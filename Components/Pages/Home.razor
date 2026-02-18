@@ -1,0 +1,34 @@
+@page "/"
+@inject WorkoutPlanService PlanService
+@inject NavigationManager Navigation
+
+<h1>Physiquinator</h1>
+<p class="lead">Plan and track your workouts.</p>
+
+<div class="mb-4">
+    <a href="/plan" class="btn btn-primary">New workout plan</a>
+</div>
+
+<h2 class="h5 mt-4">Your plans</h2>
+@if (!PlanService.GetAllPlans().Any())
+{
+    <p class="text-muted">No plans yet. Create one to get started.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var plan in PlanService.GetAllPlans().OrderByDescending(p => p.CreatedAt))
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <strong>@plan.Name</strong>
+                    <span class="text-muted ms-2">@plan.Exercises.Count exercise(s), rest @plan.RestIntervalSeconds s</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/plan/@plan.Id" class="btn btn-outline-secondary btn-sm">Edit</a>
+                    <a href="/workout/@plan.Id" class="btn btn-success btn-sm">Start workout</a>
+                </div>
+            </li>
+        }
+    </ul>
+}

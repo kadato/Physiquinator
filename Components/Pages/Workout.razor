@@ -1,0 +1,144 @@
+@page "/workout/{PlanId:guid}"
+@inject WorkoutPlanService PlanService
+@inject WorkoutSessionService SessionService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<h1>@(SessionService.CurrentPlan?.Name ?? "Workout")</h1>
+
+@if (SessionService.CurrentPlan == null)
+{
+    <p>No active workout. <a href="/">Go to home</a> and start a plan.</p>
+}
+else
+{
+    <div class="workout-timer-section mb-4">
+        @if (SessionService.IsResting)
+        {
+            <div class="rest-timer card border-warning">
+                <div class="card-body text-center">
+                    <p class="mb-1 text-muted">Rest</p>
+                    <p class="display-4 mb-2">@FormatTime(SessionService.RestSecondsRemaining)</p>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="SkipRest">Skip rest</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2 class="h5 text-success">Done</h2>
+            <ul class="list-group list-group-flush done-list">
+                @foreach (var item in DoneItems)
+                {
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="text-success me-2" aria-hidden="true">✓</span>
+                        <span>@item.ExerciseName — Set @(item.SetIndex + 1)</span>
+                    </li>
+                }
+                @if (!DoneItems.Any())
+                {
+                    <li class="list-group-item text-muted">Complete a set to see it here.</li>
+                }
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h2 class="h5">Up next</h2>
+            <ul class="list-group list-group-flush">
+                @foreach (var item in UpcomingItems)
+                {
+                    <li class="list-group-item d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span>@item.ExerciseName — Set @(item.SetIndex + 1)</span>
+                        <button class="btn btn-primary btn-sm" @onclick="() => CompleteSet(item.ExerciseIndex, item.SetIndex)">Done</button>
+                    </li>
+                }
+                @if (!UpcomingItems.Any() && DoneItems.Any())
+                {
+                    <li class="list-group-item text-muted">All sets complete. Great work!</li>
+                }
+                @if (!UpcomingItems.Any() && !DoneItems.Any())
+                {
+                    <li class="list-group-item text-muted">No sets in this plan.</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button class="btn btn-outline-danger" @onclick="EndWorkout">End workout</button>
+        <a href="/" class="btn btn-link">Back to home</a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid PlanId { get; set; }
+
+    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> DoneItems => GetItems(completed: true);
+    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> UpcomingItems => GetItems(completed: false);
+
+    protected override void OnInitialized()
+    {
+        var plan = PlanService.GetPlan(PlanId);
+        if (plan != null)
+            SessionService.StartWorkout(plan);
+    }
+
+    protected override void OnParametersSet()
+    {
+        var plan = PlanService.GetPlan(PlanId);
+        if (plan != null && SessionService.CurrentPlan?.Id != plan.Id)
+        {
+            SessionService.StartWorkout(plan);
+        }
+    }
+
+    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> GetItems(bool completed)
+    {
+        var plan = SessionService.CurrentPlan;
+        if (plan == null) return new List<(string, int, int)>();
+
+        var list = new List<(string, int, int)>();
+        for (var ei = 0; ei < plan.Exercises.Count; ei++)
+        {
+            var ex = plan.Exercises[ei];
+            for (var si = 0; si < ex.SetCount; si++)
+            {
+                var isDone = SessionService.IsSetCompleted(ei, si);
+                if (isDone == completed)
+                    list.Add((ex.Name, ei, si));
+            }
+        }
+        return list;
+    }
+
+    private void CompleteSet(int exerciseIndex, int setIndex)
+    {
+        SessionService.CompleteSet(exerciseIndex, setIndex);
+        SessionService.StartRest(
+            onTick: () => InvokeAsync(StateHasChanged),
+            onComplete: () => InvokeAsync(StateHasChanged));
+        StateHasChanged();
+    }
+
+    private void SkipRest()
+    {
+        SessionService.SkipRest();
+        StateHasChanged();
+    }
+
+    private void EndWorkout()
+    {
+        SessionService.EndWorkout();
+        Navigation.NavigateTo("/");
+    }
+
+    private static string FormatTime(int totalSeconds)
+    {
+        var m = totalSeconds / 60;
+        var s = totalSeconds % 60;
+        return $"{m:D1}:{s:D2}";
+    }
+
+    public void Dispose() { }
+}

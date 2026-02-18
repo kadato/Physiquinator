@@ -1,0 +1,112 @@
+@page "/plan"
+@page "/plan/{PlanId:guid}"
+@inject WorkoutPlanService PlanService
+@inject NavigationManager Navigation
+
+<h1>@(IsNew ? "New workout plan" : "Edit workout plan")</h1>
+
+<div class="plan-form">
+    <div class="mb-3">
+        <label for="plan-name" class="form-label">Plan name</label>
+        <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push day" />
+    </div>
+    <div class="mb-3">
+        <label for="rest-interval" class="form-label">Rest between sets (seconds)</label>
+        <input id="rest-interval" type="number" class="form-control" @bind="RestIntervalSeconds" min="0" />
+    </div>
+
+    <h2 class="h5 mt-4">Exercises</h2>
+    <p class="text-muted">Add exercises and set how many sets for each.</p>
+
+    <div class="exercise-list">
+        @for (var i = 0; i < Exercises.Count; i++)
+        {
+            var idx = i;
+            <div class="exercise-row mb-2 d-flex align-items-center gap-2 flex-wrap">
+                <input type="text" class="form-control flex-grow-1" style="min-width: 120px;" @bind="Exercises[idx].Name" placeholder="Exercise name" />
+                <label class="mb-0">Sets:</label>
+                <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].SetCount" min="1" />
+                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveExercise(idx)">Remove</button>
+            </div>
+        }
+    </div>
+    <div class="d-flex gap-2 mt-2">
+        <input type="text" class="form-control" style="max-width: 200px;" @bind="NewExerciseName" placeholder="New exercise name" @onkeydown="AddExerciseKeydown" />
+        <button type="button" class="btn btn-outline-primary" @onclick="AddExercise">Add exercise</button>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button class="btn btn-primary" @onclick="Save" disabled="@(!CanSave)">Save plan</button>
+        <a href="/" class="btn btn-secondary">Cancel</a>
+        @if (!IsNew)
+        {
+            <a href="/workout/@PlanId" class="btn btn-success">Start this workout</a>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? PlanId { get; set; }
+
+    private string PlanName { get; set; } = "Workout";
+    private int RestIntervalSeconds { get; set; } = 60;
+    private List<ExercisePlan> Exercises { get; set; } = new();
+    private string NewExerciseName { get; set; } = "";
+    private bool IsNew => PlanId == null;
+
+    private bool CanSave => !string.IsNullOrWhiteSpace(PlanName) && Exercises.Any() && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
+
+    protected override void OnInitialized()
+    {
+        if (PlanId.HasValue)
+        {
+            var plan = PlanService.GetPlan(PlanId.Value);
+            if (plan != null)
+            {
+                PlanName = plan.Name;
+                RestIntervalSeconds = plan.RestIntervalSeconds;
+                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan { Id = e.Id, Name = e.Name, SetCount = e.SetCount, Order = e.Order }).ToList();
+            }
+        }
+    }
+
+    private void AddExercise()
+    {
+        if (string.IsNullOrWhiteSpace(NewExerciseName)) return;
+        Exercises.Add(new ExercisePlan { Name = NewExerciseName.Trim(), SetCount = 1, Order = Exercises.Count });
+        NewExerciseName = "";
+    }
+
+    private void AddExerciseKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddExercise();
+        }
+    }
+
+    private void RemoveExercise(int index)
+    {
+        if (index >= 0 && index < Exercises.Count)
+        {
+            Exercises.RemoveAt(index);
+            for (var i = 0; i < Exercises.Count; i++)
+                Exercises[i].Order = i;
+        }
+    }
+
+    private void Save()
+    {
+        if (!CanSave) return;
+        var plan = new WorkoutPlan
+        {
+            Id = PlanId ?? Guid.NewGuid(),
+            Name = PlanName.Trim(),
+            RestIntervalSeconds = RestIntervalSeconds,
+            Exercises = Exercises.Select((e, i) => new ExercisePlan { Id = e.Id, Name = e.Name.Trim(), SetCount = e.SetCount, Order = i }).ToList()
+        };
+        PlanService.SavePlan(plan);
+        Navigation.NavigateTo("/");
+    }
+}

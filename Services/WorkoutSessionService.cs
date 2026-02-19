@@ -7,13 +7,15 @@ public class WorkoutSessionService
 {
     private System.Timers.Timer? _restTimer;
     private int _restSecondsRemaining;
+    private int _restSecondsTotal;
     private Action? _onRestTick;
     private Action? _onRestComplete;
 
     public WorkoutPlan? CurrentPlan { get; private set; }
     public List<SetCompletion> CompletedSets { get; } = new();
     public int RestSecondsRemaining => _restSecondsRemaining;
-    public bool IsResting => _restTimer?.Enabled ?? false;
+    public bool IsResting => _restTimer != null;
+    public bool IsRestPaused => IsResting && !(_restTimer?.Enabled ?? false);
 
     public void StartWorkout(WorkoutPlan plan)
     {
@@ -42,18 +44,43 @@ public class WorkoutSessionService
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
     }
 
-    public void StartRest(Action onTick, Action onComplete)
+    public void StartRest(int restIntervalSeconds, Action onTick, Action onComplete)
     {
         if (CurrentPlan == null) return;
         _onRestTick = onTick;
         _onRestComplete = onComplete;
-        _restSecondsRemaining = CurrentPlan.RestIntervalSeconds;
+        _restSecondsRemaining = restIntervalSeconds;
+        _restSecondsTotal = restIntervalSeconds;
         _onRestTick?.Invoke();
 
         _restTimer?.Dispose();
         _restTimer = new System.Timers.Timer(1000);
         _restTimer.Elapsed += RestTimer_Elapsed;
         _restTimer.Start();
+    }
+
+    public void PauseRest()
+    {
+        _restTimer?.Stop();
+        _onRestTick?.Invoke();
+    }
+
+    public void ResumeRest()
+    {
+        if (_restTimer != null && !_restTimer.Enabled)
+        {
+            _restTimer.Start();
+            _onRestTick?.Invoke();
+        }
+    }
+
+    public void ResetRest()
+    {
+        if (_restTimer != null)
+        {
+            _restSecondsRemaining = _restSecondsTotal;
+            _onRestTick?.Invoke();
+        }
     }
 
     public void SkipRest()
@@ -79,5 +106,6 @@ public class WorkoutSessionService
         _restTimer?.Dispose();
         _restTimer = null;
         _restSecondsRemaining = 0;
+        _restSecondsTotal = 0;
     }
 }

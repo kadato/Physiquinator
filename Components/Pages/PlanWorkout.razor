@@ -11,8 +11,9 @@
         <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push day" />
     </div>
     <div class="mb-3">
-        <label for="rest-interval" class="form-label">Rest between sets (seconds)</label>
+        <label for="rest-interval" class="form-label">Default rest between sets (seconds)</label>
         <input id="rest-interval" type="number" class="form-control" @bind="RestIntervalSeconds" min="0" />
+        <small class="form-text text-muted">This will be used as the default for new exercises. Each exercise can have its own rest interval.</small>
     </div>
 
     <h2 class="h5 mt-4">Exercises</h2>
@@ -22,11 +23,21 @@
         @for (var i = 0; i < Exercises.Count; i++)
         {
             var idx = i;
-            <div class="exercise-row mb-2 d-flex align-items-center gap-2 flex-wrap">
-                <input type="text" class="form-control flex-grow-1" style="min-width: 120px;" @bind="Exercises[idx].Name" placeholder="Exercise name" />
-                <label class="mb-0">Sets:</label>
-                <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].SetCount" min="1" />
-                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveExercise(idx)">Remove</button>
+            <div class="exercise-row mb-3 p-3 border rounded">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                    <input type="text" class="form-control flex-grow-1" style="min-width: 120px;" @bind="Exercises[idx].Name" placeholder="Exercise name" />
+                    <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveExercise(idx)">Remove</button>
+                </div>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Sets:</label>
+                        <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].SetCount" min="1" />
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0">Rest (sec):</label>
+                        <input type="number" class="form-control" style="width: 80px;" @bind="Exercises[idx].RestIntervalSeconds" min="0" />
+                    </div>
+                </div>
             </div>
         }
     </div>
@@ -66,7 +77,14 @@
             {
                 PlanName = plan.Name;
                 RestIntervalSeconds = plan.RestIntervalSeconds;
-                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan { Id = e.Id, Name = e.Name, SetCount = e.SetCount, Order = e.Order }).ToList();
+                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan 
+                { 
+                    Id = e.Id, 
+                    Name = e.Name, 
+                    SetCount = e.SetCount, 
+                    Order = e.Order,
+                    RestIntervalSeconds = e.RestIntervalSeconds
+                }).ToList();
             }
         }
     }
@@ -74,7 +92,13 @@
     private void AddExercise()
     {
         if (string.IsNullOrWhiteSpace(NewExerciseName)) return;
-        Exercises.Add(new ExercisePlan { Name = NewExerciseName.Trim(), SetCount = 1, Order = Exercises.Count });
+        Exercises.Add(new ExercisePlan 
+        { 
+            Name = NewExerciseName.Trim(), 
+            SetCount = 4, 
+            Order = Exercises.Count,
+            RestIntervalSeconds = RestIntervalSeconds
+        });
         NewExerciseName = "";
     }
 
@@ -104,7 +128,14 @@
             Id = PlanId ?? Guid.NewGuid(),
             Name = PlanName.Trim(),
             RestIntervalSeconds = RestIntervalSeconds,
-            Exercises = Exercises.Select((e, i) => new ExercisePlan { Id = e.Id, Name = e.Name.Trim(), SetCount = e.SetCount, Order = i }).ToList()
+            Exercises = Exercises.Select((e, i) => new ExercisePlan 
+            { 
+                Id = e.Id, 
+                Name = e.Name.Trim(), 
+                SetCount = e.SetCount, 
+                Order = i,
+                RestIntervalSeconds = e.RestIntervalSeconds
+            }).ToList()
         };
         PlanService.SavePlan(plan);
         Navigation.NavigateTo("/");

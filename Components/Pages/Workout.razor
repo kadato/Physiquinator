@@ -4,53 +4,82 @@
 @inject NavigationManager Navigation
 @implements IDisposable
 
-<h1>@(SessionService.CurrentPlan?.Name ?? "Workout")</h1>
+<div class="mb-3">
+    <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>Back to Home
+    </a>
+</div>
+
+<h1><i class="bi bi-fire me-2"></i>@(SessionService.CurrentPlan?.Name ?? "Workout")</h1>
 
 @if (SessionService.CurrentPlan == null)
 {
-    <p>No active workout. <a href="/">Go to home</a> and start a plan.</p>
+    <div class="text-center py-5">
+        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #f59e0b; opacity: 0.5;"></i>
+        <p class="mt-3">No active workout. <a href="/">Go to home</a> and start a plan.</p>
+    </div>
 }
 else
 {
     <div class="workout-timer-section mb-4">
         @if (SessionService.IsResting)
         {
-            <div class="rest-timer card border-warning">
+            <div class="rest-timer card">
                 <div class="card-body text-center">
-                    <p class="mb-1 text-muted">Rest</p>
-                    <p class="display-4 mb-2">@FormatTime(SessionService.RestSecondsRemaining)</p>
+                    <p class="mb-2 text-uppercase fw-bold" style="color: #f59e0b; letter-spacing: 2px;">
+                        <i class="bi bi-hourglass-split me-2"></i>Rest Time
+                    </p>
+                    <p class="display-4 mb-3">@FormatTime(SessionService.RestSecondsRemaining)</p>
                     <div class="d-flex gap-2 justify-content-center flex-wrap">
                         @if (SessionService.IsRestPaused)
                         {
-                            <button class="btn btn-success btn-sm" @onclick="ResumeRest">Resume</button>
+                            <button class="btn btn-success" @onclick="ResumeRest">
+                                <i class="bi bi-play-fill me-2"></i>Resume
+                            </button>
                         }
                         else
                         {
-                            <button class="btn btn-warning btn-sm" @onclick="PauseRest">Pause</button>
+                            <button class="btn btn-warning" @onclick="PauseRest">
+                                <i class="bi bi-pause-fill me-2"></i>Pause
+                            </button>
                         }
-                        <button class="btn btn-info btn-sm" @onclick="ResetRest">Reset</button>
-                        <button class="btn btn-outline-secondary btn-sm" @onclick="SkipRest">Skip</button>
+                        <button class="btn btn-info" @onclick="ResetRest">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="SkipRest">
+                            <i class="bi bi-skip-forward-fill me-2"></i>Skip
+                        </button>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <h2 class="h5 text-success">Done</h2>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="d-flex align-items-center mb-3">
+                <h2 class="h5 mb-0 text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>Completed
+                </h2>
+            </div>
             <div class="exercise-panels">
                 @foreach (var item in DoneExercises)
                 {
-                    <div class="card mb-2">
+                    <div class="card mb-3">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="card-title mb-1">@item.ExerciseName</h5>
-                                    <p class="card-text text-success mb-0">
-                                        <span class="text-success me-2" aria-hidden="true">✓</span>
-                                        @item.CompletedSets/@item.TotalSets sets complete
-                                    </p>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-2">
+                                        <i class="bi bi-trophy-fill text-success me-2"></i>@item.ExerciseName
+                                    </h5>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-3" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: @(item.CompletedSets * 100.0 / item.TotalSets)%"></div>
+                                        </div>
+                                        <span class="badge bg-success">
+                                            @item.CompletedSets/@item.TotalSets
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -58,26 +87,40 @@ else
                 }
                 @if (!DoneExercises.Any())
                 {
-                    <p class="text-muted">Complete a set to see it here.</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-circle" style="font-size: 3rem; color: #667eea; opacity: 0.2;"></i>
+                        <p class="text-muted mt-3">Complete a set to see it here.</p>
+                    </div>
                 }
             </div>
         </div>
-        <div class="col-md-6">
-            <h2 class="h5">Up next</h2>
+        <div class="col-lg-6">
+            <div class="d-flex align-items-center mb-3">
+                <h2 class="h5 mb-0">
+                    <i class="bi bi-lightning-charge-fill me-2" style="color: #667eea;"></i>Up Next
+                </h2>
+            </div>
             <div class="exercise-panels">
                 @foreach (var item in UpcomingExercises)
                 {
-                    <div class="card mb-2">
+                    <div class="card mb-3">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div>
-                                    <h5 class="card-title mb-1">@item.ExerciseName</h5>
-                                    <p class="card-text text-muted mb-0">
-                                        @item.CompletedSets/@item.TotalSets sets complete
-                                    </p>
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div class="flex-grow-1 mb-2">
+                                    <h5 class="card-title mb-2">
+                                        <i class="bi bi-dot me-1" style="color: #667eea; font-size: 1.5rem;"></i>@item.ExerciseName
+                                    </h5>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-3" style="height: 8px;">
+                                            <div class="progress-bar" style="width: @(item.CompletedSets * 100.0 / item.TotalSets)%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                                        </div>
+                                        <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                            @item.CompletedSets/@item.TotalSets
+                                        </span>
+                                    </div>
                                 </div>
-                                <button class="btn btn-primary btn-sm" @onclick="() => CompleteNextSet(item.ExerciseIndex)">
-                                    Complete set @(item.CompletedSets + 1)
+                                <button class="btn btn-primary w-100" @onclick="() => CompleteNextSet(item.ExerciseIndex)">
+                                    <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
                                 </button>
                             </div>
                         </div>
@@ -85,19 +128,30 @@ else
                 }
                 @if (!UpcomingExercises.Any() && DoneExercises.Any())
                 {
-                    <p class="text-muted">All sets complete. Great work!</p>
+                    <div class="text-center py-5">
+                        <i class="bi bi-trophy-fill" style="font-size: 4rem; color: #4ade80;"></i>
+                        <h3 class="mt-3" style="color: #4ade80;">Workout Complete!</h3>
+                        <p class="text-muted">Great work! All sets completed.</p>
+                    </div>
                 }
                 @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
-                    <p class="text-muted">No sets in this plan.</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #667eea; opacity: 0.3;"></i>
+                        <p class="text-muted mt-3">No sets in this plan.</p>
+                    </div>
                 }
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <button class="btn btn-outline-danger" @onclick="EndWorkout">End workout</button>
-        <a href="/" class="btn btn-link">Back to home</a>
+    <div class="mt-5 pt-4 border-top d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-danger" @onclick="EndWorkout">
+            <i class="bi bi-stop-circle me-2"></i>End Workout
+        </button>
+        <a href="/" class="btn btn-link">
+            <i class="bi bi-house-fill me-2"></i>Back to Home
+        </a>
     </div>
 }
 

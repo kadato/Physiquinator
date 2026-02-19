@@ -19,7 +19,18 @@ else
                 <div class="card-body text-center">
                     <p class="mb-1 text-muted">Rest</p>
                     <p class="display-4 mb-2">@FormatTime(SessionService.RestSecondsRemaining)</p>
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="SkipRest">Skip rest</button>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        @if (SessionService.IsRestPaused)
+                        {
+                            <button class="btn btn-success btn-sm" @onclick="ResumeRest">Resume</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-warning btn-sm" @onclick="PauseRest">Pause</button>
+                        }
+                        <button class="btn btn-info btn-sm" @onclick="ResetRest">Reset</button>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="SkipRest">Skip</button>
+                    </div>
                 </div>
             </div>
         }
@@ -28,39 +39,59 @@ else
     <div class="row">
         <div class="col-md-6">
             <h2 class="h5 text-success">Done</h2>
-            <ul class="list-group list-group-flush done-list">
-                @foreach (var item in DoneItems)
+            <div class="exercise-panels">
+                @foreach (var item in DoneExercises)
                 {
-                    <li class="list-group-item d-flex align-items-center">
-                        <span class="text-success me-2" aria-hidden="true">✓</span>
-                        <span>@item.ExerciseName — Set @(item.SetIndex + 1)</span>
-                    </li>
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-1">@item.ExerciseName</h5>
+                                    <p class="card-text text-success mb-0">
+                                        <span class="text-success me-2" aria-hidden="true">✓</span>
+                                        @item.CompletedSets/@item.TotalSets sets complete
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
-                @if (!DoneItems.Any())
+                @if (!DoneExercises.Any())
                 {
-                    <li class="list-group-item text-muted">Complete a set to see it here.</li>
+                    <p class="text-muted">Complete a set to see it here.</p>
                 }
-            </ul>
+            </div>
         </div>
         <div class="col-md-6">
             <h2 class="h5">Up next</h2>
-            <ul class="list-group list-group-flush">
-                @foreach (var item in UpcomingItems)
+            <div class="exercise-panels">
+                @foreach (var item in UpcomingExercises)
                 {
-                    <li class="list-group-item d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <span>@item.ExerciseName — Set @(item.SetIndex + 1)</span>
-                        <button class="btn btn-primary btn-sm" @onclick="() => CompleteSet(item.ExerciseIndex, item.SetIndex)">Done</button>
-                    </li>
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h5 class="card-title mb-1">@item.ExerciseName</h5>
+                                    <p class="card-text text-muted mb-0">
+                                        @item.CompletedSets/@item.TotalSets sets complete
+                                    </p>
+                                </div>
+                                <button class="btn btn-primary btn-sm" @onclick="() => CompleteNextSet(item.ExerciseIndex)">
+                                    Complete set @(item.CompletedSets + 1)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 }
-                @if (!UpcomingItems.Any() && DoneItems.Any())
+                @if (!UpcomingExercises.Any() && DoneExercises.Any())
                 {
-                    <li class="list-group-item text-muted">All sets complete. Great work!</li>
+                    <p class="text-muted">All sets complete. Great work!</p>
                 }
-                @if (!UpcomingItems.Any() && !DoneItems.Any())
+                @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
-                    <li class="list-group-item text-muted">No sets in this plan.</li>
+                    <p class="text-muted">No sets in this plan.</p>
                 }
-            </ul>
+            </div>
         </div>
     </div>
 
@@ -74,8 +105,10 @@ else
     [Parameter]
     public Guid PlanId { get; set; }
 
-    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> DoneItems => GetItems(completed: true);
-    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> UpcomingItems => GetItems(completed: false);
+    private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
+
+    private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
+    private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
 
     protected override void OnInitialized()
     {
@@ -93,31 +126,90 @@ else
         }
     }
 
-    private List<(string ExerciseName, int ExerciseIndex, int SetIndex)> GetItems(bool completed)
+    private List<ExerciseProgress> GetExerciseProgress(bool completed)
     {
         var plan = SessionService.CurrentPlan;
-        if (plan == null) return new List<(string, int, int)>();
+        if (plan == null) return new List<ExerciseProgress>();
 
-        var list = new List<(string, int, int)>();
+        var list = new List<ExerciseProgress>();
         for (var ei = 0; ei < plan.Exercises.Count; ei++)
         {
             var ex = plan.Exercises[ei];
+            var completedSets = 0;
             for (var si = 0; si < ex.SetCount; si++)
             {
-                var isDone = SessionService.IsSetCompleted(ei, si);
-                if (isDone == completed)
-                    list.Add((ex.Name, ei, si));
+                if (SessionService.IsSetCompleted(ei, si))
+                    completedSets++;
+            }
+
+            var isFullyCompleted = completedSets == ex.SetCount;
+            var hasAnySets = completedSets > 0;
+
+            if (completed)
+            {
+                if (hasAnySets)
+                    list.Add(new ExerciseProgress(ex.Name, ei, completedSets, ex.SetCount));
+            }
+            else
+            {
+                if (!isFullyCompleted)
+                    list.Add(new ExerciseProgress(ex.Name, ei, completedSets, ex.SetCount));
             }
         }
         return list;
     }
 
-    private void CompleteSet(int exerciseIndex, int setIndex)
+    private void CompleteNextSet(int exerciseIndex)
     {
-        SessionService.CompleteSet(exerciseIndex, setIndex);
-        SessionService.StartRest(
-            onTick: () => InvokeAsync(StateHasChanged),
-            onComplete: () => InvokeAsync(StateHasChanged));
+        var plan = SessionService.CurrentPlan;
+        if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
+
+        var exercise = plan.Exercises[exerciseIndex];
+
+        // Find the next incomplete set
+        for (var si = 0; si < exercise.SetCount; si++)
+        {
+            if (!SessionService.IsSetCompleted(exerciseIndex, si))
+            {
+                SessionService.CompleteSet(exerciseIndex, si);
+
+                // Start rest timer if not the last set of this exercise
+                var completedCount = 0;
+                for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
+                {
+                    if (SessionService.IsSetCompleted(exerciseIndex, checkSi))
+                        completedCount++;
+                }
+
+                if (completedCount < exercise.SetCount)
+                {
+                    SessionService.StartRest(
+                        restIntervalSeconds: exercise.RestIntervalSeconds,
+                        onTick: () => InvokeAsync(StateHasChanged),
+                        onComplete: () => InvokeAsync(StateHasChanged));
+                }
+
+                StateHasChanged();
+                break;
+            }
+        }
+    }
+
+    private void PauseRest()
+    {
+        SessionService.PauseRest();
+        StateHasChanged();
+    }
+
+    private void ResumeRest()
+    {
+        SessionService.ResumeRest();
+        StateHasChanged();
+    }
+
+    private void ResetRest()
+    {
+        SessionService.ResetRest();
         StateHasChanged();
     }
 

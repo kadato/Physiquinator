@@ -19,11 +19,4 @@ public class WorkoutPlanService
         }
         _plans.Add(plan);
     }
-
-    public void DeletePlan(Guid id)
-    {
-        var plan = _plans.FirstOrDefault(p => p.Id == id);
-        if (plan != null)
-            _plans.Remove(plan);
-    }
 }

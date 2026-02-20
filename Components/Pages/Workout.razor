@@ -225,9 +225,7 @@ else
         {
             if (!SessionService.IsSetCompleted(exerciseIndex, si))
             {
-                SessionService.CompleteSet(exerciseIndex, si);
-
-                // Start rest timer if not the last set of this exercise
+                // Count completed sets in this exercise BEFORE completing the current one
                 var completedCount = 0;
                 for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
                 {
@@ -235,7 +233,22 @@ else
                         completedCount++;
                 }
 
-                if (completedCount < exercise.SetCount)
+                // Check if this will be the last set of the last exercise
+                var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
+                var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
+                var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
+
+                // Stop the timer if this will be the last set of the workout
+                if (willBeLastSetOfWorkout && SessionService.IsResting)
+                {
+                    SessionService.SkipRest();
+                }
+
+                // Complete the set
+                SessionService.CompleteSet(exerciseIndex, si);
+
+                // Start rest timer only if not the last set of this exercise, and not the last set of the workout
+                if (!willBeLastSetOfExercise)
                 {
                     SessionService.StartRest(
                         restIntervalSeconds: exercise.RestIntervalSeconds,

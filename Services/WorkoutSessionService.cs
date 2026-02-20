@@ -8,6 +8,7 @@ public class WorkoutSessionService
     private System.Timers.Timer? _restTimer;
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
+    private int _lastRestIntervalSeconds;
     private Action? _onRestTick;
     private Action? _onRestComplete;
 
@@ -42,6 +43,18 @@ public class WorkoutSessionService
         if (setIndex < 0 || setIndex >= ex.SetCount) return;
 
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
+
+        // Reset timer to last rest interval when completing a set
+        if (_restTimer != null)
+        {
+            _restSecondsRemaining = _lastRestIntervalSeconds;
+            _restSecondsTotal = _lastRestIntervalSeconds;
+            if (!_restTimer.Enabled)
+            {
+                _restTimer.Start();
+            }
+            _onRestTick?.Invoke();
+        }
     }
 
     public void StartRest(int restIntervalSeconds, Action onTick, Action onComplete)
@@ -51,6 +64,7 @@ public class WorkoutSessionService
         _onRestComplete = onComplete;
         _restSecondsRemaining = restIntervalSeconds;
         _restSecondsTotal = restIntervalSeconds;
+        _lastRestIntervalSeconds = restIntervalSeconds;
         _onRestTick?.Invoke();
 
         _restTimer?.Dispose();
@@ -79,6 +93,11 @@ public class WorkoutSessionService
         if (_restTimer != null)
         {
             _restSecondsRemaining = _restSecondsTotal;
+            // Restart the timer if it was stopped at zero
+            if (!_restTimer.Enabled)
+            {
+                _restTimer.Start();
+            }
             _onRestTick?.Invoke();
         }
     }
@@ -95,7 +114,8 @@ public class WorkoutSessionService
         _onRestTick?.Invoke();
         if (_restSecondsRemaining <= 0)
         {
-            StopRestTimer();
+            // Stop timer but don't clear it - keep it visible at 0:00
+            _restTimer?.Stop();
             _onRestComplete?.Invoke();
         }
     }

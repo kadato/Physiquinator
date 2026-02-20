@@ -65,12 +65,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Physiquinator.csproj
 
-    - name: Build Windows MSIX
+    - name: Build Windows Package
       run: |
         dotnet publish Physiquinator.csproj `
           -f net10.0-windows10.0.19041.0 `
           -c Release `
-          -p:RuntimeIdentifierOverride=win10-x64 `
+          -p:RuntimeIdentifier=win-x64 `
           -p:WindowsPackageType=None `
           -p:WindowsAppSDKSelfContained=true `
           -o ./artifacts/windows

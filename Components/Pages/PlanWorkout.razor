@@ -4,105 +4,110 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<div class="mb-4">
+<div class="mb-2">
     <a href="/" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-2"></i>Back to Home
+        <i class="bi bi-arrow-left me-1"></i>Back
     </a>
 </div>
 
-<h1><i class="bi bi-clipboard2-check-fill me-2"></i>@(IsNew ? "New Workout Plan" : "Edit Workout Plan")</h1>
+<h1 class="h4 mb-3"><i class="bi bi-clipboard2-check-fill me-2"></i>@(IsNew ? "New Plan" : "Edit Plan")</h1>
 
-<div class="plan-form mt-4">
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-gear-fill me-2"></i>Plan Settings</h5>
-            <div class="mb-3">
-                <label for="plan-name" class="form-label"><i class="bi bi-tag-fill me-2"></i>Plan Name</label>
-                <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push Day, Leg Day" />
-            </div>
-            <div class="mb-3">
-                <label for="default-set-count" class="form-label"><i class="bi bi-repeat me-2"></i>Default Sets per Exercise</label>
-                <input id="default-set-count" type="number" class="form-control" @bind="DefaultSetCount" min="1" />
-                <small class="form-text">This will be used as the default for new exercises. Each exercise can have its own set count.</small>
-            </div>
-            <div class="mb-0">
-                <label for="rest-interval" class="form-label"><i class="bi bi-clock-fill me-2"></i>Default Rest Between Sets</label>
-                <div class="input-group">
-                    <input id="rest-interval" type="number" class="form-control" @bind="RestIntervalSeconds" min="0" />
-                    <span class="input-group-text">seconds</span>
+<div class="plan-form">
+    <div class="card mb-2">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-6">
+                    <label for="plan-name" class="form-label mb-1"><i class="bi bi-tag-fill me-1"></i>Plan Name</label>
+                    <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push Day" />
                 </div>
-                <small class="form-text">This will be used as the default for new exercises. Each exercise can have its own rest interval.</small>
+                <div class="col-6 col-md-3">
+                    <label for="default-set-count" class="form-label mb-1"><i class="bi bi-repeat me-1"></i>Default Sets</label>
+                    <input id="default-set-count" type="number" class="form-control" @bind="DefaultSetCount" min="1" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label for="rest-interval" class="form-label mb-1"><i class="bi bi-clock-fill me-1"></i>Default Rest (s)</label>
+                    <input id="rest-interval" type="number" class="form-control" @bind="RestIntervalSeconds" min="0" />
+                </div>
             </div>
         </div>
     </div>
 
-    <h2 class="h5 mt-4 mb-3"><i class="bi bi-list-task me-2"></i>Exercises</h2>
+    <h2 class="h6 mt-3 mb-2"><i class="bi bi-list-task me-1"></i>Exercises</h2>
 
     <div class="exercise-list">
         @if (!Exercises.Any())
         {
-            <div class="text-center py-4">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #667eea; opacity: 0.3;"></i>
-                <p class="text-muted mt-3">No exercises added yet. Add your first exercise below.</p>
+            <div class="text-center py-3">
+                <i class="bi bi-inbox" style="font-size: 2rem; color: #667eea; opacity: 0.3;"></i>
+                <p class="text-muted mt-2 mb-0">No exercises yet. Add one below.</p>
             </div>
         }
         @for (var i = 0; i < Exercises.Count; i++)
         {
             var idx = i;
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
-                        <i class="bi bi-grip-vertical text-muted" style="font-size: 1.2rem;"></i>
-                        <input type="text" class="form-control flex-grow-1" style="min-width: 150px;" @bind="Exercises[idx].Name" placeholder="Exercise name (e.g., Bench Press)" />
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="btn-group-vertical btn-group-sm">
+                            <button type="button" class="btn btn-sm btn-link text-muted p-0" 
+                                    @onclick="() => MoveExerciseUp(idx)" 
+                                    disabled="@(idx == 0)"
+                                    title="Move up"
+                                    style="font-size: 0.9rem; line-height: 1;">
+                                <i class="bi bi-chevron-up"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-link text-muted p-0" 
+                                    @onclick="() => MoveExerciseDown(idx)" 
+                                    disabled="@(idx == Exercises.Count - 1)"
+                                    title="Move down"
+                                    style="font-size: 0.9rem; line-height: 1;">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                        <input type="text" class="form-control flex-grow-1" @bind="Exercises[idx].Name" placeholder="Exercise name" />
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bi bi-repeat text-muted"></i>
+                            <input type="number" class="form-control" style="width: 60px;" @bind="Exercises[idx].SetCount" min="1" title="Sets" />
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <i class="bi bi-hourglass-split text-muted"></i>
+                            <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].RestIntervalSeconds" min="0" title="Rest (seconds)" />
+                            <span class="text-muted">s</span>
+                        </div>
                         <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveExercise(idx)">
                             <i class="bi bi-trash-fill"></i>
                         </button>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-repeat text-muted"></i>
-                            <label class="mb-0 fw-medium">Sets:</label>
-                            <input type="number" class="form-control" style="width: 80px;" @bind="Exercises[idx].SetCount" min="1" />
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-hourglass-split text-muted"></i>
-                            <label class="mb-0 fw-medium">Rest:</label>
-                            <div class="input-group" style="width: 120px;">
-                                <input type="number" class="form-control" @bind="Exercises[idx].RestIntervalSeconds" min="0" />
-                                <span class="input-group-text">s</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="text" class="form-control flex-grow-1" style="min-width: 200px; max-width: 400px;" @bind="NewExerciseName" placeholder="New exercise name" @onkeydown="AddExerciseKeydown" />
+    <div class="card mb-2">
+        <div class="card-body p-2">
+            <div class="d-flex gap-2 align-items-center">
+                <input type="text" class="form-control flex-grow-1" @bind="NewExerciseName" placeholder="Add new exercise..." @onkeydown="AddExerciseKeydown" />
                 <button type="button" class="btn btn-outline-primary" @onclick="AddExercise">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Add Exercise
+                    <i class="bi bi-plus-circle-fill"></i> Add
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 d-flex gap-2 flex-wrap">
+    <div class="mt-2 d-flex gap-2 flex-wrap">
         <button class="btn btn-primary" @onclick="Save" disabled="@(!CanSave)">
-            <i class="bi bi-save-fill me-2"></i>Save Plan
+            <i class="bi bi-save-fill me-1"></i>Save
         </button>
         <a href="/" class="btn btn-secondary">
-            <i class="bi bi-x-circle me-2"></i>Cancel
+            <i class="bi bi-x-circle me-1"></i>Cancel
         </a>
         @if (!IsNew)
         {
             <a href="/workout/@PlanId" class="btn btn-success">
-                <i class="bi bi-play-fill me-2"></i>Start This Workout
+                <i class="bi bi-play-fill me-1"></i>Start
             </a>
             <button class="btn btn-outline-info" @onclick="ExportCurrentPlan">
-                <i class="bi bi-download me-2"></i>Export Plan
+                <i class="bi bi-download me-1"></i>Export
             </button>
         }
     </div>
@@ -169,6 +174,34 @@
         if (index >= 0 && index < Exercises.Count)
         {
             Exercises.RemoveAt(index);
+            for (var i = 0; i < Exercises.Count; i++)
+                Exercises[i].Order = i;
+        }
+    }
+
+    private void MoveExerciseUp(int index)
+    {
+        if (index > 0)
+        {
+            var temp = Exercises[index];
+            Exercises[index] = Exercises[index - 1];
+            Exercises[index - 1] = temp;
+
+            // Update Order property
+            for (var i = 0; i < Exercises.Count; i++)
+                Exercises[i].Order = i;
+        }
+    }
+
+    private void MoveExerciseDown(int index)
+    {
+        if (index < Exercises.Count - 1)
+        {
+            var temp = Exercises[index];
+            Exercises[index] = Exercises[index + 1];
+            Exercises[index + 1] = temp;
+
+            // Update Order property
             for (var i = 0; i < Exercises.Count; i++)
                 Exercises[i].Order = i;
         }

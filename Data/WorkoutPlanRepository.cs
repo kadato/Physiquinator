@@ -13,6 +13,7 @@ public class WorkoutPlanRepository
 
     public async Task<List<WorkoutPlan>> GetAllPlansAsync()
     {
+        await _database.EnsureInitializedAsync();
         var planEntities = await _database.Database.Table<WorkoutPlanEntity>().ToListAsync();
         var plans = new List<WorkoutPlan>();
 
@@ -48,6 +49,7 @@ public class WorkoutPlanRepository
 
     public async Task<WorkoutPlan?> GetPlanAsync(Guid id)
     {
+        await _database.EnsureInitializedAsync();
         var planEntity = await _database.Database.Table<WorkoutPlanEntity>()
             .Where(p => p.Id == id.ToString())
             .FirstOrDefaultAsync();
@@ -80,6 +82,7 @@ public class WorkoutPlanRepository
 
     public async Task SavePlanAsync(WorkoutPlan plan)
     {
+        await _database.EnsureInitializedAsync();
         var planEntity = new WorkoutPlanEntity
         {
             Id = plan.Id.ToString(),
@@ -113,6 +116,7 @@ public class WorkoutPlanRepository
 
     public async Task DeletePlanAsync(Guid id)
     {
+        await _database.EnsureInitializedAsync();
         await _database.Database.Table<ExercisePlanEntity>()
             .Where(e => e.WorkoutPlanId == id.ToString())
             .DeleteAsync();

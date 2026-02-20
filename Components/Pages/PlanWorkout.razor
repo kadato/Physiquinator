@@ -19,6 +19,11 @@
                 <label for="plan-name" class="form-label"><i class="bi bi-tag-fill me-2"></i>Plan Name</label>
                 <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push Day, Leg Day" />
             </div>
+            <div class="mb-3">
+                <label for="default-set-count" class="form-label"><i class="bi bi-repeat me-2"></i>Default Sets per Exercise</label>
+                <input id="default-set-count" type="number" class="form-control" @bind="DefaultSetCount" min="1" />
+                <small class="form-text">This will be used as the default for new exercises. Each exercise can have its own set count.</small>
+            </div>
             <div class="mb-0">
                 <label for="rest-interval" class="form-label"><i class="bi bi-clock-fill me-2"></i>Default Rest Between Sets</label>
                 <div class="input-group">
@@ -105,6 +110,7 @@
 
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
+    private int DefaultSetCount { get; set; } = 4;
     private List<ExercisePlan> Exercises { get; set; } = new();
     private string NewExerciseName { get; set; } = "";
     private bool IsNew => PlanId == null;
@@ -120,6 +126,7 @@
             {
                 PlanName = plan.Name;
                 RestIntervalSeconds = plan.RestIntervalSeconds;
+                DefaultSetCount = plan.DefaultSetCount;
                 Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan 
                 { 
                     Id = e.Id, 
@@ -138,7 +145,7 @@
         Exercises.Add(new ExercisePlan 
         { 
             Name = NewExerciseName.Trim(), 
-            SetCount = 4, 
+            SetCount = DefaultSetCount, 
             Order = Exercises.Count,
             RestIntervalSeconds = RestIntervalSeconds
         });
@@ -171,6 +178,7 @@
             Id = PlanId ?? Guid.NewGuid(),
             Name = PlanName.Trim(),
             RestIntervalSeconds = RestIntervalSeconds,
+            DefaultSetCount = DefaultSetCount,
             Exercises = Exercises.Select((e, i) => new ExercisePlan 
             { 
                 Id = e.Id, 

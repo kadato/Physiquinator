@@ -49,7 +49,6 @@
         <AndroidLinkMode>None</AndroidLinkMode>
         <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
         <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>
-        <AndroidFastDeploymentType>Assemblies:Dexes</AndroidFastDeploymentType>
         <AndroidDexTool>d8</AndroidDexTool>
 
         <!-- iOS optimizations -->

@@ -111,6 +111,8 @@
 
     <ItemGroup>
       <Folder Include=".vscode\" />
+      <Folder Include="docs\screenshots\" />
+      <Folder Include="wwwroot\js\" />
     </ItemGroup>
 
 </Project>

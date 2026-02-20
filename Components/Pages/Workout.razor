@@ -74,7 +74,7 @@ else
                                     </h5>
                                     <div class="d-flex align-items-center">
                                         <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar bg-success" style="width: @(item.CompletedSets * 100.0 / item.TotalSets)%"></div>
+                                            <div class="progress-bar bg-success" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%"></div>
                                         </div>
                                         <span class="badge bg-success">
                                             @item.CompletedSets/@item.TotalSets
@@ -112,14 +112,14 @@ else
                                     </h5>
                                     <div class="d-flex align-items-center">
                                         <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar" style="width: @(item.CompletedSets * 100.0 / item.TotalSets)%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
                                         </div>
                                         <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                             @item.CompletedSets/@item.TotalSets
                                         </span>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary w-100" @onclick="() => CompleteNextSet(item.ExerciseIndex)">
+                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)">
                                     <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
                                 </button>
                             </div>
@@ -213,7 +213,7 @@ else
         return list;
     }
 
-    private void CompleteNextSet(int exerciseIndex)
+    private async Task CompleteNextSet(int exerciseIndex)
     {
         var plan = SessionService.CurrentPlan;
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
@@ -256,7 +256,7 @@ else
                         onComplete: () => InvokeAsync(StateHasChanged));
                 }
 
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
                 break;
             }
         }
@@ -297,6 +297,13 @@ else
         var m = totalSeconds / 60;
         var s = totalSeconds % 60;
         return $"{m:D1}:{s:D2}";
+    }
+
+    private static string GetProgressPercentage(int completed, int total)
+    {
+        if (total == 0) return "0";
+        var percentage = (completed * 100.0) / total;
+        return percentage.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public void Dispose() { }

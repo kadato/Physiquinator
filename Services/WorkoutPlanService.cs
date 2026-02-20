@@ -1,22 +1,42 @@
+using Physiquinator.Data;
 using Physiquinator.Models;
 
 namespace Physiquinator.Services;
 
 public class WorkoutPlanService
 {
-    private readonly List<WorkoutPlan> _plans = new();
+    private readonly WorkoutPlanRepository _repository;
 
-    public IReadOnlyList<WorkoutPlan> GetAllPlans() => _plans.AsReadOnly();
+    public WorkoutPlanService(WorkoutPlanRepository repository)
+    {
+        _repository = repository;
+    }
 
-    public WorkoutPlan? GetPlan(Guid id) => _plans.FirstOrDefault(p => p.Id == id);
+    public async Task<List<WorkoutPlan>> GetAllPlansAsync() => await _repository.GetAllPlansAsync();
+
+    public async Task<WorkoutPlan?> GetPlanAsync(Guid id) => await _repository.GetPlanAsync(id);
+
+    public async Task SavePlanAsync(WorkoutPlan plan) => await _repository.SavePlanAsync(plan);
+
+    public async Task DeletePlanAsync(Guid id) => await _repository.DeletePlanAsync(id);
+
+    public List<WorkoutPlan> GetAllPlans()
+    {
+        return GetAllPlansAsync().GetAwaiter().GetResult();
+    }
+
+    public WorkoutPlan? GetPlan(Guid id)
+    {
+        return GetPlanAsync(id).GetAwaiter().GetResult();
+    }
 
     public void SavePlan(WorkoutPlan plan)
     {
-        var existing = _plans.FirstOrDefault(p => p.Id == plan.Id);
-        if (existing != null)
-        {
-            _plans.Remove(existing);
-        }
-        _plans.Add(plan);
+        SavePlanAsync(plan).GetAwaiter().GetResult();
+    }
+
+    public void DeletePlan(Guid id)
+    {
+        DeletePlanAsync(id).GetAwaiter().GetResult();
     }
 }

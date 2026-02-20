@@ -69,15 +69,33 @@
         <RunAOTCompilation>true</RunAOTCompilation>
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
-        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <AndroidPackageFormat>aab</AndroidPackageFormat>
+
+        <!-- Additional Android optimizations -->
+        <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
+        <AndroidDexTool>d8</AndroidDexTool>
+        <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
 
         <!-- iOS release optimizations -->
         <MtouchLink>SdkOnly</MtouchLink>
         <EnableLLVM>true</EnableLLVM>
+        <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
+
+        <!-- .NET 10 trimming optimizations -->
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
 
         <!-- General release optimizations -->
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
+        <Optimize>true</Optimize>
+
+        <!-- .NET 10 performance features -->
+        <EventSourceSupport>false</EventSourceSupport>
+        <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+        <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">

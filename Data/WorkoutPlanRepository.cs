@@ -50,8 +50,9 @@ public class WorkoutPlanRepository
     public async Task<WorkoutPlan?> GetPlanAsync(Guid id)
     {
         await _database.EnsureInitializedAsync();
+        var idString = id.ToString();
         var planEntity = await _database.Database.Table<WorkoutPlanEntity>()
-            .Where(p => p.Id == id.ToString())
+            .Where(p => p.Id == idString)
             .FirstOrDefaultAsync();
 
         if (planEntity == null)
@@ -94,8 +95,9 @@ public class WorkoutPlanRepository
 
         await _database.Database.InsertOrReplaceAsync(planEntity);
 
+        var planIdString = plan.Id.ToString();
         await _database.Database.Table<ExercisePlanEntity>()
-            .Where(e => e.WorkoutPlanId == plan.Id.ToString())
+            .Where(e => e.WorkoutPlanId == planIdString)
             .DeleteAsync();
 
         foreach (var exercise in plan.Exercises)
@@ -117,12 +119,13 @@ public class WorkoutPlanRepository
     public async Task DeletePlanAsync(Guid id)
     {
         await _database.EnsureInitializedAsync();
+        var idString = id.ToString();
         await _database.Database.Table<ExercisePlanEntity>()
-            .Where(e => e.WorkoutPlanId == id.ToString())
+            .Where(e => e.WorkoutPlanId == idString)
             .DeleteAsync();
 
         await _database.Database.Table<WorkoutPlanEntity>()
-            .Where(p => p.Id == id.ToString())
+            .Where(p => p.Id == idString)
             .DeleteAsync();
     }
 }

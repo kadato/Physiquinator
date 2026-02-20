@@ -164,16 +164,16 @@ else
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
     private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var plan = PlanService.GetPlan(PlanId);
+        var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null)
             SessionService.StartWorkout(plan);
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        var plan = PlanService.GetPlan(PlanId);
+        var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null && SessionService.CurrentPlan?.Id != plan.Id)
         {
             SessionService.StartWorkout(plan);

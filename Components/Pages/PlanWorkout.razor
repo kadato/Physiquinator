@@ -117,11 +117,11 @@
 
     private bool CanSave => !string.IsNullOrWhiteSpace(PlanName) && Exercises.Any() && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (PlanId.HasValue)
         {
-            var plan = PlanService.GetPlan(PlanId.Value);
+            var plan = await PlanService.GetPlanAsync(PlanId.Value);
             if (plan != null)
             {
                 PlanName = plan.Name;
@@ -170,7 +170,7 @@
         }
     }
 
-    private void Save()
+    private async Task Save()
     {
         if (!CanSave) return;
         var plan = new WorkoutPlan
@@ -188,7 +188,7 @@
                 RestIntervalSeconds = e.RestIntervalSeconds
             }).ToList()
         };
-        PlanService.SavePlan(plan);
+        await PlanService.SavePlanAsync(plan);
         Navigation.NavigateTo("/");
     }
 }

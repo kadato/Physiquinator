@@ -18,6 +18,10 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddMauiBlazorWebView();
+
+		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "physiquinator.db3");
+		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
+		builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
 		builder.Services.AddSingleton<Services.WorkoutSessionService>();
 

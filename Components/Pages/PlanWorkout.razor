@@ -2,6 +2,7 @@
 @page "/plan/{PlanId:guid}"
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <div class="mb-4">
     <a href="/" class="btn btn-outline-secondary btn-sm">
@@ -100,6 +101,9 @@
             <a href="/workout/@PlanId" class="btn btn-success">
                 <i class="bi bi-play-fill me-2"></i>Start This Workout
             </a>
+            <button class="btn btn-outline-info" @onclick="ExportCurrentPlan">
+                <i class="bi bi-download me-2"></i>Export Plan
+            </button>
         }
     </div>
 </div>
@@ -190,5 +194,32 @@
         };
         await PlanService.SavePlanAsync(plan);
         Navigation.NavigateTo("/");
+    }
+
+    private async Task ExportCurrentPlan()
+    {
+        if (!PlanId.HasValue) return;
+
+        try
+        {
+            var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);
+            var safeFileName = string.Join("_", PlanName.Split(Path.GetInvalidFileNameChars()));
+            var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+
+            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+            await File.WriteAllTextAsync(filePath, json);
+
+            await Share.RequestAsync(new ShareFileRequest
+            {
+                Title = "Export Workout Plan",
+                File = new ShareFile(filePath)
+            });
+
+            await JSRuntime.InvokeVoidAsync("alert", "Plan exported successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+        }
     }
 }

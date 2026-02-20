@@ -42,6 +42,45 @@
         <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
     </PropertyGroup>
 
+    <!-- Debug Configuration: Optimize for fast deployment -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <!-- Android optimizations for faster wireless debugging -->
+        <AndroidUseSharedRuntime>true</AndroidUseSharedRuntime>
+        <AndroidLinkMode>None</AndroidLinkMode>
+        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+        <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>
+        <AndroidFastDeploymentType>Assemblies:Dexes</AndroidFastDeploymentType>
+        <AndroidDexTool>d8</AndroidDexTool>
+
+        <!-- iOS optimizations -->
+        <MtouchLink>None</MtouchLink>
+        <MtouchDebug>true</MtouchDebug>
+        <MtouchFastDev>true</MtouchFastDev>
+
+        <!-- General debug optimizations -->
+        <DebugType>portable</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <!-- Release Configuration: Optimize for performance -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <!-- Android release optimizations -->
+        <AndroidLinkMode>Full</AndroidLinkMode>
+        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+        <RunAOTCompilation>true</RunAOTCompilation>
+        <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+
+        <!-- iOS release optimizations -->
+        <MtouchLink>SdkOnly</MtouchLink>
+        <EnableLLVM>true</EnableLLVM>
+
+        <!-- General release optimizations -->
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">
         <RuntimeIdentifier>$(RuntimeIdentifierOverride)</RuntimeIdentifier>
     </PropertyGroup>

@@ -1,6 +1,7 @@
 @page "/"
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <div class="text-center mb-5">
     <h1><i class="bi bi-lightning-charge-fill"></i> Physiquinator</h1>
@@ -50,6 +51,9 @@ else
                             <a href="/workout/@plan.Id" class="btn btn-success btn-sm flex-fill">
                                 <i class="bi bi-play-fill me-1"></i>Start
                             </a>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeletePlan(plan.Id, plan.Name)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -64,5 +68,19 @@ else
     protected override async Task OnInitializedAsync()
     {
         _plans = await PlanService.GetAllPlansAsync();
+    }
+
+    private async Task DeletePlan(Guid planId, string planName)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Are you sure you want to delete '{planName}'? This action cannot be undone.");
+
+        if (confirmed)
+        {
+            await PlanService.DeletePlanAsync(planId);
+            _plans = await PlanService.GetAllPlansAsync();
+            StateHasChanged();
+        }
     }
 }

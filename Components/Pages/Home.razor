@@ -9,9 +9,20 @@
 </div>
 
 <div class="mb-4 text-center">
-    <a href="/plan" class="btn btn-primary btn-lg">
-        <i class="bi bi-plus-circle-fill me-2"></i>New Workout Plan
-    </a>
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <a href="/plan" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle-fill me-2"></i>New Workout Plan
+        </a>
+        @if (_plans != null && _plans.Any())
+        {
+            <button class="btn btn-outline-success btn-lg" @onclick="ExportAllPlans">
+                <i class="bi bi-download me-2"></i>Export All
+            </button>
+        }
+        <button class="btn btn-outline-info btn-lg" @onclick="ImportPlans">
+            <i class="bi bi-upload me-2"></i>Import Plans
+        </button>
+    </div>
 </div>
 
 <h2 class="h4 mt-5 mb-3"><i class="bi bi-folder-fill me-2"></i>Your Plans</h2>
@@ -51,6 +62,9 @@ else
                             <a href="/workout/@plan.Id" class="btn btn-success btn-sm flex-fill">
                                 <i class="bi bi-play-fill me-1"></i>Start
                             </a>
+                            <button class="btn btn-outline-info btn-sm" @onclick="() => ExportSinglePlan(plan.Id, plan.Name)" title="Export">
+                                <i class="bi bi-download"></i>
+                            </button>
                             <button class="btn btn-outline-danger btn-sm" @onclick="() => DeletePlan(plan.Id, plan.Name)">
                                 <i class="bi bi-trash-fill"></i>
                             </button>
@@ -82,5 +96,95 @@ else
             _plans = await PlanService.GetAllPlansAsync();
             StateHasChanged();
         }
+    }
+
+    private async Task ExportAllPlans()
+    {
+        try
+        {
+            var json = await PlanService.ExportAllPlansToJsonAsync();
+            var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+
+            await SaveFile(fileName, json);
+            await JSRuntime.InvokeVoidAsync("alert", "All plans exported successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+        }
+    }
+
+    private async Task ExportSinglePlan(Guid planId, string planName)
+    {
+        try
+        {
+            var json = await PlanService.ExportPlanToJsonAsync(planId);
+            var safeFileName = string.Join("_", planName.Split(Path.GetInvalidFileNameChars()));
+            var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+
+            await SaveFile(fileName, json);
+            await JSRuntime.InvokeVoidAsync("alert", $"'{planName}' exported successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+        }
+    }
+
+    private async Task ImportPlans()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = "Select workout plan JSON file",
+                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.json" } },
+                    { DevicePlatform.Android, new[] { "application/json" } },
+                    { DevicePlatform.WinUI, new[] { ".json" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.json" } }
+                })
+            });
+
+            if (result != null)
+            {
+                using var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+
+                var importedCount = 0;
+                try
+                {
+                    var plans = await PlanService.ImportPlansFromJsonAsync(json);
+                    importedCount = plans.Count;
+                }
+                catch
+                {
+                    var plan = await PlanService.ImportPlanFromJsonAsync(json);
+                    importedCount = 1;
+                }
+
+                _plans = await PlanService.GetAllPlansAsync();
+                StateHasChanged();
+                await JSRuntime.InvokeVoidAsync("alert", $"Successfully imported {importedCount} plan(s)!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Import failed: {ex.Message}");
+        }
+    }
+
+    private async Task SaveFile(string fileName, string content)
+    {
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllTextAsync(filePath, content);
+
+        await Share.RequestAsync(new ShareFileRequest
+        {
+            Title = "Export Workout Plan",
+            File = new ShareFile(filePath)
+        });
     }
 }

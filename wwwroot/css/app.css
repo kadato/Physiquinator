@@ -296,6 +296,22 @@ h1:focus {
     outline: 2px solid #4ade80;
 }
 
+/* Mobile view: Show upcoming exercises first, completed below */
+@media (max-width: 991px) {
+    .exercise-layout {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .upcoming-section {
+        order: 1;
+    }
+
+    .completed-section {
+        order: 2;
+    }
+}
+
 .invalid {
     outline: 2px solid #ef4444;
 }

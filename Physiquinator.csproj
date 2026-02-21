@@ -51,6 +51,20 @@
         <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>
         <AndroidDexTool>d8</AndroidDexTool>
 
+        <!-- Additional emulator speed optimizations -->
+        <AndroidEnableMultiDex>false</AndroidEnableMultiDex>
+        <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
+        <AndroidUseAssemblyStore>false</AndroidUseAssemblyStore>
+        <AndroidStripILAfterAOT>false</AndroidStripILAfterAOT>
+        <AndroidEnableDesugar>false</AndroidEnableDesugar>
+
+        <!-- Skip resource processing for faster builds -->
+        <AndroidUseAapt2>true</AndroidUseAapt2>
+        <AndroidUseApkSigner>false</AndroidUseApkSigner>
+
+        <!-- Faster startup -->
+        <AndroidEnablePreloadAssemblies>false</AndroidEnablePreloadAssemblies>
+
         <!-- iOS optimizations -->
         <MtouchLink>None</MtouchLink>
         <MtouchDebug>true</MtouchDebug>
@@ -123,6 +137,15 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AndroidResource Remove="docs\screenshots\**" />
+      <Compile Remove="docs\screenshots\**" />
+      <Content Remove="docs\screenshots\**" />
+      <EmbeddedResource Remove="docs\screenshots\**" />
+      <MauiXaml Remove="docs\screenshots\**" />
+      <None Remove="docs\screenshots\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.40" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.40" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.40" />
@@ -131,13 +154,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include=".vscode\" />
-      <Folder Include="docs\screenshots\" />
-      <Folder Include="wwwroot\js\" />
+      <None Include=".github\workflows\release.yml" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Include=".github\workflows\release.yml" />
+      <Folder Include=".vscode\" />
+      <Folder Include="scripts\" />
     </ItemGroup>
 
 </Project>

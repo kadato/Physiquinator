@@ -34,16 +34,14 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Restore and build Android APK during image build (not at container run)
-# Specify framework during restore to avoid iOS/macOS workload requirements on Linux
-RUN dotnet restore Physiquinator.csproj -f net9.0-android && \
-    dotnet publish Physiquinator.csproj \
-        -f net9.0-android \
+# Build Android APK - Override TargetFrameworks to only include Android
+# This prevents iOS/macOS workload requirements on Linux
+RUN dotnet publish Physiquinator.csproj \
         -c Release \
+        -p:TargetFramework=net9.0-android \
         -p:AndroidPackageFormat=apk \
         -p:AndroidKeyStore=false \
         -p:NoWarn=XA0141 \
-        --no-restore \
         -o /app/artifacts/android
 
 # The artifacts are now baked into the image at /app/artifacts/android

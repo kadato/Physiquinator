@@ -14,7 +14,7 @@ on:
 jobs:
   build-android:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -24,6 +24,12 @@ jobs:
       with:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
+
+    - name: Add .NET preview feed
+      run: |
+        dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --name dotnet10 `
+          --configfile nuget.config || true
 
     - name: Install MAUI workload
       run: dotnet workload install maui
@@ -38,6 +44,7 @@ jobs:
           -c Release `
           -p:AndroidPackageFormat=apk `
           -p:AndroidKeyStore=false `
+          -p:NoWarn=XA0141 `
           -o ./artifacts/android
 
     - name: Upload Android APK
@@ -48,7 +55,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -58,6 +65,12 @@ jobs:
       with:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
+
+    - name: Add .NET preview feed
+      run: |
+        dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --name dotnet10 `
+          --configfile nuget.config || true
 
     - name: Install MAUI workload
       run: dotnet workload install maui
@@ -70,9 +83,11 @@ jobs:
         dotnet publish Physiquinator.csproj `
           -f net10.0-windows10.0.19041.0 `
           -c Release `
-          -p:RuntimeIdentifier=win-x64 `
           -p:WindowsPackageType=None `
           -p:WindowsAppSDKSelfContained=true `
+          -p:PublishSingleFile=false `
+          -p:SelfContained=true `
+          -p:RuntimeIdentifier=win-x64 `
           -o ./artifacts/windows
 
     - name: Upload Windows build

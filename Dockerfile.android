@@ -1,0 +1,41 @@
+# Use official .NET 9 SDK image (pinned to 9.0.100)
+FROM mcr.microsoft.com/dotnet/sdk:9.0.100
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Android SDK
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    cd ${ANDROID_HOME}/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
+    unzip commandlinetools-linux-*_latest.zip && \
+    rm commandlinetools-linux-*_latest.zip && \
+    mv cmdline-tools latest
+
+# Accept licenses and install required Android SDK components
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+# Install .NET MAUI workload
+RUN dotnet workload install maui
+
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Build Android APK
+CMD ["dotnet", "publish", "Physiquinator.csproj", \
+     "-f", "net9.0-android", \
+     "-c", "Release", \
+     "-p:AndroidPackageFormat=apk", \
+     "-p:AndroidKeyStore=false", \
+     "-o", "/app/artifacts/android"]

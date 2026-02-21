@@ -141,6 +141,22 @@ a:hover {
     color: #fff;
 }
 
+.btn-pause {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1a2e;
+    font-weight: 600;
+    border: 2px solid #fbbf24;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.btn-pause:hover {
+    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+    color: #1a1a2e;
+    border-color: #fcd34d;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.5);
+}
+
 .btn-info {
     background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
     color: #fff;

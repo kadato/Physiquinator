@@ -18,24 +18,37 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ## 📥 Download & Install
 
-### Ready-to-Use Releases
+> **Note**: Download links will be available once the repository is made public.
 
-| Platform | Download | Requirements |
-|:--------:|:--------:|:------------:|
-| 🤖 **Android** | [Download APK](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | Android 7.0+ |
-| 🪟 **Windows** | Coming Soon | Windows 10/11 |
+### Build from Source
 
-> **Latest Release**: [v1.0.2](https://github.com/tothKarolyDavid/Physiquinator/releases/latest) - Docker Build Infrastructure
+Until public releases are available, you can build the app yourself:
 
-#### Android Installation
-1. Download the APK from the link above
-2. Enable "Install from Unknown Sources" in **Settings** → **Security**
-3. Open the downloaded APK and tap **Install**
+**Option 1: Using Docker** (Recommended - No Android SDK required)
+```powershell
+# Build Android APK
+docker build -t physiquinator-android -f Dockerfile.android .
+docker create --name temp physiquinator-android
+docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
+docker rm temp
+```
+
+**Option 2: Using .NET SDK**
+```bash
+# Android
+dotnet build -t:Run -f net10.0-android
+
+# Windows  
+dotnet build -t:Run -f net10.0-windows10.0.19041.0
+```
+
+See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-started) for detailed instructions.
+
+#### Android Installation (After Building)
+1. Enable "Install from Unknown Sources" in **Settings** → **Security**
+2. Transfer the APK to your device
+3. Open the APK file and tap **Install**
 4. Launch **Physiquinator** and start tracking! 🎉
-
-#### Build from Source
-Windows builds and other platforms can be built from source using Docker or .NET SDK.  
-See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-started) below.
 
 > **💡 Tip:** The app includes sample workout plans to get you started immediately!
 

@@ -25,17 +25,27 @@ jobs:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
 
-    - name: Add .NET preview feed
+    - name: Configure NuGet sources
       run: |
+        dotnet nuget list source
         dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
-          --name dotnet10 `
-          --configfile nuget.config || true
+          --name dotnet10 2>$null || echo "Source may already exist"
+        dotnet nuget add source https://api.nuget.org/v3/index.json `
+          --name nuget.org 2>$null || echo "Source may already exist"
+        dotnet nuget list source
 
     - name: Install MAUI workload
-      run: dotnet workload install maui
+      run: |
+        dotnet workload install maui `
+          --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --source https://api.nuget.org/v3/index.json
 
     - name: Restore dependencies
-      run: dotnet restore Physiquinator.csproj
+      run: |
+        dotnet restore Physiquinator.csproj `
+          --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --source https://api.nuget.org/v3/index.json `
+          -v detailed
 
     - name: Build Android APK
       run: |
@@ -66,17 +76,27 @@ jobs:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
 
-    - name: Add .NET preview feed
+    - name: Configure NuGet sources
       run: |
+        dotnet nuget list source
         dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
-          --name dotnet10 `
-          --configfile nuget.config || true
+          --name dotnet10 2>$null || echo "Source may already exist"
+        dotnet nuget add source https://api.nuget.org/v3/index.json `
+          --name nuget.org 2>$null || echo "Source may already exist"
+        dotnet nuget list source
 
     - name: Install MAUI workload
-      run: dotnet workload install maui
+      run: |
+        dotnet workload install maui `
+          --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --source https://api.nuget.org/v3/index.json
 
     - name: Restore dependencies
-      run: dotnet restore Physiquinator.csproj
+      run: |
+        dotnet restore Physiquinator.csproj `
+          --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json `
+          --source https://api.nuget.org/v3/index.json `
+          -v detailed
 
     - name: Build Windows Package
       run: |

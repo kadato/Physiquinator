@@ -13,8 +13,8 @@ public class WorkoutPlanRepository
 
     public async Task<List<WorkoutPlan>> GetAllPlansAsync()
     {
-        await _database.EnsureInitializedAsync();
-        var planEntities = await _database.Database.Table<WorkoutPlanEntity>().ToListAsync();
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
+        var planEntities = await _database.Database.Table<WorkoutPlanEntity>().ToListAsync().ConfigureAwait(false);
         var plans = new List<WorkoutPlan>();
 
         foreach (var planEntity in planEntities)
@@ -22,7 +22,7 @@ public class WorkoutPlanRepository
             var exercises = await _database.Database.Table<ExercisePlanEntity>()
                 .Where(e => e.WorkoutPlanId == planEntity.Id)
                 .OrderBy(e => e.Order)
-                .ToListAsync();
+                .ToListAsync().ConfigureAwait(false);
 
             var plan = new WorkoutPlan
             {
@@ -49,11 +49,11 @@ public class WorkoutPlanRepository
 
     public async Task<WorkoutPlan?> GetPlanAsync(Guid id)
     {
-        await _database.EnsureInitializedAsync();
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
         var idString = id.ToString();
         var planEntity = await _database.Database.Table<WorkoutPlanEntity>()
             .Where(p => p.Id == idString)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync().ConfigureAwait(false);
 
         if (planEntity == null)
             return null;
@@ -61,7 +61,7 @@ public class WorkoutPlanRepository
         var exercises = await _database.Database.Table<ExercisePlanEntity>()
             .Where(e => e.WorkoutPlanId == planEntity.Id)
             .OrderBy(e => e.Order)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         return new WorkoutPlan
         {
@@ -83,7 +83,7 @@ public class WorkoutPlanRepository
 
     public async Task SavePlanAsync(WorkoutPlan plan)
     {
-        await _database.EnsureInitializedAsync();
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
         var planEntity = new WorkoutPlanEntity
         {
             Id = plan.Id.ToString(),
@@ -93,12 +93,12 @@ public class WorkoutPlanRepository
             CreatedAt = plan.CreatedAt
         };
 
-        await _database.Database.InsertOrReplaceAsync(planEntity);
+        await _database.Database.InsertOrReplaceAsync(planEntity).ConfigureAwait(false);
 
         var planIdString = plan.Id.ToString();
         await _database.Database.Table<ExercisePlanEntity>()
             .Where(e => e.WorkoutPlanId == planIdString)
-            .DeleteAsync();
+            .DeleteAsync().ConfigureAwait(false);
 
         foreach (var exercise in plan.Exercises)
         {
@@ -112,20 +112,20 @@ public class WorkoutPlanRepository
                 RestIntervalSeconds = exercise.RestIntervalSeconds
             };
 
-            await _database.Database.InsertAsync(exerciseEntity);
+            await _database.Database.InsertAsync(exerciseEntity).ConfigureAwait(false);
         }
     }
 
     public async Task DeletePlanAsync(Guid id)
     {
-        await _database.EnsureInitializedAsync();
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
         var idString = id.ToString();
         await _database.Database.Table<ExercisePlanEntity>()
             .Where(e => e.WorkoutPlanId == idString)
-            .DeleteAsync();
+            .DeleteAsync().ConfigureAwait(false);
 
         await _database.Database.Table<WorkoutPlanEntity>()
             .Where(p => p.Id == idString)
-            .DeleteAsync();
+            .DeleteAsync().ConfigureAwait(false);
     }
 }

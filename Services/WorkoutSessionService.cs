@@ -3,7 +3,7 @@ using Physiquinator.Models;
 
 namespace Physiquinator.Services;
 
-public class WorkoutSessionService
+public class WorkoutSessionService : IDisposable
 {
     private System.Timers.Timer? _restTimer;
     private int _restSecondsRemaining;
@@ -127,5 +127,12 @@ public class WorkoutSessionService
         _restTimer = null;
         _restSecondsRemaining = 0;
         _restSecondsTotal = 0;
+    }
+
+    public void Dispose()
+    {
+        _restTimer?.Stop();
+        _restTimer?.Dispose();
+        _restTimer = null;
     }
 }

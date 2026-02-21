@@ -40,7 +40,7 @@ else
                         }
                         else
                         {
-                            <button class="btn btn-warning" @onclick="PauseRest">
+                            <button class="btn btn-pause" @onclick="PauseRest">
                                 <i class="bi bi-pause-fill me-2"></i>Pause
                             </button>
                         }
@@ -162,6 +162,7 @@ else
     public Guid PlanId { get; set; }
 
     private bool _isRestComplete;
+    private IJSObjectReference? _audioModule;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -169,6 +170,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audio.js");
         var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null)
             SessionService.StartWorkout(plan);
@@ -186,16 +188,19 @@ else
     private List<ExerciseProgress> GetExerciseProgress(bool completed)
     {
         var plan = SessionService.CurrentPlan;
-        if (plan == null) return new List<ExerciseProgress>();
+        if (plan == null) return [];
 
+        var completedSetsSet = SessionService.CompletedSets.ToHashSet();
         var list = new List<ExerciseProgress>();
+
         for (var ei = 0; ei < plan.Exercises.Count; ei++)
         {
             var ex = plan.Exercises[ei];
             var completedSets = 0;
+
             for (var si = 0; si < ex.SetCount; si++)
             {
-                if (SessionService.IsSetCompleted(ei, si))
+                if (completedSetsSet.Contains(new SetCompletion(ei, si)))
                     completedSets++;
             }
 
@@ -315,18 +320,9 @@ else
             await Task.Delay(100);
             Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(200));
 
-            // Play notification sound (browser beep)
-            await JSRuntime.InvokeVoidAsync("eval", @"
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 800;
-                gainNode.gain.value = 0.3;
-                oscillator.start();
-                setTimeout(() => oscillator.stop(), 200);
-            ");
+            // Play notification sound
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("playRestCompleteSound");
         }
         catch
         {
@@ -346,23 +342,8 @@ else
             Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
 
             // Play celebratory ascending tone sequence
-            await JSRuntime.InvokeVoidAsync("eval", @"
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const playTone = (frequency, startTime, duration) => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    oscillator.frequency.value = frequency;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start(startTime);
-                    oscillator.stop(startTime + duration);
-                };
-                const now = audioContext.currentTime;
-                playTone(523, now, 0.15);        // C5
-                playTone(659, now + 0.15, 0.15); // E5
-                playTone(784, now + 0.3, 0.3);   // G5
-            ");
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("playWorkoutCompleteSound");
         }
         catch
         {
@@ -390,5 +371,8 @@ else
         return percentage.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        _audioModule?.DisposeAsync();
+    }
 }

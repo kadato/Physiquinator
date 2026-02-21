@@ -3,83 +3,54 @@
 .SYNOPSIS
     Build Windows application for Physiquinator
 .DESCRIPTION
-    Builds the .NET MAUI Windows app and optionally creates a ZIP package.
-    Supports both framework-dependent and portable (with WindowsAppSDK) builds.
+    Builds the .NET MAUI Windows app with WindowsAppSDK bundled.
+    Creates a ZIP package ready for distribution.
 .PARAMETER OutputPath
     Output directory for the build (default: ./artifacts/windows)
-.PARAMETER Portable
-    Create a portable build with WindowsAppSDK runtime included (larger but fewer dependencies)
 .PARAMETER CreateZip
     Create a ZIP file of the output
 .PARAMETER ZipPath
-    Path for the ZIP file (default: ./Physiquinator-Windows.zip or ./Physiquinator-Windows-Portable.zip)
+    Path for the ZIP file (default: ./Physiquinator-Windows.zip)
 .EXAMPLE
     .\build-windows.ps1
     .\build-windows.ps1 -CreateZip
-    .\build-windows.ps1 -Portable -CreateZip
     .\build-windows.ps1 -OutputPath ./build -CreateZip -ZipPath ./release.zip
 #>
 
 [CmdletBinding()]
 param(
     [Parameter()]
-    [string]$OutputPath,
-
-    [Parameter()]
-    [switch]$Portable,
+    [string]$OutputPath = "./artifacts/windows",
 
     [Parameter()]
     [switch]$CreateZip,
 
     [Parameter()]
-    [string]$ZipPath
+    [string]$ZipPath = "./Physiquinator-Windows.zip"
 )
 
 $ErrorActionPreference = 'Stop'
 
-# Set defaults based on build type
-if (-not $OutputPath) {
-    $OutputPath = if ($Portable) { "./artifacts/windows-portable" } else { "./artifacts/windows" }
-}
-
-if (-not $ZipPath) {
-    $ZipPath = if ($Portable) { "./Physiquinator-Windows-Portable.zip" } else { "./Physiquinator-Windows.zip" }
-}
-
-$buildType = if ($Portable) { "Portable (WindowsAppSDK)" } else { "Framework-Dependent" }
-
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host " Physiquinator Windows Build" -ForegroundColor Cyan
-Write-Host " Type: $buildType" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 # Build the application
 Write-Host "Building Windows application..." -ForegroundColor Yellow
-if ($Portable) {
-    Write-Host "Mode: Portable (includes WindowsAppSDK, still requires .NET 10 Runtime)" -ForegroundColor Yellow
-} else {
-    Write-Host "Mode: Framework-dependent (requires .NET 10 Runtime)" -ForegroundColor Yellow
-}
+Write-Host "Includes: WindowsAppSDK runtime bundled" -ForegroundColor Yellow
+Write-Host "Requires: .NET 10 Desktop Runtime (on user's machine)" -ForegroundColor Yellow
 
 $buildStartTime = Get-Date
 
 try {
-    $buildArgs = @(
-        "publish"
-        "Physiquinator.csproj"
-        "-f", "net10.0-windows10.0.19041.0"
-        "-c", "Release"
-        "-p:WindowsPackageType=None"
-        "-p:SelfContained=false"
-        "-p:PublishTrimmed=false"
-        "-o", $OutputPath
-    )
-
-    if ($Portable) {
-        $buildArgs += "-p:WindowsAppSDKSelfContained=true"
-    }
-
-    & dotnet @buildArgs
+    dotnet publish Physiquinator.csproj `
+        -f net10.0-windows10.0.19041.0 `
+        -c Release `
+        -p:WindowsPackageType=None `
+        -p:WindowsAppSDKSelfContained=true `
+        -p:SelfContained=false `
+        -p:PublishTrimmed=false `
+        -o $OutputPath
 
     if ($LASTEXITCODE -ne 0) {
         throw "Build failed with exit code $LASTEXITCODE"
@@ -112,13 +83,11 @@ Write-Host "`nBuild Information:" -ForegroundColor Cyan
 Write-Host "  Output location: $($exeInfo.Directory.FullName)" -ForegroundColor White
 Write-Host "  Executable: Physiquinator.exe (${exeSizeMB} MB)" -ForegroundColor White
 Write-Host "  Total size: ${totalSizeMB} MB" -ForegroundColor White
-Write-Host "  Build type: $buildType" -ForegroundColor White
 
-if (-not $Portable) {
-    Write-Host "`nRuntime Requirements:" -ForegroundColor Yellow
-    Write-Host "  - .NET 10 Desktop Runtime (x64)" -ForegroundColor White
-    Write-Host "  Download: https://dotnet.microsoft.com/download/dotnet/10.0" -ForegroundColor Gray
-}
+Write-Host "`nRuntime Requirements:" -ForegroundColor Yellow
+Write-Host "  - .NET 10 Desktop Runtime (x64)" -ForegroundColor White
+Write-Host "  - WindowsAppSDK: ✅ Bundled" -ForegroundColor Green
+Write-Host "  Download Runtime: https://dotnet.microsoft.com/download/dotnet/10.0" -ForegroundColor Gray
 
 # Create ZIP if requested
 if ($CreateZip) {

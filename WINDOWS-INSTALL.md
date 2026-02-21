@@ -6,50 +6,26 @@
 - **.NET 10 Desktop Runtime** (downloadable for free from Microsoft)
 - **64-bit (x64) processor**
 
-## Installation Options
+## Installation
 
-### Option 1: Framework-Dependent (Recommended - 62 MB)
+### Download and Install
 
-**Requirements:** .NET 10 Desktop Runtime must be installed
-
-1. **Download .NET 10 Desktop Runtime**
+1. **Download .NET 10 Desktop Runtime** (one-time, 5-minute setup)
    - Visit: https://dotnet.microsoft.com/download/dotnet/10.0
    - Download: ".NET Desktop Runtime 10.0.x (x64)"
-   - Install the downloaded file (one-time, 5-minute setup)
+   - Install the downloaded file
 
 2. **Download Physiquinator**
    - Download `Physiquinator-Windows.zip` from the [latest release](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
    - Extract the ZIP file to any folder
    - Run `Physiquinator.exe`
 
-**Pros:**
-- ✅ Smaller download (62 MB)
-- ✅ Faster to extract and start
-- ✅ Shares runtime with other .NET apps
-- ✅ Easier to update
+**Package Details:**
+- Download size: 62 MB
+- Includes WindowsAppSDK runtime bundled
+- Requires .NET 10 Desktop Runtime (~55 MB, one-time install)
 
-**Cons:**
-- ❌ Requires one-time .NET 10 runtime installation
-
-### Option 2: Portable with WindowsAppSDK (62 MB)
-
-**Requirements:** .NET 10 Desktop Runtime
-
-1. **Download Physiquinator-Portable**
-   - Download `Physiquinator-Windows-Portable.zip` from the [latest release](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
-   - Extract the ZIP file to any folder
-   - Run `Physiquinator.exe`
-
-**Pros:**
-- ✅ Includes WindowsAppSDK runtime bundled
-- ✅ Same size as Option 1
-
-**Cons:**
-- ❌ Still requires .NET 10 Desktop Runtime
-
-> **Note:** Both options require .NET 10 Desktop Runtime because .NET MAUI uses the Mono runtime for cross-platform support. The runtime is free, small (~55 MB), and installs quickly.
-
-## Why Can't I Get a Fully Standalone EXE?
+## Why Do I Need .NET Runtime?
 
 .NET MAUI applications use the Mono runtime for cross-platform compatibility, which requires the .NET Desktop Runtime to be installed. This is the same for all .NET MAUI Windows apps. The runtime needs to be installed only once and works for all .NET 10 apps on your system.
 

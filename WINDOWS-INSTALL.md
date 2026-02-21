@@ -3,19 +3,19 @@
 ## System Requirements
 
 - **Windows 10** (version 1809 or later) or **Windows 11**
-- **.NET 10 Runtime** (Desktop Runtime)
+- **.NET 10 Desktop Runtime** (downloadable for free from Microsoft)
 - **64-bit (x64) processor**
 
 ## Installation Options
 
-### Option 1: Framework-Dependent (Smaller Download - 65 MB)
+### Option 1: Framework-Dependent (Recommended - 62 MB)
 
-**Requirements:** .NET 10 Runtime must be installed
+**Requirements:** .NET 10 Desktop Runtime must be installed
 
 1. **Download .NET 10 Desktop Runtime**
    - Visit: https://dotnet.microsoft.com/download/dotnet/10.0
    - Download: ".NET Desktop Runtime 10.0.x (x64)"
-   - Install the downloaded file
+   - Install the downloaded file (one-time, 5-minute setup)
 
 2. **Download Physiquinator**
    - Download `Physiquinator-Windows.zip` from the [latest release](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
@@ -23,16 +23,17 @@
    - Run `Physiquinator.exe`
 
 **Pros:**
-- ✅ Smaller download (65 MB)
-- ✅ Faster to extract
+- ✅ Smaller download (62 MB)
+- ✅ Faster to extract and start
 - ✅ Shares runtime with other .NET apps
+- ✅ Easier to update
 
 **Cons:**
-- ❌ Requires .NET 10 runtime installation
+- ❌ Requires one-time .NET 10 runtime installation
 
-### Option 2: Self-Contained with WindowsAppSDK (Larger - 167 MB)
+### Option 2: Portable with WindowsAppSDK (62 MB)
 
-**Requirements:** None (includes most dependencies)
+**Requirements:** .NET 10 Desktop Runtime
 
 1. **Download Physiquinator-Portable**
    - Download `Physiquinator-Windows-Portable.zip` from the [latest release](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
@@ -40,14 +41,17 @@
    - Run `Physiquinator.exe`
 
 **Pros:**
-- ✅ Includes WindowsAppSDK runtime
-- ✅ Fewer external dependencies
+- ✅ Includes WindowsAppSDK runtime bundled
+- ✅ Same size as Option 1
 
 **Cons:**
-- ❌ Still requires .NET 10 Runtime
-- ❌ Larger download (167 MB)
+- ❌ Still requires .NET 10 Desktop Runtime
 
-> **Note:** Due to .NET 10 being in preview, fully self-contained builds (no runtime required) are not yet available. Once .NET 10 RTM is released, we'll provide truly portable builds.
+> **Note:** Both options require .NET 10 Desktop Runtime because .NET MAUI uses the Mono runtime for cross-platform support. The runtime is free, small (~55 MB), and installs quickly.
+
+## Why Can't I Get a Fully Standalone EXE?
+
+.NET MAUI applications use the Mono runtime for cross-platform compatibility, which requires the .NET Desktop Runtime to be installed. This is the same for all .NET MAUI Windows apps. The runtime needs to be installed only once and works for all .NET 10 apps on your system.
 
 ## Troubleshooting
 

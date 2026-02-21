@@ -37,12 +37,6 @@ docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquina
 docker rm temp
 ```
 
-# Copy APK out
-docker create --name temp physiquinator-android
-docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
-docker rm temp
-```
-
 ## Build Times
 
 - **Android build**: ~10-15 minutes (first build), ~2-8 seconds (cached)
@@ -77,32 +71,22 @@ docker system prune -a
 
 **Solution**: Clear cache and rebuild:
 ```powershell
-.\test-docker-build.ps1 -NoCache -Dockerfile Dockerfile.android
+docker build --no-cache -t physiquinator-android -f Dockerfile.android .
 ```
 
 ## CI/CD Integration
 
-These Dockerfiles are designed to work with GitHub Actions workflows. Always test locally first:
+These Dockerfiles are designed to work with GitHub Actions workflows.
 
-```powershell
-# Test before committing
-.\test-docker-build.ps1
-
-# If all tests pass, commit and push
-git add Dockerfile* test-docker-build.ps1
-git commit -m "Update Docker build configuration"
-git push
+Example workflow step:
+```yaml
+- name: Build Android APK
+  run: |
+    docker build -t physiquinator-android -f Dockerfile.android .
+    docker create --name temp physiquinator-android
+    docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
+    docker rm temp
 ```
-
-## Technical Details
-
-### Dockerfile.android
-
-- **Base Image**: `mcr.microsoft.com/dotnet/sdk:10.0`
-- **Android SDK**: Version 35 (Android 15)
-- **Build Tools**: 35.0.0
-- **Java**: OpenJDK 17
-- **Output**: APK (unsigned, for testing/distribution)
 
 ## Technical Details
 
@@ -133,6 +117,6 @@ git push
 
 For issues:
 1. Check Docker Desktop is running
-2. Review error messages in test script output
-3. Try rebuilding without cache
+2. Review error messages during build
+3. Try rebuilding without cache: `docker build --no-cache ...`
 4. Check [GitHub Issues](https://github.com/tothKarolyDavid/Physiquinator/issues)

@@ -4,7 +4,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<div class="mb-2">
+<div class="mb-2 mt-3">
     <a href="/" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i>Back
     </a>
@@ -47,34 +47,36 @@
             var idx = i;
             <div class="card mb-2">
                 <div class="card-body p-2">
+                    <!-- First row: Up arrow + Exercise name -->
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-link text-muted p-0" 
+                                @onclick="() => MoveExerciseUp(idx)" 
+                                disabled="@(idx == 0)"
+                                title="Move up"
+                                style="font-size: 1.2rem; line-height: 1;">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                        <input type="text" class="form-control form-control-lg flex-grow-1" @bind="Exercises[idx].Name" placeholder="Exercise name" />
+                    </div>
+                    <!-- Second row: Down arrow + Sets, Rest time, Delete -->
                     <div class="d-flex align-items-center gap-2">
-                        <div class="btn-group-vertical btn-group-sm">
-                            <button type="button" class="btn btn-sm btn-link text-muted p-0" 
-                                    @onclick="() => MoveExerciseUp(idx)" 
-                                    disabled="@(idx == 0)"
-                                    title="Move up"
-                                    style="font-size: 0.9rem; line-height: 1;">
-                                <i class="bi bi-chevron-up"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-link text-muted p-0" 
-                                    @onclick="() => MoveExerciseDown(idx)" 
-                                    disabled="@(idx == Exercises.Count - 1)"
-                                    title="Move down"
-                                    style="font-size: 0.9rem; line-height: 1;">
-                                <i class="bi bi-chevron-down"></i>
-                            </button>
-                        </div>
-                        <input type="text" class="form-control flex-grow-1" @bind="Exercises[idx].Name" placeholder="Exercise name" />
-                        <div class="d-flex align-items-center gap-1">
+                        <button type="button" class="btn btn-sm btn-link text-muted p-0" 
+                                @onclick="() => MoveExerciseDown(idx)" 
+                                disabled="@(idx == Exercises.Count - 1)"
+                                title="Move down"
+                                style="font-size: 1.2rem; line-height: 1; margin-left: 1px;">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
                             <i class="bi bi-repeat text-muted"></i>
                             <input type="number" class="form-control" style="width: 60px;" @bind="Exercises[idx].SetCount" min="1" title="Sets" />
                         </div>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
                             <i class="bi bi-hourglass-split text-muted"></i>
                             <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].RestIntervalSeconds" min="0" title="Rest (seconds)" />
                             <span class="text-muted">s</span>
                         </div>
-                        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveExercise(idx)">
+                        <button type="button" class="btn btn-outline-danger btn-sm ms-auto" @onclick="() => RemoveExercise(idx)">
                             <i class="bi bi-trash-fill"></i>
                         </button>
                     </div>

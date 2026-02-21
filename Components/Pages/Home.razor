@@ -2,8 +2,9 @@
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject DemoDataSeeder DemoSeeder
 
-<div class="text-center mb-5">
+<div class="text-center mb-3 mt-5">
     <h1><i class="bi bi-lightning-charge-fill"></i> Physiquinator</h1>
 </div>
 
@@ -80,6 +81,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Seed demo data if this is the first launch
+        await DemoSeeder.SeedDemoDataIfNeededAsync();
+
         _plans = await PlanService.GetAllPlansAsync();
     }
 

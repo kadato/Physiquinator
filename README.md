@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-10.0-512BD4?logo=dotnet)
+![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-9.0-512BD4?logo=dotnet)
 ![Blazor](https://img.shields.io/badge/Blazor-Hybrid-512BD4?logo=blazor)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
 ![License](https://img.shields.io/github/license/tothKarolyDavid/Physiquinator)
@@ -91,7 +91,7 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 ## Tech Stack
 
 ### Core Technologies
-- **[.NET 10](https://dotnet.microsoft.com/)** - Latest .NET with performance improvements
+- **[.NET 9](https://dotnet.microsoft.com/)** - Latest stable .NET with performance improvements
 - **[.NET MAUI](https://dotnet.microsoft.com/apps/maui)** - Cross-platform native UI framework
 - **[Blazor Hybrid](https://learn.microsoft.com/aspnet/core/blazor/hybrid/)** - Rich web UI in native apps
 - **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - Local database
@@ -118,8 +118,8 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ### Prerequisites
 
-- **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)** (Preview)
-- **[Visual Studio 2026](https://visualstudio.microsoft.com/)** with MAUI workload, or
+- **[.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)**
+- **[Visual Studio 2022](https://visualstudio.microsoft.com/)** (v17.12+) with MAUI workload, or
 - **[Visual Studio Code](https://code.visualstudio.com/)** with C# Dev Kit
 - **Android SDK** - For Android development (via Visual Studio)
 - **Xcode** - For iOS/macOS development (Mac only)
@@ -135,13 +135,13 @@ cd Physiquinator
 dotnet restore
 
 # Run on Windows
-dotnet build -t:Run -f net10.0-windows10.0.19041.0
+dotnet build -t:Run -f net9.0-windows10.0.19041.0
 
 # Run on Android (device/emulator)
-dotnet build -t:Run -f net10.0-android
+dotnet build -t:Run -f net9.0-android
 
 # Run on iOS (Mac only)
-dotnet build -t:Run -f net10.0-ios
+dotnet build -t:Run -f net9.0-ios
 ```
 
 ### Build Configurations

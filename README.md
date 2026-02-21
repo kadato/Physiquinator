@@ -23,7 +23,9 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 | Platform | Download | Requirements |
 |:--------:|:--------:|:------------:|
 | 🤖 **Android** | [Download APK](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | Android 7.0+ |
-| 🪟 **Windows** | [Download ZIP](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | Windows 10/11 |
+| 🪟 **Windows** | Coming Soon | Windows 10/11 |
+
+> **Latest Release**: [v1.0.2](https://github.com/tothKarolyDavid/Physiquinator/releases/latest) - Docker Build Infrastructure
 
 #### Android Installation
 1. Download the APK from the link above
@@ -31,10 +33,9 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 3. Open the downloaded APK and tap **Install**
 4. Launch **Physiquinator** and start tracking! 🎉
 
-#### Windows Installation
-1. Download and extract the ZIP file
-2. Run `Physiquinator.exe`
-3. No installation required - runs standalone!
+#### Build from Source
+Windows builds and other platforms can be built from source using Docker or .NET SDK.  
+See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-started) below.
 
 > **💡 Tip:** The app includes sample workout plans to get you started immediately!
 

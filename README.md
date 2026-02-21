@@ -5,12 +5,24 @@
 ![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-10.0-512BD4?logo=dotnet)
 ![Blazor](https://img.shields.io/badge/Blazor-Hybrid-512BD4?logo=blazor)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
-![License](https://img.shields.io/github/license/tothKarolyDavid/Physiquinator)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
 
 A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, and workout plan management.
 
-[Download](#-download--install) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Demo](#-demo) • [Getting Started](#-getting-started)
+[Download](#-download--install) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started)
+
+</div>
+
+---
+
+## 📸 Preview
+
+<div align="center">
+
+<img src="docs/preview/image1.png" width="250" alt="Preview 1"/> <img src="docs/preview/image2.png" width="250" alt="Preview 2"/> <img src="docs/preview/image3.png" width="250" alt="Preview 3"/>
+
+<img src="docs/preview/image4.png" width="250" alt="Preview 4"/> <img src="docs/preview/image5.png" width="250" alt="Preview 5"/>
 
 </div>
 
@@ -124,19 +136,6 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 - **Export to JSON** - Share plans across devices or back them up
 - **Import Plans** - Load workout plans from JSON files
 - **Bulk Export** - Export all plans at once for backup
-
----
-
-## 🎬 Demo
-
-> **📹 Demo Video**
-
-### Screenshots
-
-<!-- Add screenshots here once created -->
-| Home Screen | Plan Editor | Workout in Progress |
-|:----------:|:----------:|:-------------------:|
-| ![Home](docs/screenshots/home.png) | ![Editor](docs/screenshots/editor.png) | ![Workout](docs/screenshots/workout.png) |
 
 ---
 

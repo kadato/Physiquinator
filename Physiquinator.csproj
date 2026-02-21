@@ -40,6 +40,10 @@
 
         <!-- Bundle Windows App SDK runtime with app so it runs without system-wide install -->
         <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
+
+        <!-- Allow runtime version roll-forward for preview builds -->
+        <RollForward>LatestMinor</RollForward>
+        <UseCurrentRuntimeIdentifier>true</UseCurrentRuntimeIdentifier>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->

@@ -25,6 +25,12 @@ jobs:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
 
+    - name: Verify .NET installation
+      run: |
+        dotnet --version
+        dotnet --list-sdks
+        dotnet --info
+
     - name: Configure NuGet sources
       run: |
         dotnet nuget list source
@@ -75,6 +81,12 @@ jobs:
       with:
         dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
+
+    - name: Verify .NET installation
+      run: |
+        dotnet --version
+        dotnet --list-sdks
+        dotnet --info
 
     - name: Configure NuGet sources
       run: |

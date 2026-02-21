@@ -28,10 +28,11 @@ RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-# Try to install .NET MAUI workload
-RUN dotnet workload install maui \
+# Try to install Android workload (maui-android instead of maui on Linux)
+RUN dotnet workload install maui-android \
     --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json \
-    --source https://api.nuget.org/v3/index.json || true
+    --source https://api.nuget.org/v3/index.json \
+    --skip-manifest-update || true
 
 WORKDIR /app
 

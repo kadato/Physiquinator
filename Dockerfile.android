@@ -1,5 +1,5 @@
 # Use official .NET 9 SDK image (pinned to 9.0.100)
-FROM mcr.microsoft.com/dotnet/sdk:9.0.100
+FROM mcr.microsoft.com/dotnet/sdk:9.0.100 AS build
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -15,17 +15,19 @@ ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platfo
 
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
     cd ${ANDROID_HOME}/cmdline-tools && \
-    wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
-    unzip commandlinetools-linux-*_latest.zip && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
+    unzip -q commandlinetools-linux-*_latest.zip && \
     rm commandlinetools-linux-*_latest.zip && \
     mv cmdline-tools latest
 
 # Accept licenses and install required Android SDK components
-RUN yes | sdkmanager --licenses && \
-    sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 && \
+    sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
 
-# Install .NET MAUI workload
-RUN dotnet workload install maui
+# Install .NET workloads for Android
+# Use maui-android for Linux containers (maui workload is only for Windows/Mac)
+RUN dotnet workload install maui-android --skip-manifest-update || \
+    dotnet workload install android --skip-manifest-update
 
 WORKDIR /app
 

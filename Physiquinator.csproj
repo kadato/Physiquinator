@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
@@ -96,6 +96,9 @@
         <EventSourceSupport>false</EventSourceSupport>
         <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
         <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+
+        <!-- Suppress Android 16 KB page size warning for SQLite -->
+        <NoWarn>$(NoWarn);XA0141</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">
@@ -131,6 +134,10 @@
       <Folder Include=".vscode\" />
       <Folder Include="docs\screenshots\" />
       <Folder Include="wwwroot\js\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include=".github\workflows\release.yml" />
     </ItemGroup>
 
 </Project>

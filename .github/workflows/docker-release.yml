@@ -26,8 +26,10 @@ jobs:
       run: |
         docker build -f Dockerfile.android -t physiquinator-android .
         docker create --name temp-container physiquinator-android
-        docker cp temp-container:/app/artifacts/android ./artifacts/
+        mkdir -p ./artifacts/android
+        docker cp temp-container:/app/artifacts/android/. ./artifacts/android/
         docker rm temp-container
+        ls -la ./artifacts/android/
     
     - name: Upload Android APK
       uses: actions/upload-artifact@v4

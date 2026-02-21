@@ -34,10 +34,14 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Build Android APK
-CMD ["dotnet", "publish", "Physiquinator.csproj", \
-     "-f", "net9.0-android", \
-     "-c", "Release", \
-     "-p:AndroidPackageFormat=apk", \
-     "-p:AndroidKeyStore=false", \
-     "-o", "/app/artifacts/android"]
+# Restore and build Android APK during image build (not at container run)
+RUN dotnet restore Physiquinator.csproj && \
+    dotnet publish Physiquinator.csproj \
+        -f net9.0-android \
+        -c Release \
+        -p:AndroidPackageFormat=apk \
+        -p:AndroidKeyStore=false \
+        -p:NoWarn=XA0141 \
+        -o /app/artifacts/android
+
+# The artifacts are now baked into the image at /app/artifacts/android

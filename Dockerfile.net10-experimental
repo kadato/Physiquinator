@@ -39,9 +39,13 @@ WORKDIR /app
 COPY . .
 
 # Build Android APK (will likely fail until packages are available)
-CMD ["dotnet", "publish", "Physiquinator.csproj", \
-     "-f", "net10.0-android", \
-     "-c", "Release", \
-     "-p:AndroidPackageFormat=apk", \
-     "-p:AndroidKeyStore=false", \
-     "-o", "/app/artifacts/android"]
+RUN dotnet restore Physiquinator.csproj \
+        --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json \
+        --source https://api.nuget.org/v3/index.json && \
+    dotnet publish Physiquinator.csproj \
+        -f net10.0-android \
+        -c Release \
+        -p:AndroidPackageFormat=apk \
+        -p:AndroidKeyStore=false \
+        -p:NoWarn=XA0141 \
+        -o /app/artifacts/android

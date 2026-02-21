@@ -20,13 +20,19 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 > **Note**: Download links will be available once the repository is made public.
 
-### Build from Source
+### Available Builds
 
 **Latest Release**: [v1.0.2](https://github.com/tothKarolyDavid/Physiquinator/releases/latest) includes:
-- 🤖 **Android APK** (30 MB) - Ready to install
-- 🪟 **Windows ZIP** (65 MB) - Portable, no installation required
 
-Both builds are attached to the release but require repository access until made public.
+| Platform | Package | Size | Requirements |
+|----------|---------|------|--------------|
+| 🤖 Android | Physiquinator-Android.apk | 30 MB | Android 7.0+ |
+| 🪟 Windows | Physiquinator-Windows.zip | 62 MB | .NET 10 Runtime |
+| 🪟 Windows Portable | Physiquinator-Windows-Portable.zip | 62 MB | .NET 10 Runtime + WindowsAppSDK included |
+
+> **Windows Users**: See [WINDOWS-INSTALL.md](WINDOWS-INSTALL.md) for detailed installation instructions and troubleshooting.
+
+**Note:** Both Windows versions require .NET 10 Runtime. Fully self-contained builds (no runtime required) will be available once .NET 10 RTM is released.
 
 ---
 

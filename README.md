@@ -22,9 +22,15 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ### Build from Source
 
-Until public releases are available, you can build the app yourself:
+**Latest Release**: [v1.0.2](https://github.com/tothKarolyDavid/Physiquinator/releases/latest) includes:
+- 🤖 **Android APK** (30 MB) - Ready to install
+- 🪟 **Windows ZIP** (65 MB) - Portable, no installation required
 
-**Option 1: Using Docker** (Recommended - No Android SDK required)
+Both builds are attached to the release but require repository access until made public.
+
+---
+
+**Option 1: Using Docker** (Recommended for Android - No Android SDK required)
 ```powershell
 # Build Android APK
 docker build -t physiquinator-android -f Dockerfile.android .
@@ -33,22 +39,48 @@ docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquina
 docker rm temp
 ```
 
-**Option 2: Using .NET SDK**
+**Option 2: Build Windows Locally**
+```powershell
+# Build Windows application
+dotnet publish Physiquinator.csproj `
+  -f net10.0-windows10.0.19041.0 `
+  -c Release `
+  -p:WindowsPackageType=None `
+  -p:SelfContained=false `
+  -p:PublishTrimmed=false `
+  -o ./artifacts/windows
+
+# Run the app
+./artifacts/windows/Physiquinator.exe
+```
+
+**Option 3: Using .NET SDK (All platforms)**
 ```bash
-# Android
+# Android (requires Android SDK)
 dotnet build -t:Run -f net10.0-android
 
 # Windows  
 dotnet build -t:Run -f net10.0-windows10.0.19041.0
+
+# iOS (Mac only, requires Xcode)
+dotnet build -t:Run -f net10.0-ios
 ```
 
 See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-started) for detailed instructions.
 
-#### Android Installation (After Building)
+#### Installation Instructions
+
+**Android:**
 1. Enable "Install from Unknown Sources" in **Settings** → **Security**
 2. Transfer the APK to your device
 3. Open the APK file and tap **Install**
 4. Launch **Physiquinator** and start tracking! 🎉
+
+**Windows:**
+1. Extract the ZIP file
+2. Run `Physiquinator.exe`
+3. No installation required - runs standalone!
+4. Note: Requires .NET 10 Runtime (or use published version with runtime included)
 
 > **💡 Tip:** The app includes sample workout plans to get you started immediately!
 

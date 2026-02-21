@@ -7,6 +7,7 @@ namespace Physiquinator.Services;
 public class WorkoutPlanService
 {
     private readonly WorkoutPlanRepository _repository;
+    private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
 
     public WorkoutPlanService(WorkoutPlanRepository repository)
     {
@@ -21,26 +22,6 @@ public class WorkoutPlanService
 
     public async Task DeletePlanAsync(Guid id) => await _repository.DeletePlanAsync(id);
 
-    public List<WorkoutPlan> GetAllPlans()
-    {
-        return GetAllPlansAsync().GetAwaiter().GetResult();
-    }
-
-    public WorkoutPlan? GetPlan(Guid id)
-    {
-        return GetPlanAsync(id).GetAwaiter().GetResult();
-    }
-
-    public void SavePlan(WorkoutPlan plan)
-    {
-        SavePlanAsync(plan).GetAwaiter().GetResult();
-    }
-
-    public void DeletePlan(Guid id)
-    {
-        DeletePlanAsync(id).GetAwaiter().GetResult();
-    }
-
     /// <summary>
     /// Exports a workout plan to a JSON string.
     /// </summary>
@@ -50,11 +31,7 @@ public class WorkoutPlanService
         if (plan == null)
             throw new InvalidOperationException($"Plan with ID {id} not found.");
 
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-        return JsonSerializer.Serialize(plan, options);
+        return JsonSerializer.Serialize(plan, s_jsonOptions);
     }
 
     /// <summary>
@@ -63,11 +40,7 @@ public class WorkoutPlanService
     public async Task<string> ExportAllPlansToJsonAsync()
     {
         var plans = await GetAllPlansAsync();
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-        return JsonSerializer.Serialize(plans, options);
+        return JsonSerializer.Serialize(plans, s_jsonOptions);
     }
 
     /// <summary>

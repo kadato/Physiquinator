@@ -39,7 +39,9 @@ WORKDIR /app
 COPY . .
 
 # Build Android APK (will likely fail until packages are available)
+# Specify framework during restore to avoid iOS/macOS workload requirements
 RUN dotnet restore Physiquinator.csproj \
+        -f net10.0-android \
         --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json \
         --source https://api.nuget.org/v3/index.json && \
     dotnet publish Physiquinator.csproj \
@@ -48,4 +50,5 @@ RUN dotnet restore Physiquinator.csproj \
         -p:AndroidPackageFormat=apk \
         -p:AndroidKeyStore=false \
         -p:NoWarn=XA0141 \
+        --no-restore \
         -o /app/artifacts/android

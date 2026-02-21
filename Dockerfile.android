@@ -1,47 +1,73 @@
-# Use official .NET 9 SDK image (pinned to 9.0.100)
-FROM mcr.microsoft.com/dotnet/sdk:9.0.100 AS build
+# Dockerfile for building .NET MAUI Android APK
+# Based on .NET 10 with Android SDK
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
     wget \
     unzip \
-    openjdk-17-jdk \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Android SDK
-ENV ANDROID_HOME=/opt/android-sdk
-ENV ANDROID_SDK_ROOT=${ANDROID_HOME}
-ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+# Set Java home
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
-RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
-    cd ${ANDROID_HOME}/cmdline-tools && \
-    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
-    unzip -q commandlinetools-linux-*_latest.zip && \
-    rm commandlinetools-linux-*_latest.zip && \
-    mv cmdline-tools latest
+# Install Android SDK
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH="${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools"
+
+# Download and install Android command-line tools
+RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip && \
+    unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    mv ${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
+    rm /tmp/cmdline-tools.zip
 
 # Accept licenses and install required Android SDK components
-RUN yes | sdkmanager --licenses > /dev/null 2>&1 && \
-    sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0"
 
-# Install .NET workloads for Android
-# Use maui-android for Linux containers (maui workload is only for Windows/Mac)
-RUN dotnet workload install maui-android --skip-manifest-update || \
-    dotnet workload install android --skip-manifest-update
+# Install .NET MAUI Android workload
+RUN dotnet workload install maui-android --skip-sign-check
 
-WORKDIR /app
+WORKDIR /src
 
 # Copy project files
-COPY . .
+COPY Physiquinator.csproj .
+COPY *.xaml .
+COPY *.razor .
+COPY *.cs .
 
-# Build Android APK - Override TargetFrameworks to only include Android
-# This prevents iOS/macOS workload requirements on Linux
+# Copy directories
+COPY Components/ ./Components/
+COPY Data/ ./Data/
+COPY Models/ ./Models/
+COPY Platforms/ ./Platforms/
+COPY Properties/ ./Properties/
+COPY Resources/ ./Resources/
+COPY Services/ ./Services/
+COPY wwwroot/ ./wwwroot/
+
+# Restore dependencies for Android only
+RUN dotnet restore Physiquinator.csproj \
+    -p:TargetFrameworks=net10.0-android
+
+# Build Android APK
 RUN dotnet publish Physiquinator.csproj \
-        -c Release \
-        -p:TargetFramework=net9.0-android \
-        -p:AndroidPackageFormat=apk \
-        -p:AndroidKeyStore=false \
-        -p:NoWarn=XA0141 \
-        -o /app/artifacts/android
+    -f net10.0-android \
+    -c Release \
+    -p:TargetFrameworks=net10.0-android \
+    -p:AndroidPackageFormat=apk \
+    -p:AndroidKeyStore=false \
+    -p:NoWarn=XA0141 \
+    -o /app/output
 
-# The artifacts are now baked into the image at /app/artifacts/android
+# Export the APK
+FROM scratch AS export
+COPY --from=build /app/output/*-Signed.apk /
+
+# Default stage for testing
+FROM build AS test
+WORKDIR /app/output
+RUN ls -lah && echo "Build completed successfully"

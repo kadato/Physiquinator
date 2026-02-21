@@ -1,88 +1,138 @@
 # Docker Build Setup
 
-This directory contains Docker configurations for building Physiquinator in isolated, reproducible environments.
+This directory contains Docker configurations for building the Physiquinator .NET MAUI application in containerized environments.
 
-## Available Dockerfiles
+## Prerequisites
 
-### 1. `Dockerfile.android` - .NET 9 Android Build (STABLE)
-✅ **Recommended for production releases**
+- **Docker Desktop** installed and running
+  - Download: https://www.docker.com/products/docker-desktop
+  - On Windows: Docker Desktop must be started
+- **8GB RAM minimum** (16GB recommended for Android builds)
+- **20GB free disk space**
 
-Builds Android APK using .NET 9.0.100 (stable release) with guaranteed package availability.
+## Files
 
-```bash
+- **`Dockerfile.android`** - Builds Android APK
+
+## Quick Start
+
+### Build Android APK
+
+```powershell
 # Build the Docker image
-docker build -f Dockerfile.android -t physiquinator-android .
-
-# Run the build
-docker run --rm -v $(pwd)/artifacts:/app/artifacts physiquinator-android
-
-# Or use docker-compose
-docker-compose up android-build
+docker build -t physiquinator-android -f Dockerfile.android .
 ```
 
-### 2. `Dockerfile.net10-experimental` - .NET 10 Preview (EXPERIMENTAL)
-⚠️ **NOT WORKING YET** - Runtime packages unavailable
+The built APK will be in `/app/output` inside the container.
 
-Attempts to build with .NET 10 preview. Will fail until Microsoft publishes runtime packages.
+### Extract APK from Container
 
-```bash
-# Try experimental .NET 10 build (will likely fail)
-docker build -f Dockerfile.net10-experimental -t physiquinator-net10 .
+```powershell
+# Build the image
+docker build -t physiquinator-android -f Dockerfile.android .
+
+# Create temporary container and extract APK
+docker create --name temp physiquinator-android
+docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
+docker rm temp
 ```
 
-## GitHub Actions Integration
-
-The `docker-release.yml` workflow uses Docker for Android builds:
-
-- ✅ Isolated build environment
-- ✅ Pinned .NET SDK version (9.0.100)
-- ✅ Reproducible builds
-- ✅ Consistent across all runners
-
-## Why Docker?
-
-### Problems Solved:
-1. **SDK Version Drift** - GitHub Actions may install newer SDK versions without runtime packages
-2. **Environment Consistency** - Same build environment everywhere (local, CI/CD)
-3. **Android SDK Management** - All Android dependencies included
-4. **NuGet Source Control** - Explicit control over package sources
-
-### Advantages:
-- ✅ Reproducible builds
-- ✅ No reliance on GitHub Actions SDK versions
-- ✅ Easy to test locally
-- ✅ Can upgrade .NET versions independently
-
-### Trade-offs:
-- ⚠️ Longer initial build time (Docker image pull)
-- ⚠️ Larger cache usage
-- ⚠️ Slightly more complex setup
-
-## Local Testing
-
-Test the Docker build locally before pushing:
-
-```bash
-# Build Android APK
-docker build -f Dockerfile.android -t physiquinator-android .
-docker run --rm -v $(pwd)/artifacts:/app/artifacts physiquinator-android
-
-# Check output
-ls -l artifacts/android/
+# Copy APK out
+docker create --name temp physiquinator-android
+docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
+docker rm temp
 ```
 
-## Future: .NET 10 Support
+## Build Times
 
-Once .NET 10 runtime packages are available:
+- **Android build**: ~10-15 minutes (first build), ~2-8 seconds (cached)
 
-1. Update `Dockerfile.net10-experimental` with correct package sources
-2. Test locally: `docker build -f Dockerfile.net10-experimental .`
-3. If successful, rename to `Dockerfile.android` (replace stable)
-4. Update `docker-release.yml` to use .NET 10
-5. Update `global.json` to specify .NET 10 SDK
+## Build Outputs
 
-## Notes
+### Android APK Location
+After successful build, the APK is located at:
+- `/app/output/com.companyname.physiquinator-Signed.apk` (~31MB)
 
-- **Windows builds** still use native GitHub Actions runners (Docker Windows containers have limitations)
-- **Android builds** benefit most from Docker isolation
-- **iOS/macOS builds** require macOS runners (not in scope for Docker on Linux)
+## Troubleshooting
+
+### "Docker daemon is not running"
+
+**Solution**: Start Docker Desktop and wait for it to fully initialize.
+
+### "Not enough memory"
+
+**Solution**: Increase Docker memory allocation:
+1. Open Docker Desktop
+2. Settings → Resources → Memory
+3. Allocate at least 8GB
+
+### "No space left on device"
+
+**Solution**: Clean up Docker resources:
+```powershell
+docker system prune -a
+```
+
+### Build fails with Android SDK errors
+
+**Solution**: Clear cache and rebuild:
+```powershell
+.\test-docker-build.ps1 -NoCache -Dockerfile Dockerfile.android
+```
+
+## CI/CD Integration
+
+These Dockerfiles are designed to work with GitHub Actions workflows. Always test locally first:
+
+```powershell
+# Test before committing
+.\test-docker-build.ps1
+
+# If all tests pass, commit and push
+git add Dockerfile* test-docker-build.ps1
+git commit -m "Update Docker build configuration"
+git push
+```
+
+## Technical Details
+
+### Dockerfile.android
+
+- **Base Image**: `mcr.microsoft.com/dotnet/sdk:10.0`
+- **Android SDK**: Version 35 (Android 15)
+- **Build Tools**: 35.0.0
+- **Java**: OpenJDK 17
+- **Output**: APK (unsigned, for testing/distribution)
+
+## Technical Details
+
+### Dockerfile.android
+
+- **Base Image**: `mcr.microsoft.com/dotnet/sdk:10.0`
+- **Android SDK**: Version 35-36 (Android 15)
+- **Build Tools**: 35.0.0, 36.0.0
+- **Java**: OpenJDK 17
+- **Output**: APK (unsigned, for testing/distribution)
+
+## Best Practices
+
+1. **Test builds locally** before pushing to CI/CD
+2. **Use cache** for faster iterations
+3. **Monitor resources** during builds (CPU, memory, disk)
+
+## Performance Tips
+
+- **Multi-stage builds**: Used to minimize final image size
+- **Layer caching**: Dependencies are restored in separate layer
+- **Docker BuildKit**: Enable for faster builds:
+  ```powershell
+  $env:DOCKER_BUILDKIT=1
+  ```
+
+## Support
+
+For issues:
+1. Check Docker Desktop is running
+2. Review error messages in test script output
+3. Try rebuilding without cache
+4. Check [GitHub Issues](https://github.com/tothKarolyDavid/Physiquinator/issues)

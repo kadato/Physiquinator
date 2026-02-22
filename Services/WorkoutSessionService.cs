@@ -9,6 +9,7 @@ public class WorkoutSessionService : IDisposable
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
     private int _lastRestIntervalSeconds;
+    private DateTime? _suspendedAt;
     private Action? _onRestTick;
     private Action? _onRestComplete;
 
@@ -81,10 +82,27 @@ public class WorkoutSessionService : IDisposable
 
     public void ResumeRest()
     {
-        if (_restTimer != null && !_restTimer.Enabled && _restSecondsRemaining > 0)
+        if (_restTimer == null) return;
+
+        if (_suspendedAt.HasValue)
+        {
+            var elapsed = (int)(DateTime.UtcNow - _suspendedAt.Value).TotalSeconds;
+            _suspendedAt = null;
+            _restSecondsRemaining = Math.Max(0, _restSecondsRemaining - elapsed);
+
+            if (_restSecondsRemaining <= 0)
+            {
+                _restTimer.Stop();
+                try { _onRestTick?.Invoke(); } catch { }
+                try { _onRestComplete?.Invoke(); } catch { }
+                return;
+            }
+        }
+
+        if (!_restTimer.Enabled && _restSecondsRemaining > 0)
         {
             _restTimer.Start();
-            _onRestTick?.Invoke();
+            try { _onRestTick?.Invoke(); } catch { }
         }
     }
 
@@ -109,7 +127,14 @@ public class WorkoutSessionService : IDisposable
     }
 
     /// <summary>Pause the rest timer when the app is backgrounded to avoid battery-optimizer kills.</summary>
-    public void SuspendRest() => _restTimer?.Stop();
+    public void SuspendRest()
+    {
+        if (_restTimer?.Enabled == true)
+        {
+            _suspendedAt = DateTime.UtcNow;
+            _restTimer.Stop();
+        }
+    }
 
     public void UnregisterTimerCallbacks()
     {
@@ -136,6 +161,7 @@ public class WorkoutSessionService : IDisposable
         _restTimer = null;
         _restSecondsRemaining = 0;
         _restSecondsTotal = 0;
+        _suspendedAt = null;
     }
 
     public void Dispose()

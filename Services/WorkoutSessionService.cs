@@ -81,7 +81,7 @@ public class WorkoutSessionService : IDisposable
 
     public void ResumeRest()
     {
-        if (_restTimer != null && !_restTimer.Enabled)
+        if (_restTimer != null && !_restTimer.Enabled && _restSecondsRemaining > 0)
         {
             _restTimer.Start();
             _onRestTick?.Invoke();
@@ -107,6 +107,9 @@ public class WorkoutSessionService : IDisposable
         StopRestTimer();
         _onRestComplete?.Invoke();
     }
+
+    /// <summary>Pause the rest timer when the app is backgrounded to avoid battery-optimizer kills.</summary>
+    public void SuspendRest() => _restTimer?.Stop();
 
     public void UnregisterTimerCallbacks()
     {

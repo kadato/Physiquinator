@@ -66,7 +66,7 @@
     <!-- Release Configuration: Optimize for performance -->
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <!-- Android release optimizations -->
-        <AndroidLinkMode>Full</AndroidLinkMode>
+        <AndroidLinkMode>SdkOnly</AndroidLinkMode>
         <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
         <RunAOTCompilation>true</RunAOTCompilation>
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
@@ -83,8 +83,8 @@
         <EnableLLVM>true</EnableLLVM>
         <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
 
-        <!-- .NET 10 trimming optimizations -->
-        <PublishTrimmed>true</PublishTrimmed>
+        <!-- .NET 10 trimming optimizations (Android/iOS only; disabled on Windows as BlazorWebView uses reflection) -->
+        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
         <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>

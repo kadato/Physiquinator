@@ -1,0 +1,26 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<Exception>? ErrorContent { get; set; }
+
+    public Exception? CurrentException { get; private set; }
+
+    protected override void OnParametersSet()
+    {
+        CurrentException = null;
+    }
+
+    public void Recover()
+    {
+        CurrentException = null;
+        StateHasChanged();
+    }
+}

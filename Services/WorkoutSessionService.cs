@@ -108,15 +108,21 @@ public class WorkoutSessionService : IDisposable
         _onRestComplete?.Invoke();
     }
 
+    public void UnregisterTimerCallbacks()
+    {
+        _onRestTick = null;
+        _onRestComplete = null;
+    }
+
     private void RestTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
         _restSecondsRemaining--;
-        _onRestTick?.Invoke();
+        try { _onRestTick?.Invoke(); } catch { }
         if (_restSecondsRemaining <= 0)
         {
             // Stop timer but don't clear it - keep it visible at 0:00
             _restTimer?.Stop();
-            _onRestComplete?.Invoke();
+            try { _onRestComplete?.Invoke(); } catch { }
         }
     }
 

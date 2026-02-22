@@ -271,9 +271,13 @@ else
                         onTick: () => InvokeAsync(StateHasChanged),
                         onComplete: async () =>
                         {
-                            _isRestComplete = true;
-                            await InvokeAsync(StateHasChanged);
-                            await OnRestComplete();
+                            try
+                            {
+                                _isRestComplete = true;
+                                await InvokeAsync(StateHasChanged);
+                                await OnRestComplete();
+                            }
+                            catch { }
                         });
                 }
 

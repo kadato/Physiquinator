@@ -40,6 +40,9 @@
 
         <!-- Bundle Windows App SDK runtime with app so it runs without system-wide install -->
         <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
+
+        <!-- CS1591: XML doc comments are not required for an application project -->
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->

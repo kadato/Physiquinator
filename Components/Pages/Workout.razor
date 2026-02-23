@@ -252,6 +252,9 @@ else
                     SessionService.SkipRest();
                 }
 
+                // Always clear rest-complete state when a new set is completed
+                _isRestComplete = false;
+
                 // Complete the set
                 SessionService.CompleteSet(exerciseIndex, si);
 

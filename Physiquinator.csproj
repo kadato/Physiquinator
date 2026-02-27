@@ -128,6 +128,9 @@
       <AndroidResource Remove="docs\screenshots\**" />
       <Compile Remove="docs\screenshots\**" />
       <Content Remove="docs\screenshots\**" />
+      <Compile Remove="Physiquinator.Tests\**" />
+      <Content Remove="Physiquinator.Tests\**" />
+      <None Remove="Physiquinator.Tests\**" />
       <EmbeddedResource Remove="docs\screenshots\**" />
       <MauiXaml Remove="docs\screenshots\**" />
       <None Remove="docs\screenshots\**" />
@@ -144,6 +147,7 @@
 
     <ItemGroup>
       <None Include=".github\workflows\release.yml" />
+      <None Include="Physiquinator.Tests\Physiquinator.Tests.csproj" />
     </ItemGroup>
 
     <ItemGroup>

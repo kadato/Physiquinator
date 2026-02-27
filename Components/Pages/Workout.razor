@@ -120,7 +120,7 @@ else
                                         </span>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)" disabled="@(_completingExercises.Contains(item.ExerciseIndex))">
+                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)" disabled="@_isCompleting">
                                     <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
                                 </button>
                             </div>
@@ -163,7 +163,7 @@ else
 
     private bool _isRestComplete;
     private IJSObjectReference? _audioModule;
-    private HashSet<int> _completingExercises = [];
+    private bool _isCompleting;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -224,79 +224,92 @@ else
 
     private async Task CompleteNextSet(int exerciseIndex)
     {
-        if (_completingExercises.Contains(exerciseIndex)) return;
+        if (_isCompleting) return;
 
         var plan = SessionService.CurrentPlan;
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
 
-        var exercise = plan.Exercises[exerciseIndex];
-        _completingExercises.Add(exerciseIndex);
-        StateHasChanged(); // immediately disable the button before any await
+        _isCompleting = true;
+        StateHasChanged();
 
-        // Find the next incomplete set
-        for (var si = 0; si < exercise.SetCount; si++)
+        try
         {
-            if (!SessionService.IsSetCompleted(exerciseIndex, si))
+            var exercise = plan.Exercises[exerciseIndex];
+
+            // Find the next incomplete set
+            for (var si = 0; si < exercise.SetCount; si++)
             {
-                // Count completed sets in this exercise BEFORE completing the current one
-                var completedCount = 0;
-                for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
+                if (!SessionService.IsSetCompleted(exerciseIndex, si))
                 {
-                    if (SessionService.IsSetCompleted(exerciseIndex, checkSi))
-                        completedCount++;
-                }
+                    // Count completed sets in this exercise BEFORE completing the current one
+                    var completedCount = 0;
+                    for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
+                    {
+                        if (SessionService.IsSetCompleted(exerciseIndex, checkSi))
+                            completedCount++;
+                    }
 
-                // Check if this will be the last set of the last exercise
-                var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
-                var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
-                var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
+                    // Check if this will be the last set of the last exercise
+                    var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
+                    var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
+                    var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
-                // Stop the timer if this will be the last set of the workout
-                if (willBeLastSetOfWorkout && SessionService.IsResting)
-                {
-                    SessionService.SkipRest();
-                }
+                    // Stop the timer if this will be the last set of the workout
+                    if (willBeLastSetOfWorkout && SessionService.IsResting)
+                    {
+                        SessionService.SkipRest();
+                    }
 
-                // Always clear rest-complete state when a new set is completed
-                _isRestComplete = false;
-
-                // Complete the set
-                SessionService.CompleteSet(exerciseIndex, si);
-
-                // Check if workout is now complete and celebrate!
-                if (willBeLastSetOfWorkout)
-                {
-                    await InvokeAsync(StateHasChanged);
-                    await OnWorkoutComplete();
-                }
-
-                // Start rest timer only if not the last set of this exercise, and not the last set of the workout
-                if (!willBeLastSetOfExercise)
-                {
+                    // Always clear rest-complete state when a new set is completed
                     _isRestComplete = false;
-                    SessionService.StartRest(
-                        restIntervalSeconds: exercise.RestIntervalSeconds,
-                        onTick: () => InvokeAsync(StateHasChanged),
-                        onComplete: async () =>
-                        {
-                            try
-                            {
-                                _isRestComplete = true;
-                                await InvokeAsync(StateHasChanged);
-                                await OnRestComplete();
-                            }
-                            catch { }
-                        });
-                }
 
-                await InvokeAsync(StateHasChanged);
-                break;
+                    // Complete the set
+                    SessionService.CompleteSet(exerciseIndex, si);
+
+                    // Check if workout is now complete and celebrate!
+                    if (willBeLastSetOfWorkout)
+                    {
+                        await InvokeAsync(StateHasChanged);
+                        await OnWorkoutComplete();
+                    }
+
+                    // Start rest timer only if not the last set of this exercise, and not the last set of the workout
+                    if (!willBeLastSetOfExercise)
+                    {
+                        _isRestComplete = false;
+                        SessionService.StartRest(
+                            restIntervalSeconds: exercise.RestIntervalSeconds,
+                            onTick: async () =>
+                            {
+                                try { await InvokeAsync(StateHasChanged); }
+                                catch { }
+                            },
+                            onComplete: async () =>
+                            {
+                                try
+                                {
+                                    await InvokeAsync(() =>
+                                    {
+                                        _isRestComplete = true;
+                                        StateHasChanged();
+                                    });
+                                    await OnRestComplete();
+                                }
+                                catch { }
+                            });
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(300); // debounce accidental touch repetition
+                    break;
+                }
             }
         }
-
-        await Task.Delay(300);
-        _completingExercises.Remove(exerciseIndex);
-        await InvokeAsync(StateHasChanged);
+        finally
+        {
+            _isCompleting = false;
+            StateHasChanged();
+        }
     }
 
     private void PauseRest()

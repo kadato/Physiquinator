@@ -7,6 +7,7 @@
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
+[![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
 
 A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, and workout plan management.
 
@@ -32,7 +33,7 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ### Available Builds
 
-**Latest Release**: [v1.0.4](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
+**Latest Release**: [![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
 
 | Platform | Package | Size | Requirements |
 |----------|---------|------|--------------|

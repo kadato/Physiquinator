@@ -153,24 +153,29 @@ public class WorkoutSessionService : IDisposable
         }
         else
         {
-            _restTimer?.Start(); // Re-arm for the next second
+            // Re-arm for the next second; guard against a concurrent StopRestTimer disposing the timer
+            try { _restTimer?.Start(); }
+            catch (ObjectDisposedException) { }
         }
     }
 
     private void StopRestTimer()
     {
-        _restTimer?.Stop();
-        _restTimer?.Dispose();
+        // Null out first so the Elapsed handler on the ThreadPool sees null before we dispose
+        var timer = _restTimer;
         _restTimer = null;
         _restSecondsRemaining = 0;
         _restSecondsTotal = 0;
         _suspendedAt = null;
+        timer?.Stop();
+        timer?.Dispose();
     }
 
     public void Dispose()
     {
-        _restTimer?.Stop();
-        _restTimer?.Dispose();
+        var timer = _restTimer;
         _restTimer = null;
+        timer?.Stop();
+        timer?.Dispose();
     }
 }

@@ -5,7 +5,7 @@ namespace Physiquinator.Services;
 
 public class WorkoutSessionService : IDisposable
 {
-    private readonly object _lock = new();
+    private readonly Action<Action> _dispatchToMainThread;
     private System.Timers.Timer? _restTimer;
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
@@ -13,6 +13,16 @@ public class WorkoutSessionService : IDisposable
     private DateTime? _suspendedAt;
     private Action? _onRestTick;
     private Action? _onRestComplete;
+
+    /// <param name="dispatchToMainThread">
+    /// Dispatcher that runs an action on the UI/main thread.
+    /// Pass <c>MainThread.BeginInvokeOnMainThread</c> from MAUI.
+    /// Defaults to direct (inline) invocation for unit tests.
+    /// </param>
+    public WorkoutSessionService(Action<Action>? dispatchToMainThread = null)
+    {
+        _dispatchToMainThread = dispatchToMainThread ?? (action => action());
+    }
 
     public WorkoutPlan? CurrentPlan { get; private set; }
     public List<SetCompletion> CompletedSets { get; } = new();
@@ -47,179 +57,129 @@ public class WorkoutSessionService : IDisposable
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
 
         // Reset timer to last rest interval when completing a set
-        Action? onTick = null;
-        lock (_lock)
+        if (_restTimer != null)
         {
-            if (_restTimer != null)
+            _restSecondsRemaining = _lastRestIntervalSeconds;
+            _restSecondsTotal = _lastRestIntervalSeconds;
+            if (!_restTimer.Enabled)
             {
-                _restSecondsRemaining = _lastRestIntervalSeconds;
-                _restSecondsTotal = _lastRestIntervalSeconds;
-                if (!_restTimer.Enabled)
-                {
-                    _restTimer.Start();
-                }
-                onTick = _onRestTick;
+                _restTimer.Start();
             }
+            _onRestTick?.Invoke();
         }
-        onTick?.Invoke();
     }
 
     public void StartRest(int restIntervalSeconds, Action onTick, Action onComplete)
     {
         if (CurrentPlan == null) return;
+        _onRestTick = onTick;
+        _onRestComplete = onComplete;
+        _restSecondsRemaining = restIntervalSeconds;
+        _restSecondsTotal = restIntervalSeconds;
+        _lastRestIntervalSeconds = restIntervalSeconds;
 
-        lock (_lock)
-        {
-            _onRestTick = onTick;
-            _onRestComplete = onComplete;
-            _restSecondsRemaining = restIntervalSeconds;
-            _restSecondsTotal = restIntervalSeconds;
-            _lastRestIntervalSeconds = restIntervalSeconds;
-
-            _restTimer?.Dispose();
-            _restTimer = new System.Timers.Timer(1000) { AutoReset = false };
-            _restTimer.Elapsed += RestTimer_Elapsed;
-            _restTimer.Start();
-        }
+        _restTimer?.Dispose();
+        _restTimer = new System.Timers.Timer(1000) { AutoReset = false };
+        _restTimer.Elapsed += RestTimer_Elapsed;
+        _restTimer.Start();
 
         onTick.Invoke();
     }
 
     public void PauseRest()
     {
-        Action? onTick;
-        lock (_lock)
-        {
-            _restTimer?.Stop();
-            onTick = _onRestTick;
-        }
-        onTick?.Invoke();
+        _restTimer?.Stop();
+        _onRestTick?.Invoke();
     }
 
     public void ResumeRest()
     {
-        Action? onTick = null;
-        Action? onComplete = null;
+        if (_restTimer == null) return;
 
-        lock (_lock)
+        if (_suspendedAt.HasValue)
         {
-            if (_restTimer == null) return;
+            var elapsed = (int)(DateTime.UtcNow - _suspendedAt.Value).TotalSeconds;
+            _suspendedAt = null;
+            _restSecondsRemaining = Math.Max(0, _restSecondsRemaining - elapsed);
 
-            if (_suspendedAt.HasValue)
+            if (_restSecondsRemaining <= 0)
             {
-                var elapsed = (int)(DateTime.UtcNow - _suspendedAt.Value).TotalSeconds;
-                _suspendedAt = null;
-                _restSecondsRemaining = Math.Max(0, _restSecondsRemaining - elapsed);
-
-                if (_restSecondsRemaining <= 0)
-                {
-                    _restTimer.Stop();
-                    onTick = _onRestTick;
-                    onComplete = _onRestComplete;
-                }
-            }
-
-            if (onComplete == null && !_restTimer.Enabled && _restSecondsRemaining > 0)
-            {
-                _restTimer.Start();
-                onTick = _onRestTick;
+                _restTimer.Stop();
+                try { _onRestTick?.Invoke(); } catch { }
+                try { _onRestComplete?.Invoke(); } catch { }
+                return;
             }
         }
 
-        try { onTick?.Invoke(); } catch { }
-        try { onComplete?.Invoke(); } catch { }
+        if (!_restTimer.Enabled && _restSecondsRemaining > 0)
+        {
+            _restTimer.Start();
+            try { _onRestTick?.Invoke(); } catch { }
+        }
     }
 
     public void ResetRest()
     {
-        Action? onTick = null;
-        lock (_lock)
+        if (_restTimer != null)
         {
-            if (_restTimer != null)
+            _restSecondsRemaining = _restSecondsTotal;
+            if (!_restTimer.Enabled)
             {
-                _restSecondsRemaining = _restSecondsTotal;
-                if (!_restTimer.Enabled)
-                {
-                    _restTimer.Start();
-                }
-                onTick = _onRestTick;
+                _restTimer.Start();
             }
+            _onRestTick?.Invoke();
         }
-        onTick?.Invoke();
     }
 
     public void SkipRest()
     {
-        Action? onComplete;
-        lock (_lock)
-        {
-            StopRestTimerUnsafe();
-            onComplete = _onRestComplete;
-        }
-        onComplete?.Invoke();
+        StopRestTimer();
+        _onRestComplete?.Invoke();
     }
 
     /// <summary>Pause the rest timer when the app is backgrounded to avoid battery-optimizer kills.</summary>
     public void SuspendRest()
     {
-        lock (_lock)
+        if (_restTimer?.Enabled == true)
         {
-            if (_restTimer?.Enabled == true)
-            {
-                _suspendedAt = DateTime.UtcNow;
-                _restTimer.Stop();
-            }
+            _suspendedAt = DateTime.UtcNow;
+            _restTimer.Stop();
         }
     }
 
     public void UnregisterTimerCallbacks()
     {
-        lock (_lock)
-        {
-            _onRestTick = null;
-            _onRestComplete = null;
-        }
+        _onRestTick = null;
+        _onRestComplete = null;
     }
 
     private void RestTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
-        Action? onTick;
-        Action? onComplete = null;
-
-        lock (_lock)
+        // Dispatch to the main thread so all state access is single-threaded.
+        // This eliminates race conditions between the ThreadPool timer and UI code.
+        _dispatchToMainThread(() =>
         {
             // Ignore stale callbacks from a timer that was replaced or stopped
             if (_restTimer == null || sender != _restTimer)
                 return;
 
             _restSecondsRemaining--;
-            onTick = _onRestTick;
+            _onRestTick?.Invoke();
 
             if (_restSecondsRemaining <= 0)
             {
-                onComplete = _onRestComplete;
+                _onRestComplete?.Invoke();
             }
             else
             {
-                try { _restTimer.Start(); }
+                // Re-arm for the next second
+                try { _restTimer?.Start(); }
                 catch (ObjectDisposedException) { }
             }
-        }
-
-        try { onTick?.Invoke(); } catch { }
-        try { onComplete?.Invoke(); } catch { }
+        });
     }
 
     private void StopRestTimer()
-    {
-        lock (_lock)
-        {
-            StopRestTimerUnsafe();
-        }
-    }
-
-    /// <summary>Stops and disposes the timer. Caller must hold <see cref="_lock"/>.</summary>
-    private void StopRestTimerUnsafe()
     {
         var timer = _restTimer;
         _restTimer = null;
@@ -232,12 +192,9 @@ public class WorkoutSessionService : IDisposable
 
     public void Dispose()
     {
-        lock (_lock)
-        {
-            var timer = _restTimer;
-            _restTimer = null;
-            timer?.Stop();
-            timer?.Dispose();
-        }
+        var timer = _restTimer;
+        _restTimer = null;
+        timer?.Stop();
+        timer?.Dispose();
     }
 }

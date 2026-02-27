@@ -120,7 +120,7 @@ else
                                         </span>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)">
+                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)" disabled="@(_completingExercises.Contains(item.ExerciseIndex))">
                                     <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
                                 </button>
                             </div>
@@ -163,6 +163,7 @@ else
 
     private bool _isRestComplete;
     private IJSObjectReference? _audioModule;
+    private HashSet<int> _completingExercises = [];
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -223,10 +224,14 @@ else
 
     private async Task CompleteNextSet(int exerciseIndex)
     {
+        if (_completingExercises.Contains(exerciseIndex)) return;
+
         var plan = SessionService.CurrentPlan;
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
 
         var exercise = plan.Exercises[exerciseIndex];
+        _completingExercises.Add(exerciseIndex);
+        StateHasChanged(); // immediately disable the button before any await
 
         // Find the next incomplete set
         for (var si = 0; si < exercise.SetCount; si++)
@@ -288,6 +293,10 @@ else
                 break;
             }
         }
+
+        await Task.Delay(1000);
+        _completingExercises.Remove(exerciseIndex);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void PauseRest()

@@ -69,7 +69,7 @@ public class WorkoutSessionService : IDisposable
         _onRestTick?.Invoke();
 
         _restTimer?.Dispose();
-        _restTimer = new System.Timers.Timer(1000);
+        _restTimer = new System.Timers.Timer(1000) { AutoReset = false };
         _restTimer.Elapsed += RestTimer_Elapsed;
         _restTimer.Start();
     }
@@ -148,9 +148,12 @@ public class WorkoutSessionService : IDisposable
         try { _onRestTick?.Invoke(); } catch { }
         if (_restSecondsRemaining <= 0)
         {
-            // Stop timer but don't clear it - keep it visible at 0:00
-            _restTimer?.Stop();
+            // AutoReset=false already stopped the timer; keep it alive at 0:00 so the UI stays visible
             try { _onRestComplete?.Invoke(); } catch { }
+        }
+        else
+        {
+            _restTimer?.Start(); // Re-arm for the next second
         }
     }
 

@@ -2,7 +2,6 @@
 @page "/plan/{PlanId:guid}"
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
 <div class="mb-2 mt-3">
     <a href="/" class="btn btn-outline-secondary btn-sm">
@@ -250,11 +249,11 @@
                 File = new ShareFile(filePath)
             });
 
-            await JSRuntime.InvokeVoidAsync("alert", "Plan exported successfully!");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", "Plan exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 }

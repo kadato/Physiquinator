@@ -1,7 +1,6 @@
 @page "/"
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 @inject DemoDataSeeder DemoSeeder
 
 <div class="text-center mb-3 mt-5">
@@ -89,9 +88,10 @@ else
 
     private async Task DeletePlan(Guid planId, string planName)
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>(
-            "confirm",
-            $"Are you sure you want to delete '{planName}'? This action cannot be undone.");
+        var confirmed = await Application.Current!.MainPage!.DisplayAlert(
+            "Delete Plan",
+            $"Are you sure you want to delete '{planName}'? This action cannot be undone.",
+            "Delete", "Cancel");
 
         if (confirmed)
         {
@@ -109,11 +109,11 @@ else
             var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
 
             await SaveFile(fileName, json);
-            await JSRuntime.InvokeVoidAsync("alert", "All plans exported successfully!");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", "All plans exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 
@@ -126,11 +126,11 @@ else
             var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
 
             await SaveFile(fileName, json);
-            await JSRuntime.InvokeVoidAsync("alert", $"'{planName}' exported successfully!");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"'{planName}' exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"Export failed: {ex.Message}");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 
@@ -170,12 +170,12 @@ else
 
                 _plans = await PlanService.GetAllPlansAsync();
                 StateHasChanged();
-                await JSRuntime.InvokeVoidAsync("alert", $"Successfully imported {importedCount} plan(s)!");
+                await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Successfully imported {importedCount} plan(s)!", "OK");
             }
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"Import failed: {ex.Message}");
+            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Import failed: {ex.Message}", "OK");
         }
     }
 

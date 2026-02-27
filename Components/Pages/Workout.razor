@@ -294,7 +294,7 @@ else
             }
         }
 
-        await Task.Delay(1000);
+        await Task.Delay(300);
         _completingExercises.Remove(exerciseIndex);
         await InvokeAsync(StateHasChanged);
     }

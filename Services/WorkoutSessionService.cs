@@ -6,6 +6,7 @@ namespace Physiquinator.Services;
 public class WorkoutSessionService : IDisposable
 {
     private readonly Action<Action> _dispatchToMainThread;
+    private readonly Action<string, Exception> _logError;
     private System.Timers.Timer? _restTimer;
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
@@ -20,9 +21,15 @@ public class WorkoutSessionService : IDisposable
     /// Pass <c>MainThread.BeginInvokeOnMainThread</c> from MAUI.
     /// Defaults to direct (inline) invocation for unit tests.
     /// </param>
-    public WorkoutSessionService(Action<Action>? dispatchToMainThread = null)
+    /// <param name="logError">
+    /// Optional error logger for exceptions caught inside timer callbacks.
+    /// Pass <c>(src, ex) => CrashLogger.Log(src, ex)</c> from MAUI.
+    /// Defaults to a no-op for unit tests.
+    /// </param>
+    public WorkoutSessionService(Action<Action>? dispatchToMainThread = null, Action<string, Exception>? logError = null)
     {
         _dispatchToMainThread = dispatchToMainThread ?? (action => action());
+        _logError = logError ?? ((_, _) => { });
     }
 
     public WorkoutPlan? CurrentPlan { get; private set; }
@@ -170,24 +177,24 @@ public class WorkoutSessionService : IDisposable
 
                 if (_restSecondsRemaining <= 0)
                 {
-                    try { _onRestTick?.Invoke(); } catch { }
-                    try { _onRestComplete?.Invoke(); } catch { }
+                    try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
+                    try { _onRestComplete?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onComplete", ex); }
                 }
                 else
                 {
                     // Re-arm before notifying UI so IsRestPaused stays false during the re-render
                     try { _restTimer?.Start(); }
                     catch (ObjectDisposedException) { }
-                    try { _onRestTick?.Invoke(); } catch { }
+                    try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
                 }
             });
         }
-        catch
+        catch (Exception ex)
         {
             // If dispatching to the main thread fails (e.g. app is shutting down,
-            // Android main looper unavailable), swallow the exception so the process
-            // survives. The timer won't re-arm (AutoReset is false) and will stop
-            // naturally.
+            // Android main looper unavailable), log it and let the timer stop naturally
+            // (AutoReset is false so it won't re-arm).
+            _logError("RestTimer/dispatch", ex);
         }
     }
 

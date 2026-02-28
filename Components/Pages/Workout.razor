@@ -254,6 +254,9 @@ else
                     var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
                     var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
+                    Services.CrashLogger.Breadcrumb(
+                        $"CompleteSet ex={exerciseIndex} set={si} lastOfWorkout={willBeLastSetOfWorkout} isResting={SessionService.IsResting}");
+
                     // Manage rest timer based on what is being completed
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
                         SessionService.SkipRest();
@@ -275,14 +278,17 @@ else
                     if (!willBeLastSetOfWorkout)
                     {
                         _isRestComplete = false;
+                        Services.CrashLogger.Breadcrumb($"StartRest restSeconds={exercise.RestIntervalSeconds}");
                         SessionService.StartRest(
                             restIntervalSeconds: exercise.RestIntervalSeconds,
                             onTick: () => _ = InvokeAsync(StateHasChanged),
                             onComplete: () => _ = InvokeAsync(async () =>
                             {
+                                Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
                                 _isRestComplete = true;
                                 StateHasChanged();
                                 await OnRestComplete();
+                                Services.CrashLogger.Breadcrumb("RestComplete done");
                             }));
                     }
 

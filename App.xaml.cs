@@ -6,6 +6,8 @@ public partial class App : Application
 	{
 		InitializeComponent();
 
+		Services.CrashLogger.Breadcrumb("=== APP START ===");
+
 		AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
 		{
 			var ex = args.ExceptionObject as Exception;

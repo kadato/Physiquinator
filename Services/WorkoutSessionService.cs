@@ -128,7 +128,7 @@ public class WorkoutSessionService : IDisposable
     public void SkipRest()
     {
         StopRestTimer();
-        _onRestComplete?.Invoke();
+        try { _onRestComplete?.Invoke(); } catch { }
     }
 
     /// <summary>Stop the rest timer without firing the onComplete callback.</summary>
@@ -156,29 +156,39 @@ public class WorkoutSessionService : IDisposable
 
     private void RestTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
-        // Dispatch to the main thread so all state access is single-threaded.
-        // This eliminates race conditions between the ThreadPool timer and UI code.
-        _dispatchToMainThread(() =>
+        // Elapsed fires on a ThreadPool thread. An unhandled exception here
+        // terminates the process in .NET 6+, so the entire body must be guarded.
+        try
         {
-            // Ignore stale callbacks from a timer that was replaced or stopped
-            if (_restTimer == null || sender != _restTimer)
-                return;
-
-            _restSecondsRemaining--;
-
-            if (_restSecondsRemaining <= 0)
+            _dispatchToMainThread(() =>
             {
-                try { _onRestTick?.Invoke(); } catch { }
-                try { _onRestComplete?.Invoke(); } catch { }
-            }
-            else
-            {
-                // Re-arm before notifying UI so IsRestPaused stays false during the re-render
-                try { _restTimer?.Start(); }
-                catch (ObjectDisposedException) { }
-                try { _onRestTick?.Invoke(); } catch { }
-            }
-        });
+                // Ignore stale callbacks from a timer that was replaced or stopped
+                if (_restTimer == null || sender != _restTimer)
+                    return;
+
+                _restSecondsRemaining--;
+
+                if (_restSecondsRemaining <= 0)
+                {
+                    try { _onRestTick?.Invoke(); } catch { }
+                    try { _onRestComplete?.Invoke(); } catch { }
+                }
+                else
+                {
+                    // Re-arm before notifying UI so IsRestPaused stays false during the re-render
+                    try { _restTimer?.Start(); }
+                    catch (ObjectDisposedException) { }
+                    try { _onRestTick?.Invoke(); } catch { }
+                }
+            });
+        }
+        catch
+        {
+            // If dispatching to the main thread fails (e.g. app is shutting down,
+            // Android main looper unavailable), swallow the exception so the process
+            // survives. The timer won't re-arm (AutoReset is false) and will stop
+            // naturally.
+        }
     }
 
     private void StopRestTimer()

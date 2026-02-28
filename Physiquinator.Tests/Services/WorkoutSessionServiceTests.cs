@@ -173,37 +173,6 @@ public class WorkoutSessionServiceTests : IDisposable
         Assert.Empty(_sut.CompletedSets);
     }
 
-    [Fact]
-    public void CompleteSet_ResetsRestSecondsRemaining_WhenResting()
-    {
-        var plan = MakePlan();
-        _sut.StartWorkout(plan);
-        _sut.StartRest(60, () => { }, () => { });
-        // Simulate some time passing by manually triggering a tick via PauseRest/ResumeRest is not enough
-        // We test the reset behavior: completing a set should restore the full rest period
-        var before = _sut.RestSecondsRemaining;
-
-        _sut.CompleteSet(0, 0);
-
-        Assert.Equal(60, _sut.RestSecondsRemaining);
-        Assert.Equal(before, _sut.RestSecondsRemaining);
-    }
-
-    [Fact]
-    public void CompleteSet_RestartsRestTimer_WhenRestIsPaused()
-    {
-        var plan = MakePlan();
-        _sut.StartWorkout(plan);
-        _sut.StartRest(60, () => { }, () => { });
-        _sut.PauseRest();
-        Assert.True(_sut.IsRestPaused);
-
-        _sut.CompleteSet(0, 0);
-
-        Assert.True(_sut.IsResting);
-        Assert.False(_sut.IsRestPaused);
-    }
-
     // ──────────────────────────────────────────────────────────────
     // StartRest
     // ──────────────────────────────────────────────────────────────
@@ -411,6 +380,33 @@ public class WorkoutSessionServiceTests : IDisposable
         _sut.SkipRest();
 
         Assert.Equal(0, _sut.RestSecondsRemaining);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // CancelRest
+    // ──────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void CancelRest_SetsIsResting_False()
+    {
+        _sut.StartWorkout(MakePlan());
+        _sut.StartRest(30, () => { }, () => { });
+
+        _sut.CancelRest();
+
+        Assert.False(_sut.IsResting);
+    }
+
+    [Fact]
+    public void CancelRest_DoesNotInvokeOnComplete()
+    {
+        _sut.StartWorkout(MakePlan());
+        var completed = false;
+        _sut.StartRest(30, () => { }, () => completed = true);
+
+        _sut.CancelRest();
+
+        Assert.False(completed);
     }
 
     // ──────────────────────────────────────────────────────────────

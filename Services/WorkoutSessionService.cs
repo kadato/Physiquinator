@@ -56,19 +56,6 @@ public class WorkoutSessionService : IDisposable
         if (setIndex < 0 || setIndex >= ex.SetCount) return;
 
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
-
-        // Reset timer to last rest interval when completing a set
-        if (_restTimer != null)
-        {
-            _restSecondsRemaining = _lastRestIntervalSeconds;
-            _restSecondsTotal = _lastRestIntervalSeconds;
-            _isRestPaused = false;
-            if (!_restTimer.Enabled)
-            {
-                _restTimer.Start();
-            }
-            _onRestTick?.Invoke();
-        }
     }
 
     public void StartRest(int restIntervalSeconds, Action onTick, Action onComplete)
@@ -86,14 +73,14 @@ public class WorkoutSessionService : IDisposable
         _isRestPaused = false;
         _restTimer.Start();
 
-        onTick.Invoke();
+        try { onTick.Invoke(); } catch { }
     }
 
     public void PauseRest()
     {
         _restTimer?.Stop();
         _isRestPaused = true;
-        _onRestTick?.Invoke();
+        try { _onRestTick?.Invoke(); } catch { }
     }
 
     public void ResumeRest()
@@ -131,9 +118,10 @@ public class WorkoutSessionService : IDisposable
             _isRestPaused = false;
             if (!_restTimer.Enabled)
             {
-                _restTimer.Start();
+                try { _restTimer.Start(); }
+                catch (ObjectDisposedException) { }
             }
-            _onRestTick?.Invoke();
+            try { _onRestTick?.Invoke(); } catch { }
         }
     }
 
@@ -141,6 +129,12 @@ public class WorkoutSessionService : IDisposable
     {
         StopRestTimer();
         _onRestComplete?.Invoke();
+    }
+
+    /// <summary>Stop the rest timer without firing the onComplete callback.</summary>
+    public void CancelRest()
+    {
+        StopRestTimer();
     }
 
     /// <summary>Pause the rest timer when the app is backgrounded to avoid battery-optimizer kills.</summary>
@@ -182,7 +176,7 @@ public class WorkoutSessionService : IDisposable
                 // Re-arm before notifying UI so IsRestPaused stays false during the re-render
                 try { _restTimer?.Start(); }
                 catch (ObjectDisposedException) { }
-                _onRestTick?.Invoke();
+                try { _onRestTick?.Invoke(); } catch { }
             }
         });
     }

@@ -5,20 +5,6 @@ public partial class App : Application
 	public App()
 	{
 		InitializeComponent();
-
-		Services.CrashLogger.Breadcrumb("=== APP START ===");
-
-		AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-		{
-			var ex = args.ExceptionObject as Exception;
-			Services.CrashLogger.Log("UnhandledException", ex ?? new Exception(args.ExceptionObject?.ToString()));
-		};
-
-		TaskScheduler.UnobservedTaskException += (sender, args) =>
-		{
-			Services.CrashLogger.Log("UnobservedTaskException", args.Exception);
-			args.SetObserved();
-		};
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)

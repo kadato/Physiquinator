@@ -263,9 +263,6 @@ else
                     var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
                     var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
-                    Services.CrashLogger.Breadcrumb(
-                        $"CompleteSet ex={exerciseIndex} set={si} lastOfWorkout={willBeLastSetOfWorkout} isResting={SessionService.IsResting}");
-
                     // Manage rest timer based on what is being completed
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
                         SessionService.SkipRest();
@@ -289,7 +286,6 @@ else
                         _isRestComplete = false;
                         CancelRestTick();
                         _restTickCts = new CancellationTokenSource();
-                        Services.CrashLogger.Breadcrumb($"StartRest restSeconds={exercise.RestIntervalSeconds}");
                         SessionService.StartRest(
                             restIntervalSeconds: exercise.RestIntervalSeconds,
                             onTick: () => { },
@@ -407,11 +403,9 @@ else
                     {
                         if (SessionService.RestSecondsRemaining <= 0)
                         {
-                            Services.CrashLogger.Breadcrumb("RestComplete (resumed-expired) → vibrate+audio");
                             _isRestComplete = true;
                             StateHasChanged();
                             await OnRestComplete();
-                            Services.CrashLogger.Breadcrumb("RestComplete done");
                         }
                         shouldBreak = true;
                         return;
@@ -422,11 +416,9 @@ else
 
                     if (done)
                     {
-                        Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
                         _isRestComplete = true;
                         StateHasChanged();
                         await OnRestComplete();
-                        Services.CrashLogger.Breadcrumb("RestComplete done");
                         shouldBreak = true;
                     }
                 });
@@ -435,10 +427,7 @@ else
         }
         catch (OperationCanceledException) { }
         catch (ObjectDisposedException) { }
-        catch (Exception ex)
-        {
-            Services.CrashLogger.Log("RunRestTickLoop", ex);
-        }
+        catch (Exception) { }
     }
 
     private static string FormatTime(int totalSeconds)

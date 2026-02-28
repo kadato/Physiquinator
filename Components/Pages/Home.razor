@@ -75,24 +75,8 @@ else
     </div>
 }
 
-@if (_hasCrashLog)
-{
-    <div class="mt-5 pt-3 border-top">
-        <p class="text-muted small mb-2"><i class="bi bi-bug-fill me-1"></i>Crash log detected</p>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-warning btn-sm" @onclick="ShareCrashLog">
-                <i class="bi bi-share me-1"></i>Share Log
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" @onclick="ClearCrashLog">
-                <i class="bi bi-trash me-1"></i>Clear Log
-            </button>
-        </div>
-    </div>
-}
-
 @code {
     private List<WorkoutPlan>? _plans;
-    private bool _hasCrashLog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,7 +84,6 @@ else
         await DemoSeeder.SeedDemoDataIfNeededAsync();
 
         _plans = await PlanService.GetAllPlansAsync();
-        _hasCrashLog = Services.CrashLogger.LogFilePath != null;
     }
 
     private async Task DeletePlan(Guid planId, string planName)
@@ -208,22 +191,4 @@ else
         });
     }
 
-    private async Task ShareCrashLog()
-    {
-        var path = Services.CrashLogger.LogFilePath;
-        if (path == null) return;
-
-        await Share.RequestAsync(new ShareFileRequest
-        {
-            Title = "Physiquinator Crash Log",
-            File = new ShareFile(path)
-        });
     }
-
-    private void ClearCrashLog()
-    {
-        Services.CrashLogger.Clear();
-        _hasCrashLog = false;
-        StateHasChanged();
-    }
-}

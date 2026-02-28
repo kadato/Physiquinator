@@ -22,7 +22,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
 		builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
-		builder.Services.AddSingleton(new Services.WorkoutSessionService(MainThread.BeginInvokeOnMainThread));
+		builder.Services.AddSingleton(new Services.WorkoutSessionService(
+			MainThread.BeginInvokeOnMainThread,
+			(source, ex) => Services.CrashLogger.Log(source, ex)));
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();
 
 #if DEBUG

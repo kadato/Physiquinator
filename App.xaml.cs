@@ -8,12 +8,13 @@ public partial class App : Application
 
 		AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
 		{
-			System.Diagnostics.Debug.WriteLine($"Unhandled Exception: {args.ExceptionObject}");
+			var ex = args.ExceptionObject as Exception;
+			Services.CrashLogger.Log("UnhandledException", ex ?? new Exception(args.ExceptionObject?.ToString()));
 		};
 
 		TaskScheduler.UnobservedTaskException += (sender, args) =>
 		{
-			System.Diagnostics.Debug.WriteLine($"Unobserved Task Exception: {args.Exception}");
+			Services.CrashLogger.Log("UnobservedTaskException", args.Exception);
 			args.SetObserved();
 		};
 	}

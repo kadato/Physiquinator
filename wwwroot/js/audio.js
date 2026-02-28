@@ -11,7 +11,7 @@ let restTimerId = null;
 export function startRestTimer(dotNetRef, intervalMs) {
     stopRestTimer();
     restTimerId = setInterval(() => {
-        dotNetRef.invokeMethodAsync('OnTimerTick');
+        dotNetRef.invokeMethodAsync('OnTimerTick').catch(() => stopRestTimer());
     }, intervalMs);
 }
 

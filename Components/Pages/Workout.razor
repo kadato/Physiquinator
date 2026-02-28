@@ -23,7 +23,7 @@
 else
 {
     <div class="workout-timer-section mb-4">
-        @if (SessionService.IsResting)
+        @if (SessionService.IsResting || _isRestComplete)
         {
             <div class="rest-timer card @(_isRestComplete ? "rest-complete-pulse" : "")">
                 <div class="card-body text-center">
@@ -31,26 +31,29 @@ else
                         <i class="bi @(_isRestComplete ? "bi-bell-fill" : "bi-hourglass-split") me-2"></i>@(_isRestComplete ? "Rest Complete!" : "Rest Time")
                     </p>
                     <p class="display-4 mb-3" style="color: @(_isRestComplete ? "#4ade80" : "inherit")">@FormatTime(SessionService.RestSecondsRemaining)</p>
-                    <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        @if (SessionService.IsRestPaused)
-                        {
-                            <button class="btn btn-success" @onclick="ResumeRest">
-                                <i class="bi bi-play-fill me-2"></i>Resume
+                    @if (!_isRestComplete)
+                    {
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            @if (SessionService.IsRestPaused)
+                            {
+                                <button class="btn btn-success" @onclick="ResumeRest">
+                                    <i class="bi bi-play-fill me-2"></i>Resume
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-pause" @onclick="PauseRest">
+                                    <i class="bi bi-pause-fill me-2"></i>Pause
+                                </button>
+                            }
+                            <button class="btn btn-info" @onclick="ResetRest">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Reset
                             </button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-pause" @onclick="PauseRest">
-                                <i class="bi bi-pause-fill me-2"></i>Pause
+                            <button class="btn btn-outline-secondary" @onclick="SkipRest">
+                                <i class="bi bi-skip-forward-fill me-2"></i>Skip
                             </button>
-                        }
-                        <button class="btn btn-info" @onclick="ResetRest">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Reset
-                        </button>
-                        <button class="btn btn-outline-secondary" @onclick="SkipRest">
-                            <i class="bi bi-skip-forward-fill me-2"></i>Skip
-                        </button>
-                    </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -165,6 +168,7 @@ else
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
     private bool _disposed;
+    private bool _tickProcessing;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
@@ -330,14 +334,8 @@ else
     {
         try
         {
-            // Vibrate on mobile (3 short pulses)
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(200));
-            await Task.Delay(100);
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(200));
-            await Task.Delay(100);
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(200));
+            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
 
-            // Play notification sound
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("playRestCompleteSound");
         }
@@ -351,14 +349,8 @@ else
     {
         try
         {
-            // Longer celebratory vibration pattern
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(300));
-            await Task.Delay(150);
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(300));
-            await Task.Delay(150);
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
+            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(800));
 
-            // Play celebratory ascending tone sequence
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("playWorkoutCompleteSound");
         }
@@ -384,31 +376,38 @@ else
     [JSInvokable]
     public async Task OnTimerTick()
     {
-        if (_disposed) return;
-
-        // Rest ended outside the tick (e.g. SkipRest, or ResumeRest after a long
-        // background pause can expire the timer without a tick).
-        if (!SessionService.IsResting)
+        if (_disposed || _tickProcessing) return;
+        _tickProcessing = true;
+        try
         {
-            await StopJsTimerAsync();
-            if (SessionService.RestSecondsRemaining <= 0)
+            // Rest ended outside the tick (e.g. SkipRest, or ResumeRest after a long
+            // background pause can expire the timer without a tick).
+            if (!SessionService.IsResting)
             {
+                await StopJsTimerAsync();
+                if (SessionService.RestSecondsRemaining <= 0 && !_isRestComplete)
+                {
+                    _isRestComplete = true;
+                    StateHasChanged();
+                    await OnRestComplete();
+                }
+                return;
+            }
+
+            var done = SessionService.TickRest();
+            StateHasChanged();
+
+            if (done)
+            {
+                await StopJsTimerAsync();
                 _isRestComplete = true;
                 StateHasChanged();
                 await OnRestComplete();
             }
-            return;
         }
-
-        var done = SessionService.TickRest();
-        StateHasChanged();
-
-        if (done)
+        finally
         {
-            await StopJsTimerAsync();
-            _isRestComplete = true;
-            StateHasChanged();
-            await OnRestComplete();
+            _tickProcessing = false;
         }
     }
 

@@ -164,7 +164,15 @@ else
     private bool _isRestComplete;
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
+    private CancellationTokenSource? _restTickCts;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
+
+    private void CancelRestTick()
+    {
+        _restTickCts?.Cancel();
+        _restTickCts?.Dispose();
+        _restTickCts = null;
+    }
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
     private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
@@ -278,18 +286,14 @@ else
                     if (!willBeLastSetOfWorkout)
                     {
                         _isRestComplete = false;
+                        CancelRestTick();
+                        _restTickCts = new CancellationTokenSource();
                         Services.CrashLogger.Breadcrumb($"StartRest restSeconds={exercise.RestIntervalSeconds}");
                         SessionService.StartRest(
                             restIntervalSeconds: exercise.RestIntervalSeconds,
-                            onTick: () => _ = InvokeAsync(StateHasChanged),
-                            onComplete: () => _ = InvokeAsync(async () =>
-                            {
-                                Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
-                                _isRestComplete = true;
-                                StateHasChanged();
-                                await OnRestComplete();
-                                Services.CrashLogger.Breadcrumb("RestComplete done");
-                            }));
+                            onTick: () => { },
+                            onComplete: () => { });
+                        _ = RunRestTickLoopAsync(_restTickCts.Token);
                     }
 
                     StateHasChanged();
@@ -326,6 +330,7 @@ else
 
     private void SkipRest()
     {
+        CancelRestTick();
         _isRestComplete = false;
         SessionService.SkipRest();
         StateHasChanged();
@@ -375,8 +380,40 @@ else
 
     private void EndWorkout()
     {
+        CancelRestTick();
         SessionService.EndWorkout();
         Navigation.NavigateTo("/");
+    }
+
+    // Drives the rest-timer display from within the Blazor renderer's SynchronizationContext.
+    // PeriodicTimer.WaitForNextTickAsync without ConfigureAwait(false) preserves the
+    // renderer's SyncContext so StateHasChanged() is called on the correct thread,
+    // avoiding the native Android WebView crash caused by InvokeAsync from a ThreadPool
+    // System.Timers.Timer callback.
+    private async Task RunRestTickLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                if (SessionService.RestSecondsRemaining <= 0)
+                {
+                    Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
+                    _isRestComplete = true;
+                    StateHasChanged();
+                    await OnRestComplete();
+                    Services.CrashLogger.Breadcrumb("RestComplete done");
+                    break;
+                }
+                StateHasChanged();
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Services.CrashLogger.Log("RunRestTickLoop", ex);
+        }
     }
 
     private static string FormatTime(int totalSeconds)
@@ -395,8 +432,8 @@ else
 
     public async ValueTask DisposeAsync()
     {
-        // Unregister first so the singleton timer cannot fire into this disposed component
-        SessionService.UnregisterTimerCallbacks();
+        // Cancel the component's tick loop so it cannot update a disposed component
+        CancelRestTick();
         if (_audioModule != null)
             await _audioModule.DisposeAsync();
     }

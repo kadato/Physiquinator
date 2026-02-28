@@ -1,4 +1,3 @@
-using System.Threading;
 using Physiquinator.Models;
 
 namespace Physiquinator.Services;
@@ -10,7 +9,7 @@ namespace Physiquinator.Services;
 /// </summary>
 public class WorkoutSessionService : IDisposable
 {
-    private volatile int _restSecondsRemaining;
+    private int _restSecondsRemaining;
     private int _restSecondsTotal;
     private int _lastRestIntervalSeconds;
     private bool _isResting;
@@ -77,8 +76,8 @@ public class WorkoutSessionService : IDisposable
     {
         if (!_isResting || _isRestPaused) return false;
 
-        var remaining = Interlocked.Decrement(ref _restSecondsRemaining);
-        if (remaining <= 0)
+        _restSecondsRemaining--;
+        if (_restSecondsRemaining <= 0)
         {
             _isResting = false;
             try { _onRestTick?.Invoke(); } catch { }

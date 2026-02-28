@@ -165,21 +165,15 @@ else
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
     private bool _disposed;
-    private CancellationTokenSource? _restTickCts;
+    private DotNetObjectReference<Workout>? _dotNetRef;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
-
-    private void CancelRestTick()
-    {
-        _restTickCts?.Cancel();
-        _restTickCts?.Dispose();
-        _restTickCts = null;
-    }
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
     private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
 
     protected override async Task OnInitializedAsync()
     {
+        _dotNetRef = DotNetObjectReference.Create(this);
         _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audio.js");
         var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null)
@@ -284,13 +278,12 @@ else
                     if (!willBeLastSetOfWorkout)
                     {
                         _isRestComplete = false;
-                        CancelRestTick();
-                        _restTickCts = new CancellationTokenSource();
+                        await StopJsTimerAsync();
                         SessionService.StartRest(
                             restIntervalSeconds: exercise.RestIntervalSeconds,
                             onTick: () => { },
                             onComplete: () => { });
-                        _ = RunRestTickLoopAsync(_restTickCts.Token);
+                        await StartJsTimerAsync();
                     }
 
                     StateHasChanged();
@@ -325,9 +318,9 @@ else
         StateHasChanged();
     }
 
-    private void SkipRest()
+    private async Task SkipRest()
     {
-        CancelRestTick();
+        await StopJsTimerAsync();
         _isRestComplete = false;
         SessionService.SkipRest();
         StateHasChanged();
@@ -375,59 +368,65 @@ else
         }
     }
 
-    private void EndWorkout()
+    private async Task EndWorkout()
     {
-        CancelRestTick();
+        await StopJsTimerAsync();
         SessionService.EndWorkout();
         Navigation.NavigateTo("/");
     }
 
-    private async Task RunRestTickLoopAsync(CancellationToken ct)
+    /// <summary>
+    /// Called every second by JavaScript setInterval. Because the callback originates
+    /// on the WebView thread (the same thread Blazor uses), there is zero cross-thread
+    /// marshaling — eliminating the native Android crashes caused by PeriodicTimer
+    /// resuming on a thread-pool thread.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnTimerTick()
+    {
+        if (_disposed) return;
+
+        // Rest ended outside the tick (e.g. SkipRest, or ResumeRest after a long
+        // background pause can expire the timer without a tick).
+        if (!SessionService.IsResting)
+        {
+            await StopJsTimerAsync();
+            if (SessionService.RestSecondsRemaining <= 0)
+            {
+                _isRestComplete = true;
+                StateHasChanged();
+                await OnRestComplete();
+            }
+            return;
+        }
+
+        var done = SessionService.TickRest();
+        StateHasChanged();
+
+        if (done)
+        {
+            await StopJsTimerAsync();
+            _isRestComplete = true;
+            StateHasChanged();
+            await OnRestComplete();
+        }
+    }
+
+    private async Task StartJsTimerAsync()
+    {
+        if (_audioModule != null && _dotNetRef != null)
+            await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000);
+    }
+
+    private async Task StopJsTimerAsync()
     {
         try
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-            while (await timer.WaitForNextTickAsync(ct))
-            {
-                // PeriodicTimer resumes on a thread-pool thread.
-                // All Blazor operations (StateHasChanged, JS interop) MUST run
-                // on the Blazor sync context to avoid native Android WebView crashes.
-                var shouldBreak = false;
-                await InvokeAsync(async () =>
-                {
-                    if (ct.IsCancellationRequested || _disposed) { shouldBreak = true; return; }
-
-                    // Rest ended outside the loop (e.g. SkipRest cancels CTS, ResumeRest
-                    // after a long background pause can expire the timer without a tick).
-                    if (!SessionService.IsResting)
-                    {
-                        if (SessionService.RestSecondsRemaining <= 0)
-                        {
-                            _isRestComplete = true;
-                            StateHasChanged();
-                            await OnRestComplete();
-                        }
-                        shouldBreak = true;
-                        return;
-                    }
-
-                    var done = SessionService.TickRest();
-                    StateHasChanged();
-
-                    if (done)
-                    {
-                        _isRestComplete = true;
-                        StateHasChanged();
-                        await OnRestComplete();
-                        shouldBreak = true;
-                    }
-                });
-                if (shouldBreak) break;
-            }
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("stopRestTimer");
         }
-        catch (OperationCanceledException) { }
+        catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
-        catch (Exception) { }
     }
 
     private static string FormatTime(int totalSeconds)
@@ -447,8 +446,8 @@ else
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
-        // Cancel the component's tick loop so it cannot update a disposed component
-        CancelRestTick();
+        await StopJsTimerAsync();
+        _dotNetRef?.Dispose();
         if (_audioModule != null)
             await _audioModule.DisposeAsync();
     }

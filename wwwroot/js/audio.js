@@ -1,7 +1,22 @@
-// Audio helper module for workout notifications
+// Audio helper module for workout notifications.
+// A single AudioContext is reused across calls to avoid exhausting
+// native audio resources on Android WebView (which limits concurrent contexts).
+let sharedCtx = null;
+
+function getAudioContext() {
+    if (!sharedCtx || sharedCtx.state === 'closed') {
+        sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Resume if suspended by autoplay policy (timer callbacks are not user gestures)
+    if (sharedCtx.state === 'suspended') {
+        sharedCtx.resume();
+    }
+    return sharedCtx;
+}
+
 export function playRestCompleteSound() {
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioContext = getAudioContext();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         oscillator.connect(gainNode);
@@ -9,6 +24,7 @@ export function playRestCompleteSound() {
         oscillator.frequency.value = 800;
         gainNode.gain.value = 0.3;
         oscillator.start();
+        oscillator.onended = () => gainNode.disconnect();
         setTimeout(() => oscillator.stop(), 200);
     } catch (error) {
         console.warn('Audio playback failed:', error);
@@ -17,7 +33,7 @@ export function playRestCompleteSound() {
 
 export function playWorkoutCompleteSound() {
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioContext = getAudioContext();
         const playTone = (frequency, startTime, duration) => {
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -26,6 +42,7 @@ export function playWorkoutCompleteSound() {
             oscillator.frequency.value = frequency;
             gainNode.gain.value = 0.3;
             oscillator.start(startTime);
+            oscillator.onended = () => gainNode.disconnect();
             oscillator.stop(startTime + duration);
         };
         const now = audioContext.currentTime;

@@ -385,11 +385,6 @@ else
         Navigation.NavigateTo("/");
     }
 
-    // Drives the rest-timer display from within the Blazor renderer's SynchronizationContext.
-    // PeriodicTimer.WaitForNextTickAsync without ConfigureAwait(false) preserves the
-    // renderer's SyncContext so StateHasChanged() is called on the correct thread,
-    // avoiding the native Android WebView crash caused by InvokeAsync from a ThreadPool
-    // System.Timers.Timer callback.
     private async Task RunRestTickLoopAsync(CancellationToken ct)
     {
         try
@@ -397,7 +392,25 @@ else
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
             while (await timer.WaitForNextTickAsync(ct))
             {
-                if (SessionService.RestSecondsRemaining <= 0)
+                // Rest ended outside the loop (e.g. SkipRest cancels CTS, ResumeRest
+                // after a long background pause can expire the timer without a tick).
+                if (!SessionService.IsResting)
+                {
+                    if (SessionService.RestSecondsRemaining <= 0)
+                    {
+                        Services.CrashLogger.Breadcrumb("RestComplete (resumed-expired) → vibrate+audio");
+                        _isRestComplete = true;
+                        StateHasChanged();
+                        await OnRestComplete();
+                        Services.CrashLogger.Breadcrumb("RestComplete done");
+                    }
+                    break;
+                }
+
+                var done = SessionService.TickRest();
+                StateHasChanged();
+
+                if (done)
                 {
                     Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
                     _isRestComplete = true;
@@ -406,7 +419,6 @@ else
                     Services.CrashLogger.Breadcrumb("RestComplete done");
                     break;
                 }
-                StateHasChanged();
             }
         }
         catch (OperationCanceledException) { }

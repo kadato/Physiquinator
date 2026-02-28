@@ -465,61 +465,63 @@ public class WorkoutSessionServiceTests : IDisposable
     // ──────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task RestTimer_DecrementsRestSecondsRemaining_AfterOneTick()
+    public void RestTimer_DecrementsRestSecondsRemaining_AfterOneTick()
     {
         _sut.StartWorkout(MakePlan());
         _sut.StartRest(5, () => { }, () => { });
 
-        await Task.Delay(1200);
+        _sut.TickRest();
 
         Assert.Equal(4, _sut.RestSecondsRemaining);
     }
 
     [Fact]
-    public async Task RestTimer_CallsOnTick_OnEachSecond()
+    public void RestTimer_CallsOnTick_OnEachTick()
     {
         _sut.StartWorkout(MakePlan());
         var tickCount = 0;
         _sut.StartRest(5, () => tickCount++, () => { });
         tickCount = 0; // reset the immediate tick from StartRest
 
-        await Task.Delay(2200);
+        _sut.TickRest();
+        _sut.TickRest();
 
         Assert.Equal(2, tickCount);
     }
 
     [Fact]
-    public async Task RestTimer_CallsOnComplete_WhenTimeReachesZero()
+    public void RestTimer_CallsOnComplete_WhenTimeReachesZero()
     {
         _sut.StartWorkout(MakePlan());
         var completed = false;
         _sut.StartRest(2, () => { }, () => completed = true);
 
-        await Task.Delay(2500);
+        _sut.TickRest();
+        _sut.TickRest();
 
         Assert.True(completed);
     }
 
     [Fact]
-    public async Task RestTimer_RestSecondsRemaining_IsZero_WhenTimeExpires()
+    public void RestTimer_RestSecondsRemaining_IsZero_WhenTimeExpires()
     {
         _sut.StartWorkout(MakePlan());
         _sut.StartRest(1, () => { }, () => { });
 
-        await Task.Delay(1500);
+        _sut.TickRest();
 
         Assert.Equal(0, _sut.RestSecondsRemaining);
     }
 
     [Fact]
-    public async Task RestTimer_DoesNotDecrementWhilePaused()
+    public void RestTimer_DoesNotDecrementWhilePaused()
     {
         _sut.StartWorkout(MakePlan());
         _sut.StartRest(30, () => { }, () => { });
         _sut.PauseRest();
         var secondsAfterPause = _sut.RestSecondsRemaining;
 
-        await Task.Delay(1500);
+        _sut.TickRest();
 
         Assert.Equal(secondsAfterPause, _sut.RestSecondsRemaining);
     }

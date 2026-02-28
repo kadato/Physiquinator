@@ -279,21 +279,13 @@ else
                         _isRestComplete = false;
                         SessionService.StartRest(
                             restIntervalSeconds: exercise.RestIntervalSeconds,
-                            onTick: () =>
+                            onTick: () => _ = InvokeAsync(StateHasChanged),
+                            onComplete: () => _ = InvokeAsync(async () =>
                             {
-                                try { StateHasChanged(); }
-                                catch { }
-                            },
-                            onComplete: async () =>
-                            {
-                                try
-                                {
-                                    _isRestComplete = true;
-                                    StateHasChanged();
-                                    await OnRestComplete();
-                                }
-                                catch { }
-                            });
+                                _isRestComplete = true;
+                                StateHasChanged();
+                                await OnRestComplete();
+                            }));
                     }
 
                     StateHasChanged();

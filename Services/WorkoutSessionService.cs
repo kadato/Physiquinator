@@ -149,6 +149,7 @@ public class WorkoutSessionService : IDisposable
         if (_restTimer?.Enabled == true)
         {
             _suspendedAt = DateTime.UtcNow;
+            _isRestPaused = true;
             _restTimer.Stop();
         }
     }

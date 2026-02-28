@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Timers;
 using Physiquinator.Models;
 
@@ -5,10 +6,11 @@ namespace Physiquinator.Services;
 
 public class WorkoutSessionService : IDisposable
 {
-    private readonly Action<Action> _dispatchToMainThread;
     private readonly Action<string, Exception> _logError;
     private System.Timers.Timer? _restTimer;
-    private int _restSecondsRemaining;
+    // volatile so the ThreadPool timer callback and the UI thread always see the
+    // up-to-date value without needing a lock.
+    private volatile int _restSecondsRemaining;
     private int _restSecondsTotal;
     private int _lastRestIntervalSeconds;
     private bool _isRestPaused;
@@ -16,19 +18,13 @@ public class WorkoutSessionService : IDisposable
     private Action? _onRestTick;
     private Action? _onRestComplete;
 
-    /// <param name="dispatchToMainThread">
-    /// Dispatcher that runs an action on the UI/main thread.
-    /// Pass <c>MainThread.BeginInvokeOnMainThread</c> from MAUI.
-    /// Defaults to direct (inline) invocation for unit tests.
-    /// </param>
     /// <param name="logError">
     /// Optional error logger for exceptions caught inside timer callbacks.
     /// Pass <c>(src, ex) => CrashLogger.Log(src, ex)</c> from MAUI.
     /// Defaults to a no-op for unit tests.
     /// </param>
-    public WorkoutSessionService(Action<Action>? dispatchToMainThread = null, Action<string, Exception>? logError = null)
+    public WorkoutSessionService(Action<string, Exception>? logError = null)
     {
-        _dispatchToMainThread = dispatchToMainThread ?? (action => action());
         _logError = logError ?? ((_, _) => { });
     }
 
@@ -163,38 +159,40 @@ public class WorkoutSessionService : IDisposable
 
     private void RestTimer_Elapsed(object? sender, ElapsedEventArgs e)
     {
-        // Elapsed fires on a ThreadPool thread. An unhandled exception here
-        // terminates the process in .NET 6+, so the entire body must be guarded.
+        // Runs on a ThreadPool thread. An unhandled exception here terminates the
+        // process in .NET 6+, so the entire body is guarded.
+        //
+        // We intentionally do NOT dispatch to the main thread before calling
+        // _onRestTick/_onRestComplete. Those callbacks use InvokeAsync which
+        // correctly posts to the Blazor dispatcher from any thread. Dispatching to
+        // the MAUI main thread first and then calling InvokeAsync from within that
+        // callback caused InvokeAsync to execute StateHasChanged() synchronously
+        // inside a Handler.post() callback, which triggered a native WebView crash
+        // on Android release builds.
         try
         {
-            _dispatchToMainThread(() =>
+            // Ignore stale callbacks from a timer that was replaced or stopped
+            if (_restTimer == null || sender != _restTimer)
+                return;
+
+            var remaining = Interlocked.Decrement(ref _restSecondsRemaining);
+
+            if (remaining <= 0)
             {
-                // Ignore stale callbacks from a timer that was replaced or stopped
-                if (_restTimer == null || sender != _restTimer)
-                    return;
-
-                _restSecondsRemaining--;
-
-                if (_restSecondsRemaining <= 0)
-                {
-                    try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
-                    try { _onRestComplete?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onComplete", ex); }
-                }
-                else
-                {
-                    // Re-arm before notifying UI so IsRestPaused stays false during the re-render
-                    try { _restTimer?.Start(); }
-                    catch (ObjectDisposedException) { }
-                    try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
-                }
-            });
+                try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
+                try { _onRestComplete?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onComplete", ex); }
+            }
+            else
+            {
+                // Re-arm first so IsResting stays true during the UI update
+                try { _restTimer?.Start(); }
+                catch (ObjectDisposedException) { }
+                try { _onRestTick?.Invoke(); } catch (Exception ex) { _logError("RestTimer/onTick", ex); }
+            }
         }
         catch (Exception ex)
         {
-            // If dispatching to the main thread fails (e.g. app is shutting down,
-            // Android main looper unavailable), log it and let the timer stop naturally
-            // (AutoReset is false so it won't re-arm).
-            _logError("RestTimer/dispatch", ex);
+            _logError("RestTimer/elapsed", ex);
         }
     }
 

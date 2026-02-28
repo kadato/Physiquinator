@@ -10,6 +10,7 @@ public class WorkoutSessionService : IDisposable
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
     private int _lastRestIntervalSeconds;
+    private bool _isRestPaused;
     private DateTime? _suspendedAt;
     private Action? _onRestTick;
     private Action? _onRestComplete;
@@ -28,7 +29,7 @@ public class WorkoutSessionService : IDisposable
     public List<SetCompletion> CompletedSets { get; } = new();
     public int RestSecondsRemaining => _restSecondsRemaining;
     public bool IsResting => _restTimer != null;
-    public bool IsRestPaused => IsResting && !(_restTimer?.Enabled ?? false);
+    public bool IsRestPaused => IsResting && _isRestPaused;
 
     public void StartWorkout(WorkoutPlan plan)
     {
@@ -61,6 +62,7 @@ public class WorkoutSessionService : IDisposable
         {
             _restSecondsRemaining = _lastRestIntervalSeconds;
             _restSecondsTotal = _lastRestIntervalSeconds;
+            _isRestPaused = false;
             if (!_restTimer.Enabled)
             {
                 _restTimer.Start();
@@ -81,6 +83,7 @@ public class WorkoutSessionService : IDisposable
         _restTimer?.Dispose();
         _restTimer = new System.Timers.Timer(1000) { AutoReset = false };
         _restTimer.Elapsed += RestTimer_Elapsed;
+        _isRestPaused = false;
         _restTimer.Start();
 
         onTick.Invoke();
@@ -89,6 +92,7 @@ public class WorkoutSessionService : IDisposable
     public void PauseRest()
     {
         _restTimer?.Stop();
+        _isRestPaused = true;
         _onRestTick?.Invoke();
     }
 
@@ -113,6 +117,7 @@ public class WorkoutSessionService : IDisposable
 
         if (!_restTimer.Enabled && _restSecondsRemaining > 0)
         {
+            _isRestPaused = false;
             _restTimer.Start();
             try { _onRestTick?.Invoke(); } catch { }
         }
@@ -123,6 +128,7 @@ public class WorkoutSessionService : IDisposable
         if (_restTimer != null)
         {
             _restSecondsRemaining = _restSecondsTotal;
+            _isRestPaused = false;
             if (!_restTimer.Enabled)
             {
                 _restTimer.Start();
@@ -164,17 +170,18 @@ public class WorkoutSessionService : IDisposable
                 return;
 
             _restSecondsRemaining--;
-            _onRestTick?.Invoke();
 
             if (_restSecondsRemaining <= 0)
             {
-                _onRestComplete?.Invoke();
+                try { _onRestTick?.Invoke(); } catch { }
+                try { _onRestComplete?.Invoke(); } catch { }
             }
             else
             {
-                // Re-arm for the next second
+                // Re-arm before notifying UI so IsRestPaused stays false during the re-render
                 try { _restTimer?.Start(); }
                 catch (ObjectDisposedException) { }
+                _onRestTick?.Invoke();
             }
         });
     }
@@ -185,6 +192,7 @@ public class WorkoutSessionService : IDisposable
         _restTimer = null;
         _restSecondsRemaining = 0;
         _restSecondsTotal = 0;
+        _isRestPaused = false;
         _suspendedAt = null;
         timer?.Stop();
         timer?.Dispose();

@@ -164,6 +164,7 @@ else
     private bool _isRestComplete;
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
+    private bool _disposed;
     private CancellationTokenSource? _restTickCts;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
@@ -392,36 +393,48 @@ else
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
             while (await timer.WaitForNextTickAsync(ct))
             {
-                // Rest ended outside the loop (e.g. SkipRest cancels CTS, ResumeRest
-                // after a long background pause can expire the timer without a tick).
-                if (!SessionService.IsResting)
+                // PeriodicTimer resumes on a thread-pool thread.
+                // All Blazor operations (StateHasChanged, JS interop) MUST run
+                // on the Blazor sync context to avoid native Android WebView crashes.
+                var shouldBreak = false;
+                await InvokeAsync(async () =>
                 {
-                    if (SessionService.RestSecondsRemaining <= 0)
+                    if (ct.IsCancellationRequested || _disposed) { shouldBreak = true; return; }
+
+                    // Rest ended outside the loop (e.g. SkipRest cancels CTS, ResumeRest
+                    // after a long background pause can expire the timer without a tick).
+                    if (!SessionService.IsResting)
                     {
-                        Services.CrashLogger.Breadcrumb("RestComplete (resumed-expired) → vibrate+audio");
+                        if (SessionService.RestSecondsRemaining <= 0)
+                        {
+                            Services.CrashLogger.Breadcrumb("RestComplete (resumed-expired) → vibrate+audio");
+                            _isRestComplete = true;
+                            StateHasChanged();
+                            await OnRestComplete();
+                            Services.CrashLogger.Breadcrumb("RestComplete done");
+                        }
+                        shouldBreak = true;
+                        return;
+                    }
+
+                    var done = SessionService.TickRest();
+                    StateHasChanged();
+
+                    if (done)
+                    {
+                        Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
                         _isRestComplete = true;
                         StateHasChanged();
                         await OnRestComplete();
                         Services.CrashLogger.Breadcrumb("RestComplete done");
+                        shouldBreak = true;
                     }
-                    break;
-                }
-
-                var done = SessionService.TickRest();
-                StateHasChanged();
-
-                if (done)
-                {
-                    Services.CrashLogger.Breadcrumb("RestComplete → vibrate+audio");
-                    _isRestComplete = true;
-                    StateHasChanged();
-                    await OnRestComplete();
-                    Services.CrashLogger.Breadcrumb("RestComplete done");
-                    break;
-                }
+                });
+                if (shouldBreak) break;
             }
         }
         catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
         catch (Exception ex)
         {
             Services.CrashLogger.Log("RunRestTickLoop", ex);
@@ -444,6 +457,7 @@ else
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         // Cancel the component's tick loop so it cannot update a disposed component
         CancelRestTick();
         if (_audioModule != null)

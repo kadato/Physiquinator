@@ -11,12 +11,9 @@ public class WorkoutSessionService : IDisposable
 {
     private int _restSecondsRemaining;
     private int _restSecondsTotal;
-    private int _lastRestIntervalSeconds;
     private bool _isResting;
     private bool _isRestPaused;
     private DateTime? _suspendedAt;
-    private Action? _onRestTick;
-    private Action? _onRestComplete;
 
     public WorkoutPlan? CurrentPlan { get; private set; }
     public List<SetCompletion> CompletedSets { get; } = new();
@@ -51,24 +48,18 @@ public class WorkoutSessionService : IDisposable
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
     }
 
-    public void StartRest(int restIntervalSeconds, Action onTick, Action onComplete)
+    public void StartRest(int restIntervalSeconds)
     {
         if (CurrentPlan == null) return;
-        _onRestTick = onTick;
-        _onRestComplete = onComplete;
         _restSecondsRemaining = restIntervalSeconds;
         _restSecondsTotal = restIntervalSeconds;
-        _lastRestIntervalSeconds = restIntervalSeconds;
         _isRestPaused = false;
         _suspendedAt = null;
         _isResting = true;
-
-        try { onTick.Invoke(); } catch { }
     }
 
     /// <summary>
-    /// Decrements the countdown by one second, fires <c>onTick</c>, and fires
-    /// <c>onComplete</c> when the countdown reaches zero.
+    /// Decrements the countdown by one second.
     /// Returns <c>true</c> when the rest period just finished.
     /// Must be called only from the UI timer loop (single thread).
     /// </summary>
@@ -80,24 +71,24 @@ public class WorkoutSessionService : IDisposable
         if (_restSecondsRemaining <= 0)
         {
             _isResting = false;
-            try { _onRestTick?.Invoke(); } catch { }
-            try { _onRestComplete?.Invoke(); } catch { }
             return true;
         }
 
-        try { _onRestTick?.Invoke(); } catch { }
         return false;
     }
 
     public void PauseRest()
     {
         _isRestPaused = true;
-        try { _onRestTick?.Invoke(); } catch { }
     }
 
-    public void ResumeRest()
+    /// <summary>
+    /// Resumes the rest timer. Returns <c>true</c> if the rest expired while
+    /// the app was suspended and should be treated as complete immediately.
+    /// </summary>
+    public bool ResumeRest()
     {
-        if (!_isResting) return;
+        if (!_isResting) return false;
 
         if (_suspendedAt.HasValue)
         {
@@ -108,14 +99,12 @@ public class WorkoutSessionService : IDisposable
             if (_restSecondsRemaining <= 0)
             {
                 _isResting = false;
-                try { _onRestTick?.Invoke(); } catch { }
-                try { _onRestComplete?.Invoke(); } catch { }
-                return;
+                return true;
             }
         }
 
         _isRestPaused = false;
-        try { _onRestTick?.Invoke(); } catch { }
+        return false;
     }
 
     public void ResetRest()
@@ -124,17 +113,12 @@ public class WorkoutSessionService : IDisposable
         {
             _restSecondsRemaining = _restSecondsTotal;
             _isRestPaused = false;
-            try { _onRestTick?.Invoke(); } catch { }
         }
     }
 
-    public void SkipRest()
-    {
-        StopRest();
-        try { _onRestComplete?.Invoke(); } catch { }
-    }
+    public void SkipRest() => StopRest();
 
-    /// <summary>Stop the rest timer without firing the onComplete callback.</summary>
+    /// <summary>Stop the rest timer without firing any completion callback.</summary>
     public void CancelRest() => StopRest();
 
     /// <summary>Pause the countdown when the app is backgrounded.</summary>
@@ -145,12 +129,6 @@ public class WorkoutSessionService : IDisposable
             _suspendedAt = DateTime.UtcNow;
             _isRestPaused = true;
         }
-    }
-
-    public void UnregisterTimerCallbacks()
-    {
-        _onRestTick = null;
-        _onRestComplete = null;
     }
 
     private void StopRest()

@@ -2,22 +2,39 @@
 // A single AudioContext is reused across calls to avoid exhausting
 // native audio resources on Android WebView (which limits concurrent contexts).
 let sharedCtx = null;
+let restTimerActive = false;
 let restTimerId = null;
 
 // Starts a JS-driven rest timer that calls back into .NET on each tick.
-// Using setInterval here instead of a .NET PeriodicTimer ensures every
-// callback fires on the WebView thread — the same thread Blazor uses —
-// which eliminates native Android crashes caused by cross-thread WebView access.
+// Self-rescheduling setTimeout (not setInterval) guarantees only one
+// invokeMethodAsync call is in-flight at a time — on slow Android release
+// builds, setInterval can stack up pending bridge calls and crash the WebView.
 export function startRestTimer(dotNetRef, intervalMs) {
     stopRestTimer();
-    restTimerId = setInterval(() => {
-        dotNetRef.invokeMethodAsync('OnTimerTick').catch(() => stopRestTimer());
+    restTimerActive = true;
+    scheduleTick(dotNetRef, intervalMs);
+}
+
+function scheduleTick(dotNetRef, intervalMs) {
+    restTimerId = setTimeout(() => {
+        if (!restTimerActive) return;
+        dotNetRef.invokeMethodAsync('OnTimerTick')
+            .then(done => {
+                if (restTimerActive && !done)
+                    scheduleTick(dotNetRef, intervalMs);
+                else
+                    restTimerActive = false;
+            })
+            .catch(() => {
+                restTimerActive = false;
+            });
     }, intervalMs);
 }
 
 export function stopRestTimer() {
+    restTimerActive = false;
     if (restTimerId !== null) {
-        clearInterval(restTimerId);
+        clearTimeout(restTimerId);
         restTimerId = null;
     }
 }

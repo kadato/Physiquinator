@@ -98,6 +98,7 @@ else
                 }
             </div>
         </div>
+
         <div class="col-lg-6 upcoming-section">
             <div class="d-flex align-items-center mb-3">
                 <h2 class="h5 mb-0">
@@ -168,7 +169,6 @@ else
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
     private bool _disposed;
-    private bool _tickProcessing;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
@@ -178,7 +178,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _dotNetRef = DotNetObjectReference.Create(this);
-        _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/audio.js");
+        _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/workoutTimer.js");
         var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null)
             SessionService.StartWorkout(plan);
@@ -243,12 +243,10 @@ else
         {
             var exercise = plan.Exercises[exerciseIndex];
 
-            // Find the next incomplete set
             for (var si = 0; si < exercise.SetCount; si++)
             {
                 if (!SessionService.IsSetCompleted(exerciseIndex, si))
                 {
-                    // Count completed sets in this exercise BEFORE completing the current one
                     var completedCount = 0;
                     for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
                     {
@@ -256,42 +254,32 @@ else
                             completedCount++;
                     }
 
-                    // Check if this will be the last set of the last exercise
                     var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
                     var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
                     var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
-                    // Manage rest timer based on what is being completed
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
                         SessionService.SkipRest();
 
-                    // Always clear rest-complete state when a new set is completed
                     _isRestComplete = false;
-
-                    // Complete the set
                     SessionService.CompleteSet(exerciseIndex, si);
 
-                    // Check if workout is now complete and celebrate!
                     if (willBeLastSetOfWorkout)
                     {
                         StateHasChanged();
                         await OnWorkoutComplete();
                     }
 
-                    // Start rest timer after every set except the very last of the whole workout
                     if (!willBeLastSetOfWorkout)
                     {
                         _isRestComplete = false;
                         await StopJsTimerAsync();
-                        SessionService.StartRest(
-                            restIntervalSeconds: exercise.RestIntervalSeconds,
-                            onTick: () => { },
-                            onComplete: () => { });
+                        SessionService.StartRest(exercise.RestIntervalSeconds);
                         await StartJsTimerAsync();
                     }
 
                     StateHasChanged();
-                    await Task.Delay(300); // debounce accidental touch repetition
+                    await Task.Delay(300);
                     break;
                 }
             }
@@ -309,10 +297,18 @@ else
         StateHasChanged();
     }
 
-    private void ResumeRest()
+    private async Task ResumeRest()
     {
-        SessionService.ResumeRest();
+        var expired = SessionService.ResumeRest();
         StateHasChanged();
+
+        if (expired)
+        {
+            await StopJsTimerAsync();
+            _isRestComplete = true;
+            StateHasChanged();
+            await OnRestComplete();
+        }
     }
 
     private void ResetRest()
@@ -368,47 +364,26 @@ else
     }
 
     /// <summary>
-    /// Called every second by JavaScript setInterval. Because the callback originates
-    /// on the WebView thread (the same thread Blazor uses), there is zero cross-thread
-    /// marshaling — eliminating the native Android crashes caused by PeriodicTimer
-    /// resuming on a thread-pool thread.
+    /// Called by the JS timer on each tick. Returns <c>true</c> when the rest
+    /// period ends, signalling JS to stop rescheduling.
     /// </summary>
     [JSInvokable]
-    public async Task OnTimerTick()
+    public async Task<bool> OnTimerTick()
     {
-        if (_disposed || _tickProcessing) return;
-        _tickProcessing = true;
-        try
-        {
-            // Rest ended outside the tick (e.g. SkipRest, or ResumeRest after a long
-            // background pause can expire the timer without a tick).
-            if (!SessionService.IsResting)
-            {
-                await StopJsTimerAsync();
-                if (SessionService.RestSecondsRemaining <= 0 && !_isRestComplete)
-                {
-                    _isRestComplete = true;
-                    StateHasChanged();
-                    await OnRestComplete();
-                }
-                return;
-            }
+        if (_disposed) return true;
 
-            var done = SessionService.TickRest();
+        var done = SessionService.TickRest();
+        StateHasChanged();
+
+        if (done)
+        {
+            _isRestComplete = true;
             StateHasChanged();
+            await OnRestComplete();
+            return true;
+        }
 
-            if (done)
-            {
-                await StopJsTimerAsync();
-                _isRestComplete = true;
-                StateHasChanged();
-                await OnRestComplete();
-            }
-        }
-        finally
-        {
-            _tickProcessing = false;
-        }
+        return false;
     }
 
     private async Task StartJsTimerAsync()

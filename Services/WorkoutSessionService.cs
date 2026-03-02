@@ -109,10 +109,12 @@ public class WorkoutSessionService : IDisposable
 
     public void ResetRest()
     {
-        if (_isResting)
+        if (_restSecondsTotal > 0)
         {
             _restSecondsRemaining = _restSecondsTotal;
             _isRestPaused = false;
+            _suspendedAt = null;
+            _isResting = true;
         }
     }
 

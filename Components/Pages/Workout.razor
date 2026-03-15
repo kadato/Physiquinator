@@ -89,7 +89,7 @@ else
                 @if (!DoneExercises.Any())
                 {
                     <div class="text-center py-4">
-                        <i class="bi bi-circle" style="font-size: 3rem; color: #667eea; opacity: 0.2;"></i>
+                        <i class="bi bi-circle" style="font-size: 3rem; color: #fbbf24; opacity: 0.3;"></i>
                         <p class="text-muted mt-3">Complete a set to see it here.</p>
                     </div>
                 }
@@ -99,7 +99,7 @@ else
         <div class="col-lg-6 upcoming-section">
             <div class="d-flex align-items-center mb-3">
                 <h2 class="h5 mb-0">
-                    <i class="bi bi-lightning-charge-fill me-2" style="color: #667eea;"></i>Up Next
+                    <i class="bi bi-lightning-charge-fill me-2" style="color: #fbbf24;"></i>Up Next
                 </h2>
             </div>
             <div class="exercise-panels">
@@ -110,13 +110,13 @@ else
                             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                                 <div class="flex-grow-1 mb-2">
                                     <h5 class="card-title mb-2">
-                                        <i class="bi bi-dot me-1" style="color: #667eea; font-size: 1.5rem;"></i>@item.ExerciseName
+                                        <i class="bi bi-dot me-1" style="color: #fbbf24; font-size: 1.5rem;"></i>@item.ExerciseName
                                     </h5>
                                     <div class="d-flex align-items-center">
                                         <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);"></div>
                                         </div>
-                                        <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <span class="badge" style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);">
                                             @item.CompletedSets/@item.TotalSets
                                         </span>
                                     </div>
@@ -140,7 +140,7 @@ else
                 @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
                     <div class="text-center py-4">
-                        <i class="bi bi-inbox" style="font-size: 3rem; color: #667eea; opacity: 0.3;"></i>
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: #fbbf24; opacity: 0.4;"></i>
                         <p class="text-muted mt-3">No sets in this plan.</p>
                     </div>
                 }
@@ -148,7 +148,7 @@ else
         </div>
     </div>
 
-    <div class="mt-5 pt-4 border-top d-flex gap-2 flex-wrap">
+    <div class="mt-5 pt-4 border-top action-buttons">
         <button class="btn btn-outline-danger" @onclick="EndWorkout">
             <i class="bi bi-stop-circle me-2"></i>End Workout
         </button>
@@ -175,14 +175,24 @@ else
     protected override async Task OnInitializedAsync()
     {
         _dotNetRef = DotNetObjectReference.Create(this);
-        _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/workoutTimer.js");
+
+        try
+        {
+            _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/workoutTimer.js");
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+
         var plan = await PlanService.GetPlanAsync(PlanId);
-        if (plan != null)
+        if (!_disposed && plan != null)
             SessionService.StartWorkout(plan);
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_disposed) return;
+
         var plan = await PlanService.GetPlanAsync(PlanId);
         if (plan != null && SessionService.CurrentPlan?.Id != plan.Id)
         {
@@ -229,12 +239,13 @@ else
     private async Task CompleteNextSet(int exerciseIndex)
     {
         if (_isCompleting) return;
+        if (_disposed) return;
 
         var plan = SessionService.CurrentPlan;
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
 
         _isCompleting = true;
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
 
         try
         {
@@ -244,11 +255,16 @@ else
             {
                 if (!SessionService.IsSetCompleted(exerciseIndex, si))
                 {
-                    var totalSetCount = 0;
-                    for (var ei = 0; ei < plan.Exercises.Count; ei++)
-                        totalSetCount += plan.Exercises[ei].SetCount;
+                    var completedCount = 0;
+                    for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
+                    {
+                        if (SessionService.IsSetCompleted(exerciseIndex, checkSi))
+                            completedCount++;
+                    }
 
-                    var willBeLastSetOfWorkout = (SessionService.CompletedSets.Count + 1) >= totalSetCount;
+                    var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
+                    var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
+                    var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
                         SessionService.SkipRest();
@@ -258,7 +274,7 @@ else
 
                     if (willBeLastSetOfWorkout)
                     {
-                        StateHasChanged();
+                        await SafeStateHasChangedAsync();
                         await OnWorkoutComplete();
                     }
 
@@ -270,54 +286,68 @@ else
                         await StartJsTimerAsync();
                     }
 
-                    StateHasChanged();
+                    await SafeStateHasChangedAsync();
                     await Task.Delay(300);
                     break;
                 }
             }
         }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"CompleteNextSet error: {ex}");
+        }
         finally
         {
             _isCompleting = false;
-            StateHasChanged();
+            await SafeStateHasChangedAsync();
         }
     }
 
-    private void PauseRest()
+    private async Task PauseRest()
     {
+        if (_disposed) return;
         SessionService.PauseRest();
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
     }
 
     private async Task ResumeRest()
     {
+        if (_disposed) return;
+
         var expired = SessionService.ResumeRest();
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
 
         if (expired)
         {
             await StopJsTimerAsync();
             _isRestComplete = true;
-            StateHasChanged();
+            await SafeStateHasChangedAsync();
             await OnRestComplete();
         }
     }
 
     private async Task ResetRest()
     {
+        if (_disposed) return;
+
         _isRestComplete = false;
         SessionService.ResetRest();
         if (SessionService.IsResting)
             await StartJsTimerAsync();
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
     }
 
     private async Task SkipRest()
     {
+        if (_disposed) return;
+
         await StopJsTimerAsync();
         _isRestComplete = false;
         SessionService.SkipRest();
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
     }
 
     private async Task OnRestComplete()
@@ -352,6 +382,8 @@ else
 
     private async Task EndWorkout()
     {
+        if (_disposed) return;
+
         await StopJsTimerAsync();
         SessionService.EndWorkout();
         Navigation.NavigateTo("/");
@@ -367,12 +399,12 @@ else
         if (_disposed) return true;
 
         var done = SessionService.TickRest();
-        StateHasChanged();
+        await SafeStateHasChangedAsync();
 
         if (done)
         {
             _isRestComplete = true;
-            StateHasChanged();
+            await SafeStateHasChangedAsync();
             await OnRestComplete();
             return true;
         }
@@ -382,8 +414,16 @@ else
 
     private async Task StartJsTimerAsync()
     {
-        if (_audioModule != null && _dotNetRef != null)
-            await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000);
+        if (_disposed) return;
+
+        try
+        {
+            if (_audioModule != null && _dotNetRef != null)
+                await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
     }
 
     private async Task StopJsTimerAsync()
@@ -395,6 +435,7 @@ else
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
     }
 
     private static string FormatTime(int totalSeconds)
@@ -417,6 +458,25 @@ else
         await StopJsTimerAsync();
         _dotNetRef?.Dispose();
         if (_audioModule != null)
-            await _audioModule.DisposeAsync();
+        {
+            try
+            {
+                await _audioModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+            catch (ObjectDisposedException) { }
+        }
+    }
+
+    private async Task SafeStateHasChangedAsync()
+    {
+        if (_disposed) return;
+
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
     }
 }

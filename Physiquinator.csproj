@@ -83,11 +83,12 @@
         <EnableLLVM>true</EnableLLVM>
         <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
 
-        <!-- .NET 10 trimming optimizations (Android/iOS only; disabled on Windows as BlazorWebView uses reflection) -->
-        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">true</PublishTrimmed>
-        <TrimMode>partial</TrimMode>
-        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-        <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+        <!-- .NET 10 trimming optimizations (kept for Apple targets; disabled on Android for Blazor WebView runtime stability) -->
+        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</PublishTrimmed>
+        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishTrimmed>
+        <TrimMode Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">partial</TrimMode>
+        <EnableTrimAnalyzer Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</EnableTrimAnalyzer>
+        <SuppressTrimAnalysisWarnings Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">false</SuppressTrimAnalysisWarnings>
 
         <!-- General release optimizations -->
         <DebugType>none</DebugType>

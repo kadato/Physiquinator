@@ -21,9 +21,9 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 <div align="center">
 
-<img src="docs/preview/image1.png" width="250" alt="Preview 1"/> <img src="docs/preview/image2.png" width="250" alt="Preview 2"/> <img src="docs/preview/image3.png" width="250" alt="Preview 3"/>
+<img src="docs/preview/image1.jpeg" width="250" alt="Home page"/> <img src="docs/preview/image2.jpeg" width="250" alt="New Plan page"/> <img src="docs/preview/image3.jpeg" width="250" alt="Workout in progress page"/>
 
-<img src="docs/preview/image4.png" width="250" alt="Preview 4"/> <img src="docs/preview/image5.png" width="250" alt="Preview 5"/>
+<img src="docs/preview/image4.jpeg" width="250" alt="Edit Plan page - top section"/> <img src="docs/preview/image5.jpeg" width="250" alt="Edit Plan page - bottom section"/>
 
 </div>
 

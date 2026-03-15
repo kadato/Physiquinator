@@ -8,7 +8,7 @@
 </div>
 
 <div class="mb-4 text-center">
-    <div class="d-flex gap-2 justify-content-center flex-wrap">
+    <div class="action-buttons">
         <a href="/plan" class="btn btn-primary btn-lg">
             <i class="bi bi-plus-circle-fill me-2"></i>New Workout Plan
         </a>
@@ -36,7 +36,7 @@
 else if (!_plans.Any())
 {
     <div class="text-center py-5">
-        <i class="bi bi-inbox" style="font-size: 4rem; color: #667eea; opacity: 0.3;"></i>
+        <i class="bi bi-inbox" style="font-size: 4rem; color: #fbbf24; opacity: 0.35;"></i>
         <p class="text-muted mt-3">No plans yet. Create one to get started.</p>
     </div>
 }
@@ -54,7 +54,7 @@ else
                         <p class="card-text text-muted mb-3">
                             <i class="bi bi-list-ul me-1"></i>@plan.Exercises.Count exercise(s)
                         </p>
-                        <div class="mt-auto d-flex gap-2">
+                        <div class="mt-auto action-buttons">
                             <a href="/plan/@plan.Id" class="btn btn-outline-secondary btn-sm flex-fill">
                                 <i class="bi bi-pencil-fill me-1"></i>Edit
                             </a>

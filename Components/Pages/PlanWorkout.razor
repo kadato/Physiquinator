@@ -37,7 +37,7 @@
         @if (!Exercises.Any())
         {
             <div class="text-center py-3">
-                <i class="bi bi-inbox" style="font-size: 2rem; color: #667eea; opacity: 0.3;"></i>
+                <i class="bi bi-inbox" style="font-size: 2rem; color: #fbbf24; opacity: 0.4;"></i>
                 <p class="text-muted mt-2 mb-0">No exercises yet. Add one below.</p>
             </div>
         }
@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <div class="mt-2 d-flex gap-2 flex-wrap">
+    <div class="mt-2 action-buttons">
         <button class="btn btn-primary" @onclick="Save" disabled="@(!CanSave)">
             <i class="bi bi-save-fill me-1"></i>Save
         </button>

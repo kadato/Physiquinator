@@ -1,6 +1,6 @@
 html, body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: #1a1a2e;
+    background-color: #111111;
     color: #e0e0e0;
     margin: 0;
     padding: 0;
@@ -14,7 +14,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -26,13 +26,13 @@ h1 {
 }
 
 a {
-    color: #667eea;
+    color: #fbbf24;
     text-decoration: none;
     transition: color 0.2s;
 }
 
 a:hover {
-    color: #8b9cff;
+    color: #fcd34d;
 }
 
 /* Cards */
@@ -68,17 +68,22 @@ a:hover {
     font-weight: 500;
     transition: all 0.2s;
     border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #111827;
+    font-weight: 600;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #7c8ff5 0%, #8b5fc2 100%);
+    background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+    color: #111827;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .btn-secondary {
@@ -126,19 +131,32 @@ a:hover {
 }
 
 .btn-outline-primary {
-    border: 2px solid #667eea;
-    color: #667eea;
+    border: 2px solid #fbbf24;
+    color: #fbbf24;
     background: transparent;
 }
 
 .btn-outline-primary:hover {
-    background: #667eea;
-    color: #fff;
+    background: #f59e0b;
+    color: #111827;
+}
+
+.btn-outline-info {
+    border: 2px solid #fbbf24;
+    color: #fbbf24;
+    background: transparent;
+}
+
+.btn-outline-info:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #111827;
 }
 
 .btn-warning {
     background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-    color: #fff;
+    color: #111827;
+    font-weight: 600;
 }
 
 .btn-pause {
@@ -158,16 +176,17 @@ a:hover {
 }
 
 .btn-info {
-    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #111827;
+    font-weight: 600;
 }
 
 .btn-link {
-    color: #667eea;
+    color: #fbbf24;
 }
 
 .btn:focus, .btn:active:focus {
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.5);
     outline: none;
 }
 
@@ -182,9 +201,9 @@ a:hover {
 
 .form-control:focus, .form-select:focus {
     background-color: rgba(255, 255, 255, 0.08);
-    border-color: #667eea;
+    border-color: #fbbf24;
     color: #ffffff;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.25);
 }
 
 .form-control::placeholder {
@@ -262,6 +281,10 @@ a:hover {
     color: #4ade80 !important;
 }
 
+.text-primary {
+    color: #fbbf24 !important;
+}
+
 /* Borders */
 .border {
     border-color: rgba(255, 255, 255, 0.1) !important;
@@ -293,6 +316,13 @@ a:hover {
 .badge {
     font-weight: 600;
     padding: 0.35em 0.65em;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .bg-success {
@@ -381,7 +411,7 @@ h1:focus {
         position: sticky;
         top: 0;
         height: env(safe-area-inset-top);
-        background-color: #1a1a2e;
+        background-color: #111111;
         width: 100%;
         z-index: 1;
     }

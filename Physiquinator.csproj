@@ -68,7 +68,7 @@
         <!-- Android release optimizations -->
         <AndroidLinkMode>SdkOnly</AndroidLinkMode>
         <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
-        <RunAOTCompilation>true</RunAOTCompilation>
+        <RunAOTCompilation Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</RunAOTCompilation>
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
         <AndroidPackageFormat>aab</AndroidPackageFormat>

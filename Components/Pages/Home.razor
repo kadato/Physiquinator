@@ -21,6 +21,9 @@
         <button class="btn btn-outline-info btn-lg" @onclick="ImportPlans">
             <i class="bi bi-upload me-2"></i>Import Plans
         </button>
+        <a href="/settings" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-gear-fill me-2"></i>Settings
+        </a>
     </div>
 </div>
 
@@ -36,7 +39,7 @@
 else if (!_plans.Any())
 {
     <div class="text-center py-5">
-        <i class="bi bi-inbox" style="font-size: 4rem; color: #fbbf24; opacity: 0.35;"></i>
+        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--tn-accent); opacity: 0.35;"></i>
         <p class="text-muted mt-3">No plans yet. Create one to get started.</p>
     </div>
 }
@@ -88,7 +91,7 @@ else
 
     private async Task DeletePlan(Guid planId, string planName)
     {
-        var confirmed = await Application.Current!.MainPage!.DisplayAlert(
+        var confirmed = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Delete Plan",
             $"Are you sure you want to delete '{planName}'? This action cannot be undone.",
             "Delete", "Cancel");
@@ -109,11 +112,11 @@ else
             var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
 
             await SaveFile(fileName, json);
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", "All plans exported successfully!", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", "All plans exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 
@@ -126,11 +129,11 @@ else
             var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
 
             await SaveFile(fileName, json);
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"'{planName}' exported successfully!", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"'{planName}' exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 
@@ -170,12 +173,12 @@ else
 
                 _plans = await PlanService.GetAllPlansAsync();
                 StateHasChanged();
-                await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Successfully imported {importedCount} plan(s)!", "OK");
+                await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Successfully imported {importedCount} plan(s)!", "OK");
             }
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Import failed: {ex.Message}", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Import failed: {ex.Message}", "OK");
         }
     }
 

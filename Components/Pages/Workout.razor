@@ -16,7 +16,7 @@
 @if (SessionService.CurrentPlan == null)
 {
     <div class="text-center py-5">
-        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #f59e0b; opacity: 0.5;"></i>
+        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: var(--tn-warning); opacity: 0.5;"></i>
         <p class="mt-3">No active workout. <a href="/">Go to home</a> and start a plan.</p>
     </div>
 }
@@ -27,10 +27,10 @@ else
         {
             <div class="rest-timer card @(_isRestComplete ? "rest-complete-pulse" : "")">
                 <div class="card-body text-center">
-                    <p class="mb-2 text-uppercase fw-bold" style="color: @(_isRestComplete ? "#4ade80" : "#f59e0b"); letter-spacing: 2px;">
+                    <p class="mb-2 text-uppercase fw-bold" style="color: @(_isRestComplete ? "var(--tn-success)" : "var(--tn-warning)"); letter-spacing: 2px;">
                         <i class="bi @(_isRestComplete ? "bi-bell-fill" : "bi-hourglass-split") me-2"></i>@(_isRestComplete ? "Rest Complete!" : "Rest Time")
                     </p>
-                    <p class="display-4 mb-3" style="color: @(_isRestComplete ? "#4ade80" : "inherit")">@FormatTime(SessionService.RestSecondsRemaining)</p>
+                    <p class="display-4 mb-3" style="color: @(_isRestComplete ? "var(--tn-success)" : "inherit")">@FormatTime(SessionService.RestSecondsRemaining)</p>
                     <div class="d-flex gap-2 justify-content-center flex-wrap">
                         @if (SessionService.IsRestPaused)
                         {
@@ -89,7 +89,7 @@ else
                 @if (!DoneExercises.Any())
                 {
                     <div class="text-center py-4">
-                        <i class="bi bi-circle" style="font-size: 3rem; color: #fbbf24; opacity: 0.3;"></i>
+                        <i class="bi bi-circle" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.3;"></i>
                         <p class="text-muted mt-3">Complete a set to see it here.</p>
                     </div>
                 }
@@ -99,7 +99,7 @@ else
         <div class="col-lg-6 upcoming-section">
             <div class="d-flex align-items-center mb-3">
                 <h2 class="h5 mb-0">
-                    <i class="bi bi-lightning-charge-fill me-2" style="color: #fbbf24;"></i>Up Next
+                    <i class="bi bi-lightning-charge-fill me-2" style="color: var(--tn-accent);"></i>Up Next
                 </h2>
             </div>
             <div class="exercise-panels">
@@ -110,13 +110,13 @@ else
                             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                                 <div class="flex-grow-1 mb-2">
                                     <h5 class="card-title mb-2">
-                                        <i class="bi bi-dot me-1" style="color: #fbbf24; font-size: 1.5rem;"></i>@item.ExerciseName
+                                        <i class="bi bi-dot me-1" style="color: var(--tn-accent); font-size: 1.5rem;"></i>@item.ExerciseName
                                     </h5>
                                     <div class="d-flex align-items-center">
                                         <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);"></div>
+                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, var(--tn-accent) 0%, var(--tn-accent-strong) 100%);"></div>
                                         </div>
-                                        <span class="badge" style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);">
+                                        <span class="badge" style="background: linear-gradient(135deg, var(--tn-accent) 0%, var(--tn-accent-strong) 100%);">
                                             @item.CompletedSets/@item.TotalSets
                                         </span>
                                     </div>
@@ -131,8 +131,8 @@ else
                 @if (!UpcomingExercises.Any() && DoneExercises.Any())
                 {
                     <div class="text-center py-5 workout-complete-celebration">
-                        <i class="bi bi-trophy-fill" style="font-size: 4rem; color: #4ade80;"></i>
-                        <h3 class="mt-3" style="color: #4ade80;">Workout Complete!</h3>
+                        <i class="bi bi-trophy-fill" style="font-size: 4rem; color: var(--tn-success);"></i>
+                        <h3 class="mt-3" style="color: var(--tn-success);">Workout Complete!</h3>
                         <p class="text-muted">Great work! All sets completed.</p>
                         <div class="confetti-container"></div>
                     </div>
@@ -140,7 +140,7 @@ else
                 @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
                     <div class="text-center py-4">
-                        <i class="bi bi-inbox" style="font-size: 3rem; color: #fbbf24; opacity: 0.4;"></i>
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.4;"></i>
                         <p class="text-muted mt-3">No sets in this plan.</p>
                     </div>
                 }
@@ -455,7 +455,15 @@ else
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
-        await StopJsTimerAsync();
+        SessionService.CancelRest();
+        try
+        {
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("stopRestTimer");
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
         _dotNetRef?.Dispose();
         if (_audioModule != null)
         {

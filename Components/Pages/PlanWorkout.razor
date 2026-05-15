@@ -37,7 +37,7 @@
         @if (!Exercises.Any())
         {
             <div class="text-center py-3">
-                <i class="bi bi-inbox" style="font-size: 2rem; color: #fbbf24; opacity: 0.4;"></i>
+                <i class="bi bi-inbox" style="font-size: 2rem; color: var(--tn-accent); opacity: 0.4;"></i>
                 <p class="text-muted mt-2 mb-0">No exercises yet. Add one below.</p>
             </div>
         }
@@ -249,11 +249,11 @@
                 File = new ShareFile(filePath)
             });
 
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", "Plan exported successfully!", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", "Plan exported successfully!", "OK");
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert("Physiquinator", $"Export failed: {ex.Message}", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Export failed: {ex.Message}", "OK");
         }
     }
 }

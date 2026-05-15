@@ -1,4 +1,8 @@
 @inherits LayoutComponentBase
+@using Microsoft.Extensions.Logging
+@using Physiquinator.Services
+@inject ThemeService ThemeService
+@inject ILogger<MainLayout> Logger
 
 <div class="page">
     <main>
@@ -7,3 +11,20 @@
         </article>
     </main>
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await ThemeService.EnsureInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Theme initialization failed");
+            }
+        }
+    }
+}

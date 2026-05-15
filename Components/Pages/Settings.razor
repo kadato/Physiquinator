@@ -1,0 +1,67 @@
+@page "/settings"
+@using Physiquinator.Services
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<PageTitle>Settings</PageTitle>
+
+<div class="mb-4 mt-5">
+    <h1>Settings</h1>
+    <p class="lead">Tailor the look and feel.</p>
+</div>
+
+<div class="card settings-card">
+    <div class="card-body">
+        <h2 class="h5 mb-3"><i class="bi bi-palette-fill me-2"></i>Appearance</h2>
+        <label class="form-label" for="theme-select">Theme</label>
+        <select id="theme-select" class="form-select" value="@_preference" @onchange="OnPreferenceChanged">
+            <option value="system">System</option>
+            <option value="light">Tokyo Night (Light)</option>
+            <option value="dark">Tokyo Night Storm (Dark)</option>
+        </select>
+        <div class="form-text mt-2">
+            System follows your device settings. Changes apply immediately.
+        </div>
+        <div class="mt-3 text-muted">
+            Current: <strong>@_effectiveThemeLabel</strong>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _preference = "system";
+    private string _effectiveTheme = "dark";
+
+    private string _effectiveThemeLabel => _effectiveTheme == "light" ? "Light" : "Dark";
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.ThemeChanged += HandleThemeChanged;
+        await ThemeService.EnsureInitializedAsync();
+        SyncFromService();
+    }
+
+    private async Task OnPreferenceChanged(ChangeEventArgs args)
+    {
+        var next = args.Value?.ToString() ?? "system";
+        await ThemeService.SetPreferenceAsync(next);
+        SyncFromService();
+    }
+
+    private void HandleThemeChanged()
+    {
+        SyncFromService();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncFromService()
+    {
+        _preference = ThemeService.Preference;
+        _effectiveTheme = ThemeService.EffectiveTheme;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= HandleThemeChanged;
+    }
+}

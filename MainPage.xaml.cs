@@ -1,24 +1,38 @@
-﻿namespace Physiquinator;
+﻿using Microsoft.AspNetCore.Components.WebView;
+
+namespace Physiquinator;
 
 public partial class MainPage : ContentPage
 {
 	public MainPage()
 	{
-		InitializeComponent();
-
-		blazorWebView.BlazorWebViewInitializing += (sender, args) =>
+		try
 		{
+			InitializeComponent();
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"MainPage init error: {ex}");
+			throw;
+		}
+
+		blazorWebView.BlazorWebViewInitializing += (s, e) =>
 			System.Diagnostics.Debug.WriteLine("BlazorWebView Initializing");
-		};
+		blazorWebView.BlazorWebViewInitialized += OnBlazorWebViewInitialized;
+		blazorWebView.UrlLoading += (s, e) =>
+			System.Diagnostics.Debug.WriteLine($"URL Loading: {e.Url}");
+	}
 
-		blazorWebView.BlazorWebViewInitialized += (sender, args) =>
+	private void OnBlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs args)
+	{
+		System.Diagnostics.Debug.WriteLine("BlazorWebView Initialized");
+		try
 		{
-			System.Diagnostics.Debug.WriteLine("BlazorWebView Initialized");
-		};
-
-		blazorWebView.UrlLoading += (sender, args) =>
+			WebViewLogger.AttachConsoleLogging(args.WebView);
+		}
+		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine($"URL Loading: {args.Url}");
-		};
+			System.Diagnostics.Debug.WriteLine($"BlazorWebView init error: {ex}");
+		}
 	}
 }

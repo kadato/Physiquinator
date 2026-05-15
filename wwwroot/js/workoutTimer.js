@@ -16,18 +16,17 @@ export function startRestTimer(dotNetRef, intervalMs) {
 }
 
 function scheduleTick(dotNetRef, intervalMs) {
-    restTimerId = setTimeout(() => {
+    restTimerId = setTimeout(async () => {
         if (!restTimerActive) return;
-        dotNetRef.invokeMethodAsync('OnTimerTick')
-            .then(done => {
-                if (restTimerActive && !done)
-                    scheduleTick(dotNetRef, intervalMs);
-                else
-                    restTimerActive = false;
-            })
-            .catch(() => {
+        try {
+            const done = await dotNetRef.invokeMethodAsync('OnTimerTick');
+            if (restTimerActive && !done)
+                scheduleTick(dotNetRef, intervalMs);
+            else
                 restTimerActive = false;
-            });
+        } catch {
+            restTimerActive = false;
+        }
     }, intervalMs);
 }
 

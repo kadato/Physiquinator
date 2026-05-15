@@ -24,6 +24,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
 		builder.Services.AddSingleton<Services.WorkoutSessionService>();
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();
+		builder.Services.AddSingleton<Services.ThemeService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
@@ -31,5 +32,18 @@ public static class MauiProgram
 #endif
 
 		return builder.Build();
+	}
+
+	public static MauiApp? CreateMauiAppSafe()
+	{
+		try
+		{
+			return CreateMauiApp();
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"FATAL: MauiProgram.CreateMauiApp failed: {ex}");
+			throw;
+		}
 	}
 }

@@ -1,29 +1,59 @@
 @page "/settings"
-@using Physiquinator.Services
 @inject ThemeService ThemeService
+@inject WorkoutPlanService PlanService
+@inject NavigationManager Navigation
 @implements IDisposable
 
 <PageTitle>Settings</PageTitle>
 
-<div class="mb-4 mt-5">
-    <h1>Settings</h1>
-    <p class="lead">Tailor the look and feel.</p>
+<div class="mb-3 mt-4 d-flex flex-wrap align-items-center gap-2">
+    <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Home
+    </a>
 </div>
 
-<div class="card settings-card">
-    <div class="card-body">
-        <h2 class="h5 mb-3"><i class="bi bi-palette-fill me-2"></i>Appearance</h2>
-        <label class="form-label" for="theme-select">Theme</label>
-        <select id="theme-select" class="form-select" value="@_preference" @onchange="OnPreferenceChanged">
-            <option value="system">System</option>
-            <option value="light">Tokyo Night (Light)</option>
-            <option value="dark">Tokyo Night Storm (Dark)</option>
-        </select>
-        <div class="form-text mt-2">
-            System follows your device settings. Changes apply immediately.
+<div class="mb-4">
+    <h1>Settings</h1>
+    <p class="lead mb-0">Appearance and plan backups.</p>
+</div>
+
+<div class="settings-stack">
+    <div class="card settings-card">
+        <div class="card-body">
+            <h2 class="h5 mb-3"><i class="bi bi-circle-half me-2"></i>Appearance</h2>
+            <label class="form-label" for="theme-select">Light or dark mode</label>
+            <select id="theme-select" class="form-select" value="@_preference" @onchange="OnThemePreferenceSelectChanged">
+                <option value="system">Match system setting</option>
+                <option value="light">Light (always)</option>
+                <option value="dark">Dark (always)</option>
+            </select>
+            <div class="form-text mt-2">
+                By default the app follows your device light/dark mode. Choose Light or Dark to keep that appearance even when the system setting differs.
+            </div>
+            <div class="mt-3 text-muted">
+                Active mode: <strong>@_effectiveThemeLabel</strong>
+            </div>
         </div>
-        <div class="mt-3 text-muted">
-            Current: <strong>@_effectiveThemeLabel</strong>
+    </div>
+
+    <div class="card settings-card">
+        <div class="card-body">
+            <h2 class="h5 mb-3"><i class="bi bi-database-fill-gear me-2"></i>Plans backup</h2>
+            <p class="text-muted small mb-3">
+                Export all plans as JSON for a backup, or import a file you exported earlier (single plan or full backup).
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary" disabled="@(_planCount == 0)" title="@(_planCount == 0 ? "Create a plan first" : null)" @onclick="ExportAllPlans">
+                    <i class="bi bi-upload me-2"></i>Export all plans
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="ImportPlans">
+                    <i class="bi bi-download me-2"></i>Import plans
+                </button>
+            </div>
+            @if (_planCount == 0)
+            {
+                <p class="form-text mt-2 mb-0">You have no plans yet — export becomes available after you create one.</p>
+            }
         </div>
     </div>
 </div>
@@ -31,21 +61,22 @@
 @code {
     private string _preference = "system";
     private string _effectiveTheme = "dark";
+    private int _planCount;
 
     private string _effectiveThemeLabel => _effectiveTheme == "light" ? "Light" : "Dark";
 
     protected override async Task OnInitializedAsync()
     {
         ThemeService.ThemeChanged += HandleThemeChanged;
-        await ThemeService.EnsureInitializedAsync();
+        // Theme JS is initialized from MainLayout after the first render; sync when that completes.
         SyncFromService();
+        await RefreshPlanCountAsync();
     }
 
-    private async Task OnPreferenceChanged(ChangeEventArgs args)
+    private async Task RefreshPlanCountAsync()
     {
-        var next = args.Value?.ToString() ?? "system";
-        await ThemeService.SetPreferenceAsync(next);
-        SyncFromService();
+        var plans = await PlanService.GetAllPlansAsync();
+        _planCount = plans.Count;
     }
 
     private void HandleThemeChanged()
@@ -58,6 +89,92 @@
     {
         _preference = ThemeService.Preference;
         _effectiveTheme = ThemeService.EffectiveTheme;
+    }
+
+    private async Task OnThemePreferenceSelectChanged(ChangeEventArgs e)
+    {
+        var preference = e.Value?.ToString() ?? "system";
+        await ThemeService.SetPreferenceAsync(preference);
+    }
+
+    private async Task ExportAllPlans()
+    {
+        try
+        {
+            var json = await PlanService.ExportAllPlansToJsonAsync();
+            var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+
+            await SaveFile(fileName, json);
+            await AlertAsync("Physiquinator", "All plans exported successfully!");
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Physiquinator", $"Export failed: {ex.Message}");
+        }
+    }
+
+    private async Task ImportPlans()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = "Select workout plan JSON file",
+                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.json" } },
+                    { DevicePlatform.Android, new[] { "application/json" } },
+                    { DevicePlatform.WinUI, new[] { ".json" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.json" } }
+                })
+            });
+
+            if (result != null)
+            {
+                using var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+
+                var importedCount = 0;
+                try
+                {
+                    var plans = await PlanService.ImportPlansFromJsonAsync(json);
+                    importedCount = plans.Count;
+                }
+                catch
+                {
+                    await PlanService.ImportPlanFromJsonAsync(json);
+                    importedCount = 1;
+                }
+
+                await RefreshPlanCountAsync();
+                StateHasChanged();
+                await AlertAsync("Physiquinator", $"Successfully imported {importedCount} plan(s)!");
+                Navigation.NavigateTo("/");
+            }
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Physiquinator", $"Import failed: {ex.Message}");
+        }
+    }
+
+    private static async Task SaveFile(string fileName, string content)
+    {
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllTextAsync(filePath, content);
+
+        await Share.RequestAsync(new ShareFileRequest
+        {
+            Title = "Export Workout Plan",
+            File = new ShareFile(filePath)
+        });
+    }
+
+    private static Task AlertAsync(string title, string message)
+    {
+        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        return page is null ? Task.CompletedTask : page.DisplayAlertAsync(title, message, "OK");
     }
 
     public void Dispose()

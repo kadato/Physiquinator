@@ -1,8 +1,14 @@
 using Microsoft.JSInterop;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 
 namespace Physiquinator.Services;
 
+/// <summary>
+/// Theme for Blazor WebView plus MAUI <see cref="AppTheme"/> / resources.
+/// <see cref="IJSRuntime"/> must run on the Blazor WebView dispatcher — do not marshal JS calls through <see cref="MainThread"/>.
+/// MAUI mutations (<see cref="Application.Current"/>) must run on the MAUI UI thread; use <see cref="RunOnMauiUiThread"/> when called from <see cref="JSInvokableAttribute"/> or other off-UI paths.
+/// </summary>
 public sealed class ThemeService : IAsyncDisposable
 {
     private readonly IJSRuntime _js;
@@ -22,31 +28,53 @@ public sealed class ThemeService : IAsyncDisposable
 
     public async Task EnsureInitializedAsync()
     {
+        await EnsureInitializedCoreAsync().ConfigureAwait(true);
+    }
+
+    private async Task EnsureInitializedCoreAsync()
+    {
         if (_initialized)
         {
             return;
         }
 
         _dotNetRef = DotNetObjectReference.Create(this);
+
         var result = await _js.InvokeAsync<ThemeInitResult>(
             "physiquinatorTheme.initialize",
-            _dotNetRef);
+            _dotNetRef).ConfigureAwait(true);
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
         ApplyAppThemeOverride();
+
         _initialized = true;
         ThemeChanged?.Invoke();
     }
 
+    /// <summary>
+    /// Persists theme preference (system/light/dark), updates WebView <c>data-theme</c>, MAUI <see cref="AppTheme"/>, and app resources.
+    /// </summary>
     public async Task SetPreferenceAsync(string preference)
     {
-        Preference = preference;
-        EffectiveTheme = await _js.InvokeAsync<string>(
-            "physiquinatorTheme.setPreference",
-            preference);
+        await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
+        var effective = await _js.InvokeAsync<string>("physiquinatorTheme.setPreference", preference).ConfigureAwait(true);
+
+        Preference = preference;
+        EffectiveTheme = effective;
         ApplyAppThemeOverride();
+
+        ThemeChanged?.Invoke();
+    }
+
+    [JSInvokable]
+    public void OnThemePreferenceChangedFromScript(string preference, string effective)
+    {
+        Preference = preference;
+        EffectiveTheme = effective;
+        ApplyAppThemeOverride();
+
         ThemeChanged?.Invoke();
     }
 
@@ -54,30 +82,48 @@ public sealed class ThemeService : IAsyncDisposable
     public void OnSystemThemeChanged(string effectiveTheme)
     {
         EffectiveTheme = effectiveTheme;
-        SyncAppResources();
+        RunOnMauiUiThread(SyncAppResources);
         ThemeChanged?.Invoke();
     }
 
     private void ApplyAppThemeOverride()
     {
-        if (Application.Current == null)
+        RunOnMauiUiThread(() =>
         {
-            return;
+            if (Application.Current == null)
+            {
+                return;
+            }
+
+            Application.Current.UserAppTheme = Preference switch
+            {
+                "light" => AppTheme.Light,
+                "dark" => AppTheme.Dark,
+                _ => AppTheme.Unspecified
+            };
+
+            SyncAppResources();
+        });
+    }
+
+    private static void RunOnMauiUiThread(Action action)
+    {
+        if (MainThread.IsMainThread)
+        {
+            action();
         }
-
-        Application.Current.UserAppTheme = Preference switch
+        else
         {
-            "light" => AppTheme.Light,
-            "dark" => AppTheme.Dark,
-            _ => AppTheme.Unspecified
-        };
-
-        SyncAppResources();
+            MainThread.BeginInvokeOnMainThread(action);
+        }
     }
 
     private void SyncAppResources()
     {
-        if (Application.Current == null) return;
+        if (Application.Current == null)
+        {
+            return;
+        }
 
         var isDark = EffectiveTheme == "dark";
 
@@ -93,10 +139,23 @@ public sealed class ThemeService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_dotNetRef != null)
+        if (_dotNetRef == null)
         {
-            await _js.InvokeVoidAsync("physiquinatorTheme.dispose");
+            return;
+        }
+
+        try
+        {
+            await _js.InvokeVoidAsync("physiquinatorTheme.dispose").ConfigureAwait(true);
+        }
+        catch (JSDisconnectedException)
+        {
+            // WebView or scope already torn down.
+        }
+        finally
+        {
             _dotNetRef.Dispose();
+            _dotNetRef = null;
         }
     }
 

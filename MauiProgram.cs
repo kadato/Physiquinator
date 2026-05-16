@@ -24,7 +24,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
 		builder.Services.AddSingleton<Services.WorkoutSessionService>();
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();
-		builder.Services.AddSingleton<Services.ThemeService>();
+		builder.Services.AddScoped<Services.ThemeService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

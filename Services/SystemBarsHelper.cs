@@ -2,6 +2,7 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 #if ANDROID
+using Android.OS;
 using Microsoft.Maui.Platform;
 #endif
 
@@ -59,7 +60,16 @@ public static class SystemBarsHelper
 
         if (OperatingSystem.IsAndroidVersionAtLeast(30))
         {
-            var controller = window.InsetsController;
+            // Window.InsetsController is implemented via DecorView.getWindowInsetsController() and throws
+            // if the decor view is not attached yet (e.g. MainPage.OnAppearing / theme sync during startup).
+            var decorView = window.DecorView;
+            if (decorView == null)
+            {
+                new Handler(Looper.MainLooper!).Post(() => ApplyAndroid(pageBackground, isDark));
+                return;
+            }
+
+            var controller = decorView.WindowInsetsController;
             if (controller == null)
             {
                 return;

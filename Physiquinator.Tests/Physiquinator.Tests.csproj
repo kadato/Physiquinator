@@ -31,6 +31,7 @@
     <Compile Include="..\Data\WorkoutSetLogEntity.cs" Link="Data\WorkoutSetLogEntity.cs" />
     <Compile Include="..\Data\WorkoutPlanRepository.cs" Link="Data\WorkoutPlanRepository.cs" />
     <Compile Include="..\Data\WorkoutHistoryRepository.cs" Link="Data\WorkoutHistoryRepository.cs" />
+    <Compile Include="..\Data\WorkoutDayStats.cs" Link="Data\WorkoutDayStats.cs" />
     <Compile Include="..\Data\WorkoutHistoryBackup.cs" Link="Data\WorkoutHistoryBackup.cs" />
     <Compile Include="..\Services\WorkoutHistoryService.cs" Link="Services\WorkoutHistoryService.cs" />
   </ItemGroup>

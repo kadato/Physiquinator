@@ -198,6 +198,119 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetSessionCountsByLocalDayAsync_GroupsSameUtcInstantIntoOneDay()
+    {
+        var started = new DateTime(2024, 4, 10, 15, 30, 0, DateTimeKind.Utc);
+        await InsertRawSessionAsync(started);
+        await InsertRawSessionAsync(started);
+
+        var localDay = DateOnly.FromDateTime(started.ToLocalTime().Date);
+        var map = await _sut.GetSessionCountsByLocalDayAsync(
+            new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        Assert.Single(map);
+        Assert.Equal(2, map[localDay]);
+    }
+
+    [Fact]
+    public async Task GetSessionCountsByLocalDayAsync_RespectsUtcRange()
+    {
+        var inside = new DateTime(2024, 5, 1, 12, 0, 0, DateTimeKind.Utc);
+        var outside = new DateTime(2023, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        await InsertRawSessionAsync(inside);
+        await InsertRawSessionAsync(outside);
+
+        var map = await _sut.GetSessionCountsByLocalDayAsync(
+            new DateTime(2024, 4, 1, 0, 0, 0, DateTimeKind.Utc),
+            new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        var insideDay = DateOnly.FromDateTime(inside.ToLocalTime().Date);
+        Assert.Single(map);
+        Assert.Equal(1, map[insideDay]);
+    }
+
+    [Fact]
+    public async Task GetSessionsForLocalDayAsync_ReturnsSessionsStartingThatLocalDay()
+    {
+        var localDay = new DateOnly(2024, 8, 20);
+        var tz = TimeZoneInfo.Local;
+        var startLocal = DateTime.SpecifyKind(localDay.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified);
+        var startedUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal.AddHours(14), tz);
+
+        await InsertRawSessionAsync(startedUtc);
+        await InsertRawSessionAsync(startedUtc.AddMinutes(30));
+
+        var list = await _sut.GetSessionsForLocalDayAsync(localDay);
+        Assert.Equal(2, list.Count);
+        Assert.All(list, s => Assert.Equal(localDay, DateOnly.FromDateTime(s.StartedAtUtc.ToLocalTime().Date)));
+    }
+
+    [Fact]
+    public async Task GetSessionsForLocalDayAsync_ExcludesAdjacentLocalDays()
+    {
+        var localDay = new DateOnly(2024, 3, 10);
+        var tz = TimeZoneInfo.Local;
+        var prevUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(localDay.AddDays(-1).ToDateTime(new TimeOnly(12, 0)), DateTimeKind.Unspecified),
+            tz);
+        var nextUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(localDay.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified),
+            tz);
+
+        await InsertRawSessionAsync(prevUtc);
+        await InsertRawSessionAsync(nextUtc);
+
+        var list = await _sut.GetSessionsForLocalDayAsync(localDay);
+        Assert.Empty(list);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAsync_GroupsSetsPerSession_NewestFirst()
+    {
+        var planId = Guid.NewGuid();
+        var tz = TimeZoneInfo.Local;
+        var day1 = new DateOnly(2024, 2, 1);
+        var day2 = new DateOnly(2024, 2, 5);
+        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        var t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var s1 = await InsertSessionAtUtcAsync(planId, "Old", t1);
+        await _sut.LogSetAsync(s1, 0, "Bench", 0, reps: 8, weightKg: 50);
+        await _sut.LogSetAsync(s1, 0, "Bench", 1, reps: 6, weightKg: 55);
+
+        var s2 = await InsertSessionAtUtcAsync(planId, "New", t2);
+        await _sut.LogSetAsync(s2, 0, "Bench", 0, reps: 5, weightKg: 60);
+
+        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Bench", maxSessions: 10);
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(s2, rows[0].SessionId);
+        Assert.Equal(60, rows[0].BestWeightKg);
+        Assert.Equal(5, rows[0].TotalReps);
+        Assert.Equal(1, rows[0].SetCount);
+
+        Assert.Equal(s1, rows[1].SessionId);
+        Assert.Equal(55, rows[1].BestWeightKg);
+        Assert.Equal(14, rows[1].TotalReps);
+        Assert.Equal(2, rows[1].SetCount);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAsync_ScopesByPlanAndName()
+    {
+        var p1 = Guid.NewGuid();
+        var p2 = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(p1, "A", null);
+        await _sut.LogSetAsync(s1, 0, "X", 0, reps: 1, weightKg: 10);
+        var s2 = await _sut.BeginSessionAsync(p2, "B", null);
+        await _sut.LogSetAsync(s2, 0, "X", 0, reps: 1, weightKg: 20);
+
+        var rows = await _sut.GetExerciseSessionProgressAsync(p1, "X", 10);
+        Assert.Single(rows);
+        Assert.Equal(10, rows[0].BestWeightKg);
+    }
+
+    [Fact]
     public async Task ImportBackupAsync_Idempotent_WhenReImportingSameBackup()
     {
         var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);
@@ -211,5 +324,29 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         var sets = await _sut.GetSetsForSessionAsync(sessionId);
         Assert.Single(sets);
         Assert.Equal(3, sets[0].Reps);
+    }
+
+    private Task InsertRawSessionAsync(DateTime startedAtUtc)
+    {
+        return _db.Database.InsertAsync(new WorkoutSessionLogEntity
+        {
+            Id = Guid.NewGuid().ToString(),
+            WorkoutPlanId = Guid.NewGuid().ToString(),
+            PlanName = "Test",
+            StartedAtUtc = startedAtUtc
+        });
+    }
+
+    private async Task<string> InsertSessionAtUtcAsync(Guid planId, string planName, DateTime startedAtUtc)
+    {
+        var id = Guid.NewGuid().ToString();
+        await _db.Database.InsertAsync(new WorkoutSessionLogEntity
+        {
+            Id = id,
+            WorkoutPlanId = planId.ToString(),
+            PlanName = planName,
+            StartedAtUtc = startedAtUtc
+        });
+        return id;
     }
 }

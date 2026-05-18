@@ -6,12 +6,34 @@ namespace Physiquinator.Data;
 /// <summary>Reps and weight from the most recent log row for an exercise (same plan).</summary>
 public sealed record LastSetMetrics(int? Reps, double? WeightKg);
 
+/// <summary>Per-session aggregates for one exercise under a plan (newest sessions first).</summary>
+public sealed record ExerciseSessionProgressEntry(
+    string SessionId,
+    DateTime StartedAtUtc,
+    double? BestWeightKg,
+    int TotalReps,
+    int SetCount);
+
 public class WorkoutHistoryRepository
 {
     private sealed class LastSetMetricsRow
     {
         public int? Reps { get; set; }
         public double? WeightKg { get; set; }
+    }
+
+    private sealed class SessionStartUtcRow
+    {
+        public DateTime StartedAtUtc { get; set; }
+    }
+
+    private sealed class ExerciseProgressAggRow
+    {
+        public string SessionId { get; set; } = "";
+        public DateTime StartedAtUtc { get; set; }
+        public double? BestWeightKg { get; set; }
+        public int TotalReps { get; set; }
+        public int SetCount { get; set; }
     }
     private static readonly JsonSerializerOptions s_jsonReadOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -67,6 +89,91 @@ public class WorkoutHistoryRepository
             .OrderByDescending(s => s.StartedAtUtc)
             .Take(Math.Clamp(limit, 1, 500))
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Counts workout sessions started on each local calendar day for rows in
+    /// <paramref name="utcRangeStart"/> ≤ StartedAtUtc &lt; <paramref name="utcRangeEndExclusive"/>.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<DateOnly, int>> GetSessionCountsByLocalDayAsync(
+        DateTime utcRangeStart,
+        DateTime utcRangeEndExclusive)
+    {
+        await _db.EnsureInitializedAsync();
+        var rows = await _db.Database.QueryAsync<SessionStartUtcRow>(
+            "SELECT StartedAtUtc FROM WorkoutSessionLogs WHERE StartedAtUtc >= ? AND StartedAtUtc < ?",
+            utcRangeStart,
+            utcRangeEndExclusive);
+
+        var map = new Dictionary<DateOnly, int>();
+        foreach (var row in rows)
+        {
+            var localDay = DateOnly.FromDateTime(row.StartedAtUtc.ToLocalTime().Date);
+            map.TryGetValue(localDay, out var n);
+            map[localDay] = n + 1;
+        }
+
+        return map;
+    }
+
+    /// <summary>
+    /// Sessions whose start time falls on <paramref name="localDay"/> in the device local time zone (newest first).
+    /// </summary>
+    public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetSessionsForLocalDayAsync(DateOnly localDay)
+    {
+        await _db.EnsureInitializedAsync();
+        var tz = TimeZoneInfo.Local;
+        var startLocalUnspecified = DateTime.SpecifyKind(
+            localDay.ToDateTime(TimeOnly.MinValue),
+            DateTimeKind.Unspecified);
+        var endExclusiveUnspecified = DateTime.SpecifyKind(
+            localDay.AddDays(1).ToDateTime(TimeOnly.MinValue),
+            DateTimeKind.Unspecified);
+        var utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
+        var utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
+
+        return await _db.Database.Table<WorkoutSessionLogEntity>()
+            .Where(s => s.StartedAtUtc >= utcStart && s.StartedAtUtc < utcEndExclusive)
+            .OrderByDescending(s => s.StartedAtUtc)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Last <paramref name="maxSessions"/> sessions for the plan that logged <paramref name="exerciseName"/>, newest first.
+    /// </summary>
+    public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAsync(
+        Guid workoutPlanId,
+        string exerciseName,
+        int maxSessions = 30)
+    {
+        if (string.IsNullOrWhiteSpace(exerciseName)) return Array.Empty<ExerciseSessionProgressEntry>();
+        maxSessions = Math.Clamp(maxSessions, 1, 200);
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        var rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(
+            @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
+                     MAX(s.WeightKg) AS BestWeightKg,
+                     IFNULL(SUM(s.Reps), 0) AS TotalReps,
+                     COUNT(*) AS SetCount
+              FROM WorkoutSessionLogs sess
+              INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+              GROUP BY sess.Id
+              ORDER BY sess.StartedAtUtc DESC
+              LIMIT ?",
+            planIdStr,
+            exerciseName,
+            maxSessions);
+
+        return rows
+            .Select(r => new ExerciseSessionProgressEntry(
+                r.SessionId,
+                r.StartedAtUtc,
+                r.BestWeightKg,
+                r.TotalReps,
+                r.SetCount))
+            .ToList();
     }
 
     public async Task<int> GetSessionCountAsync()

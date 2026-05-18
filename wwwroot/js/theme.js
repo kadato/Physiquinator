@@ -68,6 +68,18 @@
             applyTheme(effective);
             return effective;
         },
+        /** Clears saved theme choice so the app follows the system appearance again. */
+        resetStoredPreferenceToSystem: () => {
+            try {
+                localStorage.removeItem(storageKey);
+            } catch {
+                /* ignore */
+            }
+            const preference = "system";
+            const effective = resolveEffective(preference);
+            applyTheme(effective);
+            return { preference, effective };
+        },
         dispose: () => {
             if (mediaQuery && mediaListener) {
                 if (mediaQuery.removeEventListener) {

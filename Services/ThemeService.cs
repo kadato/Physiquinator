@@ -68,6 +68,20 @@ public sealed class ThemeService : IAsyncDisposable
         ThemeChanged?.Invoke();
     }
 
+    /// <summary>Clears the WebView theme preference so appearance matches the OS again.</summary>
+    public async Task ResetStoredPreferenceToSystemAsync()
+    {
+        await EnsureInitializedCoreAsync().ConfigureAwait(true);
+
+        var result = await _js.InvokeAsync<ThemeInitResult>("physiquinatorTheme.resetStoredPreferenceToSystem").ConfigureAwait(true);
+
+        Preference = result.Preference;
+        EffectiveTheme = result.Effective;
+        ApplyAppThemeOverride();
+
+        ThemeChanged?.Invoke();
+    }
+
     [JSInvokable]
     public void OnThemePreferenceChangedFromScript(string preference, string effective)
     {

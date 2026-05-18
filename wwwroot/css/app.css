@@ -725,3 +725,23 @@ h1:focus {
     margin: 0;
 }
 
+/* Sidebar NavLink anchors (global: NavLink renders outside scoped NavMenu bundle) */
+.phys-nav .nav-item .nav-link {
+    color: var(--tn-text-muted);
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+}
+
+.phys-nav .nav-item .nav-link.active {
+    background-color: var(--tn-accent-soft);
+    color: var(--tn-text);
+}
+
+.phys-nav .nav-item .nav-link:hover {
+    background-color: var(--tn-surface);
+    color: var(--tn-text);
+}
+

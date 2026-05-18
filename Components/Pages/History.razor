@@ -1,0 +1,63 @@
+@page "/history"
+@inject WorkoutHistoryRepository HistoryRepo
+@inject NavigationManager Navigation
+
+<div class="mb-3 mt-3">
+    <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>Back
+    </a>
+</div>
+
+<h1 class="h4 mb-3"><i class="bi bi-clock-history me-2"></i>Workout history</h1>
+
+@if (_sessions == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading</span>
+        </div>
+    </div>
+}
+else if (!_sessions.Any())
+{
+    <div class="text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.35;"></i>
+        <p class="text-muted mt-3 mb-0">No logged workouts yet. Start a plan from home to build your history.</p>
+    </div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var s in _sessions)
+        {
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-2" href="@($"/history/{Uri.EscapeDataString(s.Id)}")">
+                <div class="min-w-0">
+                    <div class="fw-semibold text-truncate">@s.PlanName</div>
+                    <small class="text-muted">
+                        @FormatLocal(s.StartedAtUtc)
+                        @if (s.EndedAtUtc != null)
+                        {
+                            <span> → @FormatLocal(s.EndedAtUtc.Value)</span>
+                        }
+                        else
+                        {
+                            <span> · in progress</span>
+                        }
+                    </small>
+                </div>
+                <i class="bi bi-chevron-right text-muted flex-shrink-0 mt-1"></i>
+            </a>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<WorkoutSessionLogEntity>? _sessions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sessions = await HistoryRepo.GetRecentSessionsAsync();
+    }
+
+    private static string FormatLocal(DateTime utc) => utc.ToLocalTime().ToString("g");
+}

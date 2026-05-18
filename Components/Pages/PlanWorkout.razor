@@ -44,13 +44,15 @@
         @for (var i = 0; i < Exercises.Count; i++)
         {
             var idx = i;
+            var moveUpDisabled = idx == 0;
+            var moveDownDisabled = idx == Exercises.Count - 1;
             <div class="card mb-2">
                 <div class="card-body p-2">
                     <!-- First row: Up arrow + Exercise name -->
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <button type="button" class="btn btn-sm btn-link text-muted p-0" 
                                 @onclick="() => MoveExerciseUp(idx)" 
-                                disabled="@(idx == 0)"
+                                disabled="@moveUpDisabled"
                                 title="Move up"
                                 style="font-size: 1.2rem; line-height: 1;">
                             <i class="bi bi-chevron-up"></i>
@@ -61,7 +63,7 @@
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm btn-link text-muted p-0" 
                                 @onclick="() => MoveExerciseDown(idx)" 
-                                disabled="@(idx == Exercises.Count - 1)"
+                                disabled="@moveDownDisabled"
                                 title="Move down"
                                 style="font-size: 1.2rem; line-height: 1; margin-left: 1px;">
                             <i class="bi bi-chevron-down"></i>
@@ -74,6 +76,11 @@
                             <i class="bi bi-hourglass-split text-muted"></i>
                             <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].RestIntervalSeconds" min="0" title="Rest (seconds)" />
                             <span class="text-muted">s</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 flex-shrink-0" title="Optional defaults when logging sets (kg)">
+                            <span class="text-muted small">def</span>
+                            <InputNumber class="form-control" style="width: 56px;" @bind-Value="Exercises[idx].DefaultReps" placeholder="reps" />
+                            <InputNumber class="form-control" style="width: 72px;" @bind-Value="Exercises[idx].DefaultWeightKg" placeholder="kg" />
                         </div>
                         <button type="button" class="btn btn-outline-danger btn-sm ms-auto" @onclick="() => RemoveExercise(idx)">
                             <i class="bi bi-trash-fill"></i>
@@ -96,7 +103,7 @@
     </div>
 
     <div class="mt-2 action-buttons">
-        <button class="btn btn-primary" @onclick="Save" disabled="@(!CanSave)">
+        <button class="btn btn-primary" @onclick="Save" disabled="@SaveDisabled">
             <i class="bi bi-save-fill me-1"></i>Save
         </button>
         <a href="/" class="btn btn-secondary">
@@ -127,6 +134,8 @@
 
     private bool CanSave => !string.IsNullOrWhiteSpace(PlanName) && Exercises.Any() && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
 
+    private bool SaveDisabled => !CanSave;
+
     protected override async Task OnInitializedAsync()
     {
         if (PlanId.HasValue)
@@ -143,7 +152,9 @@
                     Name = e.Name, 
                     SetCount = e.SetCount, 
                     Order = e.Order,
-                    RestIntervalSeconds = e.RestIntervalSeconds
+                    RestIntervalSeconds = e.RestIntervalSeconds,
+                    DefaultReps = e.DefaultReps,
+                    DefaultWeightKg = e.DefaultWeightKg
                 }).ToList();
             }
         }
@@ -223,7 +234,9 @@
                 Name = e.Name.Trim(), 
                 SetCount = e.SetCount, 
                 Order = i,
-                RestIntervalSeconds = e.RestIntervalSeconds
+                RestIntervalSeconds = e.RestIntervalSeconds,
+                DefaultReps = e.DefaultReps,
+                DefaultWeightKg = e.DefaultWeightKg
             }).ToList()
         };
         await PlanService.SavePlanAsync(plan);

@@ -43,13 +43,13 @@ else
                     <div class="d-flex gap-2 justify-content-center flex-wrap rest-timer-actions">
                         @if (SessionService.IsRestPaused)
                         {
-                            <button class="btn btn-success" @onclick="ResumeRest" disabled="@_isRestComplete">
+                            <button class="btn btn-success" @onclick="ResumeRest" disabled="@RestTimerActionsDisabled">
                                 <i class="bi bi-play-fill me-2"></i>Resume
                             </button>
                         }
                         else
                         {
-                            <button class="btn btn-pause" @onclick="PauseRest" disabled="@_isRestComplete">
+                            <button class="btn btn-pause" @onclick="PauseRest" disabled="@RestTimerActionsDisabled">
                                 <i class="bi bi-pause-fill me-2"></i>Pause
                             </button>
                         }
@@ -130,7 +130,7 @@ else
                                         </span>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary w-100" @onclick="async () => await CompleteNextSet(item.ExerciseIndex)" disabled="@_isCompleting">
+                                <button class="btn btn-primary w-100" @onclick="async () => await OpenSetLogModalAsync(item.ExerciseIndex)" disabled="@CompleteSetButtonDisabled">
                                     <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
                                 </button>
                             </div>
@@ -157,7 +157,43 @@ else
         </div>
     </div>
 
+    @if (_showSetLogModal)
+    {
+        <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,.4);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Log set</h5>
+                        <button type="button" class="btn-close" @onclick="CancelSetLogModal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">Reps and weight (kg) are prefilled from your last logged set for this exercise on this plan when available; you can change them before saving.</p>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label">Reps</label>
+                                <InputNumber class="form-control" @bind-Value="_modalReps" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Weight (kg)</label>
+                                <InputNumber class="form-control" @bind-Value="_modalWeightKg" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelSetLogModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="ConfirmSetLogAsync" disabled="@ConfirmSetLogButtonDisabled">
+                            <i class="bi bi-check2-circle me-1"></i>Complete set
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="mt-5 pt-4 border-top action-buttons">
+        <button type="button" class="btn btn-outline-secondary" @onclick="UndoLastSetAsync" disabled="@UndoLastSetButtonDisabled">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Undo last set
+        </button>
         <button class="btn btn-outline-danger" @onclick="EndWorkout">
             <i class="bi bi-stop-circle me-2"></i>End Workout
         </button>
@@ -177,6 +213,11 @@ else
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private string? _historySessionId;
+    private bool _showSetLogModal;
+    private bool _openingSetLogModal;
+    private int? _pendingExerciseIndex;
+    private int? _modalReps;
+    private double? _modalWeightKg;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -201,7 +242,8 @@ else
         {
             SessionService.StartWorkout(plan);
             await RestNotifications.EnsurePermissionAsync();
-            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name);
+            var snapshot = PlanService.SerializePlanToJson(plan);
+            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
         }
     }
 
@@ -214,7 +256,8 @@ else
         {
             SessionService.StartWorkout(plan);
             await RestNotifications.EnsurePermissionAsync();
-            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name);
+            var snapshot = PlanService.SerializePlanToJson(plan);
+            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
         }
     }
 
@@ -254,7 +297,90 @@ else
         return list;
     }
 
-    private async Task CompleteNextSet(int exerciseIndex)
+    private bool RestTimerActionsDisabled => _isRestComplete;
+
+    private bool CompleteSetButtonDisabled => _isCompleting || _showSetLogModal || _openingSetLogModal;
+
+    private bool ConfirmSetLogButtonDisabled => _isCompleting;
+
+    private bool UndoLastSetButtonDisabled =>
+        !SessionService.CompletedSets.Any() || _isCompleting || _showSetLogModal || _openingSetLogModal;
+
+    private async Task OpenSetLogModalAsync(int exerciseIndex)
+    {
+        if (_disposed || _openingSetLogModal || _showSetLogModal) return;
+
+        var plan = SessionService.CurrentPlan;
+        if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
+
+        var exercise = plan.Exercises[exerciseIndex];
+        _pendingExerciseIndex = exerciseIndex;
+
+        _openingSetLogModal = true;
+        await SafeStateHasChangedAsync();
+
+        try
+        {
+            var last = await HistoryRepository.GetLatestSetMetricsForExerciseAsync(plan.Id, exercise.Name);
+            _modalReps = last?.Reps ?? exercise.DefaultReps;
+            _modalWeightKg = last?.WeightKg ?? exercise.DefaultWeightKg;
+        }
+        catch (Exception caught)
+        {
+            System.Diagnostics.Debug.WriteLine($"GetLatestSetMetricsForExercise error: {caught}");
+            _modalReps = exercise.DefaultReps;
+            _modalWeightKg = exercise.DefaultWeightKg;
+        }
+        finally
+        {
+            _openingSetLogModal = false;
+            _showSetLogModal = true;
+            await SafeStateHasChangedAsync();
+        }
+    }
+
+    private void CancelSetLogModal()
+    {
+        _showSetLogModal = false;
+        _pendingExerciseIndex = null;
+    }
+
+    private async Task ConfirmSetLogAsync()
+    {
+        if (_pendingExerciseIndex is not int ei) return;
+        var reps = _modalReps;
+        var weight = _modalWeightKg;
+        _showSetLogModal = false;
+        _pendingExerciseIndex = null;
+        await CompleteNextSet(ei, reps, weight);
+    }
+
+    private async Task UndoLastSetAsync()
+    {
+        if (_disposed || _isCompleting || _showSetLogModal || _openingSetLogModal) return;
+        if (!SessionService.TryUndoLastSet(out _)) return;
+
+        await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
+        _isRestComplete = false;
+        SessionService.SkipRest();
+
+        if (_historySessionId != null)
+        {
+            try
+            {
+                await HistoryRepository.TryDeleteLastSetLogAsync(_historySessionId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"History undo set log error: {ex}");
+            }
+        }
+
+        await SafeStateHasChangedAsync();
+    }
+
+    private async Task CompleteNextSet(int exerciseIndex, int? reps, double? weightKg)
     {
         if (_isCompleting) return;
         if (_disposed) return;
@@ -299,7 +425,7 @@ else
                     {
                         try
                         {
-                            await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, si);
+                            await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, si, reps, weightKg);
                         }
                         catch (Exception ex)
                         {

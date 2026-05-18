@@ -1,0 +1,187 @@
+@page "/history/{SessionId}"
+@inject WorkoutHistoryRepository HistoryRepo
+@inject NavigationManager Navigation
+
+<div class="mb-3 mt-3 d-flex flex-wrap gap-2">
+    <a href="/history" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>All sessions
+    </a>
+    <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-house me-1"></i>Home
+    </a>
+</div>
+
+@if (!_ready)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading</span>
+        </div>
+    </div>
+}
+else if (_session == null)
+{
+    <p class="text-danger mt-3">This workout session was not found.</p>
+}
+else
+{
+    <h1 class="h4 mb-2"><i class="bi bi-clipboard2-data me-2"></i>@_session.PlanName</h1>
+    <p class="text-muted small mb-3">
+        Started @FormatLocal(_session.StartedAtUtc)
+        @if (_session.EndedAtUtc != null)
+        {
+            <span> · Ended @FormatLocal(_session.EndedAtUtc.Value)</span>
+        }
+        else
+        {
+            <span> · In progress</span>
+        }
+    </p>
+
+    @if (Guid.TryParse(_session.WorkoutPlanId, out var planGuid))
+    {
+        <p class="mb-3">
+            <a class="btn btn-sm btn-outline-primary" href="/plan/@planGuid">
+                <i class="bi bi-pencil-square me-1"></i>Open current plan
+            </a>
+        </p>
+    }
+
+    @if (_snapshot != null)
+    {
+        <div class="card mb-3">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span class="small fw-semibold"><i class="bi bi-camera-fill me-1"></i>Plan at workout time</span>
+            </div>
+            <div class="card-body py-2">
+                <ul class="mb-0 small ps-3">
+                    @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
+                    {
+                        <li>@ex.Name — @ex.SetCount sets, rest @ex.RestIntervalSeconds s</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+
+    @if (!_setRows.Any())
+    {
+        <div class="text-center py-4">
+            <p class="text-muted mb-0">No sets logged for this session.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Set</th>
+                        <th>Reps</th>
+                        <th>kg</th>
+                        <th>Time</th>
+                        <th>Rest after prev.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in _setRows)
+                    {
+                        <tr>
+                            <td>@row.Log.ExerciseName</td>
+                            <td>@(row.Log.SetIndex + 1)</td>
+                            <td>@(row.Log.Reps?.ToString() ?? "—")</td>
+                            <td>@(row.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</td>
+                            <td class="text-nowrap small">@FormatLocal(row.Log.CompletedAtUtc)</td>
+                            <td class="small text-muted">@(row.RestAfterPrevious ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <div class="mt-4 pt-3 border-top">
+        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="DeleteSessionClick">
+            <i class="bi bi-trash me-1"></i>Delete this workout
+        </button>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string SessionId { get; set; } = "";
+
+    private bool _ready;
+    private WorkoutSessionLogEntity? _session;
+    private WorkoutPlan? _snapshot;
+    private List<SetRow> _setRows = new();
+
+    private record SetRow(WorkoutSetLogEntity Log, string? RestAfterPrevious);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready = false;
+        var id = Uri.UnescapeDataString(SessionId ?? "");
+        _session = string.IsNullOrWhiteSpace(id) ? null : await HistoryRepo.GetSessionAsync(id);
+        _snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(_session?.PlanSnapshotJson);
+
+        var sets = _session != null
+            ? (await HistoryRepo.GetSetsForSessionAsync(_session.Id)).ToList()
+            : new List<WorkoutSetLogEntity>();
+
+        _setRows = BuildSetRows(sets);
+        _ready = true;
+    }
+
+    private static List<SetRow> BuildSetRows(IReadOnlyList<WorkoutSetLogEntity> orderedSets)
+    {
+        var list = new List<SetRow>();
+        DateTime? previousUtc = null;
+        foreach (var log in orderedSets)
+        {
+            string? rest = null;
+            if (previousUtc != null)
+            {
+                var gap = log.CompletedAtUtc - previousUtc.Value;
+                if (gap.TotalSeconds >= 0)
+                    rest = FormatDuration(gap);
+            }
+
+            list.Add(new SetRow(log, rest));
+            previousUtc = log.CompletedAtUtc;
+        }
+
+        return list;
+    }
+
+    private static string FormatDuration(TimeSpan gap)
+    {
+        if (gap.TotalHours >= 1)
+            return $"{(int)gap.TotalHours}:{gap.Minutes:D2}:{gap.Seconds:D2}";
+        if (gap.TotalMinutes >= 1)
+            return $"{(int)gap.TotalMinutes}:{gap.Seconds:D2}";
+        return $"{(int)gap.TotalSeconds}s";
+    }
+
+    private static string FormatLocal(DateTime utc) => utc.ToLocalTime().ToString("g");
+
+    private async Task DeleteSessionClick()
+    {
+        if (_session == null) return;
+
+        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page == null) return;
+
+        var ok = await page.DisplayAlertAsync(
+            "Delete workout",
+            "Remove this session and all logged sets? This cannot be undone.",
+            "Delete",
+            "Cancel");
+
+        if (!ok) return;
+
+        await HistoryRepo.DeleteSessionAsync(_session.Id);
+        Navigation.NavigateTo("/history");
+    }
+}

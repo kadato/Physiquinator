@@ -1,0 +1,26 @@
+.exercise-progress-sets-table.history-table-wrap {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.exercise-progress-table-card > .exercise-progress-sets-table {
+    border-top: 1px solid var(--tn-border);
+}
+
+@media (max-width: 575.98px) {
+    .exercise-progress-sets-table .table {
+        font-size: 0.8125rem;
+    }
+
+    .exercise-progress-sets-table .table thead th {
+        font-size: 0.58rem;
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+    }
+
+    .exercise-progress-sets-table .table td {
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+    }
+}

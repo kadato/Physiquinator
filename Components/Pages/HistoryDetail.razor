@@ -3,12 +3,12 @@
 @inject NavigationManager Navigation
 
 <div class="mb-3 mt-3 d-flex flex-wrap gap-2">
-    <a href="/history" class="btn btn-outline-secondary btn-sm">
+    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHistoryList">
         <i class="bi bi-arrow-left me-1"></i>All sessions
-    </a>
-    <a href="/" class="btn btn-outline-secondary btn-sm">
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHome">
         <i class="bi bi-house me-1"></i>Home
-    </a>
+    </button>
 </div>
 
 @if (!_ready)
@@ -25,79 +25,114 @@ else if (_session == null)
 }
 else
 {
-    <h1 class="h4 mb-2"><i class="bi bi-clipboard2-data me-2"></i>@_session.PlanName</h1>
-    <p class="text-muted small mb-3">
-        Started @FormatLocal(_session.StartedAtUtc)
-        @if (_session.EndedAtUtc != null)
-        {
-            <span> · Ended @FormatLocal(_session.EndedAtUtc.Value)</span>
-        }
-        else
-        {
-            <span> · In progress</span>
-        }
-    </p>
+    <div class="card mb-3">
+        <div class="card-header py-2">
+            <span class="small fw-semibold"><i class="bi bi-clipboard2-data me-1"></i>Workout</span>
+        </div>
+        <div class="card-body py-3">
+            <h1 class="h4 mb-2">@_session.PlanName</h1>
+            <p class="text-muted small mb-1">
+                <i class="bi bi-clock me-1"></i>Started @UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)
+            </p>
+            @if (_session.EndedAtUtc != null)
+            {
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-check2-circle me-1"></i>Ended @UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)
+                </p>
+            }
+            else
+            {
+                <p class="text-muted small mb-0"><i class="bi bi-hourglass-split me-1"></i>In progress</p>
+            }
+            @if (_planGuid is { } planId)
+            {
+                <div class="mt-3 pt-3 border-top">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => GoPlan(planId)">
+                        <i class="bi bi-pencil-square me-1"></i>Open plan
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
 
-    @if (Guid.TryParse(_session.WorkoutPlanId, out var planGuid))
+    @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
     {
-        <p class="mb-3">
-            <a class="btn btn-sm btn-outline-primary" href="/plan/@planGuid">
-                <i class="bi bi-pencil-square me-1"></i>Open current plan
-            </a>
-        </p>
+        <div class="card mb-3">
+            <div class="card-header py-2">
+                <span class="small fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i>Progress by exercise</span>
+            </div>
+            <div class="card-body py-3">
+                <p class="text-muted small mb-3">Open a chart for any exercise from this session.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var name in _distinctExerciseNames)
+                    {
+                        var exercise = name;
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" title="@exercise" @onclick="() => GoExerciseProgress(pg, exercise)">
+                            <i class="bi bi-bar-chart-line-fill me-1"></i>@exercise
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
     }
 
     @if (_snapshot != null)
     {
         <div class="card mb-3">
-            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                <span class="small fw-semibold"><i class="bi bi-camera-fill me-1"></i>Plan at workout time</span>
+            <div class="card-header py-2">
+                <span class="small fw-semibold"><i class="bi bi-camera-fill me-1"></i>Plan when you trained</span>
             </div>
-            <div class="card-body py-2">
-                <ul class="mb-0 small ps-3">
-                    @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
-                    {
-                        <li>@ex.Name — @ex.SetCount sets, rest @ex.RestIntervalSeconds s</li>
-                    }
-                </ul>
+            <div class="card-body py-3">
+                @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
+                {
+                    <div class="history-detail-snapshot-row small d-flex flex-wrap justify-content-between align-items-baseline column-gap-2 row-gap-1">
+                        <span class="fw-medium">@ex.Name</span>
+                        <span class="text-muted">@ex.SetCount sets · @ex.RestIntervalSeconds s rest</span>
+                    </div>
+                }
             </div>
         </div>
     }
 
     @if (!_setRows.Any())
     {
-        <div class="text-center py-4">
-            <p class="text-muted mb-0">No sets logged for this session.</p>
+        <div class="card mb-3">
+            <div class="card-body py-4 text-center text-muted small mb-0">No sets logged for this session.</div>
         </div>
     }
     else
     {
-        <div class="table-responsive history-table-wrap">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Exercise</th>
-                        <th>Set</th>
-                        <th>Reps</th>
-                        <th>kg</th>
-                        <th>Time</th>
-                        <th>Rest after prev.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in _setRows)
-                    {
+        <div class="card mb-3 history-detail-table-card overflow-hidden">
+            <div class="card-header py-2">
+                <span class="small fw-semibold"><i class="bi bi-list-ul me-1"></i>Sets</span>
+            </div>
+            <div class="table-responsive history-table-wrap history-detail-sets-table">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                    <thead>
                         <tr>
-                            <td>@row.Log.ExerciseName</td>
-                            <td>@(row.Log.SetIndex + 1)</td>
-                            <td>@(row.Log.Reps?.ToString() ?? "—")</td>
-                            <td>@(row.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</td>
-                            <td class="text-nowrap small">@FormatLocal(row.Log.CompletedAtUtc)</td>
-                            <td class="small text-muted">@(row.RestAfterPrevious ?? "—")</td>
+                            <th>Exercise</th>
+                            <th>Set</th>
+                            <th>Reps</th>
+                            <th>kg</th>
+                            <th>Time</th>
+                            <th><abbr title="Rest after previous set">Rest</abbr></th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _setRows)
+                        {
+                            <tr>
+                                <td>@row.Log.ExerciseName</td>
+                                <td>@(row.Log.SetIndex + 1)</td>
+                                <td>@(row.Log.Reps?.ToString() ?? "—")</td>
+                                <td>@(row.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</td>
+                                <td class="text-nowrap small">@UiDateFormats.LocalDateTimeCompact(row.Log.CompletedAtUtc)</td>
+                                <td class="small text-muted">@(row.RestAfterPrevious ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
 
@@ -116,8 +151,19 @@ else
     private WorkoutSessionLogEntity? _session;
     private WorkoutPlan? _snapshot;
     private List<SetRow> _setRows = new();
+    private Guid? _planGuid;
+    private List<string> _distinctExerciseNames = new();
 
     private record SetRow(WorkoutSetLogEntity Log, string? RestAfterPrevious);
+
+    private void GoHistoryList() => Navigation.NavigateTo("/history");
+
+    private void GoHome() => Navigation.NavigateTo("/");
+
+    private void GoPlan(Guid planId) => Navigation.NavigateTo($"/plan/{planId}");
+
+    private void GoExerciseProgress(Guid planId, string exerciseName) =>
+        Navigation.NavigateTo($"/history/exercise-progress/{planId}/{Uri.EscapeDataString(exerciseName)}");
 
     protected override async Task OnParametersSetAsync()
     {
@@ -131,6 +177,13 @@ else
             : new List<WorkoutSetLogEntity>();
 
         _setRows = BuildSetRows(sets);
+        _planGuid = Guid.TryParse(_session?.WorkoutPlanId, out var g) ? g : null;
+        _distinctExerciseNames = sets
+            .Select(s => s.ExerciseName)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+            .ToList();
         _ready = true;
     }
 
@@ -163,8 +216,6 @@ else
             return $"{(int)gap.TotalMinutes}:{gap.Seconds:D2}";
         return $"{(int)gap.TotalSeconds}s";
     }
-
-    private static string FormatLocal(DateTime utc) => utc.ToLocalTime().ToString("g");
 
     private async Task DeleteSessionClick()
     {

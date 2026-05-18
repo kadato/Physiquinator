@@ -1,0 +1,109 @@
+@page "/history/exercise-progress/{PlanId:guid}/{ExerciseName}"
+@inject WorkoutHistoryRepository HistoryRepo
+@inject NavigationManager Navigation
+
+<div class="mb-3 mt-3">
+    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHistory">
+        <i class="bi bi-arrow-left me-1"></i>History
+    </button>
+</div>
+
+@if (!_ready)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <h1 class="h4 mb-2">@_decodedExerciseName</h1>
+            <p class="text-muted small mb-0">
+                Logged performance on this plan — up to the last <strong class="text-body">@_maxSessions</strong> sessions that include this exercise.
+            </p>
+        </div>
+    </div>
+
+    @if (!_rows.Any())
+    {
+        <div class="card mb-3">
+            <div class="card-body py-4 text-center text-muted small mb-0">No sets logged for this exercise on this plan yet.</div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3 exercise-progress-table-card overflow-hidden">
+            <div class="card-header py-2">
+                <span class="small fw-semibold"><i class="bi bi-table me-1"></i>By session</span>
+            </div>
+            <div class="table-responsive history-table-wrap exercise-progress-sets-table">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th class="text-end">Best kg</th>
+                            <th class="text-end">Total reps</th>
+                            <th class="text-end">Sets</th>
+                            <th class="text-end">Session</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in _rows)
+                        {
+                            var sessionId = r.SessionId;
+                            <tr>
+                                <td class="text-nowrap small">@UiDateFormats.LocalDateCompact(r.StartedAtUtc)</td>
+                                <td class="text-end">@(r.BestWeightKg is { } w ? w.ToString("0.##") : "—")</td>
+                                <td class="text-end">@r.TotalReps</td>
+                                <td class="text-end">@r.SetCount</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-outline-primary btn-sm text-nowrap" @onclick="() => GoSession(sessionId)">
+                                        Open
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid PlanId { get; set; }
+
+    [Parameter]
+    public string ExerciseName { get; set; } = "";
+
+    private const int _maxSessions = 30;
+
+    private bool _ready;
+    private string _decodedExerciseName = "";
+    private IReadOnlyList<ExerciseSessionProgressEntry> _rows = Array.Empty<ExerciseSessionProgressEntry>();
+
+    private void GoHistory() => Navigation.NavigateTo("/history");
+
+    private void GoSession(string sessionId) =>
+        Navigation.NavigateTo($"/history/{Uri.EscapeDataString(sessionId)}");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready = false;
+        _decodedExerciseName = Uri.UnescapeDataString(ExerciseName ?? "");
+        if (string.IsNullOrWhiteSpace(_decodedExerciseName))
+        {
+            _rows = Array.Empty<ExerciseSessionProgressEntry>();
+            _ready = true;
+            return;
+        }
+
+        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, _maxSessions);
+        _ready = true;
+    }
+
+}

@@ -51,6 +51,7 @@
     --tn-celebrate-glow-1: rgba(115, 218, 202, 0.38);
     --tn-celebrate-glow-2: rgba(158, 206, 106, 0.32);
     --tn-celebrate-drop: rgba(115, 218, 202, 0.45);
+    --tn-modal-backdrop: rgba(10, 12, 22, 0.58);
 }
 
 [data-theme="light"] {
@@ -96,6 +97,7 @@
     --tn-celebrate-glow-1: rgba(46, 125, 110, 0.28);
     --tn-celebrate-glow-2: rgba(51, 99, 92, 0.22);
     --tn-celebrate-drop: rgba(46, 125, 110, 0.35);
+    --tn-modal-backdrop: rgba(52, 59, 88, 0.42);
 }
 
 html, body {
@@ -387,6 +389,46 @@ a:hover {
     background: var(--tn-surface-2);
     color: var(--tn-text);
     border-bottom: 1px solid var(--tn-border);
+}
+
+/* Modals — Bootstrap modal CSS keys off data-bs-theme; we drive colors from data-theme tokens */
+.modal.d-block {
+    background: var(--tn-modal-backdrop) !important;
+}
+
+.modal-content {
+    background: var(--tn-surface-2);
+    color: var(--tn-text);
+    border: 1px solid var(--tn-border);
+    border-radius: var(--tn-radius);
+    box-shadow: var(--tn-shadow-strong);
+}
+
+.modal-header {
+    background: var(--tn-surface);
+    color: var(--tn-text);
+    border-bottom: 1px solid var(--tn-border);
+}
+
+.modal-footer {
+    background: var(--tn-surface-2);
+    border-top: 1px solid var(--tn-border);
+}
+
+.modal-title {
+    color: var(--tn-text);
+}
+
+.modal-body {
+    color: var(--tn-text);
+}
+
+[data-theme="dark"] .modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="light"] .modal .btn-close {
+    filter: none;
 }
 
 /* Tables — theme tokens (Bootstrap table vars follow data-bs-theme; we use data-theme) */

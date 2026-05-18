@@ -34,5 +34,7 @@
     </array>
     <key>XSAppIconAssets</key>
     <string>Assets.xcassets/appicon.appiconset</string>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>Physiquinator uses notifications to alert you when rest time ends.</string>
 </dict>
 </plist>

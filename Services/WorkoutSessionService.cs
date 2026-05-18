@@ -3,23 +3,48 @@ using Physiquinator.Models;
 namespace Physiquinator.Services;
 
 /// <summary>
-/// Manages workout session state. Rest-timer ticking is driven externally by the UI
-/// component via <see cref="TickRest"/> — there is no internal background timer thread,
-/// which avoids cross-thread WebView interactions that caused native crashes on Android.
+/// Manages workout session state. Rest countdown uses wall-clock end time
+/// (<see cref="RestEndsAtUtc"/>) while ticking is still driven by the UI/JS bridge
+/// (<see cref="TickRest"/>) to avoid background threads in the WebView.
 /// </summary>
 public class WorkoutSessionService : IDisposable
 {
-    private int _restSecondsRemaining;
-    private int _restSecondsTotal;
+    private readonly TimeProvider _time;
+
+    private DateTime? _restEndsAtUtc;
+    private int _activeRestDurationSeconds;
     private bool _isResting;
-    private bool _isRestPaused;
-    private DateTime? _suspendedAt;
+    private bool _userPaused;
+    private int? _pausedRemainingSeconds;
+
+    public WorkoutSessionService(TimeProvider time) => _time = time;
 
     public WorkoutPlan? CurrentPlan { get; private set; }
     public List<SetCompletion> CompletedSets { get; } = new();
-    public int RestSecondsRemaining => _restSecondsRemaining;
+
+    /// <summary>UTC instant when the current rest period ends, if running on wall clock.</summary>
+    public DateTime? RestEndsAtUtc => _isResting && !_userPaused ? _restEndsAtUtc : null;
+
+    public int RestSecondsRemaining
+    {
+        get
+        {
+            if (!_isResting) return 0;
+            if (_userPaused && _pausedRemainingSeconds.HasValue)
+                return Math.Max(0, _pausedRemainingSeconds.Value);
+            if (_restEndsAtUtc.HasValue)
+                return Math.Max(0, (int)Math.Ceiling((_restEndsAtUtc.Value - UtcNow).TotalSeconds));
+            return 0;
+        }
+    }
+
     public bool IsResting => _isResting;
-    public bool IsRestPaused => _isResting && _isRestPaused;
+    public bool IsRestPaused => _isResting && _userPaused;
+
+    /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
+    public event EventHandler? RestCompletedWhileBackground;
+
+    private DateTime UtcNow => _time.GetUtcNow().UtcDateTime;
 
     public void StartWorkout(WorkoutPlan plan)
     {
@@ -51,26 +76,32 @@ public class WorkoutSessionService : IDisposable
     public void StartRest(int restIntervalSeconds)
     {
         if (CurrentPlan == null) return;
-        _restSecondsRemaining = restIntervalSeconds;
-        _restSecondsTotal = restIntervalSeconds;
-        _isRestPaused = false;
-        _suspendedAt = null;
+
+        _activeRestDurationSeconds = Math.Max(0, restIntervalSeconds);
+        _userPaused = false;
+        _pausedRemainingSeconds = null;
+
+        if (_activeRestDurationSeconds == 0)
+        {
+            StopRest();
+            return;
+        }
+
+        _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
     }
 
     /// <summary>
-    /// Decrements the countdown by one second.
     /// Returns <c>true</c> when the rest period just finished.
     /// Must be called only from the UI timer loop (single thread).
     /// </summary>
     public bool TickRest()
     {
-        if (!_isResting || _isRestPaused) return false;
+        if (!_isResting || _userPaused || !_restEndsAtUtc.HasValue) return false;
 
-        _restSecondsRemaining--;
-        if (_restSecondsRemaining <= 0)
+        if (UtcNow >= _restEndsAtUtc.Value)
         {
-            _isResting = false;
+            StopRest();
             return true;
         }
 
@@ -79,43 +110,59 @@ public class WorkoutSessionService : IDisposable
 
     public void PauseRest()
     {
-        _isRestPaused = true;
+        if (!_isResting || _userPaused) return;
+
+        _pausedRemainingSeconds = RestSecondsRemaining;
+        _userPaused = true;
+        _restEndsAtUtc = null;
     }
 
-    /// <summary>
-    /// Resumes the rest timer. Returns <c>true</c> if the rest expired while
-    /// the app was suspended and should be treated as complete immediately.
-    /// </summary>
+    /// <summary>User tapped Resume after pausing rest.</summary>
     public bool ResumeRest()
     {
-        if (!_isResting) return false;
+        if (!_isResting || !_userPaused) return false;
 
-        if (_suspendedAt.HasValue)
+        var remaining = _pausedRemainingSeconds ?? 0;
+        _userPaused = false;
+        _pausedRemainingSeconds = null;
+
+        if (remaining <= 0)
         {
-            var elapsed = (int)(DateTime.UtcNow - _suspendedAt.Value).TotalSeconds;
-            _suspendedAt = null;
-            _restSecondsRemaining = Math.Max(0, _restSecondsRemaining - elapsed);
-
-            if (_restSecondsRemaining <= 0)
-            {
-                _isResting = false;
-                return true;
-            }
+            StopRest();
+            return true;
         }
 
-        _isRestPaused = false;
+        _restEndsAtUtc = UtcNow.AddSeconds(remaining);
         return false;
+    }
+
+    /// <summary>Called when the app window becomes active. Completes rest if wall-clock end passed.</summary>
+    public void NotifyAppActivated()
+    {
+        if (!TryCompleteRestIfExpired())
+            return;
+
+        RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Used by tests and <see cref="NotifyAppActivated"/>.</summary>
+    public bool TryCompleteRestIfExpired()
+    {
+        if (!_isResting || _userPaused || !_restEndsAtUtc.HasValue) return false;
+        if (UtcNow < _restEndsAtUtc.Value) return false;
+
+        StopRest();
+        return true;
     }
 
     public void ResetRest()
     {
-        if (_restSecondsTotal > 0)
-        {
-            _restSecondsRemaining = _restSecondsTotal;
-            _isRestPaused = false;
-            _suspendedAt = null;
-            _isResting = true;
-        }
+        if (_activeRestDurationSeconds <= 0) return;
+
+        _userPaused = false;
+        _pausedRemainingSeconds = null;
+        _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
+        _isResting = true;
     }
 
     public void SkipRest() => StopRest();
@@ -123,23 +170,19 @@ public class WorkoutSessionService : IDisposable
     /// <summary>Stop the rest timer without firing any completion callback.</summary>
     public void CancelRest() => StopRest();
 
-    /// <summary>Pause the countdown when the app is backgrounded.</summary>
+    /// <summary>App window deactivated. Wall clock still applies; JS ticks may stop in WebView.</summary>
     public void SuspendRest()
     {
-        if (_isResting && !_isRestPaused)
-        {
-            _suspendedAt = DateTime.UtcNow;
-            _isRestPaused = true;
-        }
+        // Intentionally no-op: rest continues in real time via RestEndsAtUtc.
     }
 
     private void StopRest()
     {
         _isResting = false;
-        _isRestPaused = false;
-        _restSecondsRemaining = 0;
-        _restSecondsTotal = 0;
-        _suspendedAt = null;
+        _userPaused = false;
+        _pausedRemainingSeconds = null;
+        _restEndsAtUtc = null;
+        _activeRestDurationSeconds = 0;
     }
 
     public void Dispose() { }

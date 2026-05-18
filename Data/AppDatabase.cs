@@ -17,6 +17,8 @@ public class AppDatabase
     {
         await _database.CreateTableAsync<WorkoutPlanEntity>();
         await _database.CreateTableAsync<ExercisePlanEntity>();
+        await _database.CreateTableAsync<WorkoutSessionLogEntity>();
+        await _database.CreateTableAsync<WorkoutSetLogEntity>();
     }
 
     public async Task EnsureInitializedAsync()

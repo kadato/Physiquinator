@@ -25,13 +25,19 @@ public class WorkoutPlanService
     /// <summary>
     /// Exports a workout plan to a JSON string.
     /// </summary>
+    public string SerializePlanToJson(WorkoutPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return JsonSerializer.Serialize(plan, s_jsonOptions);
+    }
+
     public async Task<string> ExportPlanToJsonAsync(Guid id)
     {
         var plan = await GetPlanAsync(id);
         if (plan == null)
             throw new InvalidOperationException($"Plan with ID {id} not found.");
 
-        return JsonSerializer.Serialize(plan, s_jsonOptions);
+        return SerializePlanToJson(plan);
     }
 
     /// <summary>

@@ -73,6 +73,17 @@ public class WorkoutSessionService : IDisposable
         CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
     }
 
+    /// <summary>Removes the last completed set (chronological append order). Returns false when none.</summary>
+    public bool TryUndoLastSet(out SetCompletion removed)
+    {
+        removed = default!;
+        if (CompletedSets.Count == 0) return false;
+        var i = CompletedSets.Count - 1;
+        removed = CompletedSets[i];
+        CompletedSets.RemoveAt(i);
+        return true;
+    }
+
     public void StartRest(int restIntervalSeconds)
     {
         if (CurrentPlan == null) return;

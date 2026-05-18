@@ -1,0 +1,129 @@
+@using System.Globalization
+@inject IJSRuntime JSRuntime
+
+<div class="activity-heatmap mb-0">
+    <div class="heatmap-scroll" @ref="_heatmapScroll">
+        <div class="heatmap-grid" style="--week-cols: @Weeks">
+            @for (var r = 0; r < 7; r++)
+            {
+                var row = r;
+                <div class="heatmap-day-label" aria-hidden="true">@DayLabel(row)</div>
+                @for (var c = 0; c < Weeks; c++)
+                {
+                    var col = c;
+                    var cellDate = GetCellDate(col, row);
+                    var isFuture = cellDate > _endLocal;
+                    var count = isFuture ? 0 : CountsByDay.GetValueOrDefault(cellDate, 0);
+                    var active = count > 0;
+                    var title = GetCellTitle(cellDate, active);
+                    var isSelected = SelectedDay == cellDate;
+                    <button type="button"
+                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null)"
+                            title="@title"
+                            aria-label="@title"
+                            aria-pressed="@(isSelected ? "true" : "false")"
+                            disabled="@isFuture"
+                            @onclick="() => OnCellClickAsync(cellDate)"></button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Monday (row 0) through Sunday (row 6); columns are weeks, oldest left.</summary>
+    [Parameter]
+    public IReadOnlyDictionary<DateOnly, int> CountsByDay { get; set; } = new Dictionary<DateOnly, int>();
+
+    [Parameter]
+    public int Weeks { get; set; } = 53;
+
+    /// <summary>Last calendar day included in the grid (future days in the last week render empty).</summary>
+    [Parameter]
+    public DateOnly? EndLocal { get; set; }
+
+    [Parameter]
+    public DateOnly? SelectedDay { get; set; }
+
+    [Parameter]
+    public EventCallback<DateOnly?> SelectedDayChanged { get; set; }
+
+    private DateOnly _endLocal;
+    private DateOnly _leftMonday;
+    private ElementReference _heatmapScroll;
+
+    protected override void OnParametersSet()
+    {
+        Weeks = Math.Clamp(Weeks, 1, 104);
+        _endLocal = EndLocal ?? DateOnly.FromDateTime(DateTime.Today);
+        var mondayOfEndWeek = GetMondayOfWeek(_endLocal);
+        _leftMonday = mondayOfEndWeek.AddDays(-7 * (Weeks - 1));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+        try
+        {
+            await Task.Delay(32);
+            await JSRuntime.InvokeVoidAsync("physiquinator.scrollHeatmapToEnd", _heatmapScroll);
+        }
+        catch
+        {
+            /* WebView / interop not ready */
+        }
+    }
+
+    public static DateOnly GetMondayOfWeek(DateOnly date)
+    {
+        var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return date.AddDays(-diff);
+    }
+
+    public static (DateTime UtcStart, DateTime UtcEndExclusive) GetHeatmapQueryUtcBounds(DateOnly endLocal, int weeks = 53)
+    {
+        weeks = Math.Clamp(weeks, 1, 104);
+        var tz = TimeZoneInfo.Local;
+        var mondayOfEndWeek = GetMondayOfWeek(endLocal);
+        var gridStartMonday = mondayOfEndWeek.AddDays(-7 * (weeks - 1));
+
+        var startLocalUnspecified = DateTime.SpecifyKind(
+            gridStartMonday.ToDateTime(TimeOnly.MinValue),
+            DateTimeKind.Unspecified);
+        var endExclusiveUnspecified = DateTime.SpecifyKind(
+            endLocal.AddDays(1).ToDateTime(TimeOnly.MinValue),
+            DateTimeKind.Unspecified);
+
+        var utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
+        var utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
+        return (utcStart, utcEndExclusive);
+    }
+
+    private DateOnly GetCellDate(int weekColumn, int dayRow) =>
+        _leftMonday.AddDays(weekColumn * 7 + dayRow);
+
+    private static string? DayLabel(int row) => row switch
+    {
+        0 => "Mon",
+        2 => "Wed",
+        4 => "Fri",
+        _ => null
+    };
+
+    private string GetCellTitle(DateOnly cellDate, bool workedOut)
+    {
+        if (cellDate > _endLocal)
+            return $"{cellDate:yyyy-MM-dd} (future)";
+        var dayLabel = cellDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return workedOut ? $"{dayLabel} · workout" : $"{dayLabel} · off";
+    }
+
+    private async Task OnCellClickAsync(DateOnly cellDate)
+    {
+        if (cellDate > _endLocal) return;
+        if (!SelectedDayChanged.HasDelegate) return;
+        var next = SelectedDay == cellDate ? (DateOnly?)null : cellDate;
+        await SelectedDayChanged.InvokeAsync(next);
+    }
+}

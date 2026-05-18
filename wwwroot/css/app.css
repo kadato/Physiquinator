@@ -399,7 +399,43 @@ a:hover {
 .rest-timer .card-body {
     position: relative;
     z-index: 1;
-    padding: 2rem;
+    padding: 2.25rem 1.75rem;
+}
+
+@media (min-width: 576px) {
+    .rest-timer .card-body {
+        padding: 2.75rem 2.25rem;
+    }
+}
+
+.rest-complete-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--tn-radius-md);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.22) 0%, rgba(22, 163, 74, 0.12) 100%);
+    border: 2px solid var(--tn-success);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset, 0 8px 28px rgba(34, 197, 94, 0.25);
+}
+
+.rest-complete-banner__label {
+    font-size: clamp(1.05rem, 3.5vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tn-success-strong);
+}
+
+.rest-complete-banner__go {
+    font-size: clamp(1.15rem, 4vw, 1.5rem);
+    font-weight: 700;
+    color: var(--tn-text);
+}
+
+.rest-timer--complete .rest-timer-digits {
+    font-size: clamp(3.25rem, 14vw, 5.5rem);
 }
 
 .rest-timer-title {
@@ -422,9 +458,9 @@ a:hover {
 }
 
 .rest-timer-digits {
-    font-size: clamp(2.75rem, 9vw, 4.25rem);
-    font-weight: 700;
-    line-height: 1.05;
+    font-size: clamp(3.5rem, 16vw, 6.25rem);
+    font-weight: 800;
+    line-height: 1.02;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.04em;
     background: var(--tn-timer-digit);

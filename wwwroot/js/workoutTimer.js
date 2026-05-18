@@ -49,6 +49,18 @@ function getAudioContext() {
     return sharedCtx;
 }
 
+// Call once from a user gesture (e.g. Complete set) so mobile WebViews allow audio on timer fire.
+export function unlockAudioContext() {
+    try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+    } catch {
+        /* ignore */
+    }
+}
+
 export function playRestCompleteSound() {
     try {
         const audioContext = getAudioContext();

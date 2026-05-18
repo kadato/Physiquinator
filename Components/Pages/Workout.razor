@@ -1,6 +1,8 @@
 @page "/workout/{PlanId:guid}"
 @inject WorkoutPlanService PlanService
 @inject WorkoutSessionService SessionService
+@inject RestNotificationService RestNotifications
+@inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
@@ -25,12 +27,19 @@ else
     <div class="workout-timer-section mb-4">
         @if (SessionService.IsResting || _isRestComplete)
         {
-            <div class="rest-timer card @(_isRestComplete ? "rest-complete-pulse" : "")">
-                <div class="card-body text-center">
+            <div class="rest-timer card @(_isRestComplete ? "rest-complete-pulse rest-timer--complete" : "")">
+                <div class="card-body text-center py-4 px-3">
+                    @if (_isRestComplete)
+                    {
+                        <div class="rest-complete-banner mb-3" role="status" aria-live="assertive">
+                            <span class="rest-complete-banner__label">Rest complete</span>
+                            <span class="rest-complete-banner__go">Ready for your next set</span>
+                        </div>
+                    }
                     <p class="mb-2 text-uppercase fw-bold rest-timer-title @(_isRestComplete ? "rest-timer-title--complete" : "")">
-                        <i class="bi @(_isRestComplete ? "bi-bell-fill" : "bi-hourglass-split") me-2"></i>@(_isRestComplete ? "Rest Complete!" : "Rest Time")
+                        <i class="bi @(_isRestComplete ? "bi-bell-fill" : "bi-hourglass-split") me-2"></i>@(_isRestComplete ? "Time's up" : "Rest time")
                     </p>
-                    <p class="mb-3 rest-timer-digits @(_isRestComplete ? "rest-timer-digits--complete" : "")">@FormatTime(SessionService.RestSecondsRemaining)</p>
+                    <p class="mb-4 rest-timer-digits @(_isRestComplete ? "rest-timer-digits--complete" : "")" aria-live="polite">@FormatTime(SessionService.RestSecondsRemaining)</p>
                     <div class="d-flex gap-2 justify-content-center flex-wrap rest-timer-actions">
                         @if (SessionService.IsRestPaused)
                         {
@@ -167,6 +176,7 @@ else
     private bool _isCompleting;
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
+    private string? _historySessionId;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -174,6 +184,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        SessionService.RestCompletedWhileBackground += OnSessionRestCompletedWhileBackground;
+
         _dotNetRef = DotNetObjectReference.Create(this);
 
         try
@@ -186,7 +198,11 @@ else
 
         var plan = await PlanService.GetPlanAsync(PlanId);
         if (!_disposed && plan != null)
+        {
             SessionService.StartWorkout(plan);
+            await RestNotifications.EnsurePermissionAsync();
+            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name);
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -197,6 +213,8 @@ else
         if (plan != null && SessionService.CurrentPlan?.Id != plan.Id)
         {
             SessionService.StartWorkout(plan);
+            await RestNotifications.EnsurePermissionAsync();
+            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name);
         }
     }
 
@@ -249,6 +267,8 @@ else
 
         try
         {
+            await UnlockAudioContextAsync();
+
             var exercise = plan.Exercises[exerciseIndex];
 
             for (var si = 0; si < exercise.SetCount; si++)
@@ -267,13 +287,29 @@ else
                     var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
+                    {
+                        RestNotifications.CancelAllRestNotifications();
                         SessionService.SkipRest();
+                    }
 
                     _isRestComplete = false;
                     SessionService.CompleteSet(exerciseIndex, si);
 
+                    if (_historySessionId != null)
+                    {
+                        try
+                        {
+                            await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, si);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"History LogSet error: {ex}");
+                        }
+                    }
+
                     if (willBeLastSetOfWorkout)
                     {
+                        RestNotifications.CancelAllRestNotifications();
                         await SafeStateHasChangedAsync();
                         await OnWorkoutComplete();
                     }
@@ -282,8 +318,10 @@ else
                     {
                         _isRestComplete = false;
                         await StopJsTimerAsync();
+                        RestNotifications.CancelAllRestNotifications();
                         SessionService.StartRest(exercise.RestIntervalSeconds);
                         await StartJsTimerAsync();
+                        await ScheduleRestNotificationIfRestingAsync();
                     }
 
                     await SafeStateHasChangedAsync();
@@ -309,6 +347,9 @@ else
     private async Task PauseRest()
     {
         if (_disposed) return;
+
+        await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
         SessionService.PauseRest();
         await SafeStateHasChangedAsync();
     }
@@ -320,14 +361,15 @@ else
         var expired = SessionService.ResumeRest();
         if (expired)
         {
-            // Keep UI mounted: IsResting becomes false before we render — set complete first.
             _isRestComplete = true;
             await StopJsTimerAsync();
             await SafeStateHasChangedAsync();
-            await OnRestComplete();
+            await PlayRestCompleteAlertsAsync();
         }
         else
         {
+            await StartJsTimerAsync();
+            await ScheduleRestNotificationIfRestingAsync();
             await SafeStateHasChangedAsync();
         }
     }
@@ -337,9 +379,14 @@ else
         if (_disposed) return;
 
         _isRestComplete = false;
+        RestNotifications.CancelAllRestNotifications();
         SessionService.ResetRest();
         if (SessionService.IsResting)
+        {
             await StartJsTimerAsync();
+            await ScheduleRestNotificationIfRestingAsync();
+        }
+
         await SafeStateHasChangedAsync();
     }
 
@@ -348,24 +395,80 @@ else
         if (_disposed) return;
 
         await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
     }
 
-    private async Task OnRestComplete()
+    private async Task PlayRestCompleteAlertsAsync()
     {
+        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
+        var description = $"{planName}: start your next set when you are ready.";
+
+        try
+        {
+            RestNotifications.CancelAllRestNotifications();
+            await RestNotifications.ShowRestCompleteNowAsync(description);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Rest notification error: {ex}");
+        }
+
         try
         {
             Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
+        }
+        catch
+        {
+            // Silently fail if vibration not supported
+        }
 
+        try
+        {
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("playRestCompleteSound");
         }
         catch
         {
-            // Silently fail if vibration or audio not supported
+            // Silently fail if audio not supported
         }
+    }
+
+    private async Task UnlockAudioContextAsync()
+    {
+        try
+        {
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("unlockAudioContext");
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private async Task ScheduleRestNotificationIfRestingAsync()
+    {
+        var ends = SessionService.RestEndsAtUtc;
+        if (ends == null) return;
+
+        var title = SessionService.CurrentPlan?.Name ?? "Physiquinator";
+        await RestNotifications.ScheduleRestEndAsync(ends.Value, title, "Rest finished — time for your next set.");
+    }
+
+    private void OnSessionRestCompletedWhileBackground(object? sender, EventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed) return;
+
+            await StopJsTimerAsync();
+            _isRestComplete = true;
+            await SafeStateHasChangedAsync();
+            await PlayRestCompleteAlertsAsync();
+            await SafeStateHasChangedAsync();
+        });
     }
 
     private async Task OnWorkoutComplete()
@@ -388,6 +491,18 @@ else
         if (_disposed) return;
 
         await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
+
+        try
+        {
+            await HistoryRepository.EndSessionAsync(_historySessionId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"History EndSession error: {ex}");
+        }
+
+        _historySessionId = null;
         SessionService.EndWorkout();
         Navigation.NavigateTo("/");
     }
@@ -412,7 +527,7 @@ else
 
         if (done)
         {
-            await OnRestComplete();
+            await PlayRestCompleteAlertsAsync();
             return true;
         }
 
@@ -462,6 +577,18 @@ else
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
+        SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
+        RestNotifications.CancelAllRestNotifications();
+
+        try
+        {
+            await HistoryRepository.EndSessionAsync(_historySessionId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"History EndSession (dispose) error: {ex}");
+        }
+
         SessionService.CancelRest();
         try
         {

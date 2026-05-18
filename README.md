@@ -22,24 +22,28 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/home-dark.jpeg">
-  <img alt="Home" src="./docs/home-light.jpeg" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/history-contribution-dark.png">
+  <img alt="Workout history with activity grid" src="./docs/history-contribution-light.png" width="220">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/new-plan-dark.jpeg">
-  <img alt="New Plan" src="./docs/new-plan-light.jpeg" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/session-summary-dark.png">
+  <img alt="Completed session summary" src="./docs/session-summary-light.png" width="220">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/edit-plan-dark.jpeg">
-  <img alt="Edit Plan" src="./docs/edit-plan-light.jpeg" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/exercise-history-dark.png">
+  <img alt="Per-exercise session history" src="./docs/exercise-history-light.png" width="220">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/track-dark.jpeg">
-  <img alt="Track" src="./docs/track-light.jpeg" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/workout-session-dark.png">
+  <img alt="Active workout with rest timer" src="./docs/workout-session-light.png" width="220">
 </picture>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-dark.jpeg">
-  <img alt="Settings" src="./docs/settings-light.jpeg" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/dashboard-plans-dark.png">
+  <img alt="Home dashboard and plan list" src="./docs/dashboard-plans-light.png" width="220">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-backup-dark.png">
+  <img alt="Settings with appearance and JSON backup" src="./docs/settings-backup-light.png" width="220">
 </picture>
 
 </div>

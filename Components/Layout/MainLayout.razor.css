@@ -19,6 +19,12 @@ main {
     padding: 2rem 1.5rem;
 }
 
+@media (max-width: 575.98px) {
+    .content {
+        padding: 1rem 0.75rem 1.5rem;
+    }
+}
+
 @media (min-width: 768px) {
     .content {
         padding: 3rem 2rem;

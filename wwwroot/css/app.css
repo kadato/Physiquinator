@@ -106,6 +106,17 @@ html, body {
     padding: 0;
 }
 
+/* Bootstrap text utilities key off data-bs-theme; we only set data-theme on <html> */
+[data-theme="dark"] .text-muted,
+[data-theme="light"] .text-muted {
+    color: var(--tn-text-muted) !important;
+}
+
+[data-theme="dark"] .text-body,
+[data-theme="light"] .text-body {
+    color: var(--tn-text) !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
     color: var(--tn-text);
     font-weight: 600;

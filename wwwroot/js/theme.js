@@ -1,4 +1,20 @@
 (() => {
+    window.physiquinator = window.physiquinator || {};
+    /** Scroll horizontal heatmap so the most recent week is visible (mobile). */
+    window.physiquinator.scrollHeatmapToEnd = (el) => {
+        if (!el) return;
+        try {
+            if (!window.matchMedia("(max-width: 576px)").matches) return;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.scrollLeft = el.scrollWidth - el.clientWidth;
+                });
+            });
+        } catch {
+            /* ignore */
+        }
+    };
+
     const storageKey = "physiquinator-theme-preference";
     let dotNetRef = null;
     let mediaQuery = null;

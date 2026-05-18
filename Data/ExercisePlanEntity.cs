@@ -18,4 +18,8 @@ public class ExercisePlanEntity
     public int Order { get; set; }
     
     public int RestIntervalSeconds { get; set; }
+
+    public int? DefaultReps { get; set; }
+
+    public double? DefaultWeightKg { get; set; }
 }

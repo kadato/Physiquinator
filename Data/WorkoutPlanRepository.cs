@@ -37,7 +37,9 @@ public class WorkoutPlanRepository
                     Name = e.Name,
                     SetCount = e.SetCount,
                     Order = e.Order,
-                    RestIntervalSeconds = e.RestIntervalSeconds
+                    RestIntervalSeconds = e.RestIntervalSeconds,
+                    DefaultReps = e.DefaultReps,
+                    DefaultWeightKg = e.DefaultWeightKg
                 }).ToList()
             };
 
@@ -76,7 +78,9 @@ public class WorkoutPlanRepository
                 Name = e.Name,
                 SetCount = e.SetCount,
                 Order = e.Order,
-                RestIntervalSeconds = e.RestIntervalSeconds
+                RestIntervalSeconds = e.RestIntervalSeconds,
+                DefaultReps = e.DefaultReps,
+                DefaultWeightKg = e.DefaultWeightKg
             }).ToList()
         };
     }
@@ -109,7 +113,9 @@ public class WorkoutPlanRepository
                 Name = exercise.Name,
                 SetCount = exercise.SetCount,
                 Order = exercise.Order,
-                RestIntervalSeconds = exercise.RestIntervalSeconds
+                RestIntervalSeconds = exercise.RestIntervalSeconds,
+                DefaultReps = exercise.DefaultReps,
+                DefaultWeightKg = exercise.DefaultWeightKg
             };
 
             await _database.Database.InsertAsync(exerciseEntity).ConfigureAwait(false);

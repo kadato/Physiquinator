@@ -15,4 +15,7 @@ public class WorkoutSessionLogEntity
     public DateTime StartedAtUtc { get; set; }
 
     public DateTime? EndedAtUtc { get; set; }
+
+    /// <summary>JSON snapshot of the workout plan at session start.</summary>
+    public string? PlanSnapshotJson { get; set; }
 }

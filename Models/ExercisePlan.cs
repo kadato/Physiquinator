@@ -8,4 +8,10 @@ public class ExercisePlan
     public int Order { get; set; }
     /// <summary>Rest interval in seconds after completing a set of this exercise.</summary>
     public int RestIntervalSeconds { get; set; } = 60;
+
+    /// <summary>Optional default reps shown when logging a set for this exercise.</summary>
+    public int? DefaultReps { get; set; }
+
+    /// <summary>Optional default load in kilograms for set logging.</summary>
+    public double? DefaultWeightKg { get; set; }
 }

@@ -21,30 +21,43 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/history-contribution-dark.png">
-  <img alt="Workout history with activity grid" src="./docs/history-contribution-light.png" width="220">
-</picture>
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/session-summary-dark.png">
-  <img alt="Completed session summary" src="./docs/session-summary-light.png" width="220">
-</picture>
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/exercise-history-dark.png">
-  <img alt="Per-exercise session history" src="./docs/exercise-history-light.png" width="220">
-</picture>
+<p align="center">
+<strong>Live workout</strong> · <strong>Plans home</strong> · <strong>Settings</strong><br><br>
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/workout-session-dark.png">
   <img alt="Active workout with rest timer" src="./docs/workout-session-light.png" width="220">
 </picture>
+&nbsp;&nbsp;
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/dashboard-plans-dark.png">
   <img alt="Home dashboard and plan list" src="./docs/dashboard-plans-light.png" width="220">
 </picture>
+&nbsp;&nbsp;
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-backup-dark.png">
   <img alt="Settings with appearance and JSON backup" src="./docs/settings-backup-light.png" width="220">
 </picture>
+</p>
+
+<br>
+
+<p align="center">
+<strong>Activity history</strong> · <strong>Session summary</strong> · <strong>Exercise detail</strong><br><br>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/history-contribution-dark.png">
+  <img alt="Workout history with activity grid" src="./docs/history-contribution-light.png" width="220">
+</picture>
+&nbsp;&nbsp;
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/session-summary-dark.png">
+  <img alt="Completed session summary" src="./docs/session-summary-light.png" width="220">
+</picture>
+&nbsp;&nbsp;
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/exercise-history-dark.png">
+  <img alt="Per-exercise session history" src="./docs/exercise-history-light.png" width="220">
+</picture>
+</p>
 
 </div>
 

@@ -1,9 +1,12 @@
+using Microsoft.Maui.Storage;
 using Physiquinator.Models;
 
 namespace Physiquinator.Services;
 
 public class DemoDataSeeder
 {
+    private const string InitialDemoSeedCompletedKey = "Physiquinator.DemoDataInitialSeedCompleted";
+
     private readonly WorkoutPlanService _planService;
 
     public DemoDataSeeder(WorkoutPlanService planService)
@@ -13,11 +16,15 @@ public class DemoDataSeeder
 
     public async Task SeedDemoDataIfNeededAsync()
     {
-        var existingPlans = await _planService.GetAllPlansAsync();
-        
-        // Only seed if there are no plans yet
-        if (existingPlans.Any())
+        if (Preferences.Default.Get(InitialDemoSeedCompletedKey, false))
             return;
+
+        var existingPlans = await _planService.GetAllPlansAsync();
+        if (existingPlans.Any())
+        {
+            Preferences.Default.Set(InitialDemoSeedCompletedKey, true);
+            return;
+        }
 
         var demoPlans = new List<WorkoutPlan>
         {
@@ -31,6 +38,8 @@ public class DemoDataSeeder
         {
             await _planService.SavePlanAsync(plan);
         }
+
+        Preferences.Default.Set(InitialDemoSeedCompletedKey, true);
     }
 
     private static WorkoutPlan CreatePushDayPlan()

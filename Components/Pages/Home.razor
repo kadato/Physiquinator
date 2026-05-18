@@ -74,7 +74,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Seed demo data if this is the first launch
+        // One-time sample plans on first empty library (see DemoDataSeeder + Preferences).
         await DemoSeeder.SeedDemoDataIfNeededAsync();
 
         _plans = await PlanService.GetAllPlansAsync();

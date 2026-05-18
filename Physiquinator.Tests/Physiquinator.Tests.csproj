@@ -33,7 +33,11 @@
     <Compile Include="..\Data\WorkoutHistoryRepository.cs" Link="Data\WorkoutHistoryRepository.cs" />
     <Compile Include="..\Data\WorkoutDayStats.cs" Link="Data\WorkoutDayStats.cs" />
     <Compile Include="..\Data\WorkoutHistoryBackup.cs" Link="Data\WorkoutHistoryBackup.cs" />
+    <Compile Include="..\Data\DemoDataIds.cs" Link="Data\DemoDataIds.cs" />
     <Compile Include="..\Services\WorkoutHistoryService.cs" Link="Services\WorkoutHistoryService.cs" />
+    <Compile Include="..\Services\WorkoutPlanService.cs" Link="Services\WorkoutPlanService.cs" />
+    <Compile Include="..\Services\IDemoSeedPreferences.cs" Link="Services\IDemoSeedPreferences.cs" />
+    <Compile Include="..\Services\DemoDataSeeder.cs" Link="Services\DemoDataSeeder.cs" />
   </ItemGroup>
 
 </Project>

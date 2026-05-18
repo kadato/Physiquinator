@@ -30,6 +30,7 @@
     <Compile Include="..\Data\WorkoutSessionLogEntity.cs" Link="Data\WorkoutSessionLogEntity.cs" />
     <Compile Include="..\Data\WorkoutSetLogEntity.cs" Link="Data\WorkoutSetLogEntity.cs" />
     <Compile Include="..\Data\WorkoutPlanRepository.cs" Link="Data\WorkoutPlanRepository.cs" />
+    <Compile Include="..\Data\WorkoutHistoryRepository.cs" Link="Data\WorkoutHistoryRepository.cs" />
   </ItemGroup>
 
 </Project>

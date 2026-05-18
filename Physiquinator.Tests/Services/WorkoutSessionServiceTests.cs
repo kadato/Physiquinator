@@ -109,4 +109,22 @@ public class WorkoutSessionServiceTests
         svc.CompleteSet(0, 99);
         Assert.Empty(svc.CompletedSets);
     }
+
+    [Fact]
+    public void TryUndoLastSet_removes_last_completion()
+    {
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(0, 1);
+
+        Assert.True(svc.TryUndoLastSet(out var removed));
+        Assert.Equal(new SetCompletion(0, 1), removed);
+        Assert.Single(svc.CompletedSets);
+
+        Assert.True(svc.TryUndoLastSet(out removed));
+        Assert.Equal(new SetCompletion(0, 0), removed);
+        Assert.False(svc.TryUndoLastSet(out _));
+    }
 }

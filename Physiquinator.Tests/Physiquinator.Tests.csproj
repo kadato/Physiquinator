@@ -27,6 +27,8 @@
     <Compile Include="..\Data\AppDatabase.cs" Link="Data\AppDatabase.cs" />
     <Compile Include="..\Data\WorkoutPlanEntity.cs" Link="Data\WorkoutPlanEntity.cs" />
     <Compile Include="..\Data\ExercisePlanEntity.cs" Link="Data\ExercisePlanEntity.cs" />
+    <Compile Include="..\Data\WorkoutSessionLogEntity.cs" Link="Data\WorkoutSessionLogEntity.cs" />
+    <Compile Include="..\Data\WorkoutSetLogEntity.cs" Link="Data\WorkoutSetLogEntity.cs" />
     <Compile Include="..\Data\WorkoutPlanRepository.cs" Link="Data\WorkoutPlanRepository.cs" />
   </ItemGroup>
 

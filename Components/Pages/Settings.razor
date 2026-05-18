@@ -2,6 +2,7 @@
 @inject ThemeService ThemeService
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryService HistoryService
+@inject AppDataResetService AppDataReset
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -15,7 +16,7 @@
 
 <div class="mb-4">
     <h1>Settings</h1>
-    <p class="lead mb-0">Appearance, plan backups, and workout history backups.</p>
+    <p class="lead mb-0">Appearance, backups, and removing everything stored on this device.</p>
 </div>
 
 <div class="settings-stack">
@@ -73,6 +74,19 @@
             {
                 <p class="form-text mt-2 mb-0">Finish at least one workout to enable export — you can still import a backup anytime.</p>
             }
+        </div>
+    </div>
+
+    <div class="card settings-card border-danger">
+        <div class="card-body">
+            <h2 class="h5 mb-3 text-danger"><i class="bi bi-trash3 me-2"></i>Remove all data</h2>
+            <p class="text-muted small mb-3">
+                Permanently deletes every workout plan, exercise definition, and workout log in the local database on this device.
+                Export backups above first if you want to keep copies. Your saved light/dark choice is reset to match the system.
+            </p>
+            <button type="button" class="btn btn-outline-danger" @onclick="RemoveAllDataAsync">
+                <i class="bi bi-trash3 me-2"></i>Remove all data…
+            </button>
         </div>
     </div>
 </div>
@@ -247,6 +261,37 @@
             Title = shareTitle,
             File = new ShareFile(filePath)
         });
+    }
+
+    private async Task RemoveAllDataAsync()
+    {
+        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page is null)
+            return;
+
+        var confirmed = await page.DisplayAlertAsync(
+            "Remove all data?",
+            "This cannot be undone. Export any backups you need before continuing.",
+            "Remove",
+            "Cancel");
+
+        if (!confirmed)
+            return;
+
+        try
+        {
+            await AppDataReset.ClearAllLocalDataAsync();
+            SyncFromService();
+            await RefreshPlanCountAsync();
+            await RefreshHistoryCountAsync();
+            StateHasChanged();
+            await AlertAsync("Physiquinator", "All local data has been removed.");
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Physiquinator", $"Could not remove data: {ex.Message}");
+        }
     }
 
     private static Task AlertAsync(string title, string message)

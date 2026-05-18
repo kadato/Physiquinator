@@ -43,5 +43,17 @@ public class AppDatabase
         await _initializationTask;
     }
 
+    /// <summary>
+    /// Deletes all persisted workout plans, history, and set logs. Order respects child rows first.
+    /// </summary>
+    public async Task ClearAllUserDataAsync()
+    {
+        await EnsureInitializedAsync();
+        await _database.ExecuteAsync("DELETE FROM WorkoutSetLogs");
+        await _database.ExecuteAsync("DELETE FROM WorkoutSessionLogs");
+        await _database.ExecuteAsync("DELETE FROM ExercisePlans");
+        await _database.ExecuteAsync("DELETE FROM WorkoutPlans");
+    }
+
     public SQLiteAsyncConnection Database => _database;
 }

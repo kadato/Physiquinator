@@ -45,6 +45,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.RestNotificationService>();
 		builder.Services.AddSingleton<Services.IDemoSeedPreferences, Services.MauiDemoSeedPreferences>();
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();
+		builder.Services.AddScoped<Services.AppDataResetService>();
 		builder.Services.AddScoped<Services.ThemeService>();
 
 #if DEBUG

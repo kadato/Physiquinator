@@ -135,6 +135,10 @@ public sealed class ThemeService : IAsyncDisposable
             Color.FromArgb(isDark ? "#7aa2f7" : "#2959aa");
         Application.Current.Resources["PrimaryButtonTextColor"] =
             Color.FromArgb(isDark ? "#1a1b26" : "#f7f7fb");
+
+        SystemBarsHelper.Apply(
+            (Color)Application.Current.Resources["PageBackgroundColor"],
+            isDark);
     }
 
     public async ValueTask DisposeAsync()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebView;
+using Physiquinator.Services;
 
 namespace Physiquinator;
 
@@ -21,6 +22,12 @@ public partial class MainPage : ContentPage
 		blazorWebView.BlazorWebViewInitialized += OnBlazorWebViewInitialized;
 		blazorWebView.UrlLoading += (s, e) =>
 			System.Diagnostics.Debug.WriteLine($"URL Loading: {e.Url}");
+	}
+
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+		SystemBarsHelper.ApplyFromCurrentResources();
 	}
 
 	private void OnBlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs args)

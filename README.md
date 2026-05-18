@@ -17,6 +17,35 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ---
 
+## 📸 Preview
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/home-dark.jpeg">
+  <img alt="Home" src="./docs/home-light.jpeg" width="220">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/new-plan-dark.jpeg">
+  <img alt="New Plan" src="./docs/new-plan-light.jpeg" width="220">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/edit-plan-dark.jpeg">
+  <img alt="Edit Plan" src="./docs/edit-plan-light.jpeg" width="220">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/track-dark.jpeg">
+  <img alt="Track" src="./docs/track-light.jpeg" width="220">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-dark.jpeg">
+  <img alt="Settings" src="./docs/settings-light.jpeg" width="220">
+</picture>
+
+</div>
+
+---
+
 ## 📥 Download & Install
 
 ### Available Builds

@@ -156,4 +156,60 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         Assert.Single(parsed.Exercises);
         Assert.Equal(10, parsed.Exercises[0].DefaultReps);
     }
+
+    [Fact]
+    public async Task GetSessionCountAsync_TracksSessions()
+    {
+        Assert.Equal(0, await _sut.GetSessionCountAsync());
+
+        await _sut.BeginSessionAsync(Guid.NewGuid(), "A", null);
+        Assert.Equal(1, await _sut.GetSessionCountAsync());
+    }
+
+    [Fact]
+    public async Task CreateBackupSnapshotAsync_ThenImportBackupAsync_RoundTrips()
+    {
+        var planId = Guid.NewGuid();
+        const string snapshot = """{"name":"Snap"}""";
+        var sessionId = await _sut.BeginSessionAsync(planId, "Leg day", snapshot);
+        await _sut.LogSetAsync(sessionId, 0, "Squat", 0, reps: 5, weightKg: 40);
+        await _sut.EndSessionAsync(sessionId);
+
+        var backup = await _sut.CreateBackupSnapshotAsync();
+        Assert.Single(backup.Sessions);
+        Assert.Single(backup.Sessions[0].Sets);
+        Assert.Equal(snapshot, backup.Sessions[0].Session.PlanSnapshotJson);
+
+        await _sut.DeleteSessionAsync(sessionId);
+        Assert.Equal(0, await _sut.GetSessionCountAsync());
+
+        await _sut.ImportBackupAsync(backup);
+
+        Assert.Equal(1, await _sut.GetSessionCountAsync());
+        var sessions = await _sut.GetRecentSessionsAsync();
+        Assert.Single(sessions);
+        Assert.Equal(sessionId, sessions[0].Id);
+        Assert.Equal("Leg day", sessions[0].PlanName);
+
+        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        Assert.Single(sets);
+        Assert.Equal(5, sets[0].Reps);
+        Assert.Equal(40, sets[0].WeightKg);
+    }
+
+    [Fact]
+    public async Task ImportBackupAsync_Idempotent_WhenReImportingSameBackup()
+    {
+        var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);
+        await _sut.LogSetAsync(sessionId, 0, "Move", 0, reps: 3, weightKg: null);
+        var backup = await _sut.CreateBackupSnapshotAsync();
+
+        await _sut.ImportBackupAsync(backup);
+        await _sut.ImportBackupAsync(backup);
+
+        Assert.Equal(1, await _sut.GetSessionCountAsync());
+        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        Assert.Single(sets);
+        Assert.Equal(3, sets[0].Reps);
+    }
 }

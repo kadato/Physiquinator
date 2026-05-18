@@ -69,6 +69,68 @@ public class WorkoutHistoryRepository
             .ToListAsync();
     }
 
+    public async Task<int> GetSessionCountAsync()
+    {
+        await _db.EnsureInitializedAsync();
+        return await _db.Database.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM WorkoutSessionLogs");
+    }
+
+    /// <summary>All sessions, newest first (same ordering as recent list, without a cap).</summary>
+    public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetAllSessionsAsync()
+    {
+        await _db.EnsureInitializedAsync();
+        return await _db.Database.Table<WorkoutSessionLogEntity>()
+            .OrderByDescending(s => s.StartedAtUtc)
+            .ToListAsync();
+    }
+
+    public async Task<WorkoutHistoryBackup> CreateBackupSnapshotAsync()
+    {
+        await _db.EnsureInitializedAsync();
+        var sessions = await GetAllSessionsAsync();
+        var entries = new List<WorkoutHistoryBackupEntry>(sessions.Count);
+        foreach (var session in sessions)
+        {
+            var sets = await GetSetsForSessionAsync(session.Id);
+            entries.Add(new WorkoutHistoryBackupEntry
+            {
+                Session = session,
+                Sets = sets.ToList()
+            });
+        }
+
+        return new WorkoutHistoryBackup { FormatVersion = 1, Sessions = entries };
+    }
+
+    /// <summary>
+    /// Merges backup rows by primary key (insert or replace). Sessions are written first, then sets.
+    /// Set rows are tied to <see cref="WorkoutSessionLogEntity.Id"/>; <see cref="WorkoutSetLogEntity.SessionId"/> is normalized from the session.
+    /// </summary>
+    public async Task ImportBackupAsync(WorkoutHistoryBackup backup)
+    {
+        ArgumentNullException.ThrowIfNull(backup);
+        await _db.EnsureInitializedAsync();
+
+        foreach (var entry in backup.Sessions ?? new List<WorkoutHistoryBackupEntry>())
+        {
+            if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
+                continue;
+
+            var sessionId = entry.Session.Id;
+            await _db.Database.InsertOrReplaceAsync(entry.Session);
+
+            foreach (var set in entry.Sets ?? new List<WorkoutSetLogEntity>())
+            {
+                if (set is null)
+                    continue;
+                set.SessionId = sessionId;
+                if (string.IsNullOrWhiteSpace(set.Id))
+                    set.Id = Guid.NewGuid().ToString();
+                await _db.Database.InsertOrReplaceAsync(set);
+            }
+        }
+    }
+
     public async Task<WorkoutSessionLogEntity?> GetSessionAsync(string sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId)) return null;

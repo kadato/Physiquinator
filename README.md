@@ -171,8 +171,8 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 
 ### Features & APIs
 - **MAUI Essentials** - File picker, share, vibration APIs
-- **System.Timers** - Rest timer implementation
-- **Web Audio API** - Browser-based notification sounds
+- **Wall-clock rest countdown** - Driven by Blazor + JavaScript `setTimeout` (single in-flight bridge calls); optional scheduled **local notifications** on Android/iOS when rest ends
+- **Web Audio API** - Optional in-app beeps (primed on user gesture for mobile WebViews)
 
 ### DevOps & CI/CD
 - **GitHub Actions** - Automated build and release pipeline

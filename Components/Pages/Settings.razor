@@ -1,5 +1,6 @@
 @page "/settings"
 @inject ThemeService ThemeService
+@inject RestAlertSettingsService RestAlertSettings
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryService HistoryService
 @inject AppDataResetService AppDataReset
@@ -13,7 +14,7 @@
 <MudStack Spacing="3">
     <PageHeader Title="Settings" ShowBack="false" />
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-        Appearance, backups, and removing everything stored on this device.
+        Appearance, rest timer alerts, backups, and removing everything stored on this device.
     </MudText>
 
     <MudPaper Class="pa-4" Elevation="1">
@@ -29,6 +30,17 @@
         </MudSelect>
         <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
             Active mode: <strong>@_effectiveThemeLabel</strong>
+        </MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">Rest timer alerts</MudText>
+        <MudSwitch T="bool"
+                   Label="Notify when rest ends"
+                   Value="_restAlertsEnabled"
+                   ValueChanged="OnRestAlertsEnabledChanged" />
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+            When off, rest-end notifications, sound, and vibration are disabled during workouts. The on-screen rest timer still runs.
         </MudText>
     </MudPaper>
 
@@ -93,6 +105,7 @@
 @code {
     private string _preference = "system";
     private string _effectiveTheme = "dark";
+    private bool _restAlertsEnabled = true;
     private int _planCount;
     private int _historySessionCount;
 
@@ -101,6 +114,7 @@
     protected override async Task OnInitializedAsync()
     {
         ThemeService.ThemeChanged += HandleThemeChanged;
+        RestAlertSettings.Changed += HandleRestAlertsChanged;
         SyncFromService();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
@@ -127,6 +141,19 @@
     {
         _preference = ThemeService.Preference;
         _effectiveTheme = ThemeService.EffectiveTheme;
+        _restAlertsEnabled = RestAlertSettings.Enabled;
+    }
+
+    private void HandleRestAlertsChanged()
+    {
+        _restAlertsEnabled = RestAlertSettings.Enabled;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnRestAlertsEnabledChanged(bool enabled)
+    {
+        await RestAlertSettings.SetEnabledAsync(enabled);
+        _restAlertsEnabled = enabled;
     }
 
     private async Task OnThemePreferenceChanged(string preference)
@@ -282,5 +309,6 @@
     public void Dispose()
     {
         ThemeService.ThemeChanged -= HandleThemeChanged;
+        RestAlertSettings.Changed -= HandleRestAlertsChanged;
     }
 }

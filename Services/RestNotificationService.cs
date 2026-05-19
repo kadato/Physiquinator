@@ -10,6 +10,13 @@ namespace Physiquinator.Services;
 /// </summary>
 public sealed class RestNotificationService
 {
+    private readonly RestAlertSettingsService _settings;
+
+    public RestNotificationService(RestAlertSettingsService settings)
+    {
+        _settings = settings;
+    }
+
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
 
@@ -17,6 +24,9 @@ public sealed class RestNotificationService
 
     public async Task EnsurePermissionAsync()
     {
+        if (!_settings.Enabled)
+            return;
+
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             return;
 
@@ -46,6 +56,9 @@ public sealed class RestNotificationService
 
     public async Task ScheduleRestEndAsync(DateTime notifyUtc, string title, string description)
     {
+        if (!_settings.Enabled)
+            return;
+
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             return;
 
@@ -86,6 +99,9 @@ public sealed class RestNotificationService
 
     public async Task ShowRestCompleteNowAsync(string description)
     {
+        if (!_settings.Enabled)
+            return;
+
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             return;
 

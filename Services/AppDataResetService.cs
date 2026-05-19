@@ -9,17 +9,20 @@ public sealed class AppDataResetService
     private readonly IDemoSeedPreferences _demoSeedPreferences;
     private readonly WorkoutSessionService _sessionService;
     private readonly ThemeService _themeService;
+    private readonly RestAlertSettingsService _restAlertSettings;
 
     public AppDataResetService(
         AppDatabase database,
         IDemoSeedPreferences demoSeedPreferences,
         WorkoutSessionService sessionService,
-        ThemeService themeService)
+        ThemeService themeService,
+        RestAlertSettingsService restAlertSettings)
     {
         _database = database;
         _demoSeedPreferences = demoSeedPreferences;
         _sessionService = sessionService;
         _themeService = themeService;
+        _restAlertSettings = restAlertSettings;
     }
 
     public async Task ClearAllLocalDataAsync()
@@ -29,5 +32,6 @@ public sealed class AppDataResetService
         _demoSeedPreferences.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, true);
         _demoSeedPreferences.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, true);
         await _themeService.ResetStoredPreferenceToSystemAsync().ConfigureAwait(true);
+        await _restAlertSettings.SetEnabledAsync(true).ConfigureAwait(true);
     }
 }

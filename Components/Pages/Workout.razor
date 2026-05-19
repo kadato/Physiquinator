@@ -2,6 +2,7 @@
 @inject WorkoutPlanService PlanService
 @inject WorkoutSessionService SessionService
 @inject RestNotificationService RestNotifications
+@inject RestAlertSettingsService RestAlertSettings
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -202,7 +203,8 @@ else
         if (_disposed || plan == null)
             return;
 
-        await RestNotifications.EnsurePermissionAsync();
+        if (RestAlertSettings.Enabled)
+            await RestNotifications.EnsurePermissionAsync();
 
         if (!ForceNew)
         {
@@ -555,6 +557,9 @@ else
 
     private async Task PlayRestCompleteAlertsAsync()
     {
+        if (!RestAlertSettings.Enabled)
+            return;
+
         var planName = SessionService.CurrentPlan?.Name ?? "Workout";
         var description = $"{planName}: start your next set when you are ready.";
 
@@ -602,6 +607,9 @@ else
 
     private async Task ScheduleRestNotificationIfRestingAsync()
     {
+        if (!RestAlertSettings.Enabled)
+            return;
+
         var ends = SessionService.RestEndsAtUtc;
         if (ends == null) return;
 

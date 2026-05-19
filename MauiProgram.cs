@@ -53,6 +53,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.WorkoutHistoryService>();
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
 		builder.Services.AddSingleton<Services.WorkoutSessionService>();
+		builder.Services.AddSingleton<Services.RestAlertSettingsService>();
 		builder.Services.AddSingleton<Services.RestNotificationService>();
 		builder.Services.AddSingleton<Services.IDemoSeedPreferences, Services.MauiDemoSeedPreferences>();
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();

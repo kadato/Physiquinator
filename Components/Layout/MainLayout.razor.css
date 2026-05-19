@@ -7,7 +7,7 @@
     height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
-    background-color: var(--mud-palette-background, #1f2335);
+    background-color: var(--mud-palette-background);
 }
 
 .app-main-scroll {

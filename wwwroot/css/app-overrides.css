@@ -1,80 +1,19 @@
-/* Physiquinator app styles — wwwroot file (loaded in MAUI; scoped bundle is NOT shipped) */
-
-[data-theme="dark"] {
-    color-scheme: dark;
-    --tn-bg: #1f2335;
-    --tn-surface-3: #3b4261;
-    --tn-text-muted: #a9b1d6;
-    --tn-text: #c0caf5;
-    --tn-accent: #7aa2f7;
-    --tn-success: #9ece6a;
-    --tn-success-strong: #73daca;
-    --tn-timer-surface: #252a3f;
-    --tn-timer-border: rgba(122, 162, 247, 0.35);
-    --tn-timer-digit: #c0d4ff;
-    --tn-timer-ring-track: rgba(122, 162, 247, 0.18);
-    --tn-timer-ring-fill: #7aa2f7;
-    --tn-timer-urgent: #e0af68;
-    --tn-timer-urgent-bg: rgba(224, 175, 104, 0.2);
-    --tn-timer-badge-paused-text: #a9b1d6;
-    --tn-timer-badge-paused-bg: rgba(169, 177, 214, 0.15);
-    --tn-timer-controls-bg: rgba(0, 0, 0, 0.2);
-    --tn-timer-ctrl-hover: rgba(122, 162, 247, 0.12);
-    --tn-timer-complete-bg: linear-gradient(165deg, rgba(158, 206, 106, 0.35) 0%, rgba(115, 218, 202, 0.12) 45%, #252a3f 100%);
-    --tn-timer-complete-badge-bg: rgba(158, 206, 106, 0.2);
-    --tn-timer-complete-glow: rgba(115, 218, 202, 0.5);
-    --tn-timer-complete-shadow: rgba(115, 218, 202, 0.25);
-}
+/* Physiquinator app styles - wwwroot file (loaded in MAUI; scoped bundle is NOT shipped) */
 
 :root {
     --app-page-x: 16px;
     --app-tab-bar-height: 64px;
     --app-action-bar-height: 64px;
     --app-page-bottom-extra: 12px;
-    --app-nav-active: #7aa2f7;
     --app-page-top: 2rem;
-    --app-nav-tab-bg: #24283b;
-    --app-nav-tab-bg-active: rgba(122, 162, 247, 0.22);
-    --app-nav-tab-border: rgba(59, 66, 97, 0.9);
 }
-
-[data-theme="light"] {
-    color-scheme: light;
-    --app-nav-active: #2959aa;
-    --app-nav-tab-bg: #eceef5;
-    --app-nav-tab-bg-active: rgba(41, 89, 170, 0.16);
-    --app-nav-tab-border: rgba(196, 197, 200, 0.95);
-    --tn-bg: #d5d6db;
-    --tn-surface-3: #c4c5c8;
-    --tn-text-muted: #565f89;
-    --tn-text: #343b58;
-    --tn-accent: #2959aa;
-    --tn-success: #33635c;
-    --tn-success-strong: #2e7d6e;
-    --tn-timer-surface: #f4f5fa;
-    --tn-timer-border: rgba(41, 89, 170, 0.22);
-    --tn-timer-digit: #1a3d7a;
-    --tn-timer-ring-track: rgba(41, 89, 170, 0.14);
-    --tn-timer-ring-fill: #2959aa;
-    --tn-timer-urgent: #b45309;
-    --tn-timer-urgent-bg: rgba(180, 83, 9, 0.12);
-    --tn-timer-badge-paused-text: #565f89;
-    --tn-timer-badge-paused-bg: rgba(86, 95, 137, 0.1);
-    --tn-timer-controls-bg: rgba(41, 89, 170, 0.06);
-    --tn-timer-ctrl-hover: rgba(41, 89, 170, 0.1);
-    --tn-timer-complete-bg: linear-gradient(165deg, rgba(51, 99, 92, 0.22) 0%, rgba(46, 125, 110, 0.08) 45%, #f0f7f5 100%);
-    --tn-timer-complete-badge-bg: rgba(51, 99, 92, 0.14);
-    --tn-timer-complete-glow: rgba(46, 125, 110, 0.4);
-    --tn-timer-complete-shadow: rgba(46, 125, 110, 0.18);
-}
-
 html, body, #app {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: var(--mud-palette-background, var(--tn-bg));
+    background-color: var(--mud-palette-background);
 }
 
 #app {
@@ -90,7 +29,7 @@ html, body, #app {
     min-height: 0;
     height: 100%;
     overflow: hidden;
-    background-color: var(--mud-palette-background, var(--tn-bg));
+    background-color: var(--mud-palette-background);
 }
 
 .app-main-scroll {
@@ -137,17 +76,13 @@ html, body, #app {
     min-height: var(--app-tab-bar-height);
     padding: 0.375rem 0.5rem;
     border-radius: 16px;
-    background: color-mix(in srgb, var(--mud-palette-surface, #24283b) 88%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--app-nav-tab-border);
+    border: 1px solid var(--mud-palette-lines-default);
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
 }
 
-[data-theme="light"] .app-tab-bar__inner {
-    background: color-mix(in srgb, var(--mud-palette-surface, #eceef5) 92%, transparent);
-    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
-}
 
 .app-tab {
     display: flex;
@@ -162,7 +97,7 @@ html, body, #app {
     border: none;
     border-radius: 12px;
     background: transparent;
-    color: var(--mud-palette-text-secondary, #9aa5ce);
+    color: var(--mud-palette-text-secondary);
     text-decoration: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -171,7 +106,7 @@ html, body, #app {
 
 .app-tab:hover {
     text-decoration: none;
-    color: var(--mud-palette-text-primary, #c0caf5);
+    color: var(--mud-palette-text-primary);
 }
 
 .app-tab:active {
@@ -179,12 +114,12 @@ html, body, #app {
 }
 
 .app-tab--active {
-    background: var(--app-nav-tab-bg-active);
-    color: var(--app-nav-active);
+    background: color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
+    color: var(--mud-palette-primary);
 }
 
 .app-tab--active .mud-icon-root {
-    color: var(--mud-palette-primary, var(--app-nav-active)) !important;
+    color: var(--mud-palette-primary) !important;
 }
 
 .app-tab__label {
@@ -195,7 +130,7 @@ html, body, #app {
 }
 
 .app-tab--active .app-tab__label {
-    color: var(--app-nav-active);
+    color: var(--mud-palette-primary);
     font-weight: 600;
 }
 
@@ -214,7 +149,7 @@ html, body, #app {
     box-sizing: border-box;
     background: linear-gradient(
         to top,
-        var(--mud-palette-background, var(--tn-bg)) 65%,
+        var(--mud-palette-background) 65%,
         transparent
     );
 }
@@ -269,21 +204,23 @@ html, body, #app {
     min-height: 4.75rem;
     padding: 0.75rem 0.5rem;
     border-radius: 12px;
-    border: 1px solid rgba(122, 162, 247, 0.2);
-    background: rgba(36, 40, 59, 0.55);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 55%, transparent);
     overflow: hidden;
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 12%, transparent);
 }
 
-[data-theme="light"] .home-stat.mud-paper {
-    border-color: rgba(41, 89, 170, 0.18);
-    background: rgba(255, 255, 255, 0.85);
-}
 
 .home-hero {
     padding: 1rem 1.125rem !important;
     border-radius: 14px !important;
-    border: 1px solid var(--mud-palette-primary, #7aa2f7);
-    background: linear-gradient(135deg, rgba(122, 162, 247, 0.18) 0%, rgba(122, 162, 247, 0.06) 100%);
+    border: 1px solid var(--mud-palette-primary);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--mud-palette-primary) 18%, transparent) 0%,
+        color-mix(in srgb, var(--mud-palette-primary) 6%, transparent) 100%
+    );
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
 }
 
 .home-hero__label {
@@ -301,7 +238,7 @@ html, body, #app {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.1;
-    color: var(--app-nav-active);
+    color: var(--mud-palette-primary);
 }
 
 .home-stat__value--date {
@@ -316,7 +253,7 @@ html, body, #app {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--tn-text-muted, #a9b1d6);
+    color: var(--mud-palette-text-secondary);
 }.home-plans-header {
     display: flex;
     align-items: center;
@@ -329,6 +266,100 @@ html, body, #app {
     display: flex;
     flex-direction: column;
     gap: 0.875rem;
+}
+
+/* Cards & elevated surfaces (MAUI WebView — scoped *.razor.css is not shipped) */
+.app-page-container .mud-card,
+.app-page-container .mud-paper.mud-elevation-1:not(.history-heatmap-panel):not(.rest-timer-panel) {
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 14%, transparent),
+        0 6px 16px color-mix(in srgb, #000 6%, transparent);
+}
+
+.plan-card.mud-card {
+    width: 100%;
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.plan-card.mud-card:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 32%, transparent);
+    box-shadow: 0 2px 6px color-mix(in srgb, #000 12%, transparent),
+        0 10px 24px color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+}
+
+.plan-card__content {
+    padding: 0.875rem 1rem !important;
+}
+
+.plan-card__info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.plan-card-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plan-card__actions {
+    flex-shrink: 0;
+}
+
+.plan-card-start {
+    min-height: 40px;
+    min-width: 4.5rem;
+}
+
+.plan-card-icon-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+}
+
+.workout-completed-section .mud-card,
+.workout-upcoming-section .mud-card {
+    overflow: hidden;
+}
+
+.workout-completed-section .mud-card .mud-card-content,
+.workout-upcoming-section .mud-card .mud-card-content {
+    padding: 0.875rem 1rem;
+}
+
+/* Striped tables — visible contrast on default Mud theme */
+.mud-table.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row:nth-of-type(odd) {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)) !important;
+}
+
+.mud-table.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row.mud-table-row-stripe {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)) !important;
+}
+
+.mud-table.mud-table-hover.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 16%, var(--mud-palette-surface)) !important;
+}
+
+.mud-table .mud-table-head .mud-table-cell {
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 6%, var(--mud-palette-background));
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 70%, transparent);
+}
+
+.mud-table .mud-table-cell {
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 55%, transparent);
+}
+
+.mud-paper .mud-table-root {
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
 }
 
 .mud-input-control,
@@ -371,7 +402,7 @@ html, body, #app {
         height: env(safe-area-inset-top);
         width: 100%;
         z-index: 1;
-        background-color: var(--mud-palette-background, var(--tn-bg));
+        background-color: var(--mud-palette-background);
     }
 }
 
@@ -407,27 +438,22 @@ html, body, #app {
     border-radius: 12px;
 }
 .plan-details-card {
-    border: 1px solid rgba(122, 162, 247, 0.2);
-    background: rgba(63, 68, 98, 0.55);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 55%, transparent);
     overflow: hidden;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
 }
 
-[data-theme="light"] .plan-details-card {
-    border-color: rgba(41, 89, 170, 0.18);
-    background: rgba(255, 255, 255, 0.85);
-}
 
 .plan-details-card__grid {
     margin-top: 0.25rem;
 }
 
 .plan-details-card .mud-input-filled .mud-input-slot {
-    background: rgba(122, 162, 247, 0.14);
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
 }
 
-[data-theme="light"] .plan-details-card .mud-input-filled .mud-input-slot {
-    background: rgba(41, 89, 170, 0.07);
-}
 
 .plan-details-card .mud-input-label-inputcontrol {
     font-weight: 600;
@@ -491,12 +517,24 @@ html, body, #app {
 }
 
 .plan-exercise-row--ghost {
-    opacity: 0.45;
+    opacity: 0.35;
+    min-height: 3.25rem;
+    border: 2px dashed var(--mud-palette-primary);
+    border-radius: 8px;
+    background: var(--mud-palette-action-default-hover);
 }
 
-.plan-exercise-row--chosen,
-.plan-exercise-row--drag {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+.plan-exercise-row--chosen {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.plan-exercise-row--drag,
+.plan-exercise-row--fallback {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+    opacity: 0.95;
+    z-index: 1000;
 }
 
 .plan-exercise-row__main {
@@ -628,11 +666,11 @@ html, body, #app {
     width: 100%;
     margin-top: 0.5rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--mud-palette-lines-default, rgba(0, 0, 0, 0.12));
+    border-top: 1px solid var(--mud-palette-lines-default);
 }
 
 #blazor-error-ui {
-    background: var(--mud-palette-error, #f7768e);
+    background: var(--mud-palette-error);
     bottom: 0;
     display: none;
     left: 0;
@@ -677,7 +715,7 @@ html, body, #app {
     line-height: 1;
     text-align: end;
     padding-right: 4px;
-    color: var(--mud-palette-text-secondary, var(--tn-text-muted));
+    color: var(--mud-palette-text-secondary);
     letter-spacing: 0.02em;
 }
 
@@ -701,17 +739,17 @@ button.heatmap-cell:disabled {
 
 .heatmap-selected.heatmap-on,
 .heatmap-selected.heatmap-off {
-    box-shadow: 0 0 0 2px var(--mud-palette-primary, var(--tn-accent));
+    box-shadow: 0 0 0 2px var(--mud-palette-primary);
     border-radius: 2px;
 }
 
 .heatmap-off {
-    background-color: var(--mud-palette-background-gray, var(--tn-surface-3));
+    background-color: var(--mud-palette-background-gray);
     opacity: 0.62;
 }
 
 .heatmap-on {
-    background-color: var(--mud-palette-primary, var(--tn-accent));
+    background-color: var(--mud-palette-primary);
     opacity: 0.9;
 }
 
@@ -738,9 +776,9 @@ button.heatmap-cell:disabled {
 
 /* Rest timer — global (MAUI WebView may not apply scoped Workout.razor.css) */
 .rest-timer-panel.mud-paper {
-    border: 1px solid var(--tn-timer-border);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
     border-radius: 20px;
-    background: var(--tn-timer-surface);
+    background: var(--mud-palette-surface);
     transition:
         background 0.4s ease,
         border-color 0.4s ease,
@@ -753,10 +791,15 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-panel--complete.mud-paper {
-    border: 2px solid var(--tn-success);
+    border: 2px solid var(--mud-palette-success);
     border-radius: 22px;
-    background: var(--tn-timer-complete-bg);
-    box-shadow: 0 12px 40px var(--tn-timer-complete-shadow);
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--mud-palette-success) 35%, transparent) 0%,
+        color-mix(in srgb, var(--mud-palette-success) 12%, transparent) 45%,
+        var(--mud-palette-surface) 100%
+    );
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--mud-palette-success) 25%, transparent);
     animation: rest-timer-complete-in 0.45s ease-out;
 }
 
@@ -801,7 +844,7 @@ button.heatmap-cell:disabled {
     font-size: clamp(5rem, 22vw, 7.5rem);
     line-height: 0.9;
     letter-spacing: -0.04em;
-    color: var(--tn-timer-digit);
+    color: var(--mud-palette-text-primary);
 }
 
 .rest-timer-digits--paused {
@@ -809,7 +852,7 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-digits--urgent {
-    color: var(--tn-timer-urgent);
+    color: var(--mud-palette-warning);
 }
 
 .rest-timer-controls {
@@ -826,20 +869,20 @@ button.heatmap-cell:disabled {
     flex-shrink: 0;
     width: 100%;
     height: 4px;
-    background: var(--tn-timer-ring-track);
+    background: color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
     border-radius: 0 0 20px 20px;
     overflow: hidden;
 }
 
 .rest-timer-edge-fill {
     height: 100%;
-    background: var(--tn-timer-ring-fill);
+    background: var(--mud-palette-primary);
     border-radius: 0 0 0 20px;
     transition: width 0.35s linear;
 }
 
 .rest-timer-edge-fill--urgent {
-    background: var(--tn-timer-urgent);
+    background: var(--mud-palette-warning);
 }
 
 .rest-timer-complete {
@@ -851,13 +894,13 @@ button.heatmap-cell:disabled {
     width: clamp(5rem, 22vw, 6.5rem) !important;
     height: clamp(5rem, 22vw, 6.5rem) !important;
     font-size: clamp(2.5rem, 10vw, 3.25rem) !important;
-    box-shadow: 0 8px 28px var(--tn-timer-complete-glow);
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--mud-palette-success) 50%, transparent);
 }
 
 .rest-timer-complete__title {
     font-weight: 800 !important;
     letter-spacing: -0.02em;
-    color: var(--tn-success-strong) !important;
+    color: var(--mud-palette-success) !important;
 }
 
 .rest-timer-complete__action {
@@ -902,7 +945,7 @@ button.heatmap-cell:disabled {
     width: 100%;
     margin-top: 0.75rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--mud-palette-lines-default, rgba(0, 0, 0, 0.12));
+    border-top: 1px solid var(--mud-palette-lines-default);
 }
 
 .mud-dialog-container .set-log-dialog__footer .mud-button-root {
@@ -959,12 +1002,9 @@ button.heatmap-cell:disabled {
 }
 
 .set-metric-stepper__value {
-    background: rgba(122, 162, 247, 0.14);
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
 }
 
-[data-theme="light"] .set-metric-stepper__value {
-    background: rgba(41, 89, 170, 0.08);
-}
 
 .set-metric-stepper__input {
     border: 2px solid var(--mud-palette-primary);

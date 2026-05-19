@@ -32,4 +32,14 @@ public static class UiDateFormats
             return date.ToString("MMM d", ci);
         return date.ToString("yyyy-MM-dd", ci);
     }
+
+    /// <summary>Minimal date for chart X-axis (numeric month/day, no month names).</summary>
+    public static string LocalDateChartAxis(DateTime utc)
+    {
+        var d = utc.ToLocalTime();
+        var ci = CultureInfo.CurrentCulture;
+        if (d.Year == DateTime.Today.Year)
+            return d.ToString("M/d", ci);
+        return d.ToString("yy/M/d", ci);
+    }
 }

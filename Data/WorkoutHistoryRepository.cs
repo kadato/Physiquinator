@@ -12,7 +12,8 @@ public sealed record ExerciseSessionProgressEntry(
     DateTime StartedAtUtc,
     double? BestWeightKg,
     int TotalReps,
-    int SetCount);
+    int SetCount,
+    double TotalVolumeKg);
 
 public class WorkoutHistoryRepository
 {
@@ -34,6 +35,7 @@ public class WorkoutHistoryRepository
         public double? BestWeightKg { get; set; }
         public int TotalReps { get; set; }
         public int SetCount { get; set; }
+        public double TotalVolumeKg { get; set; }
     }
     private static readonly JsonSerializerOptions s_jsonReadOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -182,7 +184,13 @@ public class WorkoutHistoryRepository
             @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
                      MAX(s.WeightKg) AS BestWeightKg,
                      IFNULL(SUM(s.Reps), 0) AS TotalReps,
-                     COUNT(*) AS SetCount
+                     COUNT(*) AS SetCount,
+                     SUM(CASE
+                           WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg
+                           WHEN s.Reps IS NOT NULL THEN s.Reps
+                           WHEN s.WeightKg IS NOT NULL THEN s.WeightKg
+                           ELSE 0
+                         END) AS TotalVolumeKg
               FROM WorkoutSessionLogs sess
               INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
               WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
@@ -199,7 +207,8 @@ public class WorkoutHistoryRepository
                 r.StartedAtUtc,
                 r.BestWeightKg,
                 r.TotalReps,
-                r.SetCount))
+                r.SetCount,
+                r.TotalVolumeKg))
             .ToList();
     }
 

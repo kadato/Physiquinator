@@ -1114,3 +1114,23 @@ button.heatmap-cell:disabled {
     outline: none;
 }
 
+
+.exercise-progress-chart__plot {
+    width: 100%;
+    overflow: visible;
+    padding: 0 0.25rem 0.5rem;
+}
+
+.exercise-progress-chart__plot .mud-chart {
+    width: 100%;
+    overflow: visible;
+}
+
+.exercise-progress-chart__plot .mud-chart svg {
+    overflow: visible;
+}
+
+/* Single-series chart: legend is redundant and overlapped the table */
+.exercise-progress-chart .mud-chart-legend {
+    display: none !important;
+}

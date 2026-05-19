@@ -288,11 +288,45 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         Assert.Equal(60, rows[0].BestWeightKg);
         Assert.Equal(5, rows[0].TotalReps);
         Assert.Equal(1, rows[0].SetCount);
+        Assert.Equal(300, rows[0].TotalVolumeKg);
 
         Assert.Equal(s1, rows[1].SessionId);
         Assert.Equal(55, rows[1].BestWeightKg);
         Assert.Equal(14, rows[1].TotalReps);
         Assert.Equal(2, rows[1].SetCount);
+        Assert.Equal(730, rows[1].TotalVolumeKg);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAsync_PartialSetMetrics_CountsSingleValue()
+    {
+        var planId = Guid.NewGuid();
+        var tz = TimeZoneInfo.Local;
+        var day1 = new DateOnly(2024, 3, 1);
+        var day2 = new DateOnly(2024, 3, 2);
+        var day3 = new DateOnly(2024, 3, 3);
+        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        var t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        var t3 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day3.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var sRepsOnly = await InsertSessionAtUtcAsync(planId, "Reps", t1);
+        await _sut.LogSetAsync(sRepsOnly, 0, "Pull-Up", 0, reps: 10, weightKg: null);
+
+        var sWeightOnly = await InsertSessionAtUtcAsync(planId, "Weight", t2);
+        await _sut.LogSetAsync(sWeightOnly, 0, "Pull-Up", 0, reps: null, weightKg: 40);
+
+        var sMixed = await InsertSessionAtUtcAsync(planId, "Mixed", t3);
+        await _sut.LogSetAsync(sMixed, 0, "Pull-Up", 0, reps: 8, weightKg: 50);
+        await _sut.LogSetAsync(sMixed, 0, "Pull-Up", 1, reps: 5, weightKg: null);
+
+        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10);
+        Assert.Equal(3, rows.Count);
+        Assert.Equal(sMixed, rows[0].SessionId);
+        Assert.Equal(405, rows[0].TotalVolumeKg);
+        Assert.Equal(sWeightOnly, rows[1].SessionId);
+        Assert.Equal(40, rows[1].TotalVolumeKg);
+        Assert.Equal(sRepsOnly, rows[2].SessionId);
+        Assert.Equal(10, rows[2].TotalVolumeKg);
     }
 
     [Fact]
@@ -308,6 +342,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         var rows = await _sut.GetExerciseSessionProgressAsync(p1, "X", 10);
         Assert.Single(rows);
         Assert.Equal(10, rows[0].BestWeightKg);
+        Assert.Equal(10, rows[0].TotalVolumeKg);
     }
 
     [Fact]

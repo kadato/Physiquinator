@@ -1,4 +1,6 @@
 @page "/history/exercise-progress/{PlanId:guid}/{ExerciseName}"
+@using System.Globalization
+@using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 
@@ -21,10 +23,39 @@ else
         }
         else
         {
+            @if (_showChart)
+            {
+                <MudPaper Class="pa-3 exercise-progress-chart" Elevation="1">
+                    <MudText Typo="Typo.h6" Class="mb-1">Progression</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
+                        Per set: reps × kg when both are logged; otherwise reps or kg alone.
+                    </MudText>
+                    @if (_hasChartData)
+                    {
+                        <div class="exercise-progress-chart__plot">
+                            <MudChart T="double"
+                                      ChartType="ChartType.Line"
+                                      ChartSeries="@_chartSeries"
+                                      ChartLabels="@_chartLabels"
+                                      ChartOptions="@_chartOptions"
+                                      Width="100%"
+                                      Height="@_chartHeightPx" />
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                            Log reps or weight on sets to see progression.
+                        </MudText>
+                    }
+                </MudPaper>
+            }
+
             <MudPaper Class="pa-3" Elevation="1">
                 <MudTable Items="_rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm">
                     <HeaderContent>
                         <MudTh>Date</MudTh>
+                        <MudTh Class="text-end">Score</MudTh>
                         <MudTh Class="text-end">Best kg</MudTh>
                         <MudTh Class="text-end">Total reps</MudTh>
                         <MudTh Class="text-end">Sets</MudTh>
@@ -32,6 +63,7 @@ else
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@UiDateFormats.LocalDateCompact(context.StartedAtUtc)</MudTd>
+                        <MudTd Class="text-end">@context.TotalVolumeKg.ToString("0.##")</MudTd>
                         <MudTd Class="text-end">@(context.BestWeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
                         <MudTd Class="text-end">@context.TotalReps</MudTd>
                         <MudTd Class="text-end">@context.SetCount</MudTd>
@@ -59,6 +91,14 @@ else
     private bool _ready;
     private string _decodedExerciseName = "";
     private IReadOnlyList<ExerciseSessionProgressEntry> _rows = Array.Empty<ExerciseSessionProgressEntry>();
+    private bool _showChart;
+    private bool _hasChartData;
+    private string[] _chartLabels = Array.Empty<string>();
+    private List<ChartSeries<double>> _chartSeries = new();
+    private LineChartOptions _chartOptions = new();
+    private string _chartHeightPx = "280px";
+
+    private const int _maxChartAxisLabels = 6;
 
     private void GoHistory() => Navigation.NavigateTo("/history");
 
@@ -72,11 +112,83 @@ else
         if (string.IsNullOrWhiteSpace(_decodedExerciseName))
         {
             _rows = Array.Empty<ExerciseSessionProgressEntry>();
+            BuildChartData();
             _ready = true;
             return;
         }
 
         _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, _maxSessions);
+        BuildChartData();
         _ready = true;
+    }
+
+    private void BuildChartData()
+    {
+        _showChart = _rows.Count >= 2;
+        if (!_showChart)
+        {
+            _chartLabels = Array.Empty<string>();
+            _chartSeries = new List<ChartSeries<double>>();
+            _hasChartData = false;
+            return;
+        }
+
+        var chronological = _rows.Reverse().ToList();
+        _chartLabels = BuildSparseChartLabels(
+            chronological.Select(r => r.StartedAtUtc).ToList(),
+            _maxChartAxisLabels);
+        var values = chronological.Select(r => r.TotalVolumeKg).ToArray();
+        _hasChartData = values.Any(v => v > 0);
+        _chartSeries = new ChartSeries<double>
+        {
+            Name = "Progression",
+            Data = values
+        }.AsList();
+
+        var maxValue = values.DefaultIfEmpty(0).Max();
+        var rotateXLabels = chronological.Count > 4;
+        _chartHeightPx = rotateXLabels ? "300px" : "280px";
+        _chartOptions = new LineChartOptions
+        {
+            YAxisRequireZeroPoint = true,
+            ShowDataMarkers = false,
+            MaxNumYAxisTicks = 5,
+            YAxisToStringFunc = FormatYAxisTick,
+            YAxisSuggestedMax = maxValue > 0 ? SuggestYAxisMax(maxValue) : null,
+            XAxisLabelRotation = rotateXLabels ? -35 : 0
+        };
+    }
+
+    private static string FormatYAxisTick(double value) =>
+        value.ToString("0", CultureInfo.CurrentCulture);
+
+    private static double SuggestYAxisMax(double maxValue) =>
+        maxValue <= 0 ? 10 : Math.Ceiling(maxValue * 1.12 / 10) * 10;
+
+    private static string[] BuildSparseChartLabels(IReadOnlyList<DateTime> datesUtc, int maxLabels)
+    {
+        var count = datesUtc.Count;
+        if (count == 0)
+            return Array.Empty<string>();
+
+        maxLabels = Math.Clamp(maxLabels, 2, 12);
+        var labels = new string[count];
+
+        if (count <= maxLabels)
+        {
+            for (var i = 0; i < count; i++)
+                labels[i] = UiDateFormats.LocalDateChartAxis(datesUtc[i]);
+            return labels;
+        }
+
+        for (var tick = 0; tick < maxLabels; tick++)
+        {
+            var index = tick == maxLabels - 1
+                ? count - 1
+                : (int)Math.Round(tick * (count - 1) / (double)(maxLabels - 1));
+            labels[index] = UiDateFormats.LocalDateChartAxis(datesUtc[index]);
+        }
+
+        return labels;
     }
 }

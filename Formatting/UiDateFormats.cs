@@ -18,6 +18,10 @@ public static class UiDateFormats
         return $"{datePart} {time}";
     }
 
+    /// <summary>Clock time only (local), for tables where session date is shown elsewhere.</summary>
+    public static string LocalTimeOnly(DateTime utc) =>
+        utc.ToLocalTime().ToString("HH:mm", Invariant);
+
     public static string LocalDateCompact(DateTime utc)
     {
         var d = DateOnly.FromDateTime(utc.ToLocalTime());

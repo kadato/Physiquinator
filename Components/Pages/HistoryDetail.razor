@@ -71,30 +71,28 @@ else
             </MudPaper>
         }
 
-        @if (!_setRows.Any())
+        @if (!_sets.Any())
         {
             <MudText Typo="Typo.body2" Class="mud-text-secondary">No sets logged for this session.</MudText>
         }
         else
         {
-            <MudPaper Elevation="1">
+            <MudPaper Elevation="1" Class="history-data-table">
                 <MudText Typo="Typo.h6" Class="pa-3 pb-0">Sets</MudText>
-                <MudTable Items="_setRows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm">
+                <MudTable Items="_sets" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
                         <MudTh>Exercise</MudTh>
                         <MudTh>Set</MudTh>
                         <MudTh>Reps</MudTh>
                         <MudTh>kg</MudTh>
                         <MudTh>Time</MudTh>
-                        <MudTh>Rest</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Log.ExerciseName</MudTd>
-                        <MudTd>@(context.Log.SetIndex + 1)</MudTd>
-                        <MudTd>@(context.Log.Reps?.ToString() ?? "—")</MudTd>
-                        <MudTd>@(context.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
-                        <MudTd>@UiDateFormats.LocalDateTimeCompact(context.Log.CompletedAtUtc)</MudTd>
-                        <MudTd>@(context.RestAfterPrevious ?? "—")</MudTd>
+                        <MudTd>@context.ExerciseName</MudTd>
+                        <MudTd>@(context.SetIndex + 1)</MudTd>
+                        <MudTd>@(context.Reps?.ToString() ?? "—")</MudTd>
+                        <MudTd>@(context.WeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
+                        <MudTd>@UiDateFormats.LocalTimeOnly(context.CompletedAtUtc)</MudTd>
                     </RowTemplate>
                 </MudTable>
             </MudPaper>
@@ -130,11 +128,9 @@ else
     private bool _ready;
     private WorkoutSessionLogEntity? _session;
     private WorkoutPlan? _snapshot;
-    private List<SetRow> _setRows = new();
+    private List<WorkoutSetLogEntity> _sets = new();
     private Guid? _planGuid;
     private List<string> _distinctExerciseNames = new();
-
-    private record SetRow(WorkoutSetLogEntity Log, string? RestAfterPrevious);
 
     private void GoHistoryList() => Navigation.NavigateTo("/history");
 
@@ -158,7 +154,7 @@ else
             ? (await HistoryRepo.GetSetsForSessionAsync(_session.Id)).ToList()
             : new List<WorkoutSetLogEntity>();
 
-        _setRows = BuildSetRows(sets);
+        _sets = sets;
         _planGuid = Guid.TryParse(_session?.WorkoutPlanId, out var g) ? g : null;
         _distinctExerciseNames = sets
             .Select(s => s.ExerciseName)
@@ -167,36 +163,6 @@ else
             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
             .ToList();
         _ready = true;
-    }
-
-    private static List<SetRow> BuildSetRows(IReadOnlyList<WorkoutSetLogEntity> orderedSets)
-    {
-        var list = new List<SetRow>();
-        DateTime? previousUtc = null;
-        foreach (var log in orderedSets)
-        {
-            string? rest = null;
-            if (previousUtc != null)
-            {
-                var gap = log.CompletedAtUtc - previousUtc.Value;
-                if (gap.TotalSeconds >= 0)
-                    rest = FormatDuration(gap);
-            }
-
-            list.Add(new SetRow(log, rest));
-            previousUtc = log.CompletedAtUtc;
-        }
-
-        return list;
-    }
-
-    private static string FormatDuration(TimeSpan gap)
-    {
-        if (gap.TotalHours >= 1)
-            return $"{(int)gap.TotalHours}:{gap.Minutes:D2}:{gap.Seconds:D2}";
-        if (gap.TotalMinutes >= 1)
-            return $"{(int)gap.TotalMinutes}:{gap.Seconds:D2}";
-        return $"{(int)gap.TotalSeconds}s";
     }
 
     private async Task DeleteSessionClick()

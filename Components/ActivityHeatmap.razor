@@ -3,7 +3,7 @@
 
 <div class="activity-heatmap mb-0">
     <div class="heatmap-scroll" @ref="_heatmapScroll">
-        <div class="heatmap-grid" style="--week-cols: @Weeks">
+        <div class="heatmap-grid" style="@_gridStyle">
             @for (var r = 0; r < 7; r++)
             {
                 var row = r;
@@ -51,6 +51,7 @@
     private DateOnly _endLocal;
     private DateOnly _leftMonday;
     private ElementReference _heatmapScroll;
+    private string _gridStyle = "";
 
     protected override void OnParametersSet()
     {
@@ -58,15 +59,18 @@
         _endLocal = EndLocal ?? DateOnly.FromDateTime(DateTime.Today);
         var mondayOfEndWeek = GetMondayOfWeek(_endLocal);
         _leftMonday = mondayOfEndWeek.AddDays(-7 * (Weeks - 1));
+        _gridStyle =
+            $"grid-template-columns: 2.25rem repeat({Weeks}, 11px); grid-template-rows: repeat(7, 11px);";
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
             return;
+
         try
         {
-            await Task.Delay(32);
+            await Task.Delay(50);
             await JSRuntime.InvokeVoidAsync("physiquinator.scrollHeatmapToEnd", _heatmapScroll);
         }
         catch

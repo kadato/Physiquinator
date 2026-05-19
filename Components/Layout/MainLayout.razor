@@ -128,7 +128,7 @@
     private static bool ShouldShowBottomNav(string path)
     {
         if (path.StartsWith("workout/", StringComparison.Ordinal)) return false;
-        if (path.StartsWith("plan/", StringComparison.Ordinal)) return false;
+        if (path == "plan" || path.StartsWith("plan/", StringComparison.Ordinal)) return false;
         if (path.StartsWith("history/", StringComparison.Ordinal)) return false;
         return true;
     }

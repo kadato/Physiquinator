@@ -18,7 +18,11 @@
 
     <MudPaper Class="pa-4" Elevation="1">
         <MudText Typo="Typo.h6" Class="mb-2">Appearance</MudText>
-        <MudSelect T="string" Label="Light or dark mode" Value="_preference" ValueChanged="OnThemePreferenceChanged">
+        <MudSelect T="string"
+                   Variant="Variant.Filled"
+                   Label="Light or dark mode"
+                   Value="_preference"
+                   ValueChanged="OnThemePreferenceChanged">
             <MudSelectItem Value="@("system")">Match system</MudSelectItem>
             <MudSelectItem Value="@("light")">Light (always)</MudSelectItem>
             <MudSelectItem Value="@("dark")">Dark (always)</MudSelectItem>

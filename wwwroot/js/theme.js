@@ -95,6 +95,21 @@
         }
     };
 
+    function revertDomOrder(evt) {
+        const parent = evt.from;
+        const item = evt.item;
+        const oldIndex = evt.oldIndex;
+        const newIndex = evt.newIndex;
+        if (oldIndex === newIndex || oldIndex == null || newIndex == null) {
+            return;
+        }
+        if (oldIndex < newIndex) {
+            parent.insertBefore(item, parent.children[oldIndex]);
+        } else {
+            parent.insertBefore(item, parent.children[oldIndex + 1]);
+        }
+    }
+
     window.planReorder = {
         sortable: null,
         init: function (listId, dotNetRef) {
@@ -110,6 +125,7 @@
                 delayOnTouchOnly: true,
                 forceFallback: true,
                 fallbackTolerance: 3,
+                fallbackClass: "plan-exercise-row--fallback",
                 ghostClass: "plan-exercise-row--ghost",
                 chosenClass: "plan-exercise-row--chosen",
                 dragClass: "plan-exercise-row--drag",
@@ -118,6 +134,7 @@
                     if (evt.oldIndex === evt.newIndex) {
                         return;
                     }
+                    revertDomOrder(evt);
                     dotNetRef.invokeMethodAsync("OnExerciseReordered", evt.oldIndex, evt.newIndex);
                 }
             });

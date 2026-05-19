@@ -171,6 +171,7 @@
         Exercises.RemoveAt(oldIndex);
         Exercises.Insert(newIndex, item);
         RenumberExercises();
+        BumpSortable();
     }
 
     private void GoHome() => Navigation.NavigateTo("/");

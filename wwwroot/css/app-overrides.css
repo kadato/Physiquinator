@@ -670,10 +670,22 @@ html, body, #app {
     color: inherit;
     cursor: grab;
     touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-.plan-exercise-handle:active {
+.plan-exercise-handle:active,
+.plan-exercise-row--chosen .plan-exercise-handle {
     cursor: grabbing;
+    background: var(--mud-palette-action-default-hover);
+}
+
+@media (max-width: 576px) {
+    .plan-exercise-handle {
+        width: 52px;
+        min-width: 52px;
+        height: 52px;
+    }
 }
 
 .plan-exercise-row__body {

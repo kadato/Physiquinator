@@ -1,8 +1,6 @@
 @page "/history"
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
-@inject DemoDataSeeder DemoSeeder
-
 <MudStack Spacing="3">
     <PageHeader Title="Workout history" ShowBack="false" />
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -141,9 +139,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await DemoSeeder.SeedDemoDataIfNeededAsync();
-        await DemoSeeder.SeedDemoHistoryIfNeededAsync();
-
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
         var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(_heatmapEndLocal, HeatmapWeeks);
         var gridStart = ActivityHeatmap.GetMondayOfWeek(_heatmapEndLocal).AddDays(-7 * (HeatmapWeeks - 1));

@@ -4,7 +4,6 @@
 @inject WorkoutHistoryRepository HistoryRepository
 @inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
-@inject DemoDataSeeder DemoSeeder
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -120,9 +119,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await DemoSeeder.SeedDemoDataIfNeededAsync();
-        await DemoSeeder.SeedDemoHistoryIfNeededAsync();
-
         var endLocal = DateOnly.FromDateTime(DateTime.Today);
         var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(endLocal, HomeStatsWeeks);
         var gridStart = ActivityHeatmap.GetMondayOfWeek(endLocal).AddDays(-7 * (HomeStatsWeeks - 1));

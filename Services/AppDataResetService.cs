@@ -29,8 +29,8 @@ public sealed class AppDataResetService
     {
         _sessionService.EndWorkout();
         await _database.ClearAllUserDataAsync().ConfigureAwait(false);
-        _demoSeedPreferences.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, true);
-        _demoSeedPreferences.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, true);
+        _demoSeedPreferences.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, false);
+        _demoSeedPreferences.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, false);
         await _themeService.ResetStoredPreferenceToSystemAsync().ConfigureAwait(true);
         await _restAlertSettings.SetEnabledAsync(true).ConfigureAwait(true);
     }

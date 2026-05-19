@@ -3,6 +3,7 @@
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Services
 @inject ThemeService ThemeService
+@inject DemoDataSeeder DemoSeeder
 @inject NavigationManager Navigation
 @inject ILogger<MainLayout> Logger
 
@@ -57,12 +58,14 @@
         {
             try
             {
+                await DemoSeeder.SeedDemoDataIfNeededAsync();
+                await DemoSeeder.SeedDemoHistoryIfNeededAsync();
                 await ThemeService.EnsureInitializedAsync();
                 SyncThemeFromService();
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Theme initialization failed");
+                Logger.LogError(ex, "App initialization failed");
             }
         }
         UpdateNavigationState();

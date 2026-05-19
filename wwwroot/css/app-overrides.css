@@ -9,9 +9,21 @@
     --tn-accent: #7aa2f7;
     --tn-success: #9ece6a;
     --tn-success-strong: #73daca;
-    --tn-timer-surface: #2a3048;
-    --tn-timer-border: rgba(122, 162, 247, 0.42);
-    --tn-timer-digit: #7aa2f7;
+    --tn-timer-surface: #252a3f;
+    --tn-timer-border: rgba(122, 162, 247, 0.35);
+    --tn-timer-digit: #c0d4ff;
+    --tn-timer-ring-track: rgba(122, 162, 247, 0.18);
+    --tn-timer-ring-fill: #7aa2f7;
+    --tn-timer-urgent: #e0af68;
+    --tn-timer-urgent-bg: rgba(224, 175, 104, 0.2);
+    --tn-timer-badge-paused-text: #a9b1d6;
+    --tn-timer-badge-paused-bg: rgba(169, 177, 214, 0.15);
+    --tn-timer-controls-bg: rgba(0, 0, 0, 0.2);
+    --tn-timer-ctrl-hover: rgba(122, 162, 247, 0.12);
+    --tn-timer-complete-bg: linear-gradient(165deg, rgba(158, 206, 106, 0.35) 0%, rgba(115, 218, 202, 0.12) 45%, #252a3f 100%);
+    --tn-timer-complete-badge-bg: rgba(158, 206, 106, 0.2);
+    --tn-timer-complete-glow: rgba(115, 218, 202, 0.5);
+    --tn-timer-complete-shadow: rgba(115, 218, 202, 0.25);
 }
 
 :root {
@@ -40,9 +52,21 @@
     --tn-accent: #2959aa;
     --tn-success: #33635c;
     --tn-success-strong: #2e7d6e;
-    --tn-timer-surface: #eceef5;
-    --tn-timer-border: rgba(41, 89, 170, 0.28);
-    --tn-timer-digit: #2959aa;
+    --tn-timer-surface: #f4f5fa;
+    --tn-timer-border: rgba(41, 89, 170, 0.22);
+    --tn-timer-digit: #1a3d7a;
+    --tn-timer-ring-track: rgba(41, 89, 170, 0.14);
+    --tn-timer-ring-fill: #2959aa;
+    --tn-timer-urgent: #b45309;
+    --tn-timer-urgent-bg: rgba(180, 83, 9, 0.12);
+    --tn-timer-badge-paused-text: #565f89;
+    --tn-timer-badge-paused-bg: rgba(86, 95, 137, 0.1);
+    --tn-timer-controls-bg: rgba(41, 89, 170, 0.06);
+    --tn-timer-ctrl-hover: rgba(41, 89, 170, 0.1);
+    --tn-timer-complete-bg: linear-gradient(165deg, rgba(51, 99, 92, 0.22) 0%, rgba(46, 125, 110, 0.08) 45%, #f0f7f5 100%);
+    --tn-timer-complete-badge-bg: rgba(51, 99, 92, 0.14);
+    --tn-timer-complete-glow: rgba(46, 125, 110, 0.4);
+    --tn-timer-complete-shadow: rgba(46, 125, 110, 0.18);
 }
 
 html, body, #app {
@@ -274,6 +298,25 @@ html, body, #app {
     transition-duration: 0ms !important;
     animation-duration: 0ms !important;
 }
+/* Filled inputs: no underline; match card surfaces */
+.mud-input-underline::before,
+.mud-input-underline::after {
+    display: none !important;
+}
+
+.mud-input-filled .mud-input-slot {
+    border-radius: 12px;
+}
+
+.mud-input input[type="number"]::-webkit-inner-spin-button,
+.mud-input input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.mud-input input[type="number"] {
+    -moz-appearance: textfield;
+}
 
 .status-bar-safe-area {
     display: none;
@@ -304,57 +347,274 @@ html, body, #app {
     }
 }
 
-.plan-sticky-footer {
+/* Plan editor (MAUI WebView: global CSS — scoped bundle often missing in Debug) */
+.app-page-with-actions {
+    padding-bottom: calc(var(--app-bottom-actions) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+}
+
+.plan-page {
+    --plan-footer-stack: 88px;
+}
+
+.plan-page-with-footer {
+    padding-bottom: calc(var(--plan-footer-stack) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+}
+
+.plan-page__subtitle {
+    margin-top: -0.5rem;
+}
+
+.plan-section__label {
+    display: block;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+}
+
+.plan-section__card {
+    border-radius: 12px;
+}
+.plan-details-card {
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    background: rgba(63, 68, 98, 0.55);
+    overflow: hidden;
+}
+
+[data-theme="light"] .plan-details-card {
+    border-color: rgba(41, 89, 170, 0.18);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.plan-details-card__grid {
+    margin-top: 0.25rem;
+}
+
+.plan-details-card .mud-input-filled .mud-input-slot {
+    background: rgba(122, 162, 247, 0.14);
+}
+
+[data-theme="light"] .plan-details-card .mud-input-filled .mud-input-slot {
+    background: rgba(41, 89, 170, 0.07);
+}
+
+.plan-details-card .mud-input-label-inputcontrol {
+    font-weight: 600;
+}
+
+.plan-add-exercise {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.plan-add-exercise__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+}
+
+.plan-add-exercise__input .mud-input-control {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.plan-add-exercise__input .mud-input-outlined-border {
+    border-radius: 10px;
+}
+
+.plan-add-exercise__input input {
+    font-size: 0.9375rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.plan-add-exercise__btn.mud-button-root {
+    flex-shrink: 0;
+    height: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0 0.875rem !important;
+    border-radius: 10px !important;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: none;
+}
+
+.plan-exercise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.plan-exercise-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 56px;
+    padding: 0.25rem 0.35rem 0.25rem 0.25rem;
+    border-radius: 12px;
+    touch-action: manipulation;
+}
+
+.plan-exercise-row--ghost {
+    opacity: 0.45;
+}
+
+.plan-exercise-row--chosen,
+.plan-exercise-row--drag {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.plan-exercise-row__main {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    gap: 0.125rem;
+}
+
+.plan-exercise-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: grab;
+    touch-action: none;
+}
+
+.plan-exercise-handle:active {
+    cursor: grabbing;
+}
+
+.plan-exercise-row__body {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.35rem 0.5rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+
+.plan-exercise-row__body:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.plan-exercise-row__index {
+    flex-shrink: 0;
+    min-width: 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    opacity: 0.7;
+    text-align: center;
+}
+
+.plan-exercise-row__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    gap: 0.125rem;
+}
+
+.plan-exercise-row__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plan-exercise-row__summary {
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plan-exercise-row__chevron {
+    flex-shrink: 0;
+    opacity: 0.5;
+}
+
+.plan-exercise-row__delete {
+    flex-shrink: 0;
+}
+
+.plan-editor-footer {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 1200;
-    padding: 0.75rem 1rem;
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem 0.75rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    border-top: none;
+    box-shadow: none;
 }
 
-.plan-page-with-footer,
-.app-page-with-actions {
-    padding-bottom: calc(var(--app-bottom-actions) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+.plan-editor-footer__actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--app-bottom-nav);
 }
 
-.plan-page-with-footer.has-bottom-nav {
-    padding-bottom: calc(var(--app-bottom-bar-height) + var(--app-bottom-actions) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+.plan-editor-footer__cancel,
+.plan-editor-footer__export {
+    flex-shrink: 0;
+    min-width: auto;
+    text-transform: none;
+    font-weight: 600;
+    border-radius: 12px !important;
 }
 
-.exercise-sortable-list {
+.plan-editor-footer__export {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+.plan-editor-footer__save {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    border-radius: 12px !important;
+    text-transform: none;
+}
+
+.plan-exercise-sheet__body {
+    width: 100%;
+}
+
+.plan-exercise-sheet__footer {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.exercise-sortable-item {
-    border-radius: 12px;
-}
-
-.exercise-sortable-item.sortable-ghost {
-    opacity: 0.45;
-}
-
-.exercise-drag-handle {
-    cursor: grab;
-    touch-action: none;
-    flex-shrink: 0;
-}
-
-.exercise-drag-handle:active {
-    cursor: grabbing;
-}
-
-.plan-sticky-footer__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    max-width: 600px;
-    margin: 0 auto;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mud-palette-lines-default, rgba(0, 0, 0, 0.12));
 }
 
 #blazor-error-ui {
@@ -375,3 +635,337 @@ html, body, #app {
     right: 1rem;
     top: 1rem;
 }
+/* Activity heatmap — global (MAUI WebView may not apply scoped Physiquinator.styles.css) */
+.activity-heatmap {
+    padding: 0.25rem 0;
+    background: transparent;
+}
+
+.heatmap-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    padding-bottom: 2px;
+    padding-right: env(safe-area-inset-right, 0);
+    overscroll-behavior-x: contain;
+}
+
+.heatmap-grid {
+    display: grid;
+    gap: 3px;
+    align-items: center;
+    min-width: min-content;
+}
+
+.heatmap-day-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: end;
+    padding-right: 4px;
+    color: var(--mud-palette-text-secondary, var(--tn-text-muted));
+    letter-spacing: 0.02em;
+}
+
+button.heatmap-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    box-sizing: border-box;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: block;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button.heatmap-cell:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.heatmap-selected.heatmap-on,
+.heatmap-selected.heatmap-off {
+    box-shadow: 0 0 0 2px var(--mud-palette-primary, var(--tn-accent));
+    border-radius: 2px;
+}
+
+.heatmap-off {
+    background-color: var(--mud-palette-background-gray, var(--tn-surface-3));
+    opacity: 0.62;
+}
+
+.heatmap-on {
+    background-color: var(--mud-palette-primary, var(--tn-accent));
+    opacity: 0.9;
+}
+
+.history-heatmap-panel {
+    overflow: visible;
+    max-width: 100%;
+}
+
+.history-heatmap-panel.mud-paper {
+    overflow: visible;
+}
+
+@media (max-width: 576px) {
+    .heatmap-grid {
+        gap: 4px;
+    }
+
+    button.heatmap-cell {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+
+/* Rest timer — global (MAUI WebView may not apply scoped Workout.razor.css) */
+.rest-timer-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.rest-timer-panel.mud-paper {
+    border: 1px solid var(--tn-timer-border);
+    border-radius: 20px;
+    background: var(--tn-timer-surface);
+    transition:
+        background 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
+}
+
+.rest-timer-panel--active.mud-paper {
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.rest-timer-panel--complete.mud-paper {
+    border: 2px solid var(--tn-success);
+    border-radius: 22px;
+    background: var(--tn-timer-complete-bg);
+    box-shadow: 0 12px 40px var(--tn-timer-complete-shadow);
+    animation: rest-timer-complete-in 0.45s ease-out;
+}
+
+@keyframes rest-timer-complete-in {
+    from {
+        transform: scale(0.98);
+        opacity: 0.9;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.rest-timer-active {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+}
+
+.rest-timer-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: clamp(6.5rem, 32vw, 9rem);
+    padding: 1.5rem 1.25rem 1rem;
+    box-sizing: border-box;
+}
+
+.rest-timer-digits {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: clamp(5rem, 22vw, 7.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--tn-timer-digit);
+}
+
+.rest-timer-digits--paused {
+    opacity: 0.45;
+}
+
+.rest-timer-digits--urgent {
+    color: var(--tn-timer-urgent);
+}
+
+.rest-timer-controls {
+    width: 100%;
+    padding: 0 1rem 1.25rem;
+    box-sizing: border-box;
+}
+
+.rest-timer-controls.mud-stack {
+    justify-content: center;
+}
+
+.rest-timer-edge-track {
+    flex-shrink: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--tn-timer-ring-track);
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
+}
+
+.rest-timer-edge-fill {
+    height: 100%;
+    background: var(--tn-timer-ring-fill);
+    border-radius: 0 0 0 20px;
+    transition: width 0.35s linear;
+}
+
+.rest-timer-edge-fill--urgent {
+    background: var(--tn-timer-urgent);
+}
+
+.rest-timer-complete {
+    width: 100%;
+    padding: 0.5rem 0;
+}
+
+.rest-timer-complete__avatar.mud-avatar {
+    width: clamp(5rem, 22vw, 6.5rem) !important;
+    height: clamp(5rem, 22vw, 6.5rem) !important;
+    font-size: clamp(2.5rem, 10vw, 3.25rem) !important;
+    box-shadow: 0 8px 28px var(--tn-timer-complete-glow);
+}
+
+.rest-timer-complete__title {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+    color: var(--tn-success-strong) !important;
+}
+
+.rest-timer-complete__action {
+    font-weight: 700 !important;
+    border-radius: 14px !important;
+    min-height: 3.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rest-timer-panel--complete.mud-paper {
+        animation: none;
+    }
+
+    .rest-timer-edge-fill {
+        transition: none;
+    }
+}
+/* Set-log dialog: respect mobile keyboard / dynamic viewport */
+.mud-dialog-container .mud-dialog {
+    max-height: 100dvh;
+}
+
+.mud-dialog-container .mud-dialog.set-log-dialog {
+    max-height: min(92dvh, 100dvh);
+}
+
+/* Log set dialog — global (dialog renders in MudDialogProvider portal) */
+.mud-dialog-container .mud-dialog.set-log-dialog {
+    max-height: min(92dvh, 100dvh);
+    width: 100%;
+}
+
+.mud-dialog-container .mud-dialog.set-log-dialog .mud-dialog-content {
+    padding-bottom: 0.5rem;
+}
+
+.mud-dialog-container .set-log-dialog__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mud-palette-lines-default, rgba(0, 0, 0, 0.12));
+}
+
+.mud-dialog-container .set-log-dialog__footer .mud-button-root {
+    width: 100% !important;
+    min-height: 3rem;
+    margin: 0 !important;
+    justify-content: center;
+}
+
+.mud-dialog-container .set-log-dialog__footer .mud-button-label {
+    text-transform: none;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Set metric stepper — plan page + dialogs (MAUI WebView global) */
+.set-metric-stepper__row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.set-metric-stepper__label {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.set-metric-stepper__btn.mud-button-root {
+    flex: 0 0 3rem;
+    width: 3rem !important;
+    min-width: 3rem !important;
+    max-width: 3rem;
+    height: 3rem !important;
+    min-height: 3rem !important;
+    padding: 0 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+
+.set-metric-stepper__value,
+.set-metric-stepper__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 3rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 12px;
+}
+
+.set-metric-stepper__value {
+    background: rgba(122, 162, 247, 0.14);
+}
+
+[data-theme="light"] .set-metric-stepper__value {
+    background: rgba(41, 89, 170, 0.08);
+}
+
+.set-metric-stepper__input {
+    border: 2px solid var(--mud-palette-primary);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    text-align: center;
+}
+
+.set-metric-stepper__input:focus {
+    outline: none;
+}
+

@@ -4,10 +4,11 @@
     window.physiquinator.scrollHeatmapToEnd = (el) => {
         if (!el) return;
         try {
-            if (!window.matchMedia("(max-width: 576px)").matches) return;
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    el.scrollLeft = el.scrollWidth - el.clientWidth;
+                    if (el.scrollWidth > el.clientWidth) {
+                        el.scrollLeft = el.scrollWidth - el.clientWidth;
+                    }
                 });
             });
         } catch {
@@ -99,14 +100,20 @@
         init: function (listId, dotNetRef) {
             const el = document.getElementById(listId);
             if (!el || typeof Sortable === "undefined") {
-                return;
+                return false;
             }
             this.destroy();
             this.sortable = Sortable.create(el, {
-                handle: ".exercise-drag-handle",
+                handle: ".plan-exercise-handle",
                 animation: 150,
-                ghostClass: "sortable-ghost",
-                draggable: ".exercise-sortable-item",
+                delay: 150,
+                delayOnTouchOnly: true,
+                forceFallback: true,
+                fallbackTolerance: 3,
+                ghostClass: "plan-exercise-row--ghost",
+                chosenClass: "plan-exercise-row--chosen",
+                dragClass: "plan-exercise-row--drag",
+                draggable: ".plan-exercise-row",
                 onEnd: function (evt) {
                     if (evt.oldIndex === evt.newIndex) {
                         return;
@@ -114,6 +121,7 @@
                     dotNetRef.invokeMethodAsync("OnExerciseReordered", evt.oldIndex, evt.newIndex);
                 }
             });
+            return true;
         },
         destroy: function () {
             if (this.sortable) {

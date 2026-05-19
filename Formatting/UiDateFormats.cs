@@ -2,20 +2,20 @@ using System.Globalization;
 
 namespace Physiquinator.Formatting;
 
-/// <summary>Short, culture-aware date strings for dense mobile layouts.</summary>
+/// <summary>Short date strings for dense mobile layouts (Y-M-D when year is shown).</summary>
 public static class UiDateFormats
 {
+    private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
+
     public static string LocalDateTimeCompact(DateTime utc)
     {
         var l = utc.ToLocalTime();
-        var ci = CultureInfo.CurrentCulture;
         var today = DateTime.Today;
-        var time = l.ToString("HH:mm", ci);
+        var time = l.ToString("HH:mm", Invariant);
         if (l.Date == today)
             return time;
-        if (l.Year == today.Year)
-            return $"{l.ToString("MMM d", ci)} {time}";
-        return $"{l.ToString("yy-MM-dd", ci)} {time}";
+        var datePart = DateOnlyCompact(DateOnly.FromDateTime(l.Date));
+        return $"{datePart} {time}";
     }
 
     public static string LocalDateCompact(DateTime utc)
@@ -26,20 +26,13 @@ public static class UiDateFormats
 
     public static string DateOnlyCompact(DateOnly date)
     {
-        var ci = CultureInfo.CurrentCulture;
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (date.Year == today.Year)
-            return date.ToString("MMM d", ci);
-        return date.ToString("yyyy-MM-dd", ci);
+            return date.ToString("MM-dd", Invariant);
+        return date.ToString("yyyy-MM-dd", Invariant);
     }
 
-    /// <summary>Minimal date for chart X-axis (numeric month/day, no month names).</summary>
-    public static string LocalDateChartAxis(DateTime utc)
-    {
-        var d = utc.ToLocalTime();
-        var ci = CultureInfo.CurrentCulture;
-        if (d.Year == DateTime.Today.Year)
-            return d.ToString("M/d", ci);
-        return d.ToString("yy/M/d", ci);
-    }
+    /// <summary>Minimal date for chart X-axis (same rules as <see cref="DateOnlyCompact"/>).</summary>
+    public static string LocalDateChartAxis(DateTime utc) =>
+        DateOnlyCompact(DateOnly.FromDateTime(utc.ToLocalTime()));
 }

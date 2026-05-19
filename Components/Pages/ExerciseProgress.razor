@@ -150,20 +150,17 @@ else
         _chartHeightPx = rotateXLabels ? "300px" : "280px";
         _chartOptions = new LineChartOptions
         {
-            YAxisRequireZeroPoint = true,
+            YAxisRequireZeroPoint = false,
             ShowDataMarkers = false,
             MaxNumYAxisTicks = 5,
             YAxisToStringFunc = FormatYAxisTick,
-            YAxisSuggestedMax = maxValue > 0 ? SuggestYAxisMax(maxValue) : null,
+            YAxisSuggestedMax = maxValue > 0 ? ChartAxisScale.SuggestYAxisMax(maxValue) : null,
             XAxisLabelRotation = rotateXLabels ? -35 : 0
         };
     }
 
     private static string FormatYAxisTick(double value) =>
         value.ToString("0", CultureInfo.CurrentCulture);
-
-    private static double SuggestYAxisMax(double maxValue) =>
-        maxValue <= 0 ? 10 : Math.Ceiling(maxValue * 1.12 / 10) * 10;
 
     private static string[] BuildSparseChartLabels(IReadOnlyList<DateTime> datesUtc, int maxLabels)
     {

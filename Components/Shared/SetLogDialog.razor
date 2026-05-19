@@ -1,23 +1,37 @@
-<MudDialog>
+<MudDialog Class="set-log-dialog">
     <TitleContent>
         <MudText Typo="Typo.h6">Log set</MudText>
     </TitleContent>
     <DialogContent>
-        <MudGrid Spacing="2">
-            <MudItem xs="6">
-                <MudNumericField @bind-Value="_reps" Label="Reps" Min="0" HideSpinButtons="true" />
-            </MudItem>
-            <MudItem xs="6">
-                <MudNumericField @bind-Value="_weightKg" Label="Weight (kg)" Min="0" HideSpinButtons="true" />
-            </MudItem>
-        </MudGrid>
+        <MudStack Spacing="3" Class="set-log-dialog__body">
+            <SetMetricStepper Label="Reps"
+                              @bind-Value="RepsStepperValue"
+                              Step="1"
+                              IsInteger="true"
+                              Format="0"
+                              InputMode="numeric" />
+            <SetMetricStepper Label="Weight (kg)"
+                              @bind-Value="_weightKg"
+                              Step="2.5"
+                              Format="0.#"
+                              InputMode="decimal" />
+
+            <div class="set-log-dialog__footer">
+                <MudButton Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           FullWidth="true"
+                           OnClick="Confirm"
+                           Disabled="@ConfirmDisabled">
+                    Complete set
+                </MudButton>
+                <MudButton Variant="Variant.Text"
+                           FullWidth="true"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
+            </div>
+        </MudStack>
     </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirm" Disabled="@ConfirmDisabled">
-            Complete set
-        </MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {
@@ -35,6 +49,14 @@
 
     private int? _reps;
     private double? _weightKg;
+
+    private double? RepsStepperValue
+    {
+        get => _reps;
+        set => _reps = value.HasValue
+            ? (int?)Math.Clamp((int)Math.Round(value.Value), 0, int.MaxValue)
+            : null;
+    }
 
     protected override void OnInitialized()
     {

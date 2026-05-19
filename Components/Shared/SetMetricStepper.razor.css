@@ -1,0 +1,69 @@
+.set-metric-stepper {
+    width: 100%;
+}
+
+.set-metric-stepper__label {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.set-metric-stepper__row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.set-metric-stepper__btn.mud-button-root {
+    flex: 0 0 3rem;
+    width: 3rem;
+    min-width: 3rem;
+    height: 3rem;
+    min-height: 3rem;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-radius: 12px;
+}
+
+.set-metric-stepper__value {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 3rem;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 12px;
+    background: rgba(122, 162, 247, 0.14);
+    color: var(--mud-palette-text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.set-metric-stepper__value:active {
+    opacity: 0.85;
+}
+
+.set-metric-stepper__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--mud-palette-primary);
+    border-radius: 12px;
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.set-metric-stepper__input:focus {
+    outline: none;
+}

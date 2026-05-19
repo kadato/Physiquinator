@@ -1,0 +1,13 @@
+.set-log-dialog__body {
+    width: 100%;
+}
+
+.set-log-dialog__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mud-palette-lines-default, rgba(0, 0, 0, 0.12));
+}

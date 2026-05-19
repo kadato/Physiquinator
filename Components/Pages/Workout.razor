@@ -23,56 +23,63 @@ else
         @if (SessionService.IsResting || _isRestComplete)
         {
             <div class="rest-timer-sticky">
-            <MudPaper Class="@RestTimerPanelClass" Elevation="2">
-                <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                <MudPaper Class="@RestTimerPanelClass" Elevation="2">
                     @if (_isRestComplete)
                     {
-                        <MudAlert Severity="Severity.Success" Class="rest-timer-alert" Dense="true" role="status" aria-live="assertive">
-                            Rest complete — ready for your next set
-                        </MudAlert>
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Style="font-size:3rem;" />
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Done</MudButton>
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="rest-timer-complete">
+                            <MudAvatar Size="Size.Large" Color="Color.Success" Class="rest-timer-complete__avatar">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                            </MudAvatar>
+                            <MudText Typo="Typo.h4" Class="rest-timer-complete__title">Rest complete</MudText>
+                            <MudText Typo="Typo.body1" Class="mud-text-secondary">Ready for your next set</MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       FullWidth="true"
+                                       Size="Size.Large"
+                                       Class="rest-timer-complete__action mt-2"
+                                       OnClick="SkipRest"
+                                       aria-label="Continue to next set">
+                                Continue
+                            </MudButton>
+                        </MudStack>
                     }
                     else
                     {
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Primary" Size="Size.Small" />
-                            <MudText Typo="Typo.overline">Rest time</MudText>
-                        </MudStack>
-                        <div class="rest-timer-ring" aria-live="polite">
-                            <MudProgressCircular Value="@RestProgressValue"
-                                                   Color="@RestProgressColor"
-                                                   Size="Size.Large"
-                                                   StrokeWidth="6">
-                                <MudText Typo="Typo.h4" Class="rest-timer-digits">
+                        <div class="rest-timer-active">
+                            <div class="rest-timer-display" aria-live="polite" aria-label="@RestTimerAriaLabel">
+                                <div class="rest-timer-digits @RestDigitsClass" role="timer">
                                     @FormatTime(SessionService.RestSecondsRemaining)
-                                </MudText>
-                            </MudProgressCircular>
+                                </div>
+                            </div>
+
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Class="rest-timer-controls">
+                                @if (SessionService.IsRestPaused)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                                   Color="Color.Success"
+                                                   aria-label="Resume rest"
+                                                   OnClick="ResumeRest" />
+                                }
+                                else
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Pause"
+                                                   Color="Color.Info"
+                                                   aria-label="Pause rest"
+                                                   OnClick="PauseRest" />
+                                }
+                                <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                               Color="Color.Default"
+                                               aria-label="Reset rest"
+                                               OnClick="ResetRest" />
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
+                            </MudStack>
+
+                            <div class="rest-timer-edge-track" aria-hidden="true">
+                                <div class="rest-timer-edge-fill @RestEdgeFillClass" style="width: @(RestProgressValue.ToString("F0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                            </div>
                         </div>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1">
-                            @if (SessionService.IsRestPaused)
-                            {
-                                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                                               Color="Color.Success"
-                                               aria-label="Resume rest"
-                                               OnClick="ResumeRest" />
-                            }
-                            else
-                            {
-                                <MudIconButton Icon="@Icons.Material.Filled.Pause"
-                                               Color="Color.Info"
-                                               aria-label="Pause rest"
-                                               OnClick="PauseRest" />
-                            }
-                            <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                                           Color="Color.Default"
-                                           aria-label="Reset rest"
-                                           OnClick="ResetRest" />
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
-                        </MudStack>
                     }
-                </MudStack>
-            </MudPaper>
+                </MudPaper>
             </div>
         }
 
@@ -260,7 +267,7 @@ else
     }
 
     private string RestTimerPanelClass =>
-        _isRestComplete ? "pa-4 rest-timer-panel rest-timer-panel--complete" : "pa-4 rest-timer-panel";
+        _isRestComplete ? "pa-6 rest-timer-panel rest-timer-panel--complete" : "rest-timer-panel rest-timer-panel--active";
 
     private double RestProgressValue
     {
@@ -273,10 +280,22 @@ else
         }
     }
 
-    private Color RestProgressColor =>
-        !_isRestComplete && SessionService.RestSecondsRemaining <= 3
-            ? Color.Warning
-            : Color.Primary;
+    private string RestDigitsClass =>
+        SessionService.IsRestPaused
+            ? "rest-timer-digits--paused"
+            : SessionService.RestSecondsRemaining <= 3 && !SessionService.IsRestPaused
+                ? "rest-timer-digits--urgent"
+                : "";
+
+    private string RestEdgeFillClass =>
+        SessionService.RestSecondsRemaining <= 3 && !SessionService.IsRestPaused
+            ? "rest-timer-edge-fill--urgent"
+            : "";
+
+    private string RestTimerAriaLabel =>
+        SessionService.IsRestPaused
+            ? $"Rest paused, {FormatTime(SessionService.RestSecondsRemaining)} remaining"
+            : $"Rest, {FormatTime(SessionService.RestSecondsRemaining)} remaining";
 
     private bool CompleteSetButtonDisabled => _isCompleting || _openingSetLogModal;
 
@@ -337,7 +356,13 @@ else
                 { x => x.InitialWeightKg, modalWeightKg },
                 { x => x.ConfirmDisabled, _isCompleting },
             };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                Position = DialogPosition.BottomCenter,
+            };
             var dialog = await DialogService.ShowAsync<SetLogDialog>("Log set", parameters, options);
             var result = await dialog.Result;
             _pendingExerciseIndex = null;

@@ -1,0 +1,153 @@
+<MudStack Class="set-metric-stepper" Spacing="1">
+    <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
+    <div class="set-metric-stepper__row">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
+                   OnClick="@(() => Adjust(-1))"
+                   aria-label="@($"Decrease {Label}")">
+            -
+        </MudButton>
+        @if (_editing)
+        {
+            <input class="set-metric-stepper__input"
+                   type="number"
+                   inputmode="@InputMode"
+                   min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                   step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                   @bind="_editText"
+                   @bind:event="oninput"
+                   @onblur="CommitEdit"
+                   @onkeydown="OnEditKeyDown" />
+        }
+        else
+        {
+            <button type="button"
+                    class="set-metric-stepper__value"
+                    aria-label="@($"Edit {Label}")"
+                    @onclick="StartEdit">
+                @DisplayText
+            </button>
+        }
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
+                   OnClick="@(() => Adjust(1))"
+                   aria-label="@($"Increase {Label}")">
+            +
+        </MudButton>
+    </div>
+</MudStack>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public double? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<double?> ValueChanged { get; set; }
+
+    [Parameter]
+    public double Step { get; set; } = 1;
+
+    [Parameter]
+    public double Min { get; set; }
+
+    [Parameter]
+    public bool IsInteger { get; set; }
+
+    [Parameter]
+    public string Format { get; set; } = "0";
+
+    [Parameter]
+    public string InputMode { get; set; } = "decimal";
+
+    private bool _editing;
+    private string _editText = "";
+
+    private string DisplayText
+    {
+        get
+        {
+            if (!Value.HasValue)
+                return "0";
+
+            return IsInteger
+                ? ((int)Math.Round(Value.Value)).ToString(Format, System.Globalization.CultureInfo.InvariantCulture)
+                : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    private async Task Adjust(int direction)
+    {
+        var current = Value ?? 0;
+        var next = current + (direction * Step);
+        if (next < Min)
+            next = Min;
+
+        next = NormalizeValue(next);
+        await SetValueAsync(next);
+    }
+
+    private void StartEdit()
+    {
+        _editText = Value.HasValue
+            ? (IsInteger
+                ? ((int)Math.Round(Value.Value)).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture))
+            : "0";
+        _editing = true;
+    }
+
+    private async Task CommitEdit()
+    {
+        if (!_editing)
+            return;
+
+        _editing = false;
+        if (string.IsNullOrWhiteSpace(_editText))
+        {
+            await SetValueAsync(null);
+            return;
+        }
+
+        if (!double.TryParse(_editText, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            && !double.TryParse(_editText, out parsed))
+        {
+            return;
+        }
+
+        if (parsed < Min)
+            parsed = Min;
+
+        await SetValueAsync(NormalizeValue(parsed));
+    }
+
+    private async Task OnEditKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter")
+            await CommitEdit();
+        else if (e.Key is "Escape")
+            _editing = false;
+    }
+
+    private double NormalizeValue(double value)
+    {
+        if (IsInteger)
+            return Math.Round(value);
+
+        return Math.Round(value * 10) / 10;
+    }
+
+    private async Task SetValueAsync(double? value)
+    {
+        if (value.HasValue)
+            value = NormalizeValue(value.Value);
+
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+    }
+}

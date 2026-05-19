@@ -17,18 +17,7 @@ else if (_session == null)
 }
 else
 {
-    <MudStack Spacing="3" Class="app-page-with-actions">
-        @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
-        {
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       FullWidth="true"
-                       StartIcon="@Icons.Material.Filled.PlayArrow"
-                       OnClick="@(() => ContinueWorkout(activePlanId))">
-                Continue workout
-            </MudButton>
-        }
-
+    <MudStack Spacing="3">
         <MudPaper Class="pa-4" Elevation="1">
             <MudText Typo="Typo.h5">@_session.PlanName</MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -111,9 +100,24 @@ else
             </MudPaper>
         }
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteSessionClick">
-            Delete this workout
-        </MudButton>
+        <AppActionBar AriaLabel="Session actions">
+            @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="@(() => ContinueWorkout(activePlanId))">
+                    Continue workout
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       FullWidth="true"
+                       OnClick="DeleteSessionClick">
+                Delete this workout
+            </MudButton>
+        </AppActionBar>
     </MudStack>
 }
 

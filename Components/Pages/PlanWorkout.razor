@@ -5,7 +5,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<div class="plan-page plan-page-with-footer">
+<div class="plan-page">
     <PageHeader Title="@(IsNew ? "New plan" : "Edit plan")" OnBack="GoHome" />
 
     @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
@@ -94,13 +94,13 @@
             </section>
         </MudStack>
     </MudForm>
-</div>
 
-<PlanEditorFooter IsNew="IsNew"
+    <PlanEditorFooter IsNew="IsNew"
                   SaveDisabled="@SaveDisabled"
                   OnSave="Save"
                   OnCancel="GoHome"
                   OnExport="ExportCurrentPlan" />
+</div>
 
 @code {
     [Parameter]

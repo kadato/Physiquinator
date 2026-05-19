@@ -1,23 +1,4 @@
-/* Layout shell + bottom bar — bundled via Physiquinator.styles.css */
-:global(:root) {
-    --app-page-x: 16px;
-    --app-bottom-nav: 56px;
-    --app-bottom-bar-height: 64px;
-    --app-page-bottom-extra: 12px;
-    --app-page-top: 2rem;
-    --app-nav-active: #7aa2f7;
-    --app-nav-tab-bg: #24283b;
-    --app-nav-tab-bg-active: rgba(122, 162, 247, 0.22);
-    --app-nav-tab-border: rgba(59, 66, 97, 0.9);
-}
-
-:global([data-theme="light"]) {
-    --app-nav-active: #2959aa;
-    --app-nav-tab-bg: #eceef5;
-    --app-nav-tab-bg-active: rgba(41, 89, 170, 0.16);
-    --app-nav-tab-border: rgba(196, 197, 200, 0.95);
-}
-
+/* Layout shell — tab bar styles live in app-overrides.css for MAUI WebView */
 .app-shell {
     display: flex;
     flex-direction: column;
@@ -42,95 +23,9 @@
     padding-left: var(--app-page-x) !important;
     padding-right: var(--app-page-x) !important;
     padding-top: calc(var(--app-page-top) + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: var(--app-page-bottom-extra) !important;
     max-width: 600px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     overflow: visible !important;
-}
-
-.app-main-with-nav {
-    padding-bottom: calc(
-        var(--app-bottom-bar-height) + var(--app-page-bottom-extra) +
-        env(safe-area-inset-bottom, 0px)
-    );
-}
-
-.app-main-with-nav ::deep .app-page-container {
-    padding-bottom: var(--app-page-bottom-extra) !important;
-}
-
-::deep .app-bottom-bar {
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    max-width: 600px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    border-top: none !important;
-    box-shadow: none !important;
-}
-
-::deep .app-bottom-bar .mud-appbar {
-    background: transparent !important;
-    background-color: transparent !important;
-}
-
-::deep .app-bottom-bar .mud-toolbar-appbar {
-    min-height: var(--app-bottom-bar-height);
-    padding-left: 0;
-    padding-right: 0;
-}
-
-.app-bottom-bar__items {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    width: 100%;
-    min-height: var(--app-bottom-bar-height);
-    gap: 0.375rem;
-    padding: 0.25rem 0.5rem 0.375rem;
-}
-
-.app-bottom-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-    flex: 1 1 0;
-    min-height: var(--app-bottom-nav);
-    padding: 6px 4px;
-    border: 1px solid var(--app-nav-tab-border);
-    border-radius: 12px;
-    background: var(--app-nav-tab-bg);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.app-bottom-tab--active {
-    background: var(--app-nav-tab-bg-active);
-    border-color: rgba(122, 162, 247, 0.45);
-}
-
-.app-bottom-tab:active {
-    opacity: 0.85;
-}
-
-.app-bottom-tab__label {
-    font-size: 0.7rem;
-    font-weight: 500;
-    line-height: 1.1;
-}
-
-.app-bottom-tab__label--active {
-    color: var(--app-nav-active);
-    font-weight: 600;
-}
-
-.app-bottom-tab--create .mud-icon-root {
-    font-size: 1.35rem;
 }

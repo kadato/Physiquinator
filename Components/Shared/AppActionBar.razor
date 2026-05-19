@@ -1,0 +1,13 @@
+<footer class="app-action-bar" role="toolbar" aria-label="@AriaLabel">
+    <div class="app-action-bar__inner">
+        @ChildContent
+    </div>
+</footer>
+
+@code {
+    [Parameter]
+    public string AriaLabel { get; set; } = "Page actions";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

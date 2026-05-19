@@ -19,11 +19,10 @@
 }
 else
 {
-    <MudStack Spacing="3" Class="app-page-with-actions">
+    <MudStack Spacing="3">
         @if (SessionService.IsResting || _isRestComplete)
         {
-            <div class="rest-timer-sticky">
-                <MudPaper Class="@RestTimerPanelClass" Elevation="2">
+            <MudPaper Class="@RestTimerPanelClass" Elevation="2">
                     @if (_isRestComplete)
                     {
                         <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="rest-timer-complete">
@@ -79,8 +78,7 @@ else
                             </div>
                         </div>
                     }
-                </MudPaper>
-            </div>
+            </MudPaper>
         }
 
         <MudGrid Spacing="3" Class="workout-exercise-layout">
@@ -136,12 +134,13 @@ else
             </MudItem>
         </MudGrid>
 
-        <MudDivider Class="my-2" />
-        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Justify="Justify.Center">
-            <MudButton Variant="Variant.Outlined" OnClick="UndoLastSetAsync" Disabled="@UndoLastSetButtonDisabled">Undo last set</MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="EndWorkoutClick">End workout</MudButton>
-            <MudButton Variant="Variant.Text" Href="/">Home</MudButton>
-        </MudStack>
+        <AppActionBar AriaLabel="Workout actions">
+            <div class="app-action-bar__row app-action-bar__row--center">
+                <MudButton Variant="Variant.Outlined" OnClick="UndoLastSetAsync" Disabled="@UndoLastSetButtonDisabled">Undo last set</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="EndWorkoutClick">End workout</MudButton>
+                <MudButton Variant="Variant.Text" Href="/">Home</MudButton>
+            </div>
+        </AppActionBar>
     </MudStack>
 }
 

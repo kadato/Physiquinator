@@ -38,6 +38,8 @@
     <Compile Include="..\Services\WorkoutPlanService.cs" Link="Services\WorkoutPlanService.cs" />
     <Compile Include="..\Services\IDemoSeedPreferences.cs" Link="Services\IDemoSeedPreferences.cs" />
     <Compile Include="..\Services\DemoDataSeeder.cs" Link="Services\DemoDataSeeder.cs" />
+    <Compile Include="..\Services\AppInitializationService.cs" Link="Services\AppInitializationService.cs" />
+    <Compile Include="..\Services\IThemeInitialization.cs" Link="Services\IThemeInitialization.cs" />
     <Compile Include="..\Formatting\UiDateFormats.cs" Link="Formatting\UiDateFormats.cs" />
     <Compile Include="..\Formatting\ChartAxisScale.cs" Link="Formatting\ChartAxisScale.cs" />
   </ItemGroup>

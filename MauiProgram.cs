@@ -60,6 +60,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.DemoDataSeeder>();
 		builder.Services.AddScoped<Services.AppDataResetService>();
 		builder.Services.AddScoped<Services.ThemeService>();
+		builder.Services.AddScoped<Services.IThemeInitialization>(sp => sp.GetRequiredService<Services.ThemeService>());
+		builder.Services.AddScoped<Services.AppInitializationService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

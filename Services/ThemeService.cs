@@ -9,7 +9,7 @@ namespace Physiquinator.Services;
 /// <see cref="IJSRuntime"/> must run on the Blazor WebView dispatcher — do not marshal JS calls through <see cref="MainThread"/>.
 /// MAUI mutations (<see cref="Application.Current"/>) must run on the MAUI UI thread; use <see cref="RunOnMauiUiThread"/> when called from <see cref="JSInvokableAttribute"/> or other off-UI paths.
 /// </summary>
-public sealed class ThemeService : IAsyncDisposable
+public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 {
     private readonly IJSRuntime _js;
     private DotNetObjectReference<ThemeService>? _dotNetRef;

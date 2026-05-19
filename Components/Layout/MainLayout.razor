@@ -3,7 +3,7 @@
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Services
 @inject ThemeService ThemeService
-@inject DemoDataSeeder DemoSeeder
+@inject AppInitializationService AppInit
 @inject NavigationManager Navigation
 @inject ILogger<MainLayout> Logger
 
@@ -15,13 +15,23 @@
 <div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
     <main class="app-main-scroll">
         <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
-            @Body
+            @if (AppInit.IsReady)
+            {
+                @Body
+            }
         </MudContainer>
     </main>
 
+    @if (AppInit.ShowSetupOverlay)
+    {
+        <div class="app-startup-overlay" aria-busy="true" aria-live="polite">
+            <LoadingCenter Label="@(AppInit.SetupStatusMessage ?? "Setting up…")" />
+        </div>
+    }
+
     <WorkoutUndoToast />
 
-    @if (_showBottomNav)
+    @if (_showBottomNav && AppInit.IsReady)
     {
         <nav class="app-tab-bar" aria-label="Main navigation">
             <div class="app-tab-bar__inner app-bottom-dock">
@@ -58,25 +68,33 @@
         {
             try
             {
-                await DemoSeeder.SeedDemoDataIfNeededAsync();
-                await DemoSeeder.SeedDemoHistoryIfNeededAsync();
-                await ThemeService.EnsureInitializedAsync();
+                await AppInit.EnsureInitializedAsync();
                 SyncThemeFromService();
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "App initialization failed");
             }
+
+            await InvokeAsync(StateHasChanged);
         }
+
         UpdateNavigationState();
     }
 
     protected override void OnInitialized()
     {
         ThemeService.ThemeChanged += OnThemeChanged;
+        AppInit.ProgressChanged += OnInitProgressChanged;
         Navigation.LocationChanged += OnLocationChanged;
         SyncThemeFromService();
         UpdateNavigationState();
+    }
+
+    private void OnInitProgressChanged()
+    {
+        SyncThemeFromService();
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnThemeChanged()
@@ -111,6 +129,7 @@
     public void Dispose()
     {
         ThemeService.ThemeChanged -= OnThemeChanged;
+        AppInit.ProgressChanged -= OnInitProgressChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }

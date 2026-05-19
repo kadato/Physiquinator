@@ -68,6 +68,17 @@ html, body, #app {
     box-sizing: border-box;
 }
 
+/* Shared glass surface for tab bar and action docks */
+.app-bottom-dock {
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--mud-palette-lines-default);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+}
+
 .app-tab-bar__inner {
     display: flex;
     align-items: stretch;
@@ -75,12 +86,6 @@ html, body, #app {
     gap: 0.25rem;
     min-height: var(--app-tab-bar-height);
     padding: 0.375rem 0.5rem;
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--mud-palette-lines-default);
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
 }
 
 
@@ -138,23 +143,57 @@ html, body, #app {
     font-size: 1.3rem;
 }
 
-/* Sticky page action footer */
+/* Fixed page action dock (plan / workout / session) */
 .app-action-bar {
-    position: sticky;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
     z-index: 20;
     width: 100%;
-    margin-top: 0.75rem;
-    padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.375rem var(--app-page-x) calc(0.375rem + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
-    background: linear-gradient(
-        to top,
-        var(--mud-palette-background) 65%,
-        transparent
-    );
 }
 
-.app-action-bar__inner {
+.app-action-bar__dock {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+}
+
+
+/* Workout undo toast — shell overlay (WorkoutUndoToast.razor) */
+.workout-undo-toast {
+    position: fixed;
+    left: var(--app-page-x, 1rem);
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.625rem 0.5rem 0.625rem 1rem;
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    border-radius: var(--mud-default-borderradius, 8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    max-width: min(100% - 2rem, 360px);
+    pointer-events: auto;
+}
+
+.workout-undo-toast__message {
+    font-size: 0.875rem;
+}
+
+.workout-undo-toast__action {
+    flex-shrink: 0;
+    text-transform: none;
+}
+.app-action-bar__rows--stacked {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -167,11 +206,53 @@ html, body, #app {
     flex-wrap: wrap;
     gap: 0.5rem;
     width: 100%;
-    min-height: var(--app-action-bar-height);
+    min-height: 2.75rem;
 }
 
+.app-action-bar__row--stacked {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.app-action-bar__row--secondary {
+    flex-wrap: nowrap;
+}
+
+.app-action-bar__row--secondary > .mud-button-root {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.app-action-bar__row--secondary > .app-action-bar__home-btn {
+    flex: 0 0 auto;
+}
+
+.app-action-bar__row--workout {
+    flex-wrap: nowrap;
+}
+
+.app-action-bar__row--workout > .mud-button-root {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.app-action-bar__row--workout > .app-action-bar__home-btn {
+    flex: 0 0 auto;
+}
 .app-action-bar__row--center {
     justify-content: center;
+}
+
+.app-shell--fixed-dock .app-main-scroll {
+    scroll-padding-bottom: calc(
+        var(--app-action-bar-height) + 1.5rem + env(safe-area-inset-bottom, 0px)
+    );
+}
+
+.app-shell--fixed-dock .app-page-container {
+    padding-bottom: calc(
+        var(--app-action-bar-height) + 1.5rem + env(safe-area-inset-bottom, 0px)
+    ) !important;
 }
 .home-header {
     margin-bottom: 0.75rem;
@@ -407,6 +488,10 @@ html, body, #app {
 }
 
 @media (max-width: 991px) {
+    .workout-end-btn {
+        margin-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
     .workout-exercise-layout {
         display: flex;
         flex-direction: column;
@@ -421,7 +506,7 @@ html, body, #app {
 
 /* Plan editor (MAUI WebView: global CSS - scoped bundle often missing in Debug) */
 .plan-page {
-    padding-bottom: 0.25rem;
+    padding-bottom: 0;
 }
 .plan-page__subtitle {
     margin-top: -0.5rem;

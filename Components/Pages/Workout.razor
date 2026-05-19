@@ -7,6 +7,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
+@inject WorkoutUndoOverlayService UndoOverlay
 @implements IAsyncDisposable
 
 <PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkout" />
@@ -24,61 +25,66 @@ else
         @if (SessionService.IsResting || _isRestComplete)
         {
             <MudPaper Class="@RestTimerPanelClass" Elevation="2">
-                    @if (_isRestComplete)
-                    {
-                        <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="rest-timer-complete">
-                            <MudAvatar Size="Size.Large" Color="Color.Success" Class="rest-timer-complete__avatar">
-                                <MudIcon Icon="@Icons.Material.Filled.Check" />
-                            </MudAvatar>
-                            <MudText Typo="Typo.h4" Class="rest-timer-complete__title">Rest complete</MudText>
-                            <MudText Typo="Typo.body1" Class="mud-text-secondary">Ready for your next set</MudText>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       FullWidth="true"
-                                       Size="Size.Large"
-                                       Class="rest-timer-complete__action mt-2"
-                                       OnClick="SkipRest"
-                                       aria-label="Continue to next set">
-                                Continue
-                            </MudButton>
-                        </MudStack>
-                    }
-                    else
-                    {
                         <div class="rest-timer-active">
-                            <div class="rest-timer-display" aria-live="polite" aria-label="@RestTimerAriaLabel">
-                                <div class="rest-timer-digits @RestDigitsClass" role="timer">
-                                    @FormatTime(SessionService.RestSecondsRemaining)
-                                </div>
-                            </div>
-
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Class="rest-timer-controls">
-                                @if (SessionService.IsRestPaused)
+                            <div class="rest-timer-display" aria-live="polite" aria-label="@RestTimerDisplayAriaLabel">
+                                @if (_isRestComplete)
                                 {
-                                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                                                   Color="Color.Success"
-                                                   aria-label="Resume rest"
-                                                   OnClick="ResumeRest" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Check"
+                                             Class="rest-timer-check"
+                                             aria-hidden="true" />
                                 }
                                 else
                                 {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Pause"
-                                                   Color="Color.Info"
-                                                   aria-label="Pause rest"
-                                                   OnClick="PauseRest" />
+                                    <div class="rest-timer-digits @RestDigitsClass" role="timer">
+                                        @FormatTime(SessionService.RestSecondsRemaining)
+                                    </div>
                                 }
-                                <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                                               Color="Color.Default"
-                                               aria-label="Reset rest"
-                                               OnClick="ResetRest" />
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
+                            </div>
+
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Class="rest-timer-controls">
+                                @if (_isRestComplete)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                                   Color="Color.Default"
+                                                   aria-label="Reset rest"
+                                                   OnClick="ResetRest" />
+                                    <div class="rest-timer-controls__slot" aria-hidden="true"></div>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               OnClick="SkipRest"
+                                               aria-label="Continue to next set">
+                                        Continue
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    @if (SessionService.IsRestPaused)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                                       Color="Color.Success"
+                                                       aria-label="Resume rest"
+                                                       OnClick="ResumeRest" />
+                                    }
+                                    else
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Pause"
+                                                       Color="Color.Info"
+                                                       aria-label="Pause rest"
+                                                       OnClick="PauseRest" />
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                                   Color="Color.Default"
+                                                   aria-label="Reset rest"
+                                                   OnClick="ResetRest" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
+                                }
                             </MudStack>
 
                             <div class="rest-timer-edge-track" aria-hidden="true">
-                                <div class="rest-timer-edge-fill @RestEdgeFillClass" style="width: @(RestProgressValue.ToString("F0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                <div class="rest-timer-edge-fill @RestTimerEdgeFillClass"
+                                     style="width: @(RestTimerEdgeFillWidth)%"></div>
                             </div>
                         </div>
-                    }
             </MudPaper>
         }
 
@@ -135,14 +141,15 @@ else
             </MudItem>
         </MudGrid>
 
-        <AppActionBar AriaLabel="Workout actions">
-            <div class="app-action-bar__row app-action-bar__row--center">
-                <MudButton Variant="Variant.Outlined" OnClick="UndoLastSetAsync" Disabled="@UndoLastSetButtonDisabled">Undo last set</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="EndWorkoutClick">End workout</MudButton>
-                <MudButton Variant="Variant.Text" Href="/">Home</MudButton>
-            </div>
-        </AppActionBar>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   FullWidth="true"
+                   Class="workout-end-btn mt-4"
+                   OnClick="EndWorkoutClick">
+            End workout
+        </MudButton>
     </MudStack>
+
 }
 
 
@@ -154,6 +161,7 @@ else
     public bool ForceNew { get; set; }
 
     private bool _isRestComplete;
+    private int _lastRestDurationSeconds;
     private Guid? _loadedPlanId;
     private bool _loadedForceNew;
     private IJSObjectReference? _audioModule;
@@ -182,6 +190,7 @@ else
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
 
+        UndoOverlay.RegisterUndoHandler(UndoLastSetCoreAsync);
         await EnsureWorkoutStartedAsync();
     }
 
@@ -267,8 +276,7 @@ else
         return list;
     }
 
-    private string RestTimerPanelClass =>
-        _isRestComplete ? "pa-6 rest-timer-panel rest-timer-panel--complete" : "rest-timer-panel rest-timer-panel--active";
+    private string RestTimerPanelClass => "rest-timer-panel rest-timer-panel--active";
 
     private double RestProgressValue
     {
@@ -298,10 +306,17 @@ else
             ? $"Rest paused, {FormatTime(SessionService.RestSecondsRemaining)} remaining"
             : $"Rest, {FormatTime(SessionService.RestSecondsRemaining)} remaining";
 
-    private bool CompleteSetButtonDisabled => _isCompleting || _openingSetLogModal;
+    private string RestTimerDisplayAriaLabel =>
+        _isRestComplete ? "Rest complete" : RestTimerAriaLabel;
 
-    private bool UndoLastSetButtonDisabled =>
-        !SessionService.CompletedSets.Any() || _isCompleting || _openingSetLogModal;
+    private string RestTimerEdgeFillClass => _isRestComplete ? "" : RestEdgeFillClass;
+
+    private string RestTimerEdgeFillWidth =>
+        _isRestComplete
+            ? "100"
+            : RestProgressValue.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+
+    private bool CompleteSetButtonDisabled => _isCompleting || _openingSetLogModal;
 
     private async Task ConfirmLeaveWorkout()
     {
@@ -383,11 +398,16 @@ else
         }
     }
 
-    private async Task UndoLastSetAsync()
+    private void ShowUndoSetToast() => UndoOverlay.Show();
+
+    private void HideUndoToast() => UndoOverlay.Hide();
+
+    private async Task UndoLastSetCoreAsync()
     {
         if (_disposed || _isCompleting || _openingSetLogModal) return;
         if (!SessionService.TryUndoLastSet(out _)) return;
 
+        HideUndoToast();
         await StopJsTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
@@ -461,6 +481,8 @@ else
                         }
                     }
 
+                    ShowUndoSetToast();
+
                     if (willBeLastSetOfWorkout)
                     {
                         RestNotifications.CancelAllRestNotifications();
@@ -473,6 +495,7 @@ else
                         _isRestComplete = false;
                         await StopJsTimerAsync();
                         RestNotifications.CancelAllRestNotifications();
+                        _lastRestDurationSeconds = exercise.RestIntervalSeconds;
                         SessionService.StartRest(exercise.RestIntervalSeconds);
                         await StartJsTimerAsync();
                         await ScheduleRestNotificationIfRestingAsync();
@@ -534,7 +557,14 @@ else
 
         _isRestComplete = false;
         RestNotifications.CancelAllRestNotifications();
-        SessionService.ResetRest();
+
+        if (SessionService.IsResting)
+            SessionService.ResetRest();
+        else if (_lastRestDurationSeconds > 0)
+            SessionService.StartRest(_lastRestDurationSeconds);
+        else
+            return;
+
         if (SessionService.IsResting)
         {
             await StartJsTimerAsync();
@@ -730,6 +760,8 @@ else
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
+        UndoOverlay.UnregisterUndoHandler();
+        UndoOverlay.Hide();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         RestNotifications.CancelAllRestNotifications();
 

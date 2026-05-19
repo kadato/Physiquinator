@@ -11,17 +11,19 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="app-shell">
+<div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
     <main class="app-main-scroll">
         <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
             @Body
         </MudContainer>
     </main>
 
+    <WorkoutUndoToast />
+
     @if (_showBottomNav)
     {
         <nav class="app-tab-bar" aria-label="Main navigation">
-            <div class="app-tab-bar__inner">
+            <div class="app-tab-bar__inner app-bottom-dock">
                 <NavLink href="/" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
                     <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
                     <span class="app-tab__label">Home</span>
@@ -47,6 +49,7 @@
     private readonly MudTheme _theme = new();
     private bool _isDark = true;
     private bool _showBottomNav = true;
+    private bool _useFixedDockPadding;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -91,6 +94,7 @@
     {
         var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
         _showBottomNav = ShouldShowBottomNav(path);
+        _useFixedDockPadding = !_showBottomNav && !path.StartsWith("workout/", StringComparison.Ordinal);
     }
 
     private static bool ShouldShowBottomNav(string path)

@@ -1,0 +1,64 @@
+@using Physiquinator.Models
+
+<div class="plan-exercise-row mud-paper mud-elevation-1" @key="Exercise.Id">
+    <div class="plan-exercise-row__main">
+        <button type="button"
+                class="plan-exercise-handle"
+                aria-label="Drag to reorder @Exercise.Name">
+            <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Medium" />
+        </button>
+
+        <button type="button"
+                class="plan-exercise-row__body"
+                @onclick="OnEdit">
+            <span class="plan-exercise-row__index" aria-hidden="true">@DisplayIndex</span>
+            <span class="plan-exercise-row__text">
+                <span class="plan-exercise-row__name">@Exercise.Name</span>
+                <span class="plan-exercise-row__summary mud-text-secondary">@Summary</span>
+            </span>
+            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="plan-exercise-row__chevron" />
+        </button>
+    </div>
+
+    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                   Color="Color.Error"
+                   Size="Size.Small"
+                   Class="plan-exercise-row__delete"
+                   aria-label="@($"Remove {Exercise.Name}")"
+                   OnClick="OnDelete" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ExercisePlan Exercise { get; set; } = null!;
+
+    [Parameter]
+    public int Index { get; set; }
+
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private int DisplayIndex => Index + 1;
+
+    private string Summary => FormatSummary(Exercise);
+
+    internal static string FormatSummary(ExercisePlan exercise)
+    {
+        var parts = new List<string>
+        {
+            $"{exercise.SetCount} sets",
+            $"{exercise.RestIntervalSeconds}s rest"
+        };
+
+        if (exercise.DefaultReps.HasValue)
+            parts.Add($"{exercise.DefaultReps} reps");
+
+        if (exercise.DefaultWeightKg.HasValue)
+            parts.Add($"{exercise.DefaultWeightKg:0.#} kg");
+
+        return string.Join(" · ", parts);
+    }
+}

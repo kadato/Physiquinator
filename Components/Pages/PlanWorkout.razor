@@ -1,138 +1,139 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
-@using Microsoft.JSInterop
-@implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
-@inject IJSRuntime JS
+@inject IDialogService DialogService
 
-<div class="plan-page-with-footer @(IsNew ? "has-bottom-nav" : "")">
+<div class="plan-page plan-page-with-footer">
     <PageHeader Title="@(IsNew ? "New plan" : "Edit plan")" OnBack="GoHome" />
 
+    @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary plan-page__subtitle mb-3">@PlanName</MudText>
+    }
+
     <MudForm @ref="_form" @bind-IsValid="_formValid">
-        <MudStack Spacing="2">
-            <MudPaper Class="pa-3" Elevation="1">
-                <MudStack Spacing="2">
-                    <MudTextField @bind-Value="PlanName"
-                                  Label="Plan name"
-                                  Placeholder="e.g. Push day"
-                                  Required="true"
-                                  RequiredError="Plan name is required"
-                                  Immediate="true" />
-                    <MudGrid Spacing="2">
-                        <MudItem xs="6">
-                            <MudNumericField @bind-Value="DefaultSetCount" Label="Default sets" Min="1" />
-                        </MudItem>
-                        <MudItem xs="6">
-                            <MudNumericField @bind-Value="RestIntervalSeconds" Label="Default rest (s)" Min="0" />
-                        </MudItem>
-                    </MudGrid>
-                </MudStack>
-            </MudPaper>
+        <MudStack Spacing="3">
+            <section class="plan-section">
+                <MudText Typo="Typo.overline" Class="plan-section__label">Plan details</MudText>
+                <MudPaper Class="plan-details-card plan-section__card pa-3" Elevation="0">
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="PlanName"
+                                      Variant="Variant.Filled"
+                                      Label="Plan name"
+                                      Placeholder="e.g. Push day"
+                                      Required="true"
+                                      RequiredError="Plan name is required"
+                                      Immediate="true" />
+                        <MudGrid Spacing="2" Class="plan-details-card__grid">
+                            <MudItem xs="6">
+                                <SetMetricStepper Label="Default sets"
+                                                  @bind-Value="DefaultSetCountValue"
+                                                  Step="1"
+                                                  Min="1"
+                                                  IsInteger="true"
+                                                  Format="0"
+                                                  InputMode="numeric" />
+                            </MudItem>
+                            <MudItem xs="6">
+                                <SetMetricStepper Label="Default rest (s)"
+                                                  @bind-Value="RestIntervalSecondsValue"
+                                                  Step="5"
+                                                  Min="0"
+                                                  IsInteger="true"
+                                                  Format="0"
+                                                  InputMode="numeric" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudStack>
+                </MudPaper>
+            </section>
 
-            <MudText Typo="Typo.h6">Exercises</MudText>
+            <section class="plan-section">
+                <MudText Typo="Typo.overline" Class="plan-section__label">Exercises</MudText>
 
-            @if (!Exercises.Any())
-            {
-                <EmptyState Message="No exercises yet. Add one below."
-                            Icon="@Icons.Material.Outlined.List" />
-            }
-            else
-            {
-                <div id="exercise-sortable-list" class="exercise-sortable-list">
-                    @for (var i = 0; i < Exercises.Count; i++)
-                    {
-                        var idx = i;
-                        <MudPaper @key="Exercises[idx].Id" Class="pa-2 exercise-sortable-item" Elevation="1">
-                            <MudStack Spacing="2">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.DragIndicator"
-                                                   Class="exercise-drag-handle"
-                                                   aria-label="Drag to reorder" />
-                                    <MudTextField @bind-Value="Exercises[idx].Name"
-                                                  Label="Exercise"
-                                                  Placeholder="Exercise name"
-                                                  Class="flex-grow-1"
-                                                  Required="true" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   aria-label="Remove exercise"
-                                                   OnClick="@(() => RemoveExercise(idx))" />
-                                </MudStack>
-                                <MudGrid Spacing="2">
-                                    <MudItem xs="6" sm="3">
-                                        <MudNumericField @bind-Value="Exercises[idx].SetCount" Label="Sets" Min="1" />
-                                    </MudItem>
-                                    <MudItem xs="6" sm="3">
-                                        <MudNumericField @bind-Value="Exercises[idx].RestIntervalSeconds" Label="Rest (s)" Min="0" />
-                                    </MudItem>
-                                    <MudItem xs="6" sm="3">
-                                        <MudNumericField @bind-Value="Exercises[idx].DefaultReps" Label="Def reps" Min="0" HideSpinButtons="true" />
-                                    </MudItem>
-                                    <MudItem xs="6" sm="3">
-                                        <MudNumericField @bind-Value="Exercises[idx].DefaultWeightKg" Label="Def kg" Min="0" HideSpinButtons="true" />
-                                    </MudItem>
-                                </MudGrid>
-                            </MudStack>
-                        </MudPaper>
-                    }
-                </div>
-            }
+                @if (!Exercises.Any())
+                {
+                    <EmptyState Message="Add your first exercise to build this plan."
+                                Icon="@Icons.Material.Outlined.FitnessCenter">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="FocusAddExercise">
+                            Add exercise
+                        </MudButton>
+                    </EmptyState>
+                }
+                else
+                {
+                    <PlanExerciseList Exercises="Exercises"
+                                      SortableVersion="_sortableVersion"
+                                      OnReordered="HandleReordered"
+                                      OnEdit="EditExerciseAsync"
+                                      OnDelete="ConfirmRemoveExerciseAsync" />
+                }
 
-            <MudPaper Class="pa-2" Elevation="1">
-                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                <div class="plan-add-exercise">
                     <MudTextField @bind-Value="NewExerciseName"
-                                  Placeholder="Add new exercise…"
-                                  Class="flex-grow-1"
+                                  @ref="_newExerciseField"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Placeholder="Add exercise…"
+                                  Class="plan-add-exercise__input"
                                   OnKeyDown="AddExerciseKeydown" />
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddExercise">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Class="plan-add-exercise__btn"
+                               OnClick="AddExerciseAsync"
+                               Disabled="@string.IsNullOrWhiteSpace(NewExerciseName)">
                         Add
                     </MudButton>
-                </MudStack>
-            </MudPaper>
+                </div>
+            </section>
         </MudStack>
     </MudForm>
 </div>
 
-<MudPaper Elevation="8" Class="plan-sticky-footer">
-    <div class="plan-sticky-footer__actions">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@SaveDisabled">
-            Save
-        </MudButton>
-        <MudButton Variant="Variant.Text" OnClick="GoHome">Cancel</MudButton>
-        @if (!IsNew)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                           Color="Color.Secondary"
-                           aria-label="Start workout"
-                           Href="@($"/workout/{PlanId}")" />
-            <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="More actions" Dense="true">
-                <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="ExportCurrentPlan">
-                    Export plan
-                </MudMenuItem>
-            </MudMenu>
-        }
-    </div>
-</MudPaper>
+<PlanEditorFooter IsNew="IsNew"
+                  SaveDisabled="@SaveDisabled"
+                  OnSave="Save"
+                  OnCancel="GoHome"
+                  OnExport="ExportCurrentPlan" />
 
 @code {
     [Parameter]
     public Guid? PlanId { get; set; }
 
     private MudForm? _form;
+    private MudTextField<string>? _newExerciseField;
     private bool _formValid;
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
     private int DefaultSetCount { get; set; } = 4;
     private List<ExercisePlan> Exercises { get; set; } = new();
     private string NewExerciseName { get; set; } = "";
+    private int _sortableVersion;
     private bool IsNew => PlanId == null;
-    private DotNetObjectReference<object>? _dotNetRef;
-    private int _lastSortableCount = -1;
 
-    private bool CanSave => !string.IsNullOrWhiteSpace(PlanName) && Exercises.Any() && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
+    private bool CanSave => !string.IsNullOrWhiteSpace(PlanName)
+        && Exercises.Any()
+        && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
+
     private bool SaveDisabled => !CanSave;
+
+    private double? DefaultSetCountValue
+    {
+        get => DefaultSetCount;
+        set => DefaultSetCount = Math.Max(1, (int)Math.Round(value ?? 1));
+    }
+
+    private double? RestIntervalSecondsValue
+    {
+        get => RestIntervalSeconds;
+        set => RestIntervalSeconds = Math.Max(0, (int)Math.Round(value ?? 0));
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,58 +159,12 @@
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void BumpSortable() => _sortableVersion++;
+
+    private void HandleReordered((int OldIndex, int NewIndex) args)
     {
-        if (Exercises.Count == 0)
-        {
-            if (_lastSortableCount != 0)
-            {
-                await DestroySortableAsync();
-                _lastSortableCount = 0;
-            }
-            return;
-        }
-
-        if (_lastSortableCount == Exercises.Count && !firstRender)
-            return;
-
-        await InitSortableAsync();
-        _lastSortableCount = Exercises.Count;
-    }
-
-    private async ValueTask DestroySortableAsync()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("planReorder.destroy");
-        }
-        catch (JSException)
-        {
-            // planReorder loads from theme.js; ignore if scripts not ready yet
-        }
-    }
-
-    private async ValueTask InitSortableAsync()
-    {
-        try
-        {
-            _dotNetRef ??= DotNetObjectReference.Create<object>(this);
-            await DestroySortableAsync();
-            await JS.InvokeVoidAsync("planReorder.init", "exercise-sortable-list", _dotNetRef);
-        }
-        catch (JSException)
-        {
-            // Sortable or planReorder not loaded yet
-        }
-    }
-
-    [JSInvokable]
-    public void OnExerciseReordered(int oldIndex, int newIndex)
-    {
+        var (oldIndex, newIndex) = args;
         if (oldIndex < 0 || newIndex < 0 || oldIndex >= Exercises.Count || newIndex >= Exercises.Count)
-            return;
-
-        if (oldIndex == newIndex)
             return;
 
         var item = Exercises[oldIndex];
@@ -218,50 +173,115 @@
         RenumberExercises();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            await DestroySortableAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // WebView disposed
-        }
-
-        _dotNetRef?.Dispose();
-    }
-
     private void GoHome() => Navigation.NavigateTo("/");
 
-    private void AddExercise()
+    private async Task FocusAddExercise()
     {
-        if (string.IsNullOrWhiteSpace(NewExerciseName)) return;
-        Exercises.Add(new ExercisePlan
+        if (_newExerciseField != null)
+            await _newExerciseField.FocusAsync();
+    }
+
+    private async Task AddExerciseAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewExerciseName))
+            return;
+
+        var exercise = new ExercisePlan
         {
             Name = NewExerciseName.Trim(),
             SetCount = DefaultSetCount,
             Order = Exercises.Count,
             RestIntervalSeconds = RestIntervalSeconds
-        });
+        };
         NewExerciseName = "";
-        _lastSortableCount = -1;
+        BumpSortable();
+        await EditExerciseAsync(exercise, isNew: true, insertAtEnd: true);
     }
 
     private void AddExerciseKeydown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
-            AddExercise();
+            _ = AddExerciseAsync();
     }
 
-    private void RemoveExercise(int index)
+    private async Task EditExerciseAsync(int index)
     {
-        if (index >= 0 && index < Exercises.Count)
+        if (index < 0 || index >= Exercises.Count)
+            return;
+
+        await EditExerciseAsync(Exercises[index], isNew: false);
+    }
+
+    private async Task EditExerciseAsync(ExercisePlan exercise, bool isNew = false, bool insertAtEnd = false)
+    {
+        var parameters = new DialogParameters<PlanExerciseSheet>
         {
-            Exercises.RemoveAt(index);
+            { x => x.Exercise, CloneExercise(exercise) },
+            { x => x.IsNew, isNew }
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            Position = DialogPosition.BottomCenter,
+        };
+
+        var dialog = await DialogService.ShowAsync<PlanExerciseSheet>(
+            isNew ? "Add exercise" : "Edit exercise",
+            parameters,
+            options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false } && result.Data is ExercisePlan updated)
+        {
+            if (isNew && insertAtEnd)
+                Exercises.Add(updated);
+            else
+            {
+                var idx = Exercises.FindIndex(e => e.Id == exercise.Id);
+                if (idx >= 0)
+                    Exercises[idx] = updated;
+            }
+
             RenumberExercises();
-            _lastSortableCount = -1;
+            BumpSortable();
         }
+        else if (isNew && insertAtEnd)
+        {
+            BumpSortable();
+        }
+    }
+
+    private static ExercisePlan CloneExercise(ExercisePlan source) => new()
+    {
+        Id = source.Id,
+        Name = source.Name,
+        SetCount = source.SetCount,
+        Order = source.Order,
+        RestIntervalSeconds = source.RestIntervalSeconds,
+        DefaultReps = source.DefaultReps,
+        DefaultWeightKg = source.DefaultWeightKg
+    };
+
+    private async Task ConfirmRemoveExerciseAsync(int index)
+    {
+        if (index < 0 || index >= Exercises.Count)
+            return;
+
+        var name = Exercises[index].Name;
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Remove exercise",
+            $"Remove '{name}' from this plan?",
+            confirmText: "Remove",
+            confirmColor: Color.Error);
+
+        if (!confirmed)
+            return;
+
+        Exercises.RemoveAt(index);
+        RenumberExercises();
+        BumpSortable();
     }
 
     private void RenumberExercises()
@@ -272,7 +292,9 @@
 
     private async Task Save()
     {
-        if (!CanSave) return;
+        if (!CanSave)
+            return;
+
         var plan = new WorkoutPlan
         {
             Id = PlanId ?? Guid.NewGuid(),
@@ -297,7 +319,9 @@
 
     private async Task ExportCurrentPlan()
     {
-        if (!PlanId.HasValue) return;
+        if (!PlanId.HasValue)
+            return;
+
         try
         {
             var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);

@@ -1,0 +1,137 @@
+@using Microsoft.JSInterop
+@using Physiquinator.Models
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div id="plan-exercise-sortable-list"
+     class="plan-exercise-list"
+     @ref="_listRef">
+    @for (var i = 0; i < Exercises.Count; i++)
+    {
+        var index = i;
+        <PlanExerciseRow Exercise="Exercises[index]"
+                         Index="index"
+                         OnEdit="@(() => OnEdit.InvokeAsync(index))"
+                         OnDelete="@(() => OnDelete.InvokeAsync(index))" />
+    }
+</div>
+
+@code {
+    private const string SortableListId = "plan-exercise-sortable-list";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ExercisePlan> Exercises { get; set; } = Array.Empty<ExercisePlan>();
+
+    [Parameter]
+    public int SortableVersion { get; set; }
+
+    [Parameter]
+    public EventCallback<(int OldIndex, int NewIndex)> OnReordered { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    private ElementReference _listRef;
+    private DotNetObjectReference<PlanExerciseList>? _dotNetRef;
+    private int _lastSortableCount = -1;
+    private int _lastSortableVersion = -1;
+    private bool _sortableReady;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Exercises.Count == 0)
+        {
+            if (_lastSortableCount != 0)
+            {
+                await DestroySortableAsync();
+                _lastSortableCount = 0;
+                _lastSortableVersion = SortableVersion;
+                _sortableReady = false;
+            }
+            return;
+        }
+
+        var needsInit = !_sortableReady
+            || _lastSortableCount != Exercises.Count
+            || _lastSortableVersion != SortableVersion
+            || firstRender;
+
+        if (!needsInit)
+            return;
+
+        var ready = await InitSortableAsync();
+        if (ready)
+        {
+            _sortableReady = true;
+            _lastSortableCount = Exercises.Count;
+            _lastSortableVersion = SortableVersion;
+            return;
+        }
+
+        _sortableReady = false;
+        await Task.Delay(50);
+        ready = await InitSortableAsync();
+        if (ready)
+        {
+            _sortableReady = true;
+            _lastSortableCount = Exercises.Count;
+            _lastSortableVersion = SortableVersion;
+        }
+    }
+
+    private async ValueTask<bool> InitSortableAsync()
+    {
+        try
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await DestroySortableAsync();
+            return await JS.InvokeAsync<bool>("planReorder.init", SortableListId, _dotNetRef);
+        }
+        catch (JSException)
+        {
+            return false;
+        }
+    }
+
+    private async ValueTask DestroySortableAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("planReorder.destroy");
+        }
+        catch (JSException)
+        {
+            // Scripts not ready yet
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnExerciseReordered(int oldIndex, int newIndex)
+    {
+        if (oldIndex < 0 || newIndex < 0 || oldIndex >= Exercises.Count || newIndex >= Exercises.Count)
+            return;
+
+        if (oldIndex == newIndex)
+            return;
+
+        await OnReordered.InvokeAsync((oldIndex, newIndex));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await DestroySortableAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // WebView disposed
+        }
+
+        _dotNetRef?.Dispose();
+    }
+}

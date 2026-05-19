@@ -1,0 +1,49 @@
+<nav class="plan-editor-footer" aria-label="Plan actions">
+    <div class="plan-editor-footer__actions">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Default"
+                   Size="Size.Medium"
+                   Class="plan-editor-footer__cancel"
+                   OnClick="OnCancel">
+            Cancel
+        </MudButton>
+
+        @if (!IsNew)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Default"
+                       Size="Size.Medium"
+                       Class="plan-editor-footer__export"
+                       StartIcon="@Icons.Material.Filled.Upload"
+                       OnClick="OnExport">
+                Export
+            </MudButton>
+        }
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Medium"
+                   Class="plan-editor-footer__save"
+                   OnClick="OnSave"
+                   Disabled="@SaveDisabled">
+            Save
+        </MudButton>
+    </div>
+</nav>
+
+@code {
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    [Parameter]
+    public bool SaveDisabled { get; set; }
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnExport { get; set; }
+}

@@ -1,0 +1,109 @@
+@using Physiquinator.Models
+
+<MudDialog Class="plan-exercise-sheet">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsNew ? "Add exercise" : "Edit exercise")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Class="plan-exercise-sheet__body">
+            <MudTextField @bind-Value="_name"
+                          Variant="Variant.Filled"
+                          Label="Exercise name"
+                          Placeholder="e.g. Bench press"
+                          Required="true"
+                          Immediate="true" />
+
+            <SetMetricStepper Label="Sets"
+                              @bind-Value="_setCount"
+                              Step="1"
+                              Min="1"
+                              IsInteger="true"
+                              Format="0"
+                              InputMode="numeric" />
+            <SetMetricStepper Label="Rest (seconds)"
+                              @bind-Value="_restSeconds"
+                              Step="5"
+                              Min="0"
+                              IsInteger="true"
+                              Format="0"
+                              InputMode="numeric" />
+            <SetMetricStepper Label="Default reps"
+                              @bind-Value="_defaultReps"
+                              Step="1"
+                              Min="0"
+                              IsInteger="true"
+                              Format="0"
+                              InputMode="numeric" />
+            <SetMetricStepper Label="Default weight (kg)"
+                              @bind-Value="_defaultWeightKg"
+                              Step="2.5"
+                              Min="0"
+                              Format="0.#"
+                              InputMode="decimal" />
+
+            <div class="plan-exercise-sheet__footer">
+                <MudButton Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           FullWidth="true"
+                           OnClick="Confirm"
+                           Disabled="@ConfirmDisabled">
+                    Save exercise
+                </MudButton>
+                <MudButton Variant="Variant.Text"
+                           FullWidth="true"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
+            </div>
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public ExercisePlan Exercise { get; set; } = new();
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    private string _name = "";
+    private double? _setCount;
+    private double? _restSeconds;
+    private double? _defaultReps;
+    private double? _defaultWeightKg;
+
+    private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
+
+    protected override void OnInitialized()
+    {
+        _name = Exercise.Name;
+        _setCount = Exercise.SetCount;
+        _restSeconds = Exercise.RestIntervalSeconds;
+        _defaultReps = Exercise.DefaultReps;
+        _defaultWeightKg = Exercise.DefaultWeightKg;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        if (ConfirmDisabled)
+            return;
+
+        var updated = new ExercisePlan
+        {
+            Id = Exercise.Id,
+            Name = _name.Trim(),
+            SetCount = Math.Max(1, (int)Math.Round(_setCount ?? 1)),
+            RestIntervalSeconds = Math.Max(0, (int)Math.Round(_restSeconds ?? 0)),
+            Order = Exercise.Order,
+            DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
+            DefaultWeightKg = _defaultWeightKg
+        };
+
+        MudDialog.Close(DialogResult.Ok(updated));
+    }
+}

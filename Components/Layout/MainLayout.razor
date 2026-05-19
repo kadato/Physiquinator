@@ -2,7 +2,6 @@
 @implements IDisposable
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Services
-@using Physiquinator.Themes
 @inject ThemeService ThemeService
 @inject NavigationManager Navigation
 @inject ILogger<MainLayout> Logger
@@ -45,7 +44,7 @@
 </div>
 
 @code {
-    private readonly MudTheme _theme = PhysiquinatorTheme.Create();
+    private readonly MudTheme _theme = new();
     private bool _isDark = true;
     private bool _showBottomNav = true;
 

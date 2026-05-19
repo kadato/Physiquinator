@@ -326,6 +326,36 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         Assert.Equal(3, sets[0].Reps);
     }
 
+    [Fact]
+    public async Task GetInProgressSessionForPlanAsync_ReturnsOpenSession_IgnoresEnded()
+    {
+        var planId = Guid.NewGuid();
+        var openId = await _sut.BeginSessionAsync(planId, "Open", null);
+        var endedId = await _sut.BeginSessionAsync(planId, "Ended", null);
+        await _sut.EndSessionAsync(endedId);
+
+        var result = await _sut.GetInProgressSessionForPlanAsync(planId);
+
+        Assert.NotNull(result);
+        Assert.Equal(openId, result!.Id);
+    }
+
+    [Fact]
+    public async Task GetAnyInProgressSessionAsync_ReturnsNewestOpen()
+    {
+        var olderPlan = Guid.NewGuid();
+        var newerPlan = Guid.NewGuid();
+        var baseTime = new DateTime(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc);
+        await InsertSessionAtUtcAsync(olderPlan, "Older", baseTime);
+        var newerId = await InsertSessionAtUtcAsync(newerPlan, "Newer", baseTime.AddHours(1));
+
+        var result = await _sut.GetAnyInProgressSessionAsync();
+
+        Assert.NotNull(result);
+        Assert.Equal(newerId, result!.Id);
+        Assert.Equal("Newer", result.PlanName);
+    }
+
     private Task InsertRawSessionAsync(DateTime startedAtUtc)
     {
         return _db.Database.InsertAsync(new WorkoutSessionLogEntity

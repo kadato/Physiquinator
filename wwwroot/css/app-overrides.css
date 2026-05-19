@@ -1,0 +1,377 @@
+/* Physiquinator app styles — wwwroot file (loaded in MAUI; scoped bundle is NOT shipped) */
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --tn-bg: #1f2335;
+    --tn-surface-3: #3b4261;
+    --tn-text-muted: #a9b1d6;
+    --tn-text: #c0caf5;
+    --tn-accent: #7aa2f7;
+    --tn-success: #9ece6a;
+    --tn-success-strong: #73daca;
+    --tn-timer-surface: #2a3048;
+    --tn-timer-border: rgba(122, 162, 247, 0.42);
+    --tn-timer-digit: #7aa2f7;
+}
+
+:root {
+    --app-page-x: 16px;
+    --app-bottom-nav: 56px;
+    --app-bottom-bar-height: 64px;
+    --app-bottom-actions: 96px;
+    --app-page-bottom-extra: 12px;
+    --app-nav-active: #7aa2f7;
+    --app-page-top: 2rem;
+    --app-nav-tab-bg: #24283b;
+    --app-nav-tab-bg-active: rgba(122, 162, 247, 0.22);
+    --app-nav-tab-border: rgba(59, 66, 97, 0.9);
+}
+
+[data-theme="light"] {
+    color-scheme: light;
+    --app-nav-active: #2959aa;
+    --app-nav-tab-bg: #eceef5;
+    --app-nav-tab-bg-active: rgba(41, 89, 170, 0.16);
+    --app-nav-tab-border: rgba(196, 197, 200, 0.95);
+    --tn-bg: #d5d6db;
+    --tn-surface-3: #c4c5c8;
+    --tn-text-muted: #565f89;
+    --tn-text: #343b58;
+    --tn-accent: #2959aa;
+    --tn-success: #33635c;
+    --tn-success-strong: #2e7d6e;
+    --tn-timer-surface: #eceef5;
+    --tn-timer-border: rgba(41, 89, 170, 0.28);
+    --tn-timer-digit: #2959aa;
+}
+
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--mud-palette-background, var(--tn-bg));
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--mud-palette-background, var(--tn-bg));
+}
+
+.app-main-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-page-container {
+    padding-left: var(--app-page-x) !important;
+    padding-right: var(--app-page-x) !important;
+    padding-top: calc(var(--app-page-top) + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: var(--app-page-bottom-extra) !important;
+    max-width: 600px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.app-main-with-nav {
+    padding-bottom: calc(
+        var(--app-bottom-bar-height) + var(--app-page-bottom-extra) +
+        env(safe-area-inset-bottom, 0px)
+    );
+}
+
+.app-main-with-nav .app-page-container {
+    padding-bottom: var(--app-page-bottom-extra) !important;
+}
+
+.home-page,
+.home-plan-list,
+.mud-container {
+    overflow: visible;
+}
+
+.app-bottom-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    z-index: 1000;
+}
+
+.app-bottom-bar__items {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    min-height: var(--app-bottom-bar-height);
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem 0.375rem;
+}
+
+.app-bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: var(--app-bottom-nav);
+    padding: 6px 4px;
+    border: 1px solid var(--app-nav-tab-border);
+    border-radius: 12px;
+    background: var(--app-nav-tab-bg);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-bottom-tab--active {
+    background: var(--app-nav-tab-bg-active);
+    border-color: rgba(122, 162, 247, 0.45);
+}
+
+.app-bottom-tab:active {
+    opacity: 0.85;
+}
+
+.app-bottom-tab__label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.app-bottom-tab__label--active {
+    color: var(--app-nav-active);
+    font-weight: 600;
+}
+
+.app-bottom-tab--create .mud-icon-root {
+    font-size: 1.35rem;
+}
+
+.home-header {
+    margin-bottom: 0.75rem;
+    text-align: center;
+}
+
+.home-header__title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+}
+
+.home-stats-section {
+    margin-bottom: 0.25rem;
+}
+
+.home-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+.home-stat.mud-paper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 4.75rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    background: rgba(36, 40, 59, 0.55);
+    overflow: hidden;
+}
+
+[data-theme="light"] .home-stat.mud-paper {
+    border-color: rgba(41, 89, 170, 0.18);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.home-hero {
+    padding: 1rem 1.125rem !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--mud-palette-primary, #7aa2f7);
+    background: linear-gradient(135deg, rgba(122, 162, 247, 0.18) 0%, rgba(122, 162, 247, 0.06) 100%);
+}
+
+.home-hero__label {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.home-hero__continue {
+    min-height: 48px;
+}
+
+.home-stat__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--app-nav-active);
+}
+
+.home-stat__value--date {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.home-stat__label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--tn-text-muted, #a9b1d6);
+}.home-plans-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.home-plan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.mud-input-control,
+.mud-button-root,
+.mud-collapse-container,
+.mud-expand-panel,
+.mud-overlay {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+}
+
+.status-bar-safe-area {
+    display: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+    .status-bar-safe-area {
+        display: flex;
+        position: sticky;
+        top: 0;
+        height: env(safe-area-inset-top);
+        width: 100%;
+        z-index: 1;
+        background-color: var(--mud-palette-background, var(--tn-bg));
+    }
+}
+
+@media (max-width: 991px) {
+    .workout-exercise-layout {
+        display: flex;
+        flex-direction: column;
+    }
+    .workout-upcoming-section {
+        order: 1;
+    }
+    .workout-completed-section {
+        order: 2;
+    }
+}
+
+.plan-sticky-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1200;
+    padding: 0.75rem 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.plan-page-with-footer,
+.app-page-with-actions {
+    padding-bottom: calc(var(--app-bottom-actions) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+}
+
+.plan-page-with-footer.has-bottom-nav {
+    padding-bottom: calc(var(--app-bottom-bar-height) + var(--app-bottom-actions) + var(--app-page-bottom-extra) + env(safe-area-inset-bottom, 0px));
+}
+
+.exercise-sortable-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.exercise-sortable-item {
+    border-radius: 12px;
+}
+
+.exercise-sortable-item.sortable-ghost {
+    opacity: 0.45;
+}
+
+.exercise-drag-handle {
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+}
+
+.exercise-drag-handle:active {
+    cursor: grabbing;
+}
+
+.plan-sticky-footer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#blazor-error-ui {
+    background: var(--mud-palette-error, #f7768e);
+    bottom: 0;
+    display: none;
+    left: 0;
+    padding: 1rem 1.5rem;
+    position: fixed;
+    width: 100%;
+    z-index: 2000;
+    color: white;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+}

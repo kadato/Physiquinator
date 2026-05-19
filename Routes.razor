@@ -1,12 +1,24 @@
 ﻿<Router AppAssembly="@typeof(MauiProgram).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Components.Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <Microsoft.AspNetCore.Components.Web.ErrorBoundary>
+            <ChildContent>
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Components.Layout.MainLayout)" />
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </ChildContent>
+            <ErrorContent Context="ex">
+                <MudAlert Severity="Severity.Error" Class="ma-3">
+                    Something went wrong. @ex.Message
+                </MudAlert>
+            </ErrorContent>
+        </Microsoft.AspNetCore.Components.Web.ErrorBoundary>
     </Found>
     <NotFound>
         <PageTitle>Not found</PageTitle>
         <LayoutView Layout="@typeof(Components.Layout.MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <EmptyState Message="Sorry, there's nothing at this address."
+                        Icon="@Icons.Material.Outlined.SearchOff">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">Go home</MudButton>
+            </EmptyState>
         </LayoutView>
     </NotFound>
 </Router>

@@ -1,0 +1,38 @@
+<MudCard Class="plan-card" Elevation="1">
+    <MudCardContent Class="plan-card__content">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
+            <MudStack Spacing="0" Class="plan-card__info">
+                <MudText Typo="Typo.subtitle1" Class="plan-card-name">@PlanName</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           Class="plan-card-start"
+                           OnClick="OnStart">
+                    Start
+                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Class="plan-card-icon-btn"
+                               OnClick="OnEdit" />
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" AriaLabel="Plan options">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">Export</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="OnDelete">Delete</MudMenuItem>
+                </MudMenu>
+            </MudStack>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter] public string PlanName { get; set; } = "";
+    [Parameter] public int ExerciseCount { get; set; }
+    [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnExport { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+
+    private string ExerciseCountLabel =>
+        ExerciseCount == 1 ? "1 exercise" : $"{ExerciseCount} exercises";
+}

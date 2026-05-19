@@ -93,4 +93,33 @@
             dotNetRef = null;
         }
     };
+
+    window.planReorder = {
+        sortable: null,
+        init: function (listId, dotNetRef) {
+            const el = document.getElementById(listId);
+            if (!el || typeof Sortable === "undefined") {
+                return;
+            }
+            this.destroy();
+            this.sortable = Sortable.create(el, {
+                handle: ".exercise-drag-handle",
+                animation: 150,
+                ghostClass: "sortable-ghost",
+                draggable: ".exercise-sortable-item",
+                onEnd: function (evt) {
+                    if (evt.oldIndex === evt.newIndex) {
+                        return;
+                    }
+                    dotNetRef.invokeMethodAsync("OnExerciseReordered", evt.oldIndex, evt.newIndex);
+                }
+            });
+        },
+        destroy: function () {
+            if (this.sortable) {
+                this.sortable.destroy();
+                this.sortable = null;
+            }
+        }
+    };
 })();

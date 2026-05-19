@@ -28,7 +28,7 @@
     line-height: 1;
     text-align: end;
     padding-right: 4px;
-    color: var(--tn-text-muted);
+    color: var(--mud-palette-text-secondary, var(--tn-text-muted));
     letter-spacing: 0.02em;
 }
 
@@ -52,17 +52,17 @@ button.heatmap-cell:disabled {
 
 .heatmap-selected.heatmap-on,
 .heatmap-selected.heatmap-off {
-    box-shadow: 0 0 0 2px var(--tn-accent, #0d6efd);
+    box-shadow: 0 0 0 2px var(--mud-palette-primary, var(--tn-accent));
     border-radius: 2px;
 }
 
 .heatmap-off {
-    background-color: var(--tn-surface-3);
+    background-color: var(--mud-palette-background-gray, var(--tn-surface-3));
     opacity: 0.62;
 }
 
 .heatmap-on {
-    background-color: var(--tn-accent);
+    background-color: var(--mud-palette-primary, var(--tn-accent));
     opacity: 0.9;
 }
 

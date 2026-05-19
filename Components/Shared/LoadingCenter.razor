@@ -1,0 +1,15 @@
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8 px-4">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="@Size" />
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <MudText Typo="Typo.body2" Class="mt-3 mud-text-secondary">@Label</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Large;
+}

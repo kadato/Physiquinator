@@ -1,0 +1,30 @@
+.rest-timer-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+::deep .rest-timer-panel {
+    border: 1px solid var(--tn-timer-border);
+    border-radius: 12px;
+    background: var(--tn-timer-surface);
+}
+
+::deep .rest-timer-panel--complete {
+    border-color: var(--tn-success);
+}
+
+::deep .rest-timer-alert {
+    width: 100%;
+}
+
+::deep .rest-timer-digits {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+::deep .rest-timer-ring {
+    display: flex;
+    justify-content: center;
+}

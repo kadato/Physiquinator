@@ -2,109 +2,125 @@
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 
-<div class="mb-3 mt-3">
-    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHome">
-        <i class="bi bi-arrow-left me-2"></i>Back
-    </button>
-</div>
+<MudStack Spacing="3">
+    <PageHeader Title="Workout history" ShowBack="false" />
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+        Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday.
+    </MudText>
 
-<h1 class="h4 mb-1"><i class="bi bi-clock-history me-2"></i>Workout history</h1>
-<p class="small history-page-lead mb-3">Tap a day on the grid to filter the list below. Each square is one local calendar day; weeks run Monday–Sunday.</p>
-
-@if (_sessions == null || _activityByDay == null || _listSessions == null || _summary == null)
-{
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading</span>
-        </div>
-    </div>
-}
-else
-{
-    <div class="history-heatmap-panel">
-        <ActivityHeatmap CountsByDay="_activityByDay"
-                         Weeks="@HeatmapWeeks"
-                         EndLocal="@_heatmapEndLocal"
-                         SelectedDay="_selectedDay"
-                         SelectedDayChanged="OnSelectedDayChanged" />
-    </div>
-
-    <div class="history-stat-grid">
-        <div class="history-stat">
-            <div class="history-stat-value">@_summary.CurrentStreakWorkoutDays</div>
-            <div class="history-stat-primary">Active day streak</div>
-        </div>
-        <div class="history-stat">
-            <div class="history-stat-value">@_summary.LongestStreakWorkoutDays</div>
-            <div class="history-stat-primary">Longest streak on calendar</div>
-        </div>
-        <div class="history-stat">
-            <div class="history-stat-value">@_summary.ThisWeekSessionCount</div>
-            <div class="history-stat-primary">Sessions this week</div>
-        </div>
-        <div class="history-stat">
-            <div class="history-stat-value">@_summary.LastWeekSessionCount</div>
-            <div class="history-stat-primary">Sessions last week</div>
-        </div>
-    </div>
-    <p class="history-stat-footnote small mb-3">A streak day is any calendar day with at least one logged session. Session counts include every workout in that Monday–Sunday week (local time).</p>
-
-    @if (_selectedDay != null)
+    @if (_sessions == null || _activityByDay == null || _listSessions == null || _summary == null)
     {
-        <div class="history-day-filter-banner mb-3 flex-column flex-sm-row align-items-stretch align-items-sm-center">
-            <span>
-                Showing sessions on <strong>@UiDateFormats.DateOnlyCompact(_selectedDay.Value)</strong>
-                @if (!_listSessions.Any())
-                {
-                    <span class="text-muted"> — none logged.</span>
-                }
-            </span>
-            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ClearDayFilter">Clear filter</button>
-        </div>
-    }
-
-    @if (!_sessions.Any())
-    {
-        <div class="text-center py-5">
-            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.35;"></i>
-            <p class="text-muted mt-3 mb-0">No logged workouts yet. Start a plan from home to build your history.</p>
-        </div>
-    }
-    else if (!_listSessions.Any() && _selectedDay != null)
-    {
-        <p class="text-muted small mb-0">Pick another day on the heatmap or clear the filter to see recent sessions.</p>
+        <LoadingCenter Label="Loading history…" />
     }
     else
     {
-        <div class="card overflow-hidden history-session-card">
-            <div class="list-group list-group-flush">
+        <MudPaper Class="pa-4" Elevation="1">
+            <ActivityHeatmap CountsByDay="_activityByDay"
+                             Weeks="@HeatmapWeeks"
+                             EndLocal="@_heatmapEndLocal"
+                             SelectedDay="_selectedDay"
+                             SelectedDayChanged="OnSelectedDayChanged" />
+        </MudPaper>
+
+        <MudGrid Spacing="2">
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-3 text-center" Elevation="1">
+                    <MudText Typo="Typo.h5">@_summary.CurrentStreakWorkoutDays</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Active day streak</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-3 text-center" Elevation="1">
+                    <MudText Typo="Typo.h5">@_summary.LongestStreakWorkoutDays</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Longest streak</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-3 text-center" Elevation="1">
+                    <MudText Typo="Typo.h5">@_summary.ThisWeekSessionCount</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">This week</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-3 text-center" Elevation="1">
+                    <MudText Typo="Typo.h5">@_summary.LastWeekSessionCount</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Last week</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            A streak day is any calendar day with at least one logged session.
+        </MudText>
+
+        @if (_selectedDay != null)
+        {
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
+                    @UiDateFormats.DateOnlyCompact(_selectedDay.Value)
+                </MudChip>
+                @if (!_listSessions.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">— none logged.</MudText>
+                }
+            </MudStack>
+        }
+
+        @if (!_sessions.Any())
+        {
+            <EmptyState Message="No logged workouts yet. Start a plan from home."
+                        Icon="@Icons.Material.Outlined.History" />
+        }
+        else if (!_listSessions.Any() && _selectedDay != null)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Pick another day or clear the filter.
+            </MudText>
+        }
+        else
+        {
+            <MudList T="string" Clickable="true" Dense="true">
                 @foreach (var s in _listSessions)
                 {
                     var sid = s.Id;
-                    <button type="button"
-                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-2 py-3 w-100 text-start"
-                            @onclick="() => OpenSession(sid)">
-                        <div class="min-w-0">
-                            <div class="fw-semibold text-truncate">@s.PlanName</div>
-                            <small class="text-muted text-break">
-                                @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
-                                @if (s.EndedAtUtc != null)
+                    <MudListItem T="string" OnClick="@(() => OpenSession(sid))">
+                        <div class="d-flex justify-space-between align-center gap-2" style="width:100%;">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">@s.PlanName</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
+                                    @if (s.EndedAtUtc != null)
+                                    {
+                                        <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
+                                    }
+                                    else
+                                    {
+                                        <span> · in progress</span>
+                                    }
+                                </MudText>
+                            </div>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                @if (s.EndedAtUtc == null && Guid.TryParse(s.WorkoutPlanId, out var continuePlanId))
                                 {
-                                    <span class="text-nowrap"> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
+                                    <div @onclick:stopPropagation="true">
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => ContinueWorkout(continuePlanId))">
+                                            Continue
+                                        </MudButton>
+                                    </div>
                                 }
-                                else
-                                {
-                                    <span> · in progress</span>
-                                }
-                            </small>
+                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="mud-text-secondary" />
+                            </MudStack>
                         </div>
-                        <i class="bi bi-chevron-right text-muted flex-shrink-0 mt-1"></i>
-                    </button>
+                    </MudListItem>
+                    <MudDivider />
                 }
-            </div>
-        </div>
+            </MudList>
+        }
     }
-}
+</MudStack>
 
 @code {
     private const int HeatmapWeeks = 53;
@@ -116,10 +132,11 @@ else
     private WorkoutDaySummary? _summary;
     private DateOnly? _selectedDay;
 
-    private void GoHome() => Navigation.NavigateTo("/");
-
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo($"/history/{Uri.EscapeDataString(sessionId)}");
+
+    private void ContinueWorkout(Guid planId) =>
+        Navigation.NavigateTo($"/workout/{planId}");
 
     protected override async Task OnInitializedAsync()
     {

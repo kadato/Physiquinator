@@ -4,92 +4,87 @@
 @inject WorkoutHistoryService HistoryService
 @inject AppDataResetService AppDataReset
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 <PageTitle>Settings</PageTitle>
 
-<div class="mb-3 mt-4 d-flex flex-wrap align-items-center gap-2">
-    <a href="/" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Home
-    </a>
-</div>
+<MudStack Spacing="3">
+    <PageHeader Title="Settings" ShowBack="false" />
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+        Appearance, backups, and removing everything stored on this device.
+    </MudText>
 
-<div class="mb-4">
-    <h1>Settings</h1>
-    <p class="lead mb-0">Appearance, backups, and removing everything stored on this device.</p>
-</div>
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">Appearance</MudText>
+        <MudSelect T="string" Label="Light or dark mode" Value="_preference" ValueChanged="OnThemePreferenceChanged">
+            <MudSelectItem Value="@("system")">Match system</MudSelectItem>
+            <MudSelectItem Value="@("light")">Light (always)</MudSelectItem>
+            <MudSelectItem Value="@("dark")">Dark (always)</MudSelectItem>
+        </MudSelect>
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+            Active mode: <strong>@_effectiveThemeLabel</strong>
+        </MudText>
+    </MudPaper>
 
-<div class="settings-stack">
-    <div class="card settings-card">
-        <div class="card-body">
-            <h2 class="h5 mb-3"><i class="bi bi-circle-half me-2"></i>Appearance</h2>
-            <label class="form-label" for="theme-select">Light or dark mode</label>
-            <select id="theme-select" class="form-select" value="@_preference" @onchange="OnThemePreferenceSelectChanged">
-                <option value="system">Match system setting</option>
-                <option value="light">Light (always)</option>
-                <option value="dark">Dark (always)</option>
-            </select>
-            <div class="mt-3 text-muted">
-                Active mode: <strong>@_effectiveThemeLabel</strong>
-            </div>
-        </div>
-    </div>
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">Plans backup</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            Export all plans as JSON, or import a file you exported earlier.
+        </MudText>
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Outlined"
+                       Disabled="@(_planCount == 0)"
+                       OnClick="ExportAllPlans"
+                       StartIcon="@Icons.Material.Filled.Upload">
+                Export all plans
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
+                Import plans
+            </MudButton>
+        </MudStack>
+        @if (_planCount == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">Create a plan first to enable export.</MudText>
+        }
+    </MudPaper>
 
-    <div class="card settings-card">
-        <div class="card-body">
-            <h2 class="h5 mb-3"><i class="bi bi-database-fill-gear me-2"></i>Plans backup</h2>
-            <p class="text-muted small mb-3">
-                Export all plans as JSON for a backup, or import a file you exported earlier (single plan or full backup).
-            </p>
-            <div class="d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-outline-secondary" disabled="@(_planCount == 0)" title="@(_planCount == 0 ? "Create a plan first" : null)" @onclick="ExportAllPlans">
-                    <i class="bi bi-upload me-2"></i>Export all plans
-                </button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="ImportPlans">
-                    <i class="bi bi-download me-2"></i>Import plans
-                </button>
-            </div>
-            @if (_planCount == 0)
-            {
-                <p class="form-text mt-2 mb-0">You have no plans yet — export becomes available after you create one.</p>
-            }
-        </div>
-    </div>
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">History backup</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            Export or import workout history JSON. Import merges by session and set id.
+        </MudText>
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Outlined"
+                       Disabled="@(_historySessionCount == 0)"
+                       OnClick="ExportHistory"
+                       StartIcon="@Icons.Material.Filled.Upload">
+                Export history
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
+                Import history
+            </MudButton>
+        </MudStack>
+        @if (_historySessionCount == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">Finish at least one workout to enable export.</MudText>
+        }
+    </MudPaper>
 
-    <div class="card settings-card">
-        <div class="card-body">
-            <h2 class="h5 mb-3"><i class="bi bi-clock-history me-2"></i>History backup</h2>
-            <p class="text-muted small mb-3">
-                Export completed workouts and set logs as JSON, or import a file from this app. Import merges by session and set id (re-importing the same file updates existing rows instead of duplicating).
-            </p>
-            <div class="d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-outline-secondary" disabled="@(_historySessionCount == 0)" title="@(_historySessionCount == 0 ? "No history yet" : null)" @onclick="ExportHistory">
-                    <i class="bi bi-upload me-2"></i>Export history
-                </button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="ImportHistory">
-                    <i class="bi bi-download me-2"></i>Import history
-                </button>
-            </div>
-            @if (_historySessionCount == 0)
-            {
-                <p class="form-text mt-2 mb-0">Finish at least one workout to enable export — you can still import a backup anytime.</p>
-            }
-        </div>
-    </div>
-
-    <div class="card settings-card border-danger">
-        <div class="card-body">
-            <h2 class="h5 mb-3 text-danger"><i class="bi bi-trash3 me-2"></i>Remove all data</h2>
-            <p class="text-muted small mb-3">
-                Permanently deletes every workout plan, exercise definition, and workout log in the local database on this device.
-                Export backups above first if you want to keep copies. Your saved light/dark choice is reset to match the system.
-            </p>
-            <button type="button" class="btn btn-outline-danger" @onclick="RemoveAllDataAsync">
-                <i class="bi bi-trash3 me-2"></i>Remove all data…
-            </button>
-        </div>
-    </div>
-</div>
+    <MudPaper Class="pa-4" Elevation="1" Style="border: 1px solid var(--mud-palette-error);">
+        <MudText Typo="Typo.h6" Color="Color.Error" Class="mb-2">Remove all data</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            Permanently deletes every plan and workout log on this device. Export backups first if needed.
+        </MudText>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   OnClick="RemoveAllDataAsync"
+                   StartIcon="@Icons.Material.Filled.DeleteForever">
+            Remove all data…
+        </MudButton>
+    </MudPaper>
+</MudStack>
 
 @code {
     private string _preference = "system";
@@ -102,7 +97,6 @@
     protected override async Task OnInitializedAsync()
     {
         ThemeService.ThemeChanged += HandleThemeChanged;
-        // Theme JS is initialized from MainLayout after the first render; sync when that completes.
         SyncFromService();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
@@ -116,7 +110,6 @@
 
     private async Task RefreshHistoryCountAsync()
     {
-        // Count is cheap; full export loads all sessions and sets.
         _historySessionCount = await HistoryService.GetSessionCountAsync();
     }
 
@@ -132,9 +125,8 @@
         _effectiveTheme = ThemeService.EffectiveTheme;
     }
 
-    private async Task OnThemePreferenceSelectChanged(ChangeEventArgs e)
+    private async Task OnThemePreferenceChanged(string preference)
     {
-        var preference = e.Value?.ToString() ?? "system";
         await ThemeService.SetPreferenceAsync(preference);
     }
 
@@ -144,13 +136,12 @@
         {
             var json = await PlanService.ExportAllPlansToJsonAsync();
             var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-
             await SaveFile(fileName, json);
-            await AlertAsync("Physiquinator", "All plans exported successfully!");
+            Snackbar.Add("All plans exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await AlertAsync("Physiquinator", $"Export failed: {ex.Message}");
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
         }
     }
 
@@ -170,33 +161,32 @@
                 })
             });
 
-            if (result != null)
+            if (result == null)
+                return;
+
+            using var stream = await result.OpenReadAsync();
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+
+            var importedCount = 0;
+            try
             {
-                using var stream = await result.OpenReadAsync();
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-
-                var importedCount = 0;
-                try
-                {
-                    var plans = await PlanService.ImportPlansFromJsonAsync(json);
-                    importedCount = plans.Count;
-                }
-                catch
-                {
-                    await PlanService.ImportPlanFromJsonAsync(json);
-                    importedCount = 1;
-                }
-
-                await RefreshPlanCountAsync();
-                StateHasChanged();
-                await AlertAsync("Physiquinator", $"Successfully imported {importedCount} plan(s)!");
-                Navigation.NavigateTo("/");
+                var plans = await PlanService.ImportPlansFromJsonAsync(json);
+                importedCount = plans.Count;
             }
+            catch
+            {
+                await PlanService.ImportPlanFromJsonAsync(json);
+                importedCount = 1;
+            }
+
+            await RefreshPlanCountAsync();
+            Snackbar.Add($"Imported {importedCount} plan(s).", Severity.Success);
+            Navigation.NavigateTo("/");
         }
         catch (Exception ex)
         {
-            await AlertAsync("Physiquinator", $"Import failed: {ex.Message}");
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
         }
     }
 
@@ -206,13 +196,12 @@
         {
             var json = await HistoryService.ExportToJsonAsync();
             var fileName = $"physiquinator_history_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-
             await SaveFile(fileName, json, "Export workout history");
-            await AlertAsync("Physiquinator", "Workout history exported successfully!");
+            Snackbar.Add("Workout history exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await AlertAsync("Physiquinator", $"Export failed: {ex.Message}");
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
         }
     }
 
@@ -232,48 +221,30 @@
                 })
             });
 
-            if (result != null)
-            {
-                using var stream = await result.OpenReadAsync();
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
+            if (result == null)
+                return;
 
-                var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
-
-                await RefreshHistoryCountAsync();
-                StateHasChanged();
-                await AlertAsync("Physiquinator", $"Imported {sessions} workout(s) and {sets} set log(s).");
-            }
+            using var stream = await result.OpenReadAsync();
+            using var reader = new StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+            var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
+            await RefreshHistoryCountAsync();
+            Snackbar.Add($"Imported {sessions} workout(s) and {sets} set log(s).", Severity.Success);
         }
         catch (Exception ex)
         {
-            await AlertAsync("Physiquinator", $"Import failed: {ex.Message}");
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
         }
-    }
-
-    private static async Task SaveFile(string fileName, string content, string shareTitle = "Export Workout Plan")
-    {
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllTextAsync(filePath, content);
-
-        await Share.RequestAsync(new ShareFileRequest
-        {
-            Title = shareTitle,
-            File = new ShareFile(filePath)
-        });
     }
 
     private async Task RemoveAllDataAsync()
     {
-        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page is null)
-            return;
-
-        var confirmed = await page.DisplayAlertAsync(
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
             "Remove all data?",
             "This cannot be undone. Export any backups you need before continuing.",
-            "Remove",
-            "Cancel");
+            confirmText: "Remove",
+            confirmColor: Color.Error);
 
         if (!confirmed)
             return;
@@ -284,20 +255,24 @@
             SyncFromService();
             await RefreshPlanCountAsync();
             await RefreshHistoryCountAsync();
-            StateHasChanged();
-            await AlertAsync("Physiquinator", "All local data has been removed.");
+            Snackbar.Add("All local data has been removed.", Severity.Success);
             Navigation.NavigateTo("/");
         }
         catch (Exception ex)
         {
-            await AlertAsync("Physiquinator", $"Could not remove data: {ex.Message}");
+            Snackbar.Add($"Could not remove data: {ex.Message}", Severity.Error);
         }
     }
 
-    private static Task AlertAsync(string title, string message)
+    private static async Task SaveFile(string fileName, string content, string shareTitle = "Export Workout Plan")
     {
-        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        return page is null ? Task.CompletedTask : page.DisplayAlertAsync(title, message, "OK");
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllTextAsync(filePath, content);
+        await Share.RequestAsync(new ShareFileRequest
+        {
+            Title = shareTitle,
+            File = new ShareFile(filePath)
+        });
     }
 
     public void Dispose()

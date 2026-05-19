@@ -1,139 +1,137 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-<div class="mb-2 mt-3">
-    <a href="/" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Back
-    </a>
+<div class="plan-page-with-footer @(IsNew ? "has-bottom-nav" : "")">
+    <PageHeader Title="@(IsNew ? "New plan" : "Edit plan")" OnBack="GoHome" />
+
+    <MudForm @ref="_form" @bind-IsValid="_formValid">
+        <MudStack Spacing="2">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudTextField @bind-Value="PlanName"
+                                  Label="Plan name"
+                                  Placeholder="e.g. Push day"
+                                  Required="true"
+                                  RequiredError="Plan name is required"
+                                  Immediate="true" />
+                    <MudGrid Spacing="2">
+                        <MudItem xs="6">
+                            <MudNumericField @bind-Value="DefaultSetCount" Label="Default sets" Min="1" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField @bind-Value="RestIntervalSeconds" Label="Default rest (s)" Min="0" />
+                        </MudItem>
+                    </MudGrid>
+                </MudStack>
+            </MudPaper>
+
+            <MudText Typo="Typo.h6">Exercises</MudText>
+
+            @if (!Exercises.Any())
+            {
+                <EmptyState Message="No exercises yet. Add one below."
+                            Icon="@Icons.Material.Outlined.List" />
+            }
+            else
+            {
+                <div id="exercise-sortable-list" class="exercise-sortable-list">
+                    @for (var i = 0; i < Exercises.Count; i++)
+                    {
+                        var idx = i;
+                        <MudPaper @key="Exercises[idx].Id" Class="pa-2 exercise-sortable-item" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIconButton Icon="@Icons.Material.Filled.DragIndicator"
+                                                   Class="exercise-drag-handle"
+                                                   aria-label="Drag to reorder" />
+                                    <MudTextField @bind-Value="Exercises[idx].Name"
+                                                  Label="Exercise"
+                                                  Placeholder="Exercise name"
+                                                  Class="flex-grow-1"
+                                                  Required="true" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   aria-label="Remove exercise"
+                                                   OnClick="@(() => RemoveExercise(idx))" />
+                                </MudStack>
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="6" sm="3">
+                                        <MudNumericField @bind-Value="Exercises[idx].SetCount" Label="Sets" Min="1" />
+                                    </MudItem>
+                                    <MudItem xs="6" sm="3">
+                                        <MudNumericField @bind-Value="Exercises[idx].RestIntervalSeconds" Label="Rest (s)" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="6" sm="3">
+                                        <MudNumericField @bind-Value="Exercises[idx].DefaultReps" Label="Def reps" Min="0" HideSpinButtons="true" />
+                                    </MudItem>
+                                    <MudItem xs="6" sm="3">
+                                        <MudNumericField @bind-Value="Exercises[idx].DefaultWeightKg" Label="Def kg" Min="0" HideSpinButtons="true" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudStack>
+                        </MudPaper>
+                    }
+                </div>
+            }
+
+            <MudPaper Class="pa-2" Elevation="1">
+                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudTextField @bind-Value="NewExerciseName"
+                                  Placeholder="Add new exercise…"
+                                  Class="flex-grow-1"
+                                  OnKeyDown="AddExerciseKeydown" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddExercise">
+                        Add
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </MudForm>
 </div>
 
-<h1 class="h4 mb-3"><i class="bi bi-clipboard2-check-fill me-2"></i>@(IsNew ? "New Plan" : "Edit Plan")</h1>
-
-<div class="plan-form">
-    <div class="card mb-2">
-        <div class="card-body py-2">
-            <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-6">
-                    <label for="plan-name" class="form-label mb-1"><i class="bi bi-tag-fill me-1"></i>Plan Name</label>
-                    <input id="plan-name" type="text" class="form-control" @bind="PlanName" placeholder="e.g. Push Day" />
-                </div>
-                <div class="col-6 col-md-3">
-                    <label for="default-set-count" class="form-label mb-1"><i class="bi bi-repeat me-1"></i>Default Sets</label>
-                    <input id="default-set-count" type="number" class="form-control" @bind="DefaultSetCount" min="1" />
-                </div>
-                <div class="col-6 col-md-3">
-                    <label for="rest-interval" class="form-label mb-1"><i class="bi bi-clock-fill me-1"></i>Default Rest (s)</label>
-                    <input id="rest-interval" type="number" class="form-control" @bind="RestIntervalSeconds" min="0" />
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <h2 class="h6 mt-3 mb-2"><i class="bi bi-list-task me-1"></i>Exercises</h2>
-
-    <div class="exercise-list">
-        @if (!Exercises.Any())
-        {
-            <div class="text-center py-3">
-                <i class="bi bi-inbox" style="font-size: 2rem; color: var(--tn-accent); opacity: 0.4;"></i>
-                <p class="text-muted mt-2 mb-0">No exercises yet. Add one below.</p>
-            </div>
-        }
-        @for (var i = 0; i < Exercises.Count; i++)
-        {
-            var idx = i;
-            var moveUpDisabled = idx == 0;
-            var moveDownDisabled = idx == Exercises.Count - 1;
-            <div class="card mb-2">
-                <div class="card-body p-2">
-                    <!-- First row: Up arrow + Exercise name -->
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <button type="button" class="btn btn-sm btn-link text-muted p-0" 
-                                @onclick="() => MoveExerciseUp(idx)" 
-                                disabled="@moveUpDisabled"
-                                title="Move up"
-                                style="font-size: 1.2rem; line-height: 1;">
-                            <i class="bi bi-chevron-up"></i>
-                        </button>
-                        <input type="text" class="form-control form-control-lg flex-grow-1" @bind="Exercises[idx].Name" placeholder="Exercise name" />
-                    </div>
-                    <!-- Second row: Down arrow + Sets, Rest time, Delete -->
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-link text-muted p-0" 
-                                @onclick="() => MoveExerciseDown(idx)" 
-                                disabled="@moveDownDisabled"
-                                title="Move down"
-                                style="font-size: 1.2rem; line-height: 1; margin-left: 1px;">
-                            <i class="bi bi-chevron-down"></i>
-                        </button>
-                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                            <i class="bi bi-repeat text-muted"></i>
-                            <input type="number" class="form-control" style="width: 60px;" @bind="Exercises[idx].SetCount" min="1" title="Sets" />
-                        </div>
-                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                            <i class="bi bi-hourglass-split text-muted"></i>
-                            <input type="number" class="form-control" style="width: 70px;" @bind="Exercises[idx].RestIntervalSeconds" min="0" title="Rest (seconds)" />
-                            <span class="text-muted">s</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 flex-shrink-0" title="Optional defaults when logging sets (kg)">
-                            <span class="text-muted small">def</span>
-                            <InputNumber class="form-control" style="width: 56px;" @bind-Value="Exercises[idx].DefaultReps" placeholder="reps" />
-                            <InputNumber class="form-control" style="width: 72px;" @bind-Value="Exercises[idx].DefaultWeightKg" placeholder="kg" />
-                        </div>
-                        <button type="button" class="btn btn-outline-danger btn-sm ms-auto" @onclick="() => RemoveExercise(idx)">
-                            <i class="bi bi-trash-fill"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    <div class="card mb-2">
-        <div class="card-body p-2">
-            <div class="d-flex gap-2 align-items-center">
-                <input type="text" class="form-control flex-grow-1" @bind="NewExerciseName" placeholder="Add new exercise..." @onkeydown="AddExerciseKeydown" />
-                <button type="button" class="btn btn-outline-primary" @onclick="AddExercise">
-                    <i class="bi bi-plus-circle-fill"></i> Add
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-2 action-buttons">
-        <button class="btn btn-primary" @onclick="Save" disabled="@SaveDisabled">
-            <i class="bi bi-save-fill me-1"></i>Save
-        </button>
-        <a href="/" class="btn btn-secondary">
-            <i class="bi bi-x-circle me-1"></i>Cancel
-        </a>
+<MudPaper Elevation="8" Class="plan-sticky-footer">
+    <div class="plan-sticky-footer__actions">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@SaveDisabled">
+            Save
+        </MudButton>
+        <MudButton Variant="Variant.Text" OnClick="GoHome">Cancel</MudButton>
         @if (!IsNew)
         {
-            <a href="/workout/@PlanId" class="btn btn-start">
-                <i class="bi bi-play-fill me-1"></i>Start
-            </a>
-            <button class="btn btn-outline-secondary" @onclick="ExportCurrentPlan">
-                <i class="bi bi-upload me-1"></i>Export
-            </button>
+            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                           Color="Color.Secondary"
+                           aria-label="Start workout"
+                           Href="@($"/workout/{PlanId}")" />
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="More actions" Dense="true">
+                <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="ExportCurrentPlan">
+                    Export plan
+                </MudMenuItem>
+            </MudMenu>
         }
     </div>
-</div>
+</MudPaper>
 
 @code {
     [Parameter]
     public Guid? PlanId { get; set; }
 
+    private MudForm? _form;
+    private bool _formValid;
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
     private int DefaultSetCount { get; set; } = 4;
     private List<ExercisePlan> Exercises { get; set; } = new();
     private string NewExerciseName { get; set; } = "";
     private bool IsNew => PlanId == null;
+    private DotNetObjectReference<object>? _dotNetRef;
+    private int _lastSortableCount = -1;
 
     private bool CanSave => !string.IsNullOrWhiteSpace(PlanName) && Exercises.Any() && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
-
     private bool SaveDisabled => !CanSave;
 
     protected override async Task OnInitializedAsync()
@@ -146,11 +144,11 @@
                 PlanName = plan.Name;
                 RestIntervalSeconds = plan.RestIntervalSeconds;
                 DefaultSetCount = plan.DefaultSetCount;
-                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan 
-                { 
-                    Id = e.Id, 
-                    Name = e.Name, 
-                    SetCount = e.SetCount, 
+                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    SetCount = e.SetCount,
                     Order = e.Order,
                     RestIntervalSeconds = e.RestIntervalSeconds,
                     DefaultReps = e.DefaultReps,
@@ -160,25 +158,100 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Exercises.Count == 0)
+        {
+            if (_lastSortableCount != 0)
+            {
+                await DestroySortableAsync();
+                _lastSortableCount = 0;
+            }
+            return;
+        }
+
+        if (_lastSortableCount == Exercises.Count && !firstRender)
+            return;
+
+        await InitSortableAsync();
+        _lastSortableCount = Exercises.Count;
+    }
+
+    private async ValueTask DestroySortableAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("planReorder.destroy");
+        }
+        catch (JSException)
+        {
+            // planReorder loads from theme.js; ignore if scripts not ready yet
+        }
+    }
+
+    private async ValueTask InitSortableAsync()
+    {
+        try
+        {
+            _dotNetRef ??= DotNetObjectReference.Create<object>(this);
+            await DestroySortableAsync();
+            await JS.InvokeVoidAsync("planReorder.init", "exercise-sortable-list", _dotNetRef);
+        }
+        catch (JSException)
+        {
+            // Sortable or planReorder not loaded yet
+        }
+    }
+
+    [JSInvokable]
+    public void OnExerciseReordered(int oldIndex, int newIndex)
+    {
+        if (oldIndex < 0 || newIndex < 0 || oldIndex >= Exercises.Count || newIndex >= Exercises.Count)
+            return;
+
+        if (oldIndex == newIndex)
+            return;
+
+        var item = Exercises[oldIndex];
+        Exercises.RemoveAt(oldIndex);
+        Exercises.Insert(newIndex, item);
+        RenumberExercises();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await DestroySortableAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // WebView disposed
+        }
+
+        _dotNetRef?.Dispose();
+    }
+
+    private void GoHome() => Navigation.NavigateTo("/");
+
     private void AddExercise()
     {
         if (string.IsNullOrWhiteSpace(NewExerciseName)) return;
-        Exercises.Add(new ExercisePlan 
-        { 
-            Name = NewExerciseName.Trim(), 
-            SetCount = DefaultSetCount, 
+        Exercises.Add(new ExercisePlan
+        {
+            Name = NewExerciseName.Trim(),
+            SetCount = DefaultSetCount,
             Order = Exercises.Count,
             RestIntervalSeconds = RestIntervalSeconds
         });
         NewExerciseName = "";
+        _lastSortableCount = -1;
     }
 
     private void AddExerciseKeydown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
-        {
             AddExercise();
-        }
     }
 
     private void RemoveExercise(int index)
@@ -186,37 +259,15 @@
         if (index >= 0 && index < Exercises.Count)
         {
             Exercises.RemoveAt(index);
-            for (var i = 0; i < Exercises.Count; i++)
-                Exercises[i].Order = i;
+            RenumberExercises();
+            _lastSortableCount = -1;
         }
     }
 
-    private void MoveExerciseUp(int index)
+    private void RenumberExercises()
     {
-        if (index > 0)
-        {
-            var temp = Exercises[index];
-            Exercises[index] = Exercises[index - 1];
-            Exercises[index - 1] = temp;
-
-            // Update Order property
-            for (var i = 0; i < Exercises.Count; i++)
-                Exercises[i].Order = i;
-        }
-    }
-
-    private void MoveExerciseDown(int index)
-    {
-        if (index < Exercises.Count - 1)
-        {
-            var temp = Exercises[index];
-            Exercises[index] = Exercises[index + 1];
-            Exercises[index + 1] = temp;
-
-            // Update Order property
-            for (var i = 0; i < Exercises.Count; i++)
-                Exercises[i].Order = i;
-        }
+        for (var i = 0; i < Exercises.Count; i++)
+            Exercises[i].Order = i;
     }
 
     private async Task Save()
@@ -228,11 +279,11 @@
             Name = PlanName.Trim(),
             RestIntervalSeconds = RestIntervalSeconds,
             DefaultSetCount = DefaultSetCount,
-            Exercises = Exercises.Select((e, i) => new ExercisePlan 
-            { 
-                Id = e.Id, 
-                Name = e.Name.Trim(), 
-                SetCount = e.SetCount, 
+            Exercises = Exercises.Select((e, i) => new ExercisePlan
+            {
+                Id = e.Id,
+                Name = e.Name.Trim(),
+                SetCount = e.SetCount,
                 Order = i,
                 RestIntervalSeconds = e.RestIntervalSeconds,
                 DefaultReps = e.DefaultReps,
@@ -240,33 +291,30 @@
             }).ToList()
         };
         await PlanService.SavePlanAsync(plan);
+        Snackbar.Add("Plan saved.", Severity.Success);
         Navigation.NavigateTo("/");
     }
 
     private async Task ExportCurrentPlan()
     {
         if (!PlanId.HasValue) return;
-
         try
         {
             var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);
             var safeFileName = string.Join("_", PlanName.Split(Path.GetInvalidFileNameChars()));
             var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-
             var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
             await File.WriteAllTextAsync(filePath, json);
-
             await Share.RequestAsync(new ShareFileRequest
             {
                 Title = "Export Workout Plan",
                 File = new ShareFile(filePath)
             });
-
-            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", "Plan exported successfully!", "OK");
+            Snackbar.Add("Plan exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Export failed: {ex.Message}", "OK");
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
         }
     }
 }

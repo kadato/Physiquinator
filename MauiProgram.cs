@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using MudBlazor;
+using MudBlazor.Services;
 using Physiquinator.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
@@ -33,6 +35,15 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddMauiBlazorWebView();
+
+		builder.Services.AddMudServices(config =>
+		{
+			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
+			config.SnackbarConfiguration.VisibleStateDuration = 3000;
+			config.SnackbarConfiguration.HideTransitionDuration = 100;
+			config.SnackbarConfiguration.ShowTransitionDuration = 100;
+			config.SnackbarConfiguration.PreventDuplicates = true;
+		});
 
 		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "physiquinator.db3");
 		builder.Services.AddSingleton(TimeProvider.System);

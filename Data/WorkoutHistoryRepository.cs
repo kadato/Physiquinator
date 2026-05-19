@@ -91,6 +91,33 @@ public class WorkoutHistoryRepository
             .ToListAsync();
     }
 
+    /// <summary>Most recent open session for a plan, or null if none.</summary>
+    public async Task<WorkoutSessionLogEntity?> GetInProgressSessionForPlanAsync(Guid planId)
+    {
+        await _db.EnsureInitializedAsync();
+        var planIdStr = planId.ToString();
+        var rows = await _db.Database.Table<WorkoutSessionLogEntity>()
+            .Where(s => s.WorkoutPlanId == planIdStr && s.EndedAtUtc == null)
+            .ToListAsync();
+
+        return rows
+            .OrderByDescending(s => s.StartedAtUtc)
+            .FirstOrDefault();
+    }
+
+    /// <summary>Any open session (newest first), for home banner and cross-plan prompts.</summary>
+    public async Task<WorkoutSessionLogEntity?> GetAnyInProgressSessionAsync()
+    {
+        await _db.EnsureInitializedAsync();
+        var rows = await _db.Database.Table<WorkoutSessionLogEntity>()
+            .Where(s => s.EndedAtUtc == null)
+            .ToListAsync();
+
+        return rows
+            .OrderByDescending(s => s.StartedAtUtc)
+            .FirstOrDefault();
+    }
+
     /// <summary>
     /// Counts workout sessions started on each local calendar day for rows in
     /// <paramref name="utcRangeStart"/> ≤ StartedAtUtc &lt; <paramref name="utcRangeEndExclusive"/>.

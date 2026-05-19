@@ -1,0 +1,33 @@
+.plan-card {
+    width: 100%;
+    border-radius: 12px;
+}
+
+.plan-card__content {
+    padding: 0.875rem 1rem !important;
+}
+
+.plan-card__info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.plan-card-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plan-card__actions {
+    flex-shrink: 0;
+}
+
+.plan-card-start {
+    min-height: 40px;
+    min-width: 4.5rem;
+}
+
+.plan-card-icon-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+}

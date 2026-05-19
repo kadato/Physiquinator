@@ -1,18 +1,63 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Services
+@using Physiquinator.Themes
 @inject ThemeService ThemeService
+@inject NavigationManager Navigation
 @inject ILogger<MainLayout> Logger
 
-<div class="page">
-    <main>
-        <article class="content">
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDark" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="app-shell">
+    <main class="app-main-scroll @(_showBottomNav ? "app-main-with-nav" : "")">
+        <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
             @Body
-        </article>
+        </MudContainer>
     </main>
+
+    @if (_showBottomNav)
+    {
+        <nav class="app-bottom-bar" aria-label="Main navigation">
+            <div class="app-bottom-bar__items">
+                <div class="@GetTabClass(0)" role="button" tabindex="0" @onclick='() => NavigateTab("/")'>
+                    <MudIcon Icon="@Icons.Material.Filled.Home"
+                             Color="@(_navIndex == 0 ? Color.Primary : Color.Default)"
+                             Size="Size.Medium" />
+                    <MudText Typo="Typo.caption" Class="@GetTabCaptionClass(0)">Home</MudText>
+                </div>
+                <div class="@GetTabClass(1)" role="button" tabindex="0" @onclick='() => NavigateTab("/history")'>
+                    <MudIcon Icon="@Icons.Material.Filled.History"
+                             Color="@(_navIndex == 1 ? Color.Primary : Color.Default)"
+                             Size="Size.Medium" />
+                    <MudText Typo="Typo.caption" Class="@GetTabCaptionClass(1)">History</MudText>
+                </div>
+                <div class="@GetTabClass(2, isCreate: true)" role="button" tabindex="0" @onclick='() => NavigateTab("/plan")'>
+                    <MudIcon Icon="@Icons.Material.Filled.Add"
+                             Color="@(_navIndex == 2 ? Color.Primary : Color.Default)"
+                             Size="Size.Medium" />
+                    <MudText Typo="Typo.caption" Class="@GetTabCaptionClass(2)">New plan</MudText>
+                </div>
+                <div class="@GetTabClass(3)" role="button" tabindex="0" @onclick='() => NavigateTab("/settings")'>
+                    <MudIcon Icon="@Icons.Material.Filled.Settings"
+                             Color="@(_navIndex == 3 ? Color.Primary : Color.Default)"
+                             Size="Size.Medium" />
+                    <MudText Typo="Typo.caption" Class="@GetTabCaptionClass(3)">Settings</MudText>
+                </div>
+            </div>
+        </nav>
+    }
 </div>
 
 @code {
+    private readonly MudTheme _theme = PhysiquinatorTheme.Create();
+    private bool _isDark = true;
+    private int _navIndex = -1;
+    private bool _showBottomNav = true;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -20,11 +65,77 @@
             try
             {
                 await ThemeService.EnsureInitializedAsync();
+                SyncThemeFromService();
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Theme initialization failed");
             }
         }
+        UpdateNavigationState();
+    }
+
+    protected override void OnInitialized()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        SyncThemeFromService();
+        UpdateNavigationState();
+    }
+
+    private void OnThemeChanged()
+    {
+        SyncThemeFromService();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateNavigationState();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncThemeFromService() => _isDark = ThemeService.EffectiveTheme == "dark";
+
+    private string GetTabClass(int index, bool isCreate = false)
+    {
+        var classes = "app-bottom-tab";
+        if (isCreate)
+            classes += " app-bottom-tab--create";
+        if (_navIndex == index)
+            classes += " app-bottom-tab--active";
+        return classes;
+    }
+
+    private string GetTabCaptionClass(int index) =>
+        _navIndex == index ? "app-bottom-tab__label app-bottom-tab__label--active" : "app-bottom-tab__label mud-text-secondary";
+
+    private void NavigateTab(string href)
+    {
+        var current = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        var target = href.TrimStart('/').TrimEnd('/');
+        if (current == target) return;
+        Navigation.NavigateTo(href);
+    }
+
+    private void UpdateNavigationState()
+    {
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        _showBottomNav = ShouldShowBottomNav(path);
+        _navIndex = path switch { "" => 0, "history" => 1, "plan" => 2, "settings" => 3, _ => -1 };
+    }
+
+    private static bool ShouldShowBottomNav(string path)
+    {
+        if (path.StartsWith("workout/", StringComparison.Ordinal)) return false;
+        if (path.StartsWith("plan/", StringComparison.Ordinal)) return false;
+        if (path.StartsWith("history/", StringComparison.Ordinal)) return false;
+        return true;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

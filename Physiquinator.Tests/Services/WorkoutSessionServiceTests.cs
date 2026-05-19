@@ -111,6 +111,38 @@ public class WorkoutSessionServiceTests
     }
 
     [Fact]
+    public void ResumeWorkout_restores_completed_sets()
+    {
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        var plan = SamplePlan();
+        var completed = new[] { new SetCompletion(0, 0), new SetCompletion(0, 1) };
+
+        svc.ResumeWorkout(plan, completed);
+
+        Assert.Same(plan, svc.CurrentPlan);
+        Assert.Equal(2, svc.CompletedSets.Count);
+        Assert.True(svc.IsSetCompleted(0, 0));
+        Assert.True(svc.IsSetCompleted(0, 1));
+        Assert.False(svc.IsResting);
+    }
+
+    [Fact]
+    public void ActiveRestDurationSeconds_tracks_start_rest()
+    {
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        Assert.Equal(0, svc.ActiveRestDurationSeconds);
+
+        svc.StartRest(45);
+        Assert.Equal(45, svc.ActiveRestDurationSeconds);
+
+        svc.SkipRest();
+        Assert.Equal(0, svc.ActiveRestDurationSeconds);
+    }
+
+    [Fact]
     public void TryUndoLastSet_removes_last_completion()
     {
         var clock = new ManualTimeProvider();

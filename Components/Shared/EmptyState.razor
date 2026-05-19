@@ -1,0 +1,22 @@
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8 px-4">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <MudIcon Icon="@Icon" Size="Size.Large" Color="Color.Primary" Class="mb-2" Style="opacity:0.5; font-size:3rem;" />
+    }
+    <MudText Typo="Typo.body1" Align="Align.Center" Class="mud-text-secondary">@Message</MudText>
+    @if (ChildContent != null)
+    {
+        <div class="mt-3">@ChildContent</div>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string Message { get; set; } = "";
+
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Outlined.Inbox;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

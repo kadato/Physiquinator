@@ -41,6 +41,9 @@ public class WorkoutSessionService : IDisposable
     public bool IsResting => _isResting;
     public bool IsRestPaused => _isResting && _userPaused;
 
+    /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
+    public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
+
     /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
     public event EventHandler? RestCompletedWhileBackground;
 
@@ -50,6 +53,15 @@ public class WorkoutSessionService : IDisposable
     {
         CurrentPlan = plan;
         CompletedSets.Clear();
+        StopRest();
+    }
+
+    /// <summary>Restores in-memory workout state from persisted set logs.</summary>
+    public void ResumeWorkout(WorkoutPlan plan, IEnumerable<SetCompletion> completedSets)
+    {
+        CurrentPlan = plan;
+        CompletedSets.Clear();
+        CompletedSets.AddRange(completedSets);
         StopRest();
     }
 

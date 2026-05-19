@@ -1,0 +1,38 @@
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+    @if (ShowBack)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                       aria-label="Back"
+                       OnClick="OnBackClick" />
+    }
+    <MudText Typo="Typo.h5" Class="flex-grow-1">@Title</MudText>
+    @if (ChildContent != null)
+    {
+        <MudStack Row="true" Spacing="1">@ChildContent</MudStack>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public bool ShowBack { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    private async Task OnBackClick()
+    {
+        if (OnBack.HasDelegate)
+            await OnBack.InvokeAsync();
+        else
+            Navigation.NavigateTo("/");
+    }
+}

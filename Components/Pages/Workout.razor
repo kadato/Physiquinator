@@ -5,218 +5,157 @@
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
 @implements IAsyncDisposable
 
-<div class="mb-3 mt-3">
-    <a href="/" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-2"></i>Back to Home
-    </a>
-</div>
-
-<h1><i class="bi bi-fire me-2"></i>@(SessionService.CurrentPlan?.Name ?? "Workout")</h1>
+<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkout" />
 
 @if (SessionService.CurrentPlan == null)
 {
-    <div class="text-center py-5">
-        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: var(--tn-warning); opacity: 0.5;"></i>
-        <p class="mt-3">No active workout. <a href="/">Go to home</a> and start a plan.</p>
-    </div>
+    <EmptyState Message="No active workout. Start a plan from home."
+                Icon="@Icons.Material.Outlined.Warning">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">Go home</MudButton>
+    </EmptyState>
 }
 else
 {
-    <div class="workout-timer-section mb-4">
+    <MudStack Spacing="3" Class="app-page-with-actions">
         @if (SessionService.IsResting || _isRestComplete)
         {
-            <div class="rest-timer card @(_isRestComplete ? "rest-complete-pulse rest-timer--complete" : "")">
-                <div class="card-body text-center py-4 px-3">
+            <div class="rest-timer-sticky">
+            <MudPaper Class="@RestTimerPanelClass" Elevation="2">
+                <MudStack AlignItems="AlignItems.Center" Spacing="2">
                     @if (_isRestComplete)
                     {
-                        <div class="rest-complete-banner mb-3" role="status" aria-live="assertive">
-                            <span class="rest-complete-banner__label">Rest complete</span>
-                            <span class="rest-complete-banner__go">Ready for your next set</span>
-                        </div>
+                        <MudAlert Severity="Severity.Success" Class="rest-timer-alert" Dense="true" role="status" aria-live="assertive">
+                            Rest complete — ready for your next set
+                        </MudAlert>
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Style="font-size:3rem;" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Done</MudButton>
                     }
-                    <p class="mb-2 text-uppercase fw-bold rest-timer-title @(_isRestComplete ? "rest-timer-title--complete" : "")">
-                        <i class="bi @(_isRestComplete ? "bi-bell-fill" : "bi-hourglass-split") me-2"></i>@(_isRestComplete ? "Time's up" : "Rest time")
-                    </p>
-                    <p class="mb-4 rest-timer-digits @(_isRestComplete ? "rest-timer-digits--complete" : "")" aria-live="polite">@FormatTime(SessionService.RestSecondsRemaining)</p>
-                    <div class="d-flex gap-2 justify-content-center flex-wrap rest-timer-actions">
-                        @if (SessionService.IsRestPaused)
-                        {
-                            <button class="btn btn-success" @onclick="ResumeRest" disabled="@RestTimerActionsDisabled">
-                                <i class="bi bi-play-fill me-2"></i>Resume
-                            </button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-pause" @onclick="PauseRest" disabled="@RestTimerActionsDisabled">
-                                <i class="bi bi-pause-fill me-2"></i>Pause
-                            </button>
-                        }
-                            <button class="btn btn-outline-primary" @onclick="ResetRest">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Reset
-                        </button>
-                        <button class="btn btn-outline-secondary" @onclick="SkipRest">
-                            <i class="bi bi-skip-forward-fill me-2"></i>@(_isRestComplete ? "Done" : "Skip")
-                        </button>
-                    </div>
-                </div>
+                    else
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Primary" Size="Size.Small" />
+                            <MudText Typo="Typo.overline">Rest time</MudText>
+                        </MudStack>
+                        <div class="rest-timer-ring" aria-live="polite">
+                            <MudProgressCircular Value="@RestProgressValue"
+                                                   Color="@RestProgressColor"
+                                                   Size="Size.Large"
+                                                   StrokeWidth="6">
+                                <MudText Typo="Typo.h4" Class="rest-timer-digits">
+                                    @FormatTime(SessionService.RestSecondsRemaining)
+                                </MudText>
+                            </MudProgressCircular>
+                        </div>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1">
+                            @if (SessionService.IsRestPaused)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                               Color="Color.Success"
+                                               aria-label="Resume rest"
+                                               OnClick="ResumeRest" />
+                            }
+                            else
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Pause"
+                                               Color="Color.Info"
+                                               aria-label="Pause rest"
+                                               OnClick="PauseRest" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                                           Color="Color.Default"
+                                           aria-label="Reset rest"
+                                           OnClick="ResetRest" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudPaper>
             </div>
         }
-    </div>
 
-    <div class="row g-4 exercise-layout">
-        <div class="col-lg-6 completed-section">
-            <div class="d-flex align-items-center mb-3">
-                <h2 class="h5 mb-0 text-success">
-                    <i class="bi bi-check-circle-fill me-2"></i>Completed
-                </h2>
-            </div>
-            <div class="exercise-panels">
+        <MudGrid Spacing="3" Class="workout-exercise-layout">
+            <MudItem xs="12" lg="6" Class="workout-completed-section">
+                <MudText Typo="Typo.h6" Color="Color.Success" Class="mb-2">Completed</MudText>
                 @foreach (var item in DoneExercises)
                 {
-                    <div class="card mb-3" @key="item.ExerciseIndex">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-2">
-                                        <i class="bi bi-trophy-fill text-success me-2"></i>@item.ExerciseName
-                                    </h5>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar bg-success" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%"></div>
-                                        </div>
-                                        <span class="badge bg-success">
-                                            @item.CompletedSets/@item.TotalSets
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <MudCard Class="mb-2" @key="item.ExerciseIndex">
+                        <MudCardContent>
+                            <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+                                <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success">@item.CompletedSets/@item.TotalSets</MudChip>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
                 }
                 @if (!DoneExercises.Any())
                 {
-                    <div class="text-center py-4">
-                        <i class="bi bi-circle" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.3;"></i>
-                        <p class="text-muted mt-3">Complete a set to see it here.</p>
-                    </div>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">Complete a set to see it here.</MudText>
                 }
-            </div>
-        </div>
+            </MudItem>
 
-        <div class="col-lg-6 upcoming-section">
-            <div class="d-flex align-items-center mb-3">
-                <h2 class="h5 mb-0">
-                    <i class="bi bi-lightning-charge-fill me-2" style="color: var(--tn-accent);"></i>Up Next
-                </h2>
-            </div>
-            <div class="exercise-panels">
+            <MudItem xs="12" lg="6" Class="workout-upcoming-section">
+                <MudText Typo="Typo.h6" Class="mb-2">Up next</MudText>
                 @foreach (var item in UpcomingExercises)
                 {
-                    <div class="card mb-3" @key="item.ExerciseIndex">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                <div class="flex-grow-1 mb-2">
-                                    <h5 class="card-title mb-2">
-                                        <i class="bi bi-dot me-1" style="color: var(--tn-accent); font-size: 1.5rem;"></i>@item.ExerciseName
-                                    </h5>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress flex-grow-1 me-3" style="height: 8px;">
-                                            <div class="progress-bar" style="width: @GetProgressPercentage(item.CompletedSets, item.TotalSets)%; background: linear-gradient(135deg, var(--tn-accent) 0%, var(--tn-accent-strong) 100%);"></div>
-                                        </div>
-                                        <span class="badge" style="background: linear-gradient(135deg, var(--tn-accent) 0%, var(--tn-accent-strong) 100%);">
-                                            @item.CompletedSets/@item.TotalSets
-                                        </span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary w-100" @onclick="async () => await OpenSetLogModalAsync(item.ExerciseIndex)" disabled="@CompleteSetButtonDisabled">
-                                    <i class="bi bi-check2-circle me-2"></i>Complete Set @(item.CompletedSets + 1)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <MudCard Class="mb-2" @key="item.ExerciseIndex">
+                        <MudCardContent>
+                            <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2 mb-3">
+                                <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@item.CompletedSets/@item.TotalSets</MudChip>
+                            </MudStack>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       OnClick="@(() => OpenSetLogModalAsync(item.ExerciseIndex))"
+                                       Disabled="@CompleteSetButtonDisabled">
+                                Complete set @(item.CompletedSets + 1)
+                            </MudButton>
+                        </MudCardContent>
+                    </MudCard>
                 }
                 @if (!UpcomingExercises.Any() && DoneExercises.Any())
                 {
-                    <div class="text-center py-5 workout-complete-celebration">
-                        <i class="bi bi-trophy-fill" style="font-size: 4rem; color: var(--tn-success);"></i>
-                        <h3 class="mt-3" style="color: var(--tn-success);">Workout Complete!</h3>
-                        <p class="text-muted">Great work! All sets completed.</p>
-                        <div class="confetti-container"></div>
-                    </div>
+                    <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete! Great work.</MudAlert>
                 }
                 @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
-                    <div class="text-center py-4">
-                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--tn-accent); opacity: 0.4;"></i>
-                        <p class="text-muted mt-3">No sets in this plan.</p>
-                    </div>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">No sets in this plan.</MudText>
                 }
-            </div>
-        </div>
-    </div>
+            </MudItem>
+        </MudGrid>
 
-    @if (_showSetLogModal)
-    {
-        <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Log set</h5>
-                        <button type="button" class="btn-close" @onclick="CancelSetLogModal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label">Reps</label>
-                                <InputNumber class="form-control" @bind-Value="_modalReps" />
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Weight (kg)</label>
-                                <InputNumber class="form-control" @bind-Value="_modalWeightKg" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelSetLogModal">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="ConfirmSetLogAsync" disabled="@ConfirmSetLogButtonDisabled">
-                            <i class="bi bi-check2-circle me-1"></i>Complete set
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
-    <div class="mt-5 pt-4 border-top action-buttons">
-        <button type="button" class="btn btn-outline-secondary" @onclick="UndoLastSetAsync" disabled="@UndoLastSetButtonDisabled">
-            <i class="bi bi-arrow-counterclockwise me-2"></i>Undo last set
-        </button>
-        <button class="btn btn-outline-danger" @onclick="EndWorkout">
-            <i class="bi bi-stop-circle me-2"></i>End Workout
-        </button>
-        <a href="/" class="btn btn-link">
-            <i class="bi bi-house-fill me-2"></i>Back to Home
-        </a>
-    </div>
+        <MudDivider Class="my-2" />
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Justify="Justify.Center">
+            <MudButton Variant="Variant.Outlined" OnClick="UndoLastSetAsync" Disabled="@UndoLastSetButtonDisabled">Undo last set</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="EndWorkoutClick">End workout</MudButton>
+            <MudButton Variant="Variant.Text" Href="/">Home</MudButton>
+        </MudStack>
+    </MudStack>
 }
+
 
 @code {
     [Parameter]
     public Guid PlanId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "forceNew")]
+    public bool ForceNew { get; set; }
+
     private bool _isRestComplete;
+    private Guid? _loadedPlanId;
+    private bool _loadedForceNew;
     private IJSObjectReference? _audioModule;
     private bool _isCompleting;
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private string? _historySessionId;
-    private bool _showSetLogModal;
     private bool _openingSetLogModal;
     private int? _pendingExerciseIndex;
-    private int? _modalReps;
-    private double? _modalWeightKg;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -236,28 +175,52 @@ else
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
 
-        var plan = await PlanService.GetPlanAsync(PlanId);
-        if (!_disposed && plan != null)
-        {
-            SessionService.StartWorkout(plan);
-            await RestNotifications.EnsurePermissionAsync();
-            var snapshot = PlanService.SerializePlanToJson(plan);
-            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
-        }
+        await EnsureWorkoutStartedAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
         if (_disposed) return;
 
+        if (_loadedPlanId == PlanId && _loadedForceNew == ForceNew)
+            return;
+
+        _loadedPlanId = PlanId;
+        _loadedForceNew = ForceNew;
+        await EnsureWorkoutStartedAsync();
+    }
+
+    private async Task EnsureWorkoutStartedAsync()
+    {
         var plan = await PlanService.GetPlanAsync(PlanId);
-        if (plan != null && SessionService.CurrentPlan?.Id != plan.Id)
+        if (_disposed || plan == null)
+            return;
+
+        await RestNotifications.EnsurePermissionAsync();
+
+        if (!ForceNew)
         {
-            SessionService.StartWorkout(plan);
-            await RestNotifications.EnsurePermissionAsync();
-            var snapshot = PlanService.SerializePlanToJson(plan);
-            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
+            var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+            if (open != null)
+            {
+                var workoutPlan = WorkoutHistoryRepository.TryParsePlanSnapshot(open.PlanSnapshotJson) ?? plan;
+                var sets = await HistoryRepository.GetSetsForSessionAsync(open.Id);
+                var completions = sets.Select(s => new SetCompletion(s.ExerciseIndex, s.SetIndex));
+                SessionService.ResumeWorkout(workoutPlan, completions);
+                _historySessionId = open.Id;
+                return;
+            }
         }
+        else
+        {
+            var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+            if (open != null)
+                await HistoryRepository.EndSessionAsync(open.Id);
+        }
+
+        SessionService.StartWorkout(plan);
+        var snapshot = PlanService.SerializePlanToJson(plan);
+        _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
     }
 
     private List<ExerciseProgress> GetExerciseProgress(bool completed)
@@ -296,18 +259,60 @@ else
         return list;
     }
 
-    private bool RestTimerActionsDisabled => _isRestComplete;
+    private string RestTimerPanelClass =>
+        _isRestComplete ? "pa-4 rest-timer-panel rest-timer-panel--complete" : "pa-4 rest-timer-panel";
 
-    private bool CompleteSetButtonDisabled => _isCompleting || _showSetLogModal || _openingSetLogModal;
+    private double RestProgressValue
+    {
+        get
+        {
+            var total = SessionService.ActiveRestDurationSeconds;
+            if (total <= 0) return 0;
+            var elapsed = total - SessionService.RestSecondsRemaining;
+            return Math.Clamp(elapsed * 100.0 / total, 0, 100);
+        }
+    }
 
-    private bool ConfirmSetLogButtonDisabled => _isCompleting;
+    private Color RestProgressColor =>
+        !_isRestComplete && SessionService.RestSecondsRemaining <= 3
+            ? Color.Warning
+            : Color.Primary;
+
+    private bool CompleteSetButtonDisabled => _isCompleting || _openingSetLogModal;
 
     private bool UndoLastSetButtonDisabled =>
-        !SessionService.CompletedSets.Any() || _isCompleting || _showSetLogModal || _openingSetLogModal;
+        !SessionService.CompletedSets.Any() || _isCompleting || _openingSetLogModal;
+
+    private async Task ConfirmLeaveWorkout()
+    {
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Leave workout?",
+            "Your progress is saved. End this session and go home?",
+            confirmText: "Leave",
+            confirmColor: Color.Primary);
+        if (confirmed)
+            await EndWorkout();
+    }
+
+    private async Task EndWorkoutClick()
+    {
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "End workout?",
+            "Save this session and return home?",
+            confirmText: "End",
+            confirmColor: Color.Error);
+        if (confirmed)
+            await EndWorkout();
+    }
+
+    private static double GetProgressValue(int completed, int total) =>
+        total == 0 ? 0 : (completed * 100.0) / total;
 
     private async Task OpenSetLogModalAsync(int exerciseIndex)
     {
-        if (_disposed || _openingSetLogModal || _showSetLogModal) return;
+        if (_disposed || _openingSetLogModal) return;
 
         var plan = SessionService.CurrentPlan;
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
@@ -321,42 +326,40 @@ else
         try
         {
             var last = await HistoryRepository.GetLatestSetMetricsForExerciseAsync(plan.Id, exercise.Name);
-            _modalReps = last?.Reps ?? exercise.DefaultReps;
-            _modalWeightKg = last?.WeightKg ?? exercise.DefaultWeightKg;
+            var modalReps = last?.Reps ?? exercise.DefaultReps;
+            var modalWeightKg = last?.WeightKg ?? exercise.DefaultWeightKg;
+
+            _openingSetLogModal = false;
+
+            var parameters = new DialogParameters<SetLogDialog>
+            {
+                { x => x.InitialReps, modalReps },
+                { x => x.InitialWeightKg, modalWeightKg },
+                { x => x.ConfirmDisabled, _isCompleting },
+            };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+            var dialog = await DialogService.ShowAsync<SetLogDialog>("Log set", parameters, options);
+            var result = await dialog.Result;
+            _pendingExerciseIndex = null;
+            if (result is { Canceled: false } && result.Data is ValueTuple<int?, double?> data)
+                await CompleteNextSet(exerciseIndex, data.Item1, data.Item2);
         }
         catch (Exception caught)
         {
             System.Diagnostics.Debug.WriteLine($"GetLatestSetMetricsForExercise error: {caught}");
-            _modalReps = exercise.DefaultReps;
-            _modalWeightKg = exercise.DefaultWeightKg;
+            _openingSetLogModal = false;
+            _pendingExerciseIndex = null;
         }
         finally
         {
             _openingSetLogModal = false;
-            _showSetLogModal = true;
             await SafeStateHasChangedAsync();
         }
     }
 
-    private void CancelSetLogModal()
-    {
-        _showSetLogModal = false;
-        _pendingExerciseIndex = null;
-    }
-
-    private async Task ConfirmSetLogAsync()
-    {
-        if (_pendingExerciseIndex is not int ei) return;
-        var reps = _modalReps;
-        var weight = _modalWeightKg;
-        _showSetLogModal = false;
-        _pendingExerciseIndex = null;
-        await CompleteNextSet(ei, reps, weight);
-    }
-
     private async Task UndoLastSetAsync()
     {
-        if (_disposed || _isCompleting || _showSetLogModal || _openingSetLogModal) return;
+        if (_disposed || _isCompleting || _openingSetLogModal) return;
         if (!SessionService.TryUndoLastSet(out _)) return;
 
         await StopJsTimerAsync();
@@ -689,14 +692,7 @@ else
     {
         var m = totalSeconds / 60;
         var s = totalSeconds % 60;
-        return $"{m:D1}:{s:D2}";
-    }
-
-    private static string GetProgressPercentage(int completed, int total)
-    {
-        if (total == 0) return "0";
-        var percentage = (completed * 100.0) / total;
-        return percentage.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+        return $"{m:D2}:{s:D2}";
     }
 
     public async ValueTask DisposeAsync()

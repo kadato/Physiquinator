@@ -1,102 +1,214 @@
 @page "/"
+@using Physiquinator.Formatting
 @inject WorkoutPlanService PlanService
+@inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject DemoDataSeeder DemoSeeder
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<div class="text-center mb-3 mt-5">
-    <h1><i class="bi bi-lightning-charge-fill"></i> Physiquinator</h1>
-</div>
+<PageTitle>Home</PageTitle>
 
-<div class="mb-4 text-center">
-    <div class="action-buttons">
-        <a href="/plan" class="btn btn-primary btn-lg">
-            <i class="bi bi-plus-circle-fill me-2"></i>New Workout Plan
-        </a>
-        <a href="/history" class="btn btn-outline-secondary btn-lg">
-            <i class="bi bi-clock-history me-2"></i>History
-        </a>
-        <a href="/settings" class="btn btn-outline-secondary btn-lg">
-            <i class="bi bi-gear-fill me-2"></i>Settings
-        </a>
-    </div>
-</div>
+<MudStack Spacing="3" Class="home-page">
+    <header class="home-header">
+        <MudText Typo="Typo.h4" Class="home-header__title">Physiquinator</MudText>
+    </header>
 
-<h2 class="h4 mt-5 mb-3"><i class="bi bi-folder-fill me-2"></i>Your Plans</h2>
-@if (_plans == null)
-{
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    @if (_isLoading)
+    {
+        <LoadingCenter Label="Loading…" />
+    }
+    else
+    {
+    @if (_inProgressSession != null && _inProgressPlanId is { } heroPlanId)
+    {
+        <MudPaper Class="home-hero" Elevation="0">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.caption" Color="Color.Primary" Class="home-hero__label">
+                    In progress
+                </MudText>
+                <MudText Typo="Typo.h6">@_inProgressSession.PlanName</MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Class="home-hero__continue"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="@(() => Navigation.NavigateTo($"/workout/{heroPlanId}"))">
+                    Continue workout
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+
+    @if (_summary != null)
+    {
+        <section class="home-stats-section" aria-label="Quick stats">
+            <div class="home-stats">
+                <MudPaper Class="home-stat" Elevation="0">
+                    <MudText Class="home-stat__value">@_summary.CurrentStreakWorkoutDays</MudText>
+                    <MudText Class="home-stat__label">Streak</MudText>
+                </MudPaper>
+                <MudPaper Class="home-stat" Elevation="0">
+                    <MudText Class="home-stat__value">@_summary.ThisWeekSessionCount</MudText>
+                    <MudText Class="home-stat__label">This week</MudText>
+                </MudPaper>
+                <MudPaper Class="home-stat" Elevation="0">
+                    <MudText Class="home-stat__value home-stat__value--date">@LastSessionLabel</MudText>
+                    <MudText Class="home-stat__label">Last workout</MudText>
+                </MudPaper>
+            </div>
+        </section>
+    }
+
+    <section aria-label="Your plans">
+        <div class="home-plans-header">
+            <MudText Typo="Typo.h6">Your plans</MudText>
+            @if (_plans != null && _plans.Count > 0)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
+            }
         </div>
-    </div>
-}
-else if (!_plans.Any())
-{
-    <div class="text-center py-5">
-        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--tn-accent); opacity: 0.35;"></i>
-        <p class="text-muted mt-3">No plans yet. Create one to get started.</p>
-    </div>
-}
-else
-{
-    <div class="row g-3">
-        @foreach (var plan in _plans.OrderByDescending(p => p.CreatedAt))
+
+        @if (_plans == null || !_plans.Any())
         {
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title mb-2">
-                            <i class="bi bi-clipboard-check me-2"></i>@plan.Name
-                        </h5>
-                        <p class="card-text text-muted mb-3">
-                            <i class="bi bi-list-ul me-1"></i>@plan.Exercises.Count exercise(s)
-                        </p>
-                        <div class="mt-auto action-buttons">
-                            <a href="/plan/@plan.Id" class="btn btn-outline-secondary btn-sm flex-fill">
-                                <i class="bi bi-pencil-fill me-1"></i>Edit
-                            </a>
-                            <a href="/workout/@plan.Id" class="btn btn-start btn-sm flex-fill">
-                                <i class="bi bi-play-fill me-1"></i>Start
-                            </a>
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => ExportSinglePlan(plan.Id, plan.Name)" title="Export">
-                                <i class="bi bi-upload"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeletePlan(plan.Id, plan.Name)">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <EmptyState Message="No plans yet. Tap New plan below to create your first workout plan."
+                        Icon="@Icons.Material.Outlined.FitnessCenter">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/plan">Create plan</MudButton>
+            </EmptyState>
+        }
+        else
+        {
+            <div class="home-plan-list">
+                @foreach (var plan in _plans.OrderByDescending(p => p.CreatedAt))
+                {
+                    <PlanCard PlanName="@plan.Name"
+                              ExerciseCount="@plan.Exercises.Count"
+                              OnStart="@(() => StartWorkoutAsync(plan.Id, plan.Name))"
+                              OnEdit="@(() => Navigation.NavigateTo($"/plan/{plan.Id}"))"
+                              OnExport="@(() => ExportSinglePlan(plan.Id, plan.Name))"
+                              OnDelete="@(() => DeletePlan(plan.Id, plan.Name))" />
+                }
             </div>
         }
-    </div>
-}
+    </section>
+    }
+</MudStack>
 
 @code {
+    private const int HomeStatsWeeks = 12;
+
     private List<WorkoutPlan>? _plans;
+    private WorkoutSessionLogEntity? _inProgressSession;
+    private Guid? _inProgressPlanId;
+    private WorkoutDaySummary? _summary;
+    private WorkoutSessionLogEntity? _lastSession;
+    private bool _isLoading = true;
+
+    private string LastSessionLabel =>
+        _lastSession == null
+            ? "—"
+            : UiDateFormats.LocalDateCompact(_lastSession.StartedAtUtc);
 
     protected override async Task OnInitializedAsync()
     {
-        // One-time sample plans on first empty library, then demo history when logs are empty (see DemoDataSeeder).
         await DemoSeeder.SeedDemoDataIfNeededAsync();
         await DemoSeeder.SeedDemoHistoryIfNeededAsync();
 
-        _plans = await PlanService.GetAllPlansAsync();
+        var endLocal = DateOnly.FromDateTime(DateTime.Today);
+        var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(endLocal, HomeStatsWeeks);
+        var gridStart = ActivityHeatmap.GetMondayOfWeek(endLocal).AddDays(-7 * (HomeStatsWeeks - 1));
+
+        var plansTask = PlanService.GetAllPlansAsync();
+        var activityTask = HistoryRepository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
+        var recentTask = HistoryRepository.GetRecentSessionsAsync(1);
+        var inProgressTask = HistoryRepository.GetAnyInProgressSessionAsync();
+
+        await Task.WhenAll(plansTask, activityTask, recentTask, inProgressTask);
+
+        _plans = await plansTask;
+        var activityByDay = await activityTask;
+        _summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart);
+        var recent = await recentTask;
+        _lastSession = recent.FirstOrDefault();
+        _inProgressSession = await inProgressTask;
+        _inProgressPlanId = _inProgressSession != null && Guid.TryParse(_inProgressSession.WorkoutPlanId, out var g)
+            ? g
+            : null;
+        _isLoading = false;
+    }
+
+    private async Task StartWorkoutAsync(Guid planId, string planName)
+    {
+        var open = await HistoryRepository.GetInProgressSessionForPlanAsync(planId);
+        if (open != null)
+        {
+            var continueExisting = await ConfirmDialogService.ConfirmAsync(
+                DialogService,
+                "Workout in progress",
+                $"You have an unfinished session for '{planName}'.",
+                confirmText: "Continue",
+                confirmColor: Color.Primary,
+                cancelText: "Start new");
+
+            if (continueExisting)
+            {
+                Navigation.NavigateTo($"/workout/{planId}");
+                return;
+            }
+
+            await HistoryRepository.EndSessionAsync(open.Id);
+            await RefreshInProgressAsync();
+            Navigation.NavigateTo($"/workout/{planId}?forceNew=true");
+            return;
+        }
+
+        var anyOpen = await HistoryRepository.GetAnyInProgressSessionAsync();
+        if (anyOpen != null && Guid.TryParse(anyOpen.WorkoutPlanId, out var otherPlanId) && otherPlanId != planId)
+        {
+            var continueOther = await ConfirmDialogService.ConfirmAsync(
+                DialogService,
+                "Another workout in progress",
+                $"You have an unfinished session for '{anyOpen.PlanName}'. Continue that workout?",
+                confirmText: "Continue",
+                confirmColor: Color.Primary,
+                cancelText: "Start new");
+
+            if (continueOther)
+            {
+                Navigation.NavigateTo($"/workout/{otherPlanId}");
+                return;
+            }
+
+            await HistoryRepository.EndSessionAsync(anyOpen.Id);
+            await RefreshInProgressAsync();
+        }
+
+        Navigation.NavigateTo($"/workout/{planId}");
+    }
+
+    private async Task RefreshInProgressAsync()
+    {
+        _inProgressSession = await HistoryRepository.GetAnyInProgressSessionAsync();
+        _inProgressPlanId = _inProgressSession != null && Guid.TryParse(_inProgressSession.WorkoutPlanId, out var g)
+            ? g
+            : null;
     }
 
     private async Task DeletePlan(Guid planId, string planName)
     {
-        var confirmed = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
-            "Delete Plan",
-            $"Are you sure you want to delete '{planName}'? This action cannot be undone.",
-            "Delete", "Cancel");
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Delete plan",
+            $"Delete '{planName}'? This cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
 
-        if (confirmed)
-        {
-            await PlanService.DeletePlanAsync(planId);
-            _plans = await PlanService.GetAllPlansAsync();
-            StateHasChanged();
-        }
+        if (!confirmed)
+            return;
+
+        await PlanService.DeletePlanAsync(planId);
+        _plans = await PlanService.GetAllPlansAsync();
+        Snackbar.Add("Plan deleted.", Severity.Success);
     }
 
     private async Task ExportSinglePlan(Guid planId, string planName)
@@ -106,21 +218,19 @@ else
             var json = await PlanService.ExportPlanToJsonAsync(planId);
             var safeFileName = string.Join("_", planName.Split(Path.GetInvalidFileNameChars()));
             var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-
             await SaveFile(fileName, json);
-            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"'{planName}' exported successfully!", "OK");
+            Snackbar.Add($"'{planName}' exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            await Application.Current!.Windows[0].Page!.DisplayAlertAsync("Physiquinator", $"Export failed: {ex.Message}", "OK");
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
         }
     }
 
-    private async Task SaveFile(string fileName, string content)
+    private static async Task SaveFile(string fileName, string content)
     {
         var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
         await File.WriteAllTextAsync(filePath, content);
-
         await Share.RequestAsync(new ShareFileRequest
         {
             Title = "Export Workout Plan",

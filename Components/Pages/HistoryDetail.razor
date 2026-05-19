@@ -1,146 +1,120 @@
 @page "/history/{SessionId}"
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
 
-<div class="mb-3 mt-3 d-flex flex-wrap gap-2">
-    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHistoryList">
-        <i class="bi bi-arrow-left me-1"></i>All sessions
-    </button>
-    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="GoHome">
-        <i class="bi bi-house me-1"></i>Home
-    </button>
-</div>
+<PageHeader Title="Session" OnBack="GoHistoryList">
+    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="GoHome">Home</MudButton>
+</PageHeader>
 
 @if (!_ready)
 {
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading</span>
-        </div>
-    </div>
+    <LoadingCenter />
 }
 else if (_session == null)
 {
-    <p class="text-danger mt-3">This workout session was not found.</p>
+    <MudAlert Severity="Severity.Error">This workout session was not found.</MudAlert>
 }
 else
 {
-    <div class="card mb-3">
-        <div class="card-header py-2">
-            <span class="small fw-semibold"><i class="bi bi-clipboard2-data me-1"></i>Workout</span>
-        </div>
-        <div class="card-body py-3">
-            <h1 class="h4 mb-2">@_session.PlanName</h1>
-            <p class="text-muted small mb-1">
-                <i class="bi bi-clock me-1"></i>Started @UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)
-            </p>
+    <MudStack Spacing="3" Class="app-page-with-actions">
+        @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="@(() => ContinueWorkout(activePlanId))">
+                Continue workout
+            </MudButton>
+        }
+
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudText Typo="Typo.h5">@_session.PlanName</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Started @UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)
+            </MudText>
             @if (_session.EndedAtUtc != null)
             {
-                <p class="text-muted small mb-0">
-                    <i class="bi bi-check2-circle me-1"></i>Ended @UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)
-                </p>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    Ended @UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)
+                </MudText>
             }
             else
             {
-                <p class="text-muted small mb-0"><i class="bi bi-hourglass-split me-1"></i>In progress</p>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">In progress</MudText>
             }
             @if (_planGuid is { } planId)
             {
-                <div class="mt-3 pt-3 border-top">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => GoPlan(planId)">
-                        <i class="bi bi-pencil-square me-1"></i>Open plan
-                    </button>
-                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-2" OnClick="@(() => GoPlan(planId))">
+                    Open plan
+                </MudButton>
             }
-        </div>
-    </div>
+        </MudPaper>
 
-    @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
-    {
-        <div class="card mb-3">
-            <div class="card-header py-2">
-                <span class="small fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i>Progress by exercise</span>
-            </div>
-            <div class="card-body py-3">
-                <p class="text-muted small mb-3">Open a chart for any exercise from this session.</p>
-                <div class="d-flex flex-wrap gap-2">
+        @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-2">Progress by exercise</MudText>
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
                     @foreach (var name in _distinctExerciseNames)
                     {
                         var exercise = name;
-                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" title="@exercise" @onclick="() => GoExerciseProgress(pg, exercise)">
-                            <i class="bi bi-bar-chart-line-fill me-1"></i>@exercise
-                        </button>
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => GoExerciseProgress(pg, exercise))">
+                            @exercise
+                        </MudChip>
                     }
-                </div>
-            </div>
-        </div>
-    }
+                </MudStack>
+            </MudPaper>
+        }
 
-    @if (_snapshot != null)
-    {
-        <div class="card mb-3">
-            <div class="card-header py-2">
-                <span class="small fw-semibold"><i class="bi bi-camera-fill me-1"></i>Plan when you trained</span>
-            </div>
-            <div class="card-body py-3">
+        @if (_snapshot != null)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-2">Plan when you trained</MudText>
                 @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
                 {
-                    <div class="history-detail-snapshot-row small d-flex flex-wrap justify-content-between align-items-baseline column-gap-2 row-gap-1">
-                        <span class="fw-medium">@ex.Name</span>
-                        <span class="text-muted">@ex.SetCount sets · @ex.RestIntervalSeconds s rest</span>
-                    </div>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                        <MudText Typo="Typo.body2">@ex.Name</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@ex.SetCount sets · @ex.RestIntervalSeconds s rest</MudText>
+                    </MudStack>
                 }
-            </div>
-        </div>
-    }
+            </MudPaper>
+        }
 
-    @if (!_setRows.Any())
-    {
-        <div class="card mb-3">
-            <div class="card-body py-4 text-center text-muted small mb-0">No sets logged for this session.</div>
-        </div>
-    }
-    else
-    {
-        <div class="card mb-3 history-detail-table-card overflow-hidden">
-            <div class="card-header py-2">
-                <span class="small fw-semibold"><i class="bi bi-list-ul me-1"></i>Sets</span>
-            </div>
-            <div class="table-responsive history-table-wrap history-detail-sets-table">
-                <table class="table table-sm table-striped table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Exercise</th>
-                            <th>Set</th>
-                            <th>Reps</th>
-                            <th>kg</th>
-                            <th>Time</th>
-                            <th><abbr title="Rest after previous set">Rest</abbr></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in _setRows)
-                        {
-                            <tr>
-                                <td>@row.Log.ExerciseName</td>
-                                <td>@(row.Log.SetIndex + 1)</td>
-                                <td>@(row.Log.Reps?.ToString() ?? "—")</td>
-                                <td>@(row.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</td>
-                                <td class="text-nowrap small">@UiDateFormats.LocalDateTimeCompact(row.Log.CompletedAtUtc)</td>
-                                <td class="small text-muted">@(row.RestAfterPrevious ?? "—")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+        @if (!_setRows.Any())
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No sets logged for this session.</MudText>
+        }
+        else
+        {
+            <MudPaper Elevation="1">
+                <MudText Typo="Typo.h6" Class="pa-3 pb-0">Sets</MudText>
+                <MudTable Items="_setRows" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>Exercise</MudTh>
+                        <MudTh>Set</MudTh>
+                        <MudTh>Reps</MudTh>
+                        <MudTh>kg</MudTh>
+                        <MudTh>Time</MudTh>
+                        <MudTh>Rest</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Log.ExerciseName</MudTd>
+                        <MudTd>@(context.Log.SetIndex + 1)</MudTd>
+                        <MudTd>@(context.Log.Reps?.ToString() ?? "—")</MudTd>
+                        <MudTd>@(context.Log.WeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
+                        <MudTd>@UiDateFormats.LocalDateTimeCompact(context.Log.CompletedAtUtc)</MudTd>
+                        <MudTd>@(context.RestAfterPrevious ?? "—")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        }
 
-    <div class="mt-4 pt-3 border-top">
-        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="DeleteSessionClick">
-            <i class="bi bi-trash me-1"></i>Delete this workout
-        </button>
-    </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteSessionClick">
+            Delete this workout
+        </MudButton>
+    </MudStack>
 }
 
 @code {
@@ -161,6 +135,8 @@ else
     private void GoHome() => Navigation.NavigateTo("/");
 
     private void GoPlan(Guid planId) => Navigation.NavigateTo($"/plan/{planId}");
+
+    private void ContinueWorkout(Guid planId) => Navigation.NavigateTo($"/workout/{planId}");
 
     private void GoExerciseProgress(Guid planId, string exerciseName) =>
         Navigation.NavigateTo($"/history/exercise-progress/{planId}/{Uri.EscapeDataString(exerciseName)}");
@@ -221,14 +197,12 @@ else
     {
         if (_session == null) return;
 
-        var page = Application.Current?.Windows.FirstOrDefault()?.Page;
-        if (page == null) return;
-
-        var ok = await page.DisplayAlertAsync(
+        var ok = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
             "Delete workout",
             "Remove this session and all logged sets? This cannot be undone.",
-            "Delete",
-            "Cancel");
+            confirmText: "Delete",
+            confirmColor: Color.Error);
 
         if (!ok) return;
 

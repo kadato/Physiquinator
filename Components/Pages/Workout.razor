@@ -10,7 +10,7 @@
 @inject WorkoutUndoOverlayService UndoOverlay
 @implements IAsyncDisposable
 
-<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkout" />
+<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkoutInProgress" />
 
 @if (SessionService.CurrentPlan == null)
 {
@@ -141,13 +141,21 @@ else
             </MudItem>
         </MudGrid>
 
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Error"
-                   FullWidth="true"
-                   Class="workout-end-btn mt-4"
-                   OnClick="EndWorkoutClick">
-            End workout
-        </MudButton>
+        <MudStack Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       FullWidth="true"
+                       Class="workout-end-btn"
+                       OnClick="EndWorkoutClick">
+                End workout
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       FullWidth="true"
+                       OnClick="DiscardWorkoutClick">
+                Discard workout
+            </MudButton>
+        </MudStack>
     </MudStack>
 
 }
@@ -318,16 +326,27 @@ else
 
     private bool CompleteSetButtonDisabled => _isCompleting || _openingSetLogModal;
 
-    private async Task ConfirmLeaveWorkout()
+    private async Task ConfirmLeaveWorkoutInProgress()
     {
         var confirmed = await ConfirmDialogService.ConfirmAsync(
             DialogService,
             "Leave workout?",
-            "Your progress is saved. End this session and go home?",
+            "Your progress is saved. You can continue this workout from home.",
             confirmText: "Leave",
+            cancelText: "Stay",
             confirmColor: Color.Primary);
         if (confirmed)
-            await EndWorkout();
+            await LeaveWorkoutInProgress();
+    }
+
+    private async Task LeaveWorkoutInProgress()
+    {
+        if (_disposed) return;
+
+        await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
+        SessionService.EndWorkout();
+        Navigation.NavigateTo("/");
     }
 
     private async Task EndWorkoutClick()
@@ -340,6 +359,44 @@ else
             confirmColor: Color.Error);
         if (confirmed)
             await EndWorkout();
+    }
+
+    private async Task DiscardWorkoutClick()
+    {
+        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Discard workout?",
+            $"Remove this in-progress session for '{planName}' and all logged sets? This cannot be undone.",
+            confirmText: "Discard",
+            cancelText: "Cancel",
+            confirmColor: Color.Error);
+        if (confirmed)
+            await DiscardWorkout();
+    }
+
+    private async Task DiscardWorkout()
+    {
+        if (_disposed) return;
+
+        await StopJsTimerAsync();
+        RestNotifications.CancelAllRestNotifications();
+
+        if (_historySessionId != null)
+        {
+            try
+            {
+                await HistoryRepository.DeleteSessionAsync(_historySessionId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"History DeleteSession error: {ex}");
+            }
+        }
+
+        _historySessionId = null;
+        SessionService.EndWorkout();
+        Navigation.NavigateTo("/");
     }
 
     private static double GetProgressValue(int completed, int total) =>
@@ -764,16 +821,6 @@ else
         UndoOverlay.Hide();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         RestNotifications.CancelAllRestNotifications();
-
-        try
-        {
-            await HistoryRepository.EndSessionAsync(_historySessionId);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"History EndSession (dispose) error: {ex}");
-        }
-
         SessionService.CancelRest();
         try
         {

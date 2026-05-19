@@ -2,6 +2,7 @@
 @using Physiquinator.Formatting
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
+@inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
 @inject DemoDataSeeder DemoSeeder
 @inject IDialogService DialogService
@@ -24,9 +25,17 @@
     {
         <MudPaper Class="home-hero" Elevation="0">
             <MudStack Spacing="2">
-                <MudText Typo="Typo.caption" Color="Color.Primary" Class="home-hero__label">
-                    In progress
-                </MudText>
+                <div class="home-hero__header">
+                    <MudText Typo="Typo.caption" Color="Color.Primary" Class="home-hero__label">
+                        In progress
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
+                                   Size="Size.Small"
+                                   Color="Color.Error"
+                                   Class="home-hero__discard"
+                                   aria-label="Discard workout"
+                                   OnClick="DeleteInProgressWorkoutAsync" />
+                </div>
                 <MudText Typo="Typo.h6">@_inProgressSession.PlanName</MudText>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -192,6 +201,27 @@
         _inProgressPlanId = _inProgressSession != null && Guid.TryParse(_inProgressSession.WorkoutPlanId, out var g)
             ? g
             : null;
+    }
+
+    private async Task DeleteInProgressWorkoutAsync()
+    {
+        if (_inProgressSession == null) return;
+
+        var planName = _inProgressSession.PlanName;
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Discard workout",
+            $"Remove the in-progress session for '{planName}' and all logged sets? This cannot be undone.",
+            confirmText: "Discard",
+            cancelText: "Cancel",
+            confirmColor: Color.Error);
+
+        if (!confirmed) return;
+
+        await HistoryRepository.DeleteSessionAsync(_inProgressSession.Id);
+        SessionService.EndWorkout();
+        await RefreshInProgressAsync();
+        Snackbar.Add("Workout discarded.", Severity.Success);
     }
 
     private async Task DeletePlan(Guid planId, string planName)

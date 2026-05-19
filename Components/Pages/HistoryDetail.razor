@@ -101,22 +101,24 @@ else
         }
 
         <AppActionBar AriaLabel="Session actions">
-            @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
-            {
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
+            <div class="app-action-bar__row app-action-bar__row--stacked">
+                @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                               OnClick="@(() => ContinueWorkout(activePlanId))">
+                        Continue workout
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
                            FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.PlayArrow"
-                           OnClick="@(() => ContinueWorkout(activePlanId))">
-                    Continue workout
+                           OnClick="DeleteSessionClick">
+                    Delete this workout
                 </MudButton>
-            }
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Error"
-                       FullWidth="true"
-                       OnClick="DeleteSessionClick">
-                Delete this workout
-            </MudButton>
+            </div>
         </AppActionBar>
     </MudStack>
 }

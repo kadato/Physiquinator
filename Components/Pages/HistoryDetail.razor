@@ -82,14 +82,12 @@ else
                 <MudTable Items="_sets" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
                         <MudTh>Exercise</MudTh>
-                        <MudTh>Set</MudTh>
                         <MudTh>Reps</MudTh>
                         <MudTh>kg</MudTh>
                         <MudTh>Time</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.ExerciseName</MudTd>
-                        <MudTd>@(context.SetIndex + 1)</MudTd>
                         <MudTd>@(context.Reps?.ToString() ?? "—")</MudTd>
                         <MudTd>@(context.WeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
                         <MudTd>@UiDateFormats.LocalTimeOnly(context.CompletedAtUtc)</MudTd>

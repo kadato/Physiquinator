@@ -10,15 +10,18 @@
         </MudButton>
         @if (_editing)
         {
-            <input class="set-metric-stepper__input"
+            <input @ref="_inputRef"
+                   class="set-metric-stepper__input"
                    type="number"
                    inputmode="@InputMode"
                    min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                    step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   @bind="_editText"
+                   placeholder="@PlaceholderText"
+                   @bind="EditText"
                    @bind:event="oninput"
                    @onblur="CommitEdit"
-                   @onkeydown="OnEditKeyDown" />
+                   @onkeydown="OnEditKeyDown"
+                   autofocus />
         }
         else
         {
@@ -66,6 +69,19 @@
 
     private bool _editing;
     private string _editText = "";
+    private ElementReference _inputRef;
+    private bool _shouldFocusInput;
+    private bool _hasTyped;
+
+    private string EditText
+    {
+        get => _editText;
+        set
+        {
+            _editText = value;
+            _hasTyped = true;
+        }
+    }
 
     private string DisplayText
     {
@@ -77,6 +93,35 @@
             return IsInteger
                 ? ((int)Math.Round(Value.Value)).ToString(Format, System.Globalization.CultureInfo.InvariantCulture)
                 : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    private string PlaceholderText
+    {
+        get
+        {
+            if (!Value.HasValue)
+                return "0";
+
+            return IsInteger
+                ? ((int)Math.Round(Value.Value)).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusInput)
+        {
+            _shouldFocusInput = false;
+            try
+            {
+                await _inputRef.FocusAsync();
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 
@@ -93,12 +138,10 @@
 
     private void StartEdit()
     {
-        _editText = Value.HasValue
-            ? (IsInteger
-                ? ((int)Math.Round(Value.Value)).ToString(System.Globalization.CultureInfo.InvariantCulture)
-                : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture))
-            : "0";
+        _editText = "";
+        _hasTyped = false;
         _editing = true;
+        _shouldFocusInput = true;
     }
 
     private async Task CommitEdit()
@@ -107,6 +150,11 @@
             return;
 
         _editing = false;
+        if (!_hasTyped)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_editText))
         {
             await SetValueAsync(null);

@@ -872,6 +872,10 @@ button.heatmap-cell:disabled {
     border-radius: 2px;
 }
 
+.heatmap-today {
+    border: 1.5px solid var(--mud-palette-text-primary) !important;
+}
+
 .heatmap-off {
     background-color: var(--mud-palette-background-gray);
     opacity: 0.62;

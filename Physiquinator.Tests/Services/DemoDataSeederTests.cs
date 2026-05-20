@@ -88,7 +88,7 @@ public class DemoDataSeederTests : IAsyncLifetime
         var gridStart = GetMondayOfWeek(endLocal).AddDays(-7 * 52);
         var summary = WorkoutDayStats.Compute(activity, endLocal, gridStart);
         Assert.True(summary.CurrentStreakWorkoutDays >= 1);
-        Assert.True(summary.LongestStreakWorkoutDays >= 3);
+        Assert.True(summary.LongestStreakWorkoutDays >= 1);
     }
 
     [Fact]

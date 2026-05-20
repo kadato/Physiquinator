@@ -16,8 +16,9 @@
                     var active = count > 0;
                     var title = GetCellTitle(cellDate, active);
                     var isSelected = SelectedDay == cellDate;
+                    var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                     <button type="button"
-                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null)"
+                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null)"
                             title="@title"
                             aria-label="@title"
                             aria-pressed="@(isSelected ? "true" : "false")"
@@ -119,7 +120,9 @@
         if (cellDate > _endLocal)
             return $"{UiDateFormats.DateOnlyCompact(cellDate)} (future)";
         var dayLabel = UiDateFormats.DateOnlyCompact(cellDate);
-        return workedOut ? $"{dayLabel} · workout" : $"{dayLabel} · off";
+        var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
+        var todaySuffix = isToday ? " (today)" : "";
+        return workedOut ? $"{dayLabel}{todaySuffix} · workout" : $"{dayLabel}{todaySuffix} · off";
     }
 
     private async Task OnCellClickAsync(DateOnly cellDate)

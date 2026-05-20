@@ -1,0 +1,51 @@
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Color="Color.Primary" Size="Size.Large" />
+            <MudText Typo="Typo.h5" Class="fw-bold">Welcome to Physiquinator!</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Class="py-2">
+            <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                To help you get started right away, we have seeded a <strong>Demo User</strong> profile with sample workout plans (Push, Pull, Legs) and 1 year of mock workout history.
+            </MudText>
+
+            <MudPaper Class="pa-4" Elevation="0" Style="border-left: 4px solid var(--mud-palette-primary); background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+                <MudStack Spacing="2">
+                    <div class="d-flex align-items-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.GroupAdd" Color="Color.Primary" Size="Size.Medium" />
+                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">Multi-User Profiles</MudText>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        You can create your own clean profile in <strong>Settings</strong>. Each profile operates in its own isolated database with separate plans, progress, and history.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4" Elevation="0" Style="border-left: 4px solid var(--mud-palette-warning); background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+                <MudStack Spacing="2">
+                    <div class="d-flex align-items-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Warning" Size="Size.Medium" />
+                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">Removing Demo Data</MudText>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        When you are ready to start fresh, simply go to <strong>Settings</strong>, switch to your new profile, and delete the <strong>Demo User</strong>.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" FullWidth="true" Class="py-2 mt-2" Style="border-radius: 12px; font-weight: 600; text-transform: none;">
+            Get Started
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private void Close() => MudDialog.Close();
+}

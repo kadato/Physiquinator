@@ -4,8 +4,8 @@ namespace Physiquinator.Data;
 
 public class AppDatabase
 {
-    private readonly SQLiteAsyncConnection _database;
-    private readonly Task _initializationTask;
+    private SQLiteAsyncConnection _database;
+    private Task _initializationTask;
 
     public AppDatabase(string dbPath)
     {
@@ -20,6 +20,24 @@ public class AppDatabase
         await _database.CreateTableAsync<WorkoutSessionLogEntity>();
         await _database.CreateTableAsync<WorkoutSetLogEntity>();
         await MigrateAsync(_database);
+    }
+
+    public async Task SwitchDatabaseAsync(string dbPath)
+    {
+        if (_database != null)
+        {
+            try
+            {
+                await _database.CloseAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // Ignore connection closing errors
+            }
+        }
+        _database = new SQLiteAsyncConnection(dbPath);
+        _initializationTask = InitializeAsync();
+        await _initializationTask.ConfigureAwait(false);
     }
 
     /// <summary>sqlite-net CreateTable does not add columns on existing installs.</summary>

@@ -45,7 +45,9 @@ public static class MauiProgram
 			config.SnackbarConfiguration.PreventDuplicates = true;
 		});
 
-		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "physiquinator.db3");
+		var activeId = Microsoft.Maui.Storage.Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
+		var dbName = string.IsNullOrEmpty(activeId) ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
+		var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbName);
 		builder.Services.AddSingleton(TimeProvider.System);
 		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
 		builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
@@ -62,6 +64,7 @@ public static class MauiProgram
 		builder.Services.AddScoped<Services.ThemeService>();
 		builder.Services.AddScoped<Services.IThemeInitialization>(sp => sp.GetRequiredService<Services.ThemeService>());
 		builder.Services.AddScoped<Services.AppInitializationService>();
+		builder.Services.AddSingleton<Services.UserProfileService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

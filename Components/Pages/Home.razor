@@ -1,11 +1,14 @@
 @page "/"
 @using Physiquinator.Formatting
+@using Physiquinator.Services
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
 @inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject UserProfileService UserProfileService
+@inject IDemoSeedPreferences DemoSeedPreferences
 
 <PageTitle>Home</PageTitle>
 
@@ -262,5 +265,21 @@
             Title = "Export Workout Plan",
             File = new ShareFile(filePath)
         });
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var showModal = DemoSeedPreferences.Get(UserProfileService.ShowFirstTimeSeedModalKey, false);
+            if (showModal)
+            {
+                // Reset the flag immediately to prevent double opens
+                DemoSeedPreferences.Set(UserProfileService.ShowFirstTimeSeedModalKey, false);
+
+                var options = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
+                await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>("Welcome", options);
+            }
+        }
     }
 }

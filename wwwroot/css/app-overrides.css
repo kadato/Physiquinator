@@ -21,6 +21,15 @@ html, body, #app {
     flex-direction: column;
 }
 
+/* Hide scrollbars globally while maintaining scroll functionality */
+* {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+}
+*::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, and Opera */
+}
+
 .app-shell {
     display: flex;
     flex-direction: column;

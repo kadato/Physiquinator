@@ -23,12 +23,15 @@ public class UiDateFormatsTests
     }
 
     [Fact]
-    public void LocalDateChartAxis_MatchesDateOnlyCompact()
+    public void LocalDateChartAxis_AlwaysReturnsMonthAndDay()
     {
-        var utc = DateTime.Today.AddHours(12).ToUniversalTime();
-        var fromChart = UiDateFormats.LocalDateChartAxis(utc);
-        var fromCompact = UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(utc.ToLocalTime()));
-        Assert.Equal(fromCompact, fromChart);
+        var thisYearUtc = DateTime.Today.AddHours(12).ToUniversalTime();
+        var fromChartThisYear = UiDateFormats.LocalDateChartAxis(thisYearUtc);
+        Assert.Equal(thisYearUtc.ToLocalTime().ToString("MM-dd", CultureInfo.InvariantCulture), fromChartThisYear);
+
+        var lastYearUtc = DateTime.Today.AddYears(-1).AddHours(12).ToUniversalTime();
+        var fromChartLastYear = UiDateFormats.LocalDateChartAxis(lastYearUtc);
+        Assert.Equal(lastYearUtc.ToLocalTime().ToString("MM-dd", CultureInfo.InvariantCulture), fromChartLastYear);
     }
 
     [Fact]

@@ -36,7 +36,7 @@ public static class UiDateFormats
         return date.ToString("yyyy-MM-dd", Invariant);
     }
 
-    /// <summary>Minimal date for chart X-axis (same rules as <see cref="DateOnlyCompact"/>).</summary>
+    /// <summary>Minimal date for chart X-axis (only month and day).</summary>
     public static string LocalDateChartAxis(DateTime utc) =>
-        DateOnlyCompact(DateOnly.FromDateTime(utc.ToLocalTime()));
+        utc.ToLocalTime().ToString("MM-dd", Invariant);
 }

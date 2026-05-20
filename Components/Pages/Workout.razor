@@ -41,18 +41,20 @@ else
                                 }
                             </div>
 
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Class="rest-timer-controls">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="4" Class="rest-timer-controls">
                                 @if (_isRestComplete)
                                 {
                                     <MudIconButton Icon="@Icons.Material.Filled.Replay"
                                                    Color="Color.Default"
                                                    aria-label="Reset rest"
-                                                   OnClick="ResetRest" />
+                                                   OnClick="ResetRest"
+                                                   Size="Size.Large" />
                                     <div class="rest-timer-controls__slot" aria-hidden="true"></div>
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Primary"
                                                OnClick="SkipRest"
-                                               aria-label="Continue to next set">
+                                               aria-label="Continue to next set"
+                                               Size="Size.Large">
                                         Continue
                                     </MudButton>
                                 }
@@ -63,20 +65,28 @@ else
                                         <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
                                                        Color="Color.Success"
                                                        aria-label="Resume rest"
-                                                       OnClick="ResumeRest" />
+                                                       OnClick="ResumeRest"
+                                                       Size="Size.Large" />
                                     }
                                     else
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Pause"
                                                        Color="Color.Info"
                                                        aria-label="Pause rest"
-                                                       OnClick="PauseRest" />
+                                                       OnClick="PauseRest"
+                                                       Size="Size.Large" />
                                     }
                                     <MudIconButton Icon="@Icons.Material.Filled.Replay"
                                                    Color="Color.Default"
                                                    aria-label="Reset rest"
-                                                   OnClick="ResetRest" />
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SkipRest">Skip</MudButton>
+                                                   OnClick="ResetRest"
+                                                   Size="Size.Large" />
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               OnClick="SkipRest"
+                                               Size="Size.Large">
+                                        Skip
+                                    </MudButton>
                                 }
                             </MudStack>
 

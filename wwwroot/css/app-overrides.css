@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
 /* Physiquinator app styles - wwwroot file (loaded in MAUI; scoped bundle is NOT shipped) */
 
 :root {
@@ -976,12 +978,12 @@ button.heatmap-cell:disabled {
     margin: 0;
     padding: 0;
     text-align: center;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
-    font-size: clamp(5rem, 22vw, 7.5rem);
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    font-weight: 800;
+    font-size: clamp(5.5rem, 24vw, 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
     color: var(--mud-palette-text-primary);
 }
 
@@ -995,12 +997,87 @@ button.heatmap-cell:disabled {
 
 .rest-timer-controls {
     width: 100%;
-    padding: 0 1rem 1.25rem;
+    padding: 0.25rem 1.5rem 1.5rem;
     box-sizing: border-box;
 }
 
 .rest-timer-controls.mud-stack {
     justify-content: center;
+}
+
+/* Make rest timer buttons feel larger, modern and premium */
+.rest-timer-controls .mud-button-root {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Icon Buttons (Play/Pause, Reset) */
+.rest-timer-controls .mud-icon-button {
+    width: 60px !important;
+    height: 60px !important;
+    padding: 12px !important;
+    border-radius: 18px !important;
+    background-color: color-mix(in srgb, var(--mud-palette-action-default) 8%, transparent);
+    color: var(--mud-palette-text-secondary);
+    box-shadow: 0 2px 8px color-mix(in srgb, #000 6%, transparent);
+}
+
+.rest-timer-controls .mud-icon-button:hover {
+    background-color: color-mix(in srgb, var(--mud-palette-action-default) 14%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, #000 12%, transparent);
+}
+
+.rest-timer-controls .mud-icon-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px color-mix(in srgb, #000 4%, transparent);
+}
+
+/* Specific styling for Pause button */
+.rest-timer-controls .mud-icon-button[aria-label*="Pause"] {
+    background-color: color-mix(in srgb, var(--mud-palette-info) 10%, transparent) !important;
+    color: var(--mud-palette-info) !important;
+}
+.rest-timer-controls .mud-icon-button[aria-label*="Pause"]:hover {
+    background-color: color-mix(in srgb, var(--mud-palette-info) 18%, transparent) !important;
+}
+
+/* Specific styling for Play/Resume button */
+.rest-timer-controls .mud-icon-button[aria-label*="Resume"],
+.rest-timer-controls .mud-icon-button[aria-label*="Play"] {
+    background-color: color-mix(in srgb, var(--mud-palette-success) 10%, transparent) !important;
+    color: var(--mud-palette-success) !important;
+}
+.rest-timer-controls .mud-icon-button[aria-label*="Resume"]:hover,
+.rest-timer-controls .mud-icon-button[aria-label*="Play"]:hover {
+    background-color: color-mix(in srgb, var(--mud-palette-success) 18%, transparent) !important;
+}
+
+/* Text Buttons (Skip/Continue) */
+.rest-timer-controls .mud-button {
+    height: 60px !important;
+    min-width: 140px !important;
+    border-radius: 18px !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+    letter-spacing: 0.02em !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
+}
+
+.rest-timer-controls .mud-button:hover {
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--mud-palette-primary) 40%, transparent) !important;
+}
+
+.rest-timer-controls .mud-button:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
+}
+
+/* Control slot spacing consistency */
+.rest-timer-controls__slot {
+    display: block;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
 }
 
 .rest-timer-edge-track {

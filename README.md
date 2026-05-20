@@ -1,4 +1,4 @@
-﻿# Physiquinator
+# Physiquinator
 
 <div align="center">
 
@@ -9,7 +9,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
 [![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
 
-A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, and workout plan management.
+A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, comprehensive workout history, user profiles, and workout plan management.
 
 [Download](#-download--install) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started)
 
@@ -24,18 +24,18 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 <p align="center">
 <strong>Live workout</strong> · <strong>Plans home</strong> · <strong>Settings</strong><br><br>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/workout-session-dark.png">
-  <img alt="Active workout with rest timer" src="./docs/workout-session-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/rest-timer-dark.png">
+  <img alt="Active workout with rest timer" src="./docs/rest-timer-light.png" width="220">
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/dashboard-plans-dark.png">
-  <img alt="Home dashboard and plan list" src="./docs/dashboard-plans-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/home-dark.png">
+  <img alt="Home dashboard and plan list" src="./docs/home-light.png" width="220">
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-backup-dark.png">
-  <img alt="Settings with appearance and JSON backup" src="./docs/settings-backup-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-dark.png">
+  <img alt="Settings with appearance and JSON backup" src="./docs/settings-light.png" width="220">
 </picture>
 </p>
 
@@ -44,18 +44,38 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 <p align="center">
 <strong>Activity history</strong> · <strong>Session summary</strong> · <strong>Exercise detail</strong><br><br>
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/history-contribution-dark.png">
-  <img alt="Workout history with activity grid" src="./docs/history-contribution-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/history-dark.png">
+  <img alt="Workout history with activity grid" src="./docs/history-light.png" width="220">
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/session-summary-dark.png">
-  <img alt="Completed session summary" src="./docs/session-summary-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/session-details-dark.png">
+  <img alt="Completed session summary" src="./docs/session-details-light.png" width="220">
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/exercise-history-dark.png">
-  <img alt="Per-exercise session history" src="./docs/exercise-history-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/exercise-progression-dark.png">
+  <img alt="Per-exercise session history" src="./docs/exercise-progression-light.png" width="220">
+</picture>
+</p>
+
+<br>
+
+<p align="center">
+<strong>Create plan</strong> · <strong>Edit plan</strong> · <strong>Log set</strong><br><br>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/create-plan-dark.png">
+  <img alt="Create a new workout plan" src="./docs/create-plan-light.png" width="220">
+</picture>
+&nbsp;&nbsp;
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/edit-plan-dark.png">
+  <img alt="Edit workout plan exercises" src="./docs/edit-plan-light.png" width="220">
+</picture>
+&nbsp;&nbsp;
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/log-set-dark.png">
+  <img alt="Log a workout set" src="./docs/log-set-light.png" width="220">
 </picture>
 </p>
 
@@ -156,6 +176,8 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 - **Real-Time Updates** - See completed vs remaining sets instantly
 - **Progress Bars** - Visual representation of workout completion
 - **Exercise Grouping** - Completed and upcoming exercises clearly separated
+- **In-Workout Set Log Editing** - Granular tracking of rep count and weight/metrics for each set
+- **Undo Actions** - Quick undo toast to revert accidental set completions
 - **Mobile-Optimized** - Upcoming exercises shown first on small screens
 
 ### Workout Completion Celebration
@@ -164,11 +186,22 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 - **Haptic Pattern** - Celebratory vibration sequence
 - **Glowing Effect** - Pulsing green glow animation
 
+### Workout History & Analytics
+- **Activity Heatmap** - Visual GitHub-style contribution grid for your workout consistency
+- **Exercise Progress** - Per-exercise chart for tracking performance progression over time
+- **Session History** - Detailed review of completed sessions and set logs
+
+### User Profiles
+- **Multi-User Support** - Isolated profiles with separate plans and workout histories
+- **Easy Switching** - Quickly switch between profiles on a single device
+
 ### Data Management
 - **Local SQLite Storage** - Fast, offline-first data persistence
 - **Export to JSON** - Share plans across devices or back them up
 - **Import Plans** - Load workout plans from JSON files
 - **Bulk Export** - Export all plans at once for backup
+- **History Backup** - Export and import workout session history, merging by session and set ID
+- **Demo Data Seeding** - Automatically populate demo data to explore the app's features right after installation
 
 ---
 
@@ -181,8 +214,7 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 - **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - Local database
 
 ### UI & Styling
-- **[Bootstrap 5](https://getbootstrap.com/)** - Responsive design system
-- **[Bootstrap Icons](https://icons.getbootstrap.com/)** - Icon library
+- **[MudBlazor](https://mudblazor.com/)** - Material design component library for Blazor
 - **Custom CSS Animations** - Smooth, modern UI effects
 - **Dark Theme** - Eye-friendly design with gradient accents
 
@@ -271,10 +303,10 @@ docker rm temp
 - **Cross-Platform** - Same database file format across all platforms
 - **Zero Configuration** - No server setup required
 
-### Why Bootstrap?
-- **Rapid Development** - Pre-built responsive components
-- **Consistent Design** - Predictable UI patterns
-- **Mobile-First** - Optimized for small screens by default
+### Why MudBlazor?
+- **Rapid Development** - Rich set of pre-built, customizable Material Design components
+- **Consistent Design** - Predictable, professional UI patterns that look great out of the box
+- **Native Blazor Feel** - Written entirely in C# without JavaScript dependencies, fitting perfectly into the Blazor Hybrid model
 
 ---
 <div align="center">

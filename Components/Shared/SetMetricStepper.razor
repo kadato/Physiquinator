@@ -1,3 +1,5 @@
+@inject IJSRuntime JSRuntime
+@implements IDisposable
 <MudStack Class="set-metric-stepper" Spacing="1">
     <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
     <div class="set-metric-stepper__row">
@@ -25,10 +27,15 @@
         }
         else
         {
-            <button type="button"
+            <button @ref="_valueButtonRef"
+                    type="button"
                     class="set-metric-stepper__value"
                     aria-label="@($"Edit {Label}")"
-                    @onclick="StartEdit">
+                    @onclick="StartEdit"
+                    data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                    data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                    data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                    data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
                 @DisplayText
             </button>
         }
@@ -70,6 +77,8 @@
     private bool _editing;
     private string _editText = "";
     private ElementReference _inputRef;
+    private ElementReference _valueButtonRef;
+    private DotNetObjectReference<SetMetricStepper>? _selfRef;
     private bool _shouldFocusInput;
     private bool _hasTyped;
 
@@ -117,6 +126,19 @@
             try
             {
                 await _inputRef.FocusAsync();
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        if (!_editing && _valueButtonRef.Context != null)
+        {
+            _selfRef ??= DotNetObjectReference.Create(this);
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("physiquinatorStepper.init", _valueButtonRef, _selfRef);
             }
             catch
             {
@@ -197,5 +219,17 @@
 
         Value = value;
         await ValueChanged.InvokeAsync(value);
+    }
+
+    [JSInvokable]
+    public async Task UpdateValueFromDrag(double newValue)
+    {
+        await SetValueAsync(newValue);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _selfRef?.Dispose();
     }
 }

@@ -159,10 +159,6 @@ html, body, #app {
     font-weight: 600;
 }
 
-.app-tab--create .mud-icon-root {
-    font-size: 1.3rem;
-}
-
 /* Fixed page action dock (plan / workout / session) */
 .app-action-bar {
     position: fixed;

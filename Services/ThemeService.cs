@@ -12,12 +12,20 @@ namespace Physiquinator.Services;
 public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 {
     private readonly IJSRuntime _js;
+    private readonly UserProfileService _userProfileService;
     private DotNetObjectReference<ThemeService>? _dotNetRef;
     private bool _initialized;
 
-    public ThemeService(IJSRuntime js)
+    public ThemeService(IJSRuntime js, UserProfileService userProfileService)
     {
         _js = js;
+        _userProfileService = userProfileService;
+    }
+
+    private string GetSuffix()
+    {
+        var activeId = _userProfileService.GetActiveProfile().Id;
+        return $"_{activeId}";
     }
 
     public string Preference { get; private set; } = "system";
@@ -42,7 +50,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         var result = await _js.InvokeAsync<ThemeInitResult>(
             "physiquinatorTheme.initialize",
-            _dotNetRef).ConfigureAwait(true);
+            _dotNetRef, GetSuffix()).ConfigureAwait(true);
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
@@ -59,7 +67,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
-        var effective = await _js.InvokeAsync<string>("physiquinatorTheme.setPreference", preference).ConfigureAwait(true);
+        var effective = await _js.InvokeAsync<string>("physiquinatorTheme.setPreference", preference, GetSuffix()).ConfigureAwait(true);
 
         Preference = preference;
         EffectiveTheme = effective;
@@ -73,7 +81,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
-        var result = await _js.InvokeAsync<ThemeInitResult>("physiquinatorTheme.resetStoredPreferenceToSystem").ConfigureAwait(true);
+        var result = await _js.InvokeAsync<ThemeInitResult>("physiquinatorTheme.resetStoredPreferenceToSystem", GetSuffix()).ConfigureAwait(true);
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;

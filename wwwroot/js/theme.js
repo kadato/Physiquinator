@@ -38,9 +38,11 @@
     };
 
     window.physiquinatorTheme = {
-        initialize: (ref) => {
+        initialize: (ref, suffix = "") => {
             dotNetRef = ref || null;
-            const preference = getPreference();
+            const fullKey = storageKey + suffix;
+            const preference = localStorage.getItem(fullKey) || "system";
+            localStorage.setItem(storageKey, preference);
             const effective = resolveEffective(preference);
             applyTheme(effective);
 
@@ -63,15 +65,19 @@
 
             return { preference, effective };
         },
-        setPreference: (preference) => {
+        setPreference: (preference, suffix = "") => {
+            const fullKey = storageKey + suffix;
+            localStorage.setItem(fullKey, preference);
             localStorage.setItem(storageKey, preference);
             const effective = resolveEffective(preference);
             applyTheme(effective);
             return effective;
         },
         /** Clears saved theme choice so the app follows the system appearance again. */
-        resetStoredPreferenceToSystem: () => {
+        resetStoredPreferenceToSystem: (suffix = "") => {
+            const fullKey = storageKey + suffix;
             try {
+                localStorage.removeItem(fullKey);
                 localStorage.removeItem(storageKey);
             } catch {
                 /* ignore */

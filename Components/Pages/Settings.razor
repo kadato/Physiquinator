@@ -1,4 +1,6 @@
 @page "/settings"
+@using Physiquinator.Services
+@using Physiquinator.Models
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
 @inject WorkoutPlanService PlanService
@@ -7,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject UserProfileService UserProfileService
 @implements IDisposable
 
 <PageTitle>Settings</PageTitle>
@@ -97,6 +100,79 @@
         }
     </MudPaper>
 
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.People" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">User Profiles</MudText>
+        </div>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            Create, switch, or manage isolated user profiles. Each profile stores its own plans and history.
+        </MudText>
+
+        <MudStack Spacing="2" Class="mb-3">
+            @foreach (var profile in _profiles)
+            {
+                var isActive = profile.Id == _activeProfile.Id;
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-3 rounded-lg"
+                          Style="@(isActive ? "background-color: var(--mud-palette-primary-hover); border: 1px solid var(--mud-palette-primary);" : "background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-divider);")">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudAvatar Color="@(isActive ? Color.Primary : Color.Default)" Size="Size.Medium">
+                            @profile.Name.Substring(0, Math.Min(profile.Name.Length, 2)).ToUpper()
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Typo="Typo.body1" Class="fw-semibold">@profile.Name</MudText>
+                                @if (isActive)
+                                {
+                                    <span style="font-size: 0.75rem; background-color: var(--mud-palette-primary); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Active</span>
+                                }
+                            </MudStack>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
+                                Created: @profile.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        @if (!isActive)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.SwapHoriz"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => SwitchProfileAsync(profile.Id))"
+                                           title="Switch Profile"
+                                           Style="border-radius: 50%;" />
+                        }
+                        
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Info"
+                                       Size="Size.Small"
+                                       OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
+                                       title="Rename Profile"
+                                       Style="border-radius: 50%;" />
+
+                        @if (profile.Id != Guid.Empty)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
+                                           title="Delete Profile"
+                                           Style="border-radius: 50%;" />
+                        }
+                    </MudStack>
+                </MudStack>
+            }
+        </MudStack>
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateProfileAsync" Style="text-transform: none; border-radius: 12px; font-weight: 600;">
+            Add Profile
+        </MudButton>
+    </MudPaper>
+
     <MudPaper Class="pa-4 settings-card settings-card--danger" Elevation="0">
         <div class="settings-card__header">
             <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Class="settings-card__icon" />
@@ -121,6 +197,8 @@
     private bool _restAlertsEnabled = true;
     private int _planCount;
     private int _historySessionCount;
+    private List<UserProfile> _profiles = new();
+    private UserProfile _activeProfile = null!;
 
     private string _effectiveThemeLabel => _effectiveTheme == "light" ? "Light" : "Dark";
 
@@ -131,6 +209,8 @@
         SyncFromService();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
+        _profiles = UserProfileService.GetProfiles();
+        _activeProfile = UserProfileService.GetActiveProfile();
     }
 
     private async Task RefreshPlanCountAsync()
@@ -317,6 +397,75 @@
             Title = shareTitle,
             File = new ShareFile(filePath)
         });
+    }
+
+    private async Task CreateProfileAsync()
+    {
+        var parameters = new DialogParameters { ["Name"] = "" };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Shared.ProfileInputDialog>("Create Profile", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false } && result.Data is string name)
+        {
+            UserProfileService.CreateProfile(name);
+            _profiles = UserProfileService.GetProfiles();
+            Snackbar.Add($"Profile '{name}' created.", Severity.Success);
+        }
+    }
+
+    private async Task RenameProfileAsync(Guid id, string currentName)
+    {
+        var parameters = new DialogParameters { ["Name"] = currentName };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Shared.ProfileInputDialog>("Rename Profile", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false } && result.Data is string name)
+        {
+            UserProfileService.RenameProfile(id, name);
+            _profiles = UserProfileService.GetProfiles();
+            if (_activeProfile.Id == id)
+            {
+                _activeProfile.Name = name;
+            }
+            Snackbar.Add($"Profile renamed to '{name}'.", Severity.Success);
+        }
+    }
+
+    private async Task DeleteProfileAsync(Guid id, string name)
+    {
+        var confirmed = await ConfirmDialogService.ConfirmAsync(
+            DialogService,
+            "Delete profile?",
+            $"Are you sure you want to delete profile '{name}'? This will permanently delete its workout history, plans, and database file.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
+
+        if (!confirmed) return;
+
+        try
+        {
+            await UserProfileService.DeleteProfileAsync(id);
+            Snackbar.Add($"Profile '{name}' deleted.", Severity.Success);
+            Navigation.NavigateTo("/settings", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not delete profile: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SwitchProfileAsync(Guid id)
+    {
+        try
+        {
+            await UserProfileService.SwitchProfileAsync(id);
+            Snackbar.Add("Switched profile.", Severity.Success);
+            Navigation.NavigateTo("/settings", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to switch profile: {ex.Message}", Severity.Error);
+        }
     }
 
     public void Dispose()

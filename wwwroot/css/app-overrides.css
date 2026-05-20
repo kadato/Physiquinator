@@ -844,6 +844,8 @@ html, body, #app, .mud-typography, .mud-button, .mud-input {
     gap: 3px;
     align-items: center;
     min-width: min-content;
+    padding: 2px;
+    padding-right: 4px;
 }
 
 .heatmap-day-label {

@@ -35,8 +35,11 @@ else
                                 }
                                 else
                                 {
-                                    <div class="rest-timer-digits @RestDigitsClass" role="timer">
-                                        @FormatTime(SessionService.RestSecondsRemaining)
+                                    <div class="rest-timer-digits @RestDigitsClass @(SessionService.RestSecondsRemaining < 60 ? "rest-timer-digits--seconds-only" : "") @(SessionService.RestSecondsRemaining < 10 ? "rest-timer-digits--single-digit" : "")" role="timer">
+                                        <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(SessionService.RestSecondsRemaining)</span>
+                                        <span class="rest-timer-separator">:</span>
+                                        <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(SessionService.RestSecondsRemaining)</span>
+                                        <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(SessionService.RestSecondsRemaining)</span>
                                     </div>
                                 }
                             </div>
@@ -99,27 +102,7 @@ else
         }
 
         <MudGrid Spacing="3" Class="workout-exercise-layout">
-            <MudItem xs="12" lg="6" Class="workout-completed-section">
-                <MudText Typo="Typo.h6" Color="Color.Success" Class="mb-2">Completed</MudText>
-                @foreach (var item in DoneExercises)
-                {
-                    <MudCard Class="mb-2" @key="item.ExerciseIndex">
-                        <MudCardContent>
-                            <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
-                                <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
-                                <MudChip T="string" Size="Size.Small" Color="Color.Success">@item.CompletedSets/@item.TotalSets</MudChip>
-                            </MudStack>
-                        </MudCardContent>
-                    </MudCard>
-                }
-                @if (!DoneExercises.Any())
-                {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">Complete a set to see it here.</MudText>
-                }
-            </MudItem>
-
-            <MudItem xs="12" lg="6" Class="workout-upcoming-section">
+            <MudItem xs="12" Class="workout-upcoming-section">
                 <MudText Typo="Typo.h6" Class="mb-2">Up next</MudText>
                 @foreach (var item in UpcomingExercises)
                 {
@@ -148,6 +131,34 @@ else
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">No sets in this plan.</MudText>
                 }
+            </MudItem>
+
+            <MudItem xs="12" Class="workout-completed-section">
+                <div class="workout-completed-header" @onclick="ToggleCompletedExpanded">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Success" Class="mr-2" />
+                    <MudText Typo="Typo.subtitle1" Color="Color.Success" Class="font-weight-bold" style="flex-grow: 1;">
+                        Completed (@DoneExercises.Count)
+                    </MudText>
+                    <MudIcon Icon="@(_completedExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Color="Color.Success" />
+                </div>
+                <MudCollapse Expanded="_completedExpanded" Class="mt-2">
+                    @foreach (var item in DoneExercises)
+                    {
+                        <MudCard Class="mb-2" @key="item.ExerciseIndex">
+                            <MudCardContent>
+                                <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+                                    <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success">@item.CompletedSets/@item.TotalSets</MudChip>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                    @if (!DoneExercises.Any())
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">Complete a set to see it here.</MudText>
+                    }
+                </MudCollapse>
             </MudItem>
         </MudGrid>
 
@@ -189,6 +200,7 @@ else
     private string? _historySessionId;
     private bool _openingSetLogModal;
     private int? _pendingExerciseIndex;
+    private bool _completedExpanded;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -819,9 +831,30 @@ else
 
     private static string FormatTime(int totalSeconds)
     {
+        if (totalSeconds < 60)
+        {
+            return $"{totalSeconds}";
+        }
         var m = totalSeconds / 60;
         var s = totalSeconds % 60;
         return $"{m:D2}:{s:D2}";
+    }
+
+    private static string FormatMinutes(int totalSeconds)
+    {
+        return $"{totalSeconds / 60:D2}";
+    }
+
+    private static string FormatSecondsTens(int totalSeconds)
+    {
+        var s = totalSeconds % 60;
+        return $"{s / 10}";
+    }
+
+    private static string FormatSecondsUnits(int totalSeconds)
+    {
+        var s = totalSeconds % 60;
+        return $"{s % 10}";
     }
 
     public async ValueTask DisposeAsync()
@@ -862,5 +895,10 @@ else
         }
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
+    }
+
+    private void ToggleCompletedExpanded()
+    {
+        _completedExpanded = !_completedExpanded;
     }
 }

@@ -504,19 +504,13 @@ html, body, #app {
 }
 
 .status-bar-safe-area {
-    display: none;
-}
-
-@supports (-webkit-touch-callout: none) {
-    .status-bar-safe-area {
-        display: flex;
-        position: sticky;
-        top: 0;
-        height: env(safe-area-inset-top);
-        width: 100%;
-        z-index: 1;
-        background-color: var(--mud-palette-background);
-    }
+    display: flex;
+    position: sticky;
+    top: 0;
+    height: env(safe-area-inset-top, 0px);
+    width: 100%;
+    z-index: 1;
+    background-color: var(--mud-palette-background);
 }
 
 @media (max-width: 991px) {

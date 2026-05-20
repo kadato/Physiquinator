@@ -4,6 +4,8 @@ using Microsoft.Maui.Graphics;
 #if ANDROID
 using Android.OS;
 using Microsoft.Maui.Platform;
+using AndroidX.Core.View;
+using Android.Views;
 #endif
 
 namespace Physiquinator.Services;
@@ -52,10 +54,23 @@ public static class SystemBarsHelper
             return;
         }
 
-        var androidColor = pageBackground.ToPlatform();
+        // Enable edge-to-edge drawing
+        WindowCompat.SetDecorFitsSystemWindows(window, false);
+
+        // Allow layout to extend into the cutout (notch / camera hole) area
+        if (OperatingSystem.IsAndroidVersionAtLeast(28))
+        {
+            var attribs = window.Attributes;
+            if (attribs != null)
+            {
+                attribs.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.ShortEdges;
+                window.Attributes = attribs;
+            }
+        }
+
 #pragma warning disable CA1422 // Obsolete on Android 35+; still correct for minSdk 24–34.
-        window.SetStatusBarColor(androidColor);
-        window.SetNavigationBarColor(androidColor);
+        window.SetStatusBarColor(Android.Graphics.Color.Transparent);
+        window.SetNavigationBarColor(Android.Graphics.Color.Transparent);
 #pragma warning restore CA1422
 
         if (OperatingSystem.IsAndroidVersionAtLeast(30))

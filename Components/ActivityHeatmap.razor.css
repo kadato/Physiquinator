@@ -18,6 +18,8 @@
     gap: 3px;
     align-items: center;
     min-width: min-content;
+    padding: 2px;
+    padding-right: 4px;
 }
 
 .heatmap-day-label {

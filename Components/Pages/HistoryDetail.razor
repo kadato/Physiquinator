@@ -4,7 +4,7 @@
 @inject IDialogService DialogService
 
 <PageHeader Title="Session" OnBack="GoHistoryList">
-    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="GoHome">Home</MudButton>
+    <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
 </PageHeader>
 
 @if (!_ready)
@@ -18,8 +18,8 @@ else if (_session == null)
 else
 {
     <MudStack Spacing="3">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h5">@_session.PlanName</MudText>
+        <MudPaper Class="pa-4 settings-card" Elevation="0">
+            <MudText Typo="Typo.h5" Class="settings-card__title">@_session.PlanName</MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">
                 Started @UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)
             </MudText>
@@ -35,7 +35,7 @@ else
             }
             @if (_planGuid is { } planId)
             {
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-2" OnClick="@(() => GoPlan(planId))">
+                <MudButton Variant="Variant.Outlined" Class="mt-2 premium-btn premium-btn-outlined" OnClick="@(() => GoPlan(planId))">
                     Open plan
                 </MudButton>
             }
@@ -43,13 +43,16 @@ else
 
         @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
         {
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.h6" Class="mb-2">Progress by exercise</MudText>
+            <MudPaper Class="pa-4 settings-card" Elevation="0">
+                <div class="settings-card__header">
+                    <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
+                    <MudText Typo="Typo.h6" Class="settings-card__title">Progress by exercise</MudText>
+                </div>
                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
                     @foreach (var name in _distinctExerciseNames)
                     {
                         var exercise = name;
-                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => GoExerciseProgress(pg, exercise))">
+                        <MudChip T="string" Variant="Variant.Outlined" Class="exercise-chip" OnClick="@(() => GoExerciseProgress(pg, exercise))">
                             @exercise
                         </MudChip>
                     }
@@ -59,8 +62,11 @@ else
 
         @if (_snapshot != null)
         {
-            <MudPaper Class="pa-4" Elevation="1">
-                <MudText Typo="Typo.h6" Class="mb-2">Plan when you trained</MudText>
+            <MudPaper Class="pa-4 settings-card" Elevation="0">
+                <div class="settings-card__header">
+                    <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
+                    <MudText Typo="Typo.h6" Class="settings-card__title">Plan when you trained</MudText>
+                </div>
                 @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
                 {
                     <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
@@ -77,8 +83,8 @@ else
         }
         else
         {
-            <MudPaper Elevation="1" Class="history-data-table">
-                <MudText Typo="Typo.h6" Class="pa-3 pb-0">Sets</MudText>
+            <MudPaper Elevation="0" Class="premium-table">
+                <MudText Typo="Typo.h6" Class="pa-4 pb-1">Sets</MudText>
                 <MudTable Items="_sets" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
                         <MudTh>Exercise</MudTh>
@@ -101,16 +107,16 @@ else
                 @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
                 {
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
                                FullWidth="true"
+                               Class="premium-btn premium-btn-lg premium-btn-filled"
                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                OnClick="@(() => ContinueWorkout(activePlanId))">
                         Continue workout
                     </MudButton>
                 }
                 <MudButton Variant="Variant.Outlined"
-                           Color="Color.Error"
                            FullWidth="true"
+                           Class="premium-btn premium-btn-lg premium-btn-error-outlined"
                            OnClick="DeleteSessionClick">
                     Delete this workout
                 </MudButton>

@@ -25,7 +25,7 @@ else
         {
             @if (_showChart)
             {
-                <MudPaper Class="pa-3 exercise-progress-chart" Elevation="1">
+                <MudPaper Class="pa-3 exercise-progress-chart" Elevation="0">
                     <MudText Typo="Typo.h6" Class="mb-1">Progression</MudText>
                     <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
                         Per set: reps × kg when both are logged; otherwise reps or kg alone.
@@ -51,24 +51,24 @@ else
                 </MudPaper>
             }
 
-            <MudPaper Class="pa-2 history-data-table exercise-progress-table" Elevation="1">
+            <MudPaper Class="premium-table" Elevation="0">
                 <MudTable Items="_rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
-                        <MudTh Class="text-end">kg</MudTh>
-                        <MudTh Class="text-end">Reps</MudTh>
-                        <MudTh Class="text-end">Sets</MudTh>
+                        <MudTh>kg (Best)</MudTh>
+                        <MudTh>Reps (Total)</MudTh>
+                        <MudTh>Sets</MudTh>
                         <MudTh Class="exercise-progress-table__action" />
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd Class="text-end">@(context.BestWeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
-                        <MudTd Class="text-end">@context.TotalReps</MudTd>
-                        <MudTd Class="text-end">@context.SetCount</MudTd>
+                        <MudTd>@(context.BestWeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
+                        <MudTd>@context.TotalReps</MudTd>
+                        <MudTd>@context.SetCount</MudTd>
                         <MudTd Class="exercise-progress-table__action">
                             <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
                                            Size="Size.Small"
                                            Variant="Variant.Text"
-                                           Class="exercise-progress-table__open"
-                                           AriaLabel="Open session"
+                                           Class="exercise-progress-table__open premium-btn"
+                                           aria-label="Open session"
                                            OnClick="@(() => GoSession(context.SessionId))" />
                         </MudTd>
                     </RowTemplate>

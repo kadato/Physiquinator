@@ -14,8 +14,11 @@
 <MudStack Spacing="3">
     <PageHeader Title="Settings" ShowBack="false" />
 
-    <MudPaper Class="pa-4" Elevation="1">
-        <MudText Typo="Typo.h6" Class="mb-2">Appearance</MudText>
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.Palette" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">Appearance</MudText>
+        </div>
         <MudSelect T="string"
                    Variant="Variant.Filled"
                    Label="Light or dark mode"
@@ -30,8 +33,11 @@
         </MudText>
     </MudPaper>
 
-    <MudPaper Class="pa-4" Elevation="1">
-        <MudText Typo="Typo.h6" Class="mb-2">Rest timer alerts</MudText>
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.Timer" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">Rest timer alerts</MudText>
+        </div>
         <MudSwitch T="bool"
                    Label="Notify when rest ends"
                    Value="_restAlertsEnabled"
@@ -41,12 +47,15 @@
         </MudText>
     </MudPaper>
 
-    <MudPaper Class="pa-4" Elevation="1">
-        <MudText Typo="Typo.h6" Class="mb-2">Plans backup</MudText>
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.Backup" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">Plans backup</MudText>
+        </div>
         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
             Export all plans as JSON, or import a file you exported earlier.
         </MudText>
-        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+        <div class="settings-btn-group">
             <MudButton Variant="Variant.Outlined"
                        Disabled="@(_planCount == 0)"
                        OnClick="ExportAllPlans"
@@ -56,19 +65,22 @@
             <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
                 Import plans
             </MudButton>
-        </MudStack>
+        </div>
         @if (_planCount == 0)
         {
-            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">Create a plan first to enable export.</MudText>
+            <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Create a plan first to enable export.</MudText>
         }
     </MudPaper>
 
-    <MudPaper Class="pa-4" Elevation="1">
-        <MudText Typo="Typo.h6" Class="mb-2">History backup</MudText>
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.History" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">History backup</MudText>
+        </div>
         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
             Export or import workout history JSON. Import merges by session and set id.
         </MudText>
-        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+        <div class="settings-btn-group">
             <MudButton Variant="Variant.Outlined"
                        Disabled="@(_historySessionCount == 0)"
                        OnClick="ExportHistory"
@@ -78,22 +90,26 @@
             <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
                 Import history
             </MudButton>
-        </MudStack>
+        </div>
         @if (_historySessionCount == 0)
         {
-            <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary">Finish at least one workout to enable export.</MudText>
+            <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Finish at least one workout to enable export.</MudText>
         }
     </MudPaper>
 
-    <MudPaper Class="pa-4" Elevation="1" Style="border: 1px solid var(--mud-palette-error);">
-        <MudText Typo="Typo.h6" Color="Color.Error" Class="mb-2">Remove all data</MudText>
+    <MudPaper Class="pa-4 settings-card settings-card--danger" Elevation="0">
+        <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Color="Color.Error" Class="settings-card__title">Remove all data</MudText>
+        </div>
         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
             Permanently deletes every plan and workout log on this device. Export backups first if needed.
         </MudText>
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Error"
                    OnClick="RemoveAllDataAsync"
-                   StartIcon="@Icons.Material.Filled.DeleteForever">
+                   StartIcon="@Icons.Material.Filled.DeleteForever"
+                   Style="text-transform: none; border-radius: 12px; font-weight: 600;">
             Remove all data…
         </MudButton>
     </MudPaper>

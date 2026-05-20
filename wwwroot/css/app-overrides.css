@@ -18,6 +18,10 @@ html, body, #app {
     background-color: var(--mud-palette-background);
 }
 
+html, body, #app, .mud-typography, .mud-button, .mud-input {
+    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
 #app {
     display: flex;
     flex-direction: column;
@@ -292,6 +296,7 @@ html, body, #app {
     gap: 0.625rem;
 }
 
+/*.home-stat.mud-paper*/
 .home-stat.mud-paper {
     display: flex;
     flex-direction: column;
@@ -300,24 +305,34 @@ html, body, #app {
     gap: 0.25rem;
     min-height: 4.75rem;
     padding: 0.75rem 0.5rem;
-    border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
-    background: color-mix(in srgb, var(--mud-palette-surface) 55%, transparent);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: linear-gradient(
+        145deg,
+        var(--mud-palette-surface) 0%,
+        color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
+    );
     overflow: hidden;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 12%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.home-stat.mud-paper:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 24%, transparent);
 }
 
 
 .home-hero {
     padding: 1rem 1.125rem !important;
-    border-radius: 14px !important;
-    border: 1px solid var(--mud-palette-primary);
+    border-radius: 16px !important;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 24%, transparent) !important;
+    border-left: 5px solid var(--mud-palette-primary) !important;
     background: linear-gradient(
         135deg,
-        color-mix(in srgb, var(--mud-palette-primary) 18%, transparent) 0%,
-        color-mix(in srgb, var(--mud-palette-primary) 6%, transparent) 100%
-    );
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
+        color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) 0%,
+        color-mix(in srgb, var(--mud-palette-primary) 3%, transparent) 100%
+    ) !important;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) !important;
 }
 
 
@@ -380,23 +395,22 @@ html, body, #app {
 /* Cards & elevated surfaces (MAUI WebView — scoped *.razor.css is not shipped) */
 .app-page-container .mud-card,
 .app-page-container .mud-paper.mud-elevation-1:not(.history-heatmap-panel):not(.rest-timer-panel) {
-    border-radius: 14px;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
     background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 14%, transparent),
-        0 6px 16px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 8%, transparent),
+        0 6px 16px color-mix(in srgb, #000 4%, transparent);
+    transition: border-color 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .plan-card.mud-card {
     width: 100%;
     overflow: hidden;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.plan-card.mud-card:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 32%, transparent);
-    box-shadow: 0 2px 6px color-mix(in srgb, #000 12%, transparent),
-        0 10px 24px color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+.plan-card.mud-card:hover,
+.app-page-container .mud-card:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
 }
 
 .plan-card__content {
@@ -480,8 +494,8 @@ html, body, #app {
 .mud-collapse-container,
 .mud-expand-panel,
 .mud-overlay {
-    transition-duration: 0ms !important;
-    animation-duration: 0ms !important;
+    transition: all 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+    animation-duration: 120ms !important;
 }
 /* Filled inputs: no underline; match card surfaces */
 .mud-input-underline::before,
@@ -845,7 +859,7 @@ html, body, #app {
 button.heatmap-cell {
     width: 11px;
     height: 11px;
-    border-radius: 2px;
+    border-radius: 3px;
     box-sizing: border-box;
     border: none;
     padding: 0;
@@ -854,7 +868,6 @@ button.heatmap-cell {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
-
 button.heatmap-cell:disabled {
     cursor: default;
     opacity: 1;
@@ -867,7 +880,8 @@ button.heatmap-cell:disabled {
 }
 
 .heatmap-today {
-    border: 1.5px solid var(--mud-palette-text-primary) !important;
+    box-shadow: 0 0 0 2px var(--mud-palette-text-primary) !important;
+    border: 1px solid var(--mud-palette-surface) !important;
 }
 
 .heatmap-off {
@@ -967,18 +981,81 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-digits {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     margin: 0;
     padding: 0;
-    text-align: center;
     font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-variant-numeric: tabular-nums;
     font-weight: 800;
     font-size: clamp(5.5rem, 24vw, 8rem);
     line-height: 0.95;
-    letter-spacing: -0.02em;
     color: var(--mud-palette-text-primary);
+}
+
+.rest-timer-unit {
+    display: inline-block;
+    text-align: center;
+    opacity: 1;
+    letter-spacing: 0.08em;
+    text-indent: 0.08em;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                opacity 0.4s ease, 
+                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin 0.6s ease;
+}
+
+.rest-timer-unit--minutes {
+    max-width: 2.5ch;
+}
+
+.rest-timer-unit--seconds-tens,
+.rest-timer-unit--seconds-units {
+    max-width: 1.3ch;
+}
+
+.rest-timer-separator {
+    display: inline-block;
+    text-align: center;
+    max-width: 0.8ch;
+    opacity: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                opacity 0.4s ease, 
+                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin 0.6s ease;
+}
+
+.rest-timer-digits--seconds-only .rest-timer-unit--minutes {
+    max-width: 0;
+    opacity: 0;
+    transform: scale(0.7) translateX(-20px);
+    pointer-events: none;
+    letter-spacing: 0;
+    text-indent: 0;
+}
+
+.rest-timer-digits--seconds-only .rest-timer-separator {
+    max-width: 0;
+    opacity: 0;
+    transform: scale(0.7) translateX(-10px);
+    pointer-events: none;
+    letter-spacing: 0;
+    text-indent: 0;
+}
+
+.rest-timer-digits--single-digit .rest-timer-unit--seconds-tens {
+    max-width: 0;
+    opacity: 0;
+    transform: scale(0.7) translateX(-15px);
+    pointer-events: none;
+    letter-spacing: 0;
+    text-indent: 0;
 }
 
 .rest-timer-digits--paused {
@@ -1001,7 +1078,7 @@ button.heatmap-cell:disabled {
 
 /* Make rest timer buttons feel larger, modern and premium */
 .rest-timer-controls .mud-button-root {
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease !important;
 }
 
 /* Icon Buttons (Play/Pause, Reset) */
@@ -1021,7 +1098,6 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-controls .mud-icon-button:active {
-    transform: scale(0.95);
     box-shadow: 0 1px 4px color-mix(in srgb, #000 4%, transparent);
 }
 
@@ -1062,7 +1138,6 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-controls .mud-button:active {
-    transform: scale(0.98);
     box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
 }
 
@@ -1275,4 +1350,388 @@ button.heatmap-cell:disabled {
     min-width: 1.75rem;
     padding: 0;
     margin: 0 auto;
+}
+
+/* ==========================================================================
+   Premium UI Enhancements (History, Progression, Settings)
+   ========================================================================== */
+
+/* History Stats Cards */
+.history-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 576px) {
+    .history-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.history-stat.mud-paper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 4.75rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: linear-gradient(
+        145deg,
+        var(--mud-palette-surface) 0%,
+        color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
+    );
+    overflow: hidden;
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.history-stat.mud-paper:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
+}
+
+.history-stat__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--mud-palette-primary);
+}
+
+.history-stat__label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* History Session Cards */
+.history-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.history-session-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease;
+    cursor: pointer;
+    overflow: hidden;
+    text-decoration: none !important;
+}
+
+.history-session-card:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+    box-shadow: 0 2px 6px color-mix(in srgb, #000 8%, transparent);
+}
+
+.history-session-card__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    gap: 0.75rem;
+}
+
+.history-session-card__left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+}
+
+.history-session-card__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+
+.history-session-card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-session-card__subtitle {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.history-session-card__badge-inprogress {
+    font-weight: 700;
+    color: var(--mud-palette-secondary);
+    background: color-mix(in srgb, var(--mud-palette-secondary) 15%, transparent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.history-session-card__right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.history-session-card__chevron {
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.5;
+    transition: opacity 150ms ease;
+}
+
+.history-session-card:hover .history-session-card__chevron {
+    opacity: 0.9;
+}
+
+/* Premium Exercise Progress Chart Styling Overrides */
+.exercise-progress-chart.mud-paper {
+    background: linear-gradient(
+        150deg,
+        var(--mud-palette-surface) 0%,
+        color-mix(in srgb, var(--mud-palette-primary) 3%, var(--mud-palette-surface)) 100%
+    ) !important;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 15%, transparent) !important;
+}
+
+.exercise-progress-chart__plot .mud-chart-line {
+    stroke-width: 3.5px !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+}
+
+.exercise-progress-chart__plot .mud-chart-grid-line {
+    stroke: color-mix(in srgb, var(--mud-palette-text-secondary) 10%, transparent) !important;
+    stroke-dasharray: 4 4 !important;
+}
+
+.exercise-progress-chart__plot .mud-chart-axis-line {
+    stroke: color-mix(in srgb, var(--mud-palette-text-secondary) 18%, transparent) !important;
+    stroke-width: 1px !important;
+}
+
+.exercise-progress-chart__plot .mud-chart-text {
+    fill: var(--mud-palette-text-secondary) !important;
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    font-family: 'Outfit', sans-serif !important;
+}
+
+/* Premium Settings Cards */
+.settings-card.mud-paper {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
+    transition: box-shadow 120ms ease, border-color 120ms ease !important;
+}
+
+.settings-card.mud-paper:hover {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent) !important;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-primary) 6%, transparent) !important;
+}
+
+.settings-card--danger.mud-paper {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--mud-palette-error) 4%, transparent) 0%,
+        var(--mud-palette-surface) 100%
+    ) !important;
+}
+
+.settings-card--danger.mud-paper:hover {
+    border-color: var(--mud-palette-error) !important;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-error) 6%, transparent) !important;
+}
+
+.settings-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 0.75rem;
+}
+
+.settings-card__icon {
+    color: var(--mud-palette-primary);
+}
+
+.settings-card--danger .settings-card__icon {
+    color: var(--mud-palette-error);
+}
+
+.settings-card__title {
+    font-weight: 600 !important;
+}
+
+.settings-btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.settings-btn-group .mud-button-root {
+    flex: 1 1 auto;
+    border-radius: 12px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   Premium Refined Tables & Flat Button Styles
+   ========================================================================== */
+
+/* Premium Tables */
+.premium-table.mud-paper {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
+    border-radius: 16px !important;
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background)) !important;
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
+    overflow: hidden;
+}
+
+.premium-table .mud-table-root {
+    background: transparent !important;
+}
+
+.premium-table .mud-table-head .mud-table-cell {
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--mud-palette-text-secondary) !important;
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 3%, var(--mud-palette-surface)) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 80%, transparent) !important;
+    padding: 12px 16px !important;
+}
+
+.premium-table .mud-table-body .mud-table-row {
+    background: transparent !important;
+    transition: background 120ms ease;
+}
+
+.premium-table .mud-table-body .mud-table-row:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
+}
+
+.premium-table .mud-table-body .mud-table-row:nth-of-type(odd) {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 1.5%, transparent) !important;
+}
+
+.premium-table .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
+}
+
+.premium-table .mud-table-cell {
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 40%, transparent) !important;
+    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
+    color: var(--mud-palette-text-primary) !important;
+}
+
+/* Premium Buttons */
+.premium-btn.mud-button-root {
+    text-transform: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    border-radius: 12px !important;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
+}
+
+.premium-btn-lg.mud-button-root {
+    min-height: 48px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+}
+
+.premium-btn-filled.mud-button-root {
+    background: var(--mud-palette-primary) !important;
+    color: var(--mud-palette-background) !important;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
+}
+
+.premium-btn-filled.mud-button-root:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 85%, #fff) !important;
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
+}
+
+.premium-btn-outlined.mud-button-root {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent) !important;
+    color: var(--mud-palette-text-primary) !important;
+    background: color-mix(in srgb, var(--mud-palette-surface) 40%, transparent) !important;
+}
+
+.premium-btn-outlined.mud-button-root:hover {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 4%, transparent) !important;
+    border-color: color-mix(in srgb, var(--mud-palette-text-primary) 25%, transparent) !important;
+}
+
+.premium-btn-error-outlined.mud-button-root {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
+    color: var(--mud-palette-error) !important;
+    background: color-mix(in srgb, var(--mud-palette-error) 3%, transparent) !important;
+}
+
+.premium-btn-error-outlined.mud-button-root:hover {
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent) !important;
+    border-color: var(--mud-palette-error) !important;
+}
+
+/* Exercise Tag Chips */
+.exercise-chip.mud-chip-outlined {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 24%, transparent) !important;
+    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
+    color: var(--mud-palette-primary) !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    transition: background-color 120ms ease, border-color 120ms ease !important;
+}
+
+.exercise-chip.mud-chip-outlined:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) !important;
+    border-color: var(--mud-palette-primary) !important;
+}
+
+/* Workout Completed Accordion Header */
+.workout-completed-header {
+    display: flex;
+    align-items: center;
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
+    background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-success) 20%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.workout-completed-header:hover {
+    background: color-mix(in srgb, var(--mud-palette-success) 10%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--mud-palette-success) 40%, transparent);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
 }

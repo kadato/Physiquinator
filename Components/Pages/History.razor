@@ -21,32 +21,24 @@
                              SelectedDayChanged="OnSelectedDayChanged" />
         </MudPaper>
 
-        <MudGrid Spacing="2">
-            <MudItem xs="6" sm="3">
-                <MudPaper Class="pa-3 text-center" Elevation="1">
-                    <MudText Typo="Typo.h5">@_summary.CurrentStreakWorkoutDays</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Active day streak</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="6" sm="3">
-                <MudPaper Class="pa-3 text-center" Elevation="1">
-                    <MudText Typo="Typo.h5">@_summary.LongestStreakWorkoutDays</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Longest streak</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="6" sm="3">
-                <MudPaper Class="pa-3 text-center" Elevation="1">
-                    <MudText Typo="Typo.h5">@_summary.ThisWeekSessionCount</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">This week</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="6" sm="3">
-                <MudPaper Class="pa-3 text-center" Elevation="1">
-                    <MudText Typo="Typo.h5">@_summary.LastWeekSessionCount</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Last week</MudText>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+        <div class="history-stats">
+            <MudPaper Class="history-stat" Elevation="0">
+                <span class="history-stat__value">@_summary.CurrentStreakWorkoutDays</span>
+                <span class="history-stat__label">Streak</span>
+            </MudPaper>
+            <MudPaper Class="history-stat" Elevation="0">
+                <span class="history-stat__value">@_summary.LongestStreakWorkoutDays</span>
+                <span class="history-stat__label">Longest streak</span>
+            </MudPaper>
+            <MudPaper Class="history-stat" Elevation="0">
+                <span class="history-stat__value">@_summary.ThisWeekSessionCount</span>
+                <span class="history-stat__label">This week</span>
+            </MudPaper>
+            <MudPaper Class="history-stat" Elevation="0">
+                <span class="history-stat__value">@_summary.LastWeekSessionCount</span>
+                <span class="history-stat__label">Last week</span>
+            </MudPaper>
+        </div>
 
         <MudText Typo="Typo.caption" Class="mud-text-secondary">
             A streak day is any calendar day with at least one logged session.
@@ -56,7 +48,7 @@
         {
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                 <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
-                    @UiDateFormats.DateOnlyCompact(_selectedDay.Value)
+                    @(_selectedDay.HasValue ? UiDateFormats.DateOnlyCompact(_selectedDay.Value) : "")
                 </MudChip>
                 @if (!_listSessions.Any())
                 {
@@ -78,45 +70,50 @@
         }
         else
         {
-            <MudList T="string" Clickable="true" Dense="true">
+            <div class="history-session-list">
                 @foreach (var s in _listSessions)
                 {
                     var sid = s.Id;
-                    <MudListItem T="string" OnClick="@(() => OpenSession(sid))">
-                        <div class="d-flex justify-space-between align-center gap-2" style="width:100%;">
-                            <div>
-                                <MudText Typo="Typo.subtitle1">@s.PlanName</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
-                                    @if (s.EndedAtUtc != null)
-                                    {
-                                        <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
-                                    }
-                                    else
-                                    {
-                                        <span> · in progress</span>
-                                    }
-                                </MudText>
+                    <div class="history-session-card" @onclick="@(() => OpenSession(sid))">
+                        <div class="history-session-card__inner">
+                            <div class="history-session-card__left">
+                                <div class="history-session-card__info">
+                                    <span class="history-session-card__title">@s.PlanName</span>
+                                    <span class="history-session-card__subtitle">
+                                        @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
+                                        @if (s.EndedAtUtc != null)
+                                        {
+                                            <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="history-session-card__badge-inprogress">In progress</span>
+                                        }
+                                    </span>
+                                </div>
                             </div>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div class="history-session-card__right">
                                 @if (s.EndedAtUtc == null && Guid.TryParse(s.WorkoutPlanId, out var continuePlanId))
                                 {
                                     <div @onclick:stopPropagation="true">
                                         <MudButton Variant="Variant.Filled"
                                                    Color="Color.Primary"
                                                    Size="Size.Small"
+                                                   Class="history-session-card__continue-btn"
                                                    OnClick="@(() => ContinueWorkout(continuePlanId))">
                                             Continue
                                         </MudButton>
                                     </div>
                                 }
-                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="mud-text-secondary" />
-                            </MudStack>
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="history-session-card__chevron" />
+                                }
+                            </div>
                         </div>
-                    </MudListItem>
-                    <MudDivider />
+                    </div>
                 }
-            </MudList>
+            </div>
         }
     }
 </MudStack>

@@ -57,7 +57,47 @@
 </div>
 
 @code {
-    private readonly MudTheme _theme = new();
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#0F766E", // Deep Teal
+            Secondary = "#2563EB", // Active Cobalt
+            Tertiary = "#D946EF",
+            Success = "#10B981",
+            Info = "#06B6D4",
+            Warning = "#F59E0B",
+            Error = "#EF4444",
+            Background = "#F8F9FA",
+            Surface = "#FFFFFF",
+            AppbarBackground = "#F8F9FA",
+            TextPrimary = "#111827",
+            TextSecondary = "#6B7280",
+            LinesDefault = "rgba(0, 0, 0, 0.08)",
+            Divider = "rgba(0, 0, 0, 0.06)",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#10B981", // Active Volt Green (Sporty)
+            Secondary = "#3B82F6", // Cobalt Blue
+            Tertiary = "#FF006E", // Energy Magenta
+            Success = "#10B981",
+            Info = "#06B6D4",
+            Warning = "#F59E0B",
+            Error = "#EF4444",
+            Background = "#0B0C10", // Deep Midnight/Obsidian
+            Surface = "#151821", // Sleek charcoal card surface
+            AppbarBackground = "#0B0C10",
+            TextPrimary = "#F3F4F6",
+            TextSecondary = "#9CA3AF",
+            LinesDefault = "rgba(255, 255, 255, 0.08)",
+            Divider = "rgba(255, 255, 255, 0.06)",
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DefaultBorderRadius = "16px"
+        }
+    };
     private bool _isDark = true;
     private bool _showBottomNav = true;
     private bool _useFixedDockPadding;

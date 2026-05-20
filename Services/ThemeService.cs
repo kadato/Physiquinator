@@ -142,11 +142,11 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         var isDark = EffectiveTheme == "dark";
 
         Application.Current.Resources["PageBackgroundColor"] =
-            Color.FromArgb(isDark ? "#121212" : "#FFFFFF");
+            Color.FromArgb(isDark ? "#0B0C10" : "#F8F9FA");
         Application.Current.Resources["PrimaryTextColor"] =
-            Color.FromArgb(isDark ? "#FFFFFF" : "#DE000000");
+            Color.FromArgb(isDark ? "#F3F4F6" : "#111827");
         Application.Current.Resources["PrimaryButtonBackgroundColor"] =
-            Color.FromArgb(isDark ? "#776BE7" : "#594AE2");
+            Color.FromArgb(isDark ? "#10B981" : "#0F766E");
         Application.Current.Resources["PrimaryButtonTextColor"] =
             Color.FromArgb("#FFFFFF");
 

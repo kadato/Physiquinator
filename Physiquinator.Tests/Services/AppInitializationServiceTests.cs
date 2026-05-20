@@ -60,6 +60,21 @@ public class AppInitializationServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task EnsureInitializedAsync_OnFirstInstall_WhenNotDefaultProfile_SkipsSeeding()
+    {
+        _prefs.IsDefaultProfile = false;
+
+        var sut = CreateSut();
+        await sut.EnsureInitializedAsync();
+
+        Assert.True(sut.IsReady);
+        Assert.False(sut.ShowSetupOverlay);
+        Assert.Equal(1, _theme.InitializeCallCount);
+        Assert.Empty(await _planService.GetAllPlansAsync());
+        Assert.Equal(0, await _historyRepo.GetSessionCountAsync());
+    }
+
+    [Fact]
     public async Task EnsureInitializedAsync_AfterDbClearedWithSeedFlagsSet_DoesNotReseed()
     {
         _prefs.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, true);
@@ -97,5 +112,7 @@ public class AppInitializationServiceTests : IAsyncLifetime
             _values.TryGetValue(key, out var v) ? v : defaultValue;
 
         public void Set(string key, bool value) => _values[key] = value;
+
+        public bool IsDefaultProfile { get; set; } = true;
     }
 }

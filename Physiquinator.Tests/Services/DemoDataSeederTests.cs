@@ -158,5 +158,7 @@ public class DemoDataSeederTests : IAsyncLifetime
         public void Set(string key, bool value) => _values[key] = value;
 
         public void Clear() => _values.Clear();
+
+        public bool IsDefaultProfile => true;
     }
 }

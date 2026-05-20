@@ -58,6 +58,9 @@ public sealed class AppInitializationService
                 NotifyProgress();
                 await _demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
 
+                // Set flag to show onboarding modal explaining that demo data was seeded
+                _preferences.Set("Physiquinator.ShowFirstTimeSeedModal", true);
+
                 ShowSetupOverlay = false;
                 SetupStatusMessage = null;
                 NotifyProgress();
@@ -72,8 +75,24 @@ public sealed class AppInitializationService
         }
     }
 
+    public async Task ReinitializeAsync()
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            IsReady = false;
+            _initializationTask = null;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+        await EnsureInitializedAsync().ConfigureAwait(false);
+    }
+
     private bool NeedsFirstTimeDemoSeed() =>
-        !_preferences.Get(DemoDataSeeder.InitialDemoSeedCompletedKey, false)
+        _preferences.IsDefaultProfile
+        && !_preferences.Get(DemoDataSeeder.InitialDemoSeedCompletedKey, false)
         && !_preferences.Get(DemoDataSeeder.DemoHistorySeedCompletedKey, false);
 
     private void NotifyProgress() => ProgressChanged?.Invoke();

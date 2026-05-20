@@ -4,7 +4,26 @@ namespace Physiquinator.Services;
 
 public sealed class MauiDemoSeedPreferences : IDemoSeedPreferences
 {
-    public bool Get(string key, bool defaultValue) => Preferences.Default.Get(key, defaultValue);
+    private string GetScopedKey(string key)
+    {
+        var activeId = Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
+        if (string.IsNullOrEmpty(activeId) || activeId == System.Guid.Empty.ToString())
+        {
+            return key;
+        }
+        return $"{key}_{activeId}";
+    }
 
-    public void Set(string key, bool value) => Preferences.Default.Set(key, value);
+    public bool Get(string key, bool defaultValue) => Preferences.Default.Get(GetScopedKey(key), defaultValue);
+
+    public void Set(string key, bool value) => Preferences.Default.Set(GetScopedKey(key), value);
+
+    public bool IsDefaultProfile
+    {
+        get
+        {
+            var activeId = Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
+            return string.IsNullOrEmpty(activeId) || activeId == System.Guid.Empty.ToString();
+        }
+    }
 }

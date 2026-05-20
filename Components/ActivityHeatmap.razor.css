@@ -37,7 +37,7 @@ button.heatmap-cell {
     height: 11px;
     border-radius: 2px;
     box-sizing: border-box;
-    border: none;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
     padding: 0;
     margin: 0;
     display: block;

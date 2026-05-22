@@ -33,6 +33,33 @@ public class WorkoutDayStatsTests
     }
 
     [Fact]
+    public void Compute_CurrentStreak_MaintainsStreakIfWorkedOutYesterday()
+    {
+        var end = new DateOnly(2026, 5, 19); // Today is 19th
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Worked out yesterday (18th)
+            [new DateOnly(2026, 5, 17)] = 1, // Worked out 17th
+            [new DateOnly(2026, 5, 16)] = 1  // Worked out 16th
+        };
+        var s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1));
+        Assert.Equal(3, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_CurrentStreak_LostIfNoWorkoutYesterdayOrToday()
+    {
+        var end = new DateOnly(2026, 5, 20); // Today is 20th
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Last workout was 18th (2 days ago)
+            [new DateOnly(2026, 5, 17)] = 1
+        };
+        var s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1));
+        Assert.Equal(0, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
     public void Compute_SameDayMultipleSessions_CountsInWeekTotals()
     {
         var mon = new DateOnly(2026, 5, 11);

@@ -30,8 +30,22 @@ public static class WorkoutDayStats
 
     private static int ComputeCurrentStreak(IReadOnlyDictionary<DateOnly, int> activityByDay, DateOnly endLocal)
     {
+        DateOnly startDay;
+        if (activityByDay.GetValueOrDefault(endLocal, 0) > 0)
+        {
+            startDay = endLocal;
+        }
+        else if (activityByDay.GetValueOrDefault(endLocal.AddDays(-1), 0) > 0)
+        {
+            startDay = endLocal.AddDays(-1);
+        }
+        else
+        {
+            return 0;
+        }
+
         var streak = 0;
-        for (var d = endLocal; ; d = d.AddDays(-1))
+        for (var d = startDay; ; d = d.AddDays(-1))
         {
             if (activityByDay.GetValueOrDefault(d, 0) <= 0)
                 break;

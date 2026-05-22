@@ -7,7 +7,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
-@inject WorkoutUndoOverlayService UndoOverlay
+@inject ISnackbar Snackbar
 @implements IAsyncDisposable
 
 <PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkoutInProgress" />
@@ -201,6 +201,7 @@ else
     private bool _openingSetLogModal;
     private int? _pendingExerciseIndex;
     private bool _completedExpanded;
+    private Snackbar? _undoSnackbar;
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
@@ -220,7 +221,6 @@ else
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
 
-        UndoOverlay.RegisterUndoHandler(UndoLastSetCoreAsync);
         await EnsureWorkoutStartedAsync();
     }
 
@@ -477,9 +477,27 @@ else
         }
     }
 
-    private void ShowUndoSetToast() => UndoOverlay.Show();
+    private void ShowUndoSetToast()
+    {
+        HideUndoToast();
+        _undoSnackbar = Snackbar.Add("Set logged.", Severity.Info, config =>
+        {
+            config.Action = "Undo";
+            config.ActionColor = Color.Warning;
+            config.ShowCloseIcon = false;
+            config.RequireInteraction = false;
+            config.OnClick = snackbar => UndoLastSetCoreAsync();
+        });
+    }
 
-    private void HideUndoToast() => UndoOverlay.Hide();
+    private void HideUndoToast()
+    {
+        if (_undoSnackbar != null)
+        {
+            Snackbar.Remove(_undoSnackbar);
+            _undoSnackbar = null;
+        }
+    }
 
     private async Task UndoLastSetCoreAsync()
     {
@@ -860,8 +878,7 @@ else
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
-        UndoOverlay.UnregisterUndoHandler();
-        UndoOverlay.Hide();
+        HideUndoToast();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         RestNotifications.CancelAllRestNotifications();
         SessionService.CancelRest();

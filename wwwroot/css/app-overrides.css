@@ -196,32 +196,6 @@ html, body, #app, .mud-typography, .mud-button, .mud-input {
 }
 
 
-/* Workout undo toast — shell overlay (WorkoutUndoToast.razor) */
-.workout-undo-toast {
-    position: fixed;
-    left: var(--app-page-x, 1rem);
-    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    z-index: 25;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.625rem 0.5rem 0.625rem 1rem;
-    background: var(--mud-palette-surface);
-    color: var(--mud-palette-text-primary);
-    border-radius: var(--mud-default-borderradius, 8px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-    max-width: min(100% - 2rem, 360px);
-    pointer-events: auto;
-}
-
-.workout-undo-toast__message {
-    font-size: 0.875rem;
-}
-
-.workout-undo-toast__action {
-    flex-shrink: 0;
-    text-transform: none;
-}
 .app-action-bar__rows--stacked {
     display: flex;
     flex-direction: column;

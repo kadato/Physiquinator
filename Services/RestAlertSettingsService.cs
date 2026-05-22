@@ -22,13 +22,13 @@ public sealed class RestAlertSettingsService
         }
     }
 
-    public bool Enabled => Preferences.Default.Get(PreferenceKey, true);
+    public bool Enabled => AppPreferences.Get(PreferenceKey, true);
 
     public event Action? Changed;
 
     public Task SetEnabledAsync(bool enabled)
     {
-        Preferences.Default.Set(PreferenceKey, enabled);
+        AppPreferences.Set(PreferenceKey, enabled);
 
         if (!enabled)
             _serviceProvider.GetRequiredService<RestNotificationService>().CancelAllRestNotifications();

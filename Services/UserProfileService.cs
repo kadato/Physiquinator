@@ -24,7 +24,7 @@ public sealed class UserProfileService
 
     public List<UserProfile> GetProfiles()
     {
-        var json = Preferences.Default.Get(ProfilesKey, string.Empty);
+        var json = AppPreferences.Get(ProfilesKey, string.Empty);
         if (string.IsNullOrEmpty(json))
         {
             // First time initialization: create the default Demo User profile
@@ -52,7 +52,7 @@ public sealed class UserProfileService
     public UserProfile GetActiveProfile()
     {
         var profiles = GetProfiles();
-        var activeIdStr = Preferences.Default.Get(ActiveProfileIdKey, Guid.Empty.ToString());
+        var activeIdStr = AppPreferences.Get(ActiveProfileIdKey, Guid.Empty.ToString());
         var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
         return profiles.FirstOrDefault(p => p.Id == activeId) ?? profiles.First();
     }
@@ -67,11 +67,13 @@ public sealed class UserProfileService
         _sessionService.EndWorkout();
 
         // 2. Persist the active profile selection
-        Preferences.Default.Set(ActiveProfileIdKey, profileId.ToString());
+        AppPreferences.Set(ActiveProfileIdKey, profileId.ToString());
 
         // 3. Resolve the database path for the new user profile
         var dbName = profileId == Guid.Empty ? "physiquinator.db3" : $"physiquinator_{profileId}.db3";
-        var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbName);
+        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+        var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
+        var dbPath = Path.Combine(appDataDir, dbName);
 
         // 4. Hot-swap the database connection
         await _database.SwitchDatabaseAsync(dbPath).ConfigureAwait(false);
@@ -114,7 +116,9 @@ public sealed class UserProfileService
         SaveProfiles(profiles);
 
         // Delete the profile's SQLite database file
-        var dbPath = Path.Combine(FileSystem.AppDataDirectory, $"physiquinator_{profileId}.db3");
+        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+        var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
+        var dbPath = Path.Combine(appDataDir, $"physiquinator_{profileId}.db3");
         if (File.Exists(dbPath))
         {
             try
@@ -143,6 +147,6 @@ public sealed class UserProfileService
     private void SaveProfiles(List<UserProfile> profiles)
     {
         var json = JsonSerializer.Serialize(profiles);
-        Preferences.Default.Set(ProfilesKey, json);
+        AppPreferences.Set(ProfilesKey, json);
     }
 }

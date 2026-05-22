@@ -46,10 +46,12 @@ public static class MauiProgram
 			config.SnackbarConfiguration.ShowCloseIcon = true;
 		});
 
-		var activeIdStr = Microsoft.Maui.Storage.Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
+		var activeIdStr = Physiquinator.Services.AppPreferences.Get("Physiquinator.ActiveProfileId", string.Empty);
 		var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
 		var dbName = activeId == Guid.Empty ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
-		var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbName);
+		var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+		var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
+		var dbPath = Path.Combine(appDataDir, dbName);
 		builder.Services.AddSingleton(TimeProvider.System);
 		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
 		builder.Services.AddSingleton<Data.WorkoutPlanRepository>();

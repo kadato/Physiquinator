@@ -1136,22 +1136,40 @@ button.heatmap-cell:disabled {
 
 .rest-timer-edge-track {
     flex-shrink: 0;
-    width: 100%;
-    height: 4px;
-    background: color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
-    border-radius: 0 0 20px 20px;
-    overflow: hidden;
+    height: 8px;
+    margin: 0.5rem 1.5rem 1.25rem;
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent);
+    border-radius: 6px;
+    position: relative;
 }
 
 .rest-timer-edge-fill {
     height: 100%;
-    background: var(--mud-palette-primary);
-    border-radius: 0 0 0 20px;
+    background: linear-gradient(90deg, var(--mud-palette-secondary) 0%, var(--mud-palette-primary) 100%);
+    border-radius: 6px;
     transition: width 0.35s linear;
 }
 
+.rest-timer-edge-fill--paused {
+    opacity: 0.5;
+}
+
 .rest-timer-edge-fill--urgent {
-    background: var(--mud-palette-warning);
+    background: linear-gradient(90deg, var(--mud-palette-error) 0%, var(--mud-palette-warning) 100%);
+    animation: urgent-pulse 1.5s infinite alternate;
+}
+
+.rest-timer-panel--complete .rest-timer-edge-fill {
+    background: var(--mud-palette-success);
+}
+
+@keyframes urgent-pulse {
+    0% {
+        filter: brightness(1);
+    }
+    100% {
+        filter: brightness(1.25);
+    }
 }
 
 .rest-timer-complete {
@@ -1719,4 +1737,44 @@ button.heatmap-cell:disabled {
     background: color-mix(in srgb, var(--mud-palette-success) 10%, var(--mud-palette-surface));
     border-color: color-mix(in srgb, var(--mud-palette-success) 40%, transparent);
     box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
+}
+
+/* Premium, pill-shaped progress bars for workout cards */
+.workout-upcoming-section .mud-progress-linear,
+.workout-completed-section .mud-progress-linear {
+    height: 10px !important;
+    border-radius: 9999px !important;
+    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent) !important;
+    overflow: hidden;
+}
+
+.workout-upcoming-section .mud-progress-linear .mud-progress-linear-bar,
+.workout-completed-section .mud-progress-linear .mud-progress-linear-bar {
+    border-radius: 9999px !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Gradient fill for upcoming exercise progress */
+.workout-upcoming-section .mud-progress-linear.mud-progress-linear-primary .mud-progress-linear-bar {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-primary) 70%, #fff) 0%, var(--mud-palette-primary) 100%) !important;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
+}
+
+/* Gradient fill for completed exercise progress */
+.workout-completed-section .mud-progress-linear.mud-progress-linear-success .mud-progress-linear-bar {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-success) 70%, #fff) 0%, var(--mud-palette-success) 100%) !important;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--mud-palette-success) 30%, transparent);
+}
+
+/* Clickable snackbars styling */
+.mud-snackbar {
+    cursor: pointer;
+}
+.mud-snackbar .mud-button-root,
+.mud-snackbar button,
+.mud-snackbar a {
+    cursor: default;
+}
+.mud-snackbar-close-button {
+    display: none !important;
 }

@@ -38,11 +38,12 @@ public static class MauiProgram
 
 		builder.Services.AddMudServices(config =>
 		{
-			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
+			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
 			config.SnackbarConfiguration.VisibleStateDuration = 3000;
 			config.SnackbarConfiguration.HideTransitionDuration = 100;
 			config.SnackbarConfiguration.ShowTransitionDuration = 100;
 			config.SnackbarConfiguration.PreventDuplicates = true;
+			config.SnackbarConfiguration.ShowCloseIcon = true;
 		});
 
 		var activeIdStr = Microsoft.Maui.Storage.Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);

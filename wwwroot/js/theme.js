@@ -159,4 +159,20 @@
             }
         }
     };
+
+    // Dismiss MudBlazor snackbars on click
+    document.addEventListener("click", (e) => {
+        const snackbar = e.target.closest(".mud-snackbar");
+        if (!snackbar) return;
+
+        // If clicking a button, link, or interactive element inside the snackbar, let it propagate normally.
+        const isInteractive = e.target.closest("button") || e.target.closest("a") || e.target.closest(".mud-button-root");
+        if (isInteractive) return;
+
+        // Otherwise, click the close button to dismiss the snackbar
+        const closeBtn = snackbar.querySelector(".mud-snackbar-close-button");
+        if (closeBtn) {
+            closeBtn.click();
+        }
+    });
 })();

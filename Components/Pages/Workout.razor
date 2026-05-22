@@ -108,7 +108,7 @@ else
                 {
                     <MudCard Class="mb-2" @key="item.ExerciseIndex">
                         <MudCardContent>
-                            <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
+                            <MudText Typo="Typo.h5" Align="Align.Center" Class="font-weight-bold mb-2">@item.ExerciseName</MudText>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2 mb-3">
                                 <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
                                 <MudChip T="string" Size="Size.Small" Color="Color.Primary">@item.CompletedSets/@item.TotalSets</MudChip>
@@ -116,20 +116,21 @@ else
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Primary"
                                        FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.Check"
                                        OnClick="@(() => OpenSetLogModalAsync(item.ExerciseIndex))"
                                        Disabled="@CompleteSetButtonDisabled">
-                                Complete set @(item.CompletedSets + 1)
+                                Done
                             </MudButton>
                         </MudCardContent>
                     </MudCard>
                 }
                 @if (!UpcomingExercises.Any() && DoneExercises.Any())
                 {
-                    <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete! Great work.</MudAlert>
+                    <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete!</MudAlert>
                 }
                 @if (!UpcomingExercises.Any() && !DoneExercises.Any())
                 {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">No sets in this plan.</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">No sets.</MudText>
                 }
             </MudItem>
 
@@ -146,7 +147,7 @@ else
                     {
                         <MudCard Class="mb-2" @key="item.ExerciseIndex">
                             <MudCardContent>
-                                <MudText Typo="Typo.subtitle1">@item.ExerciseName</MudText>
+                                <MudText Typo="Typo.h5" Align="Align.Center" Class="font-weight-bold mb-2">@item.ExerciseName</MudText>
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
                                     <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
                                     <MudChip T="string" Size="Size.Small" Color="Color.Success">@item.CompletedSets/@item.TotalSets</MudChip>
@@ -156,7 +157,7 @@ else
                     }
                     @if (!DoneExercises.Any())
                     {
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">Complete a set to see it here.</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary py-4" Align="Align.Center">No completed sets.</MudText>
                     }
                 </MudCollapse>
             </MudItem>
@@ -306,7 +307,10 @@ else
         return list;
     }
 
-    private string RestTimerPanelClass => "rest-timer-panel rest-timer-panel--active";
+    private string RestTimerPanelClass =>
+        _isRestComplete
+            ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
+            : "rest-timer-panel rest-timer-panel--active";
 
     private double RestProgressValue
     {
@@ -327,9 +331,11 @@ else
                 : "";
 
     private string RestEdgeFillClass =>
-        SessionService.RestSecondsRemaining <= 3 && !SessionService.IsRestPaused
-            ? "rest-timer-edge-fill--urgent"
-            : "";
+        SessionService.IsRestPaused
+            ? "rest-timer-edge-fill--paused"
+            : SessionService.RestSecondsRemaining <= 3
+                ? "rest-timer-edge-fill--urgent"
+                : "";
 
     private string RestTimerAriaLabel =>
         SessionService.IsRestPaused
@@ -484,7 +490,7 @@ else
         {
             config.Action = "Undo";
             config.ActionColor = Color.Warning;
-            config.ShowCloseIcon = false;
+            config.ShowCloseIcon = true;
             config.RequireInteraction = false;
             config.OnClick = snackbar => UndoLastSetCoreAsync();
         });

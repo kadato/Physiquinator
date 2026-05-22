@@ -45,8 +45,9 @@ public static class MauiProgram
 			config.SnackbarConfiguration.PreventDuplicates = true;
 		});
 
-		var activeId = Microsoft.Maui.Storage.Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
-		var dbName = string.IsNullOrEmpty(activeId) ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
+		var activeIdStr = Microsoft.Maui.Storage.Preferences.Default.Get("Physiquinator.ActiveProfileId", string.Empty);
+		var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
+		var dbName = activeId == Guid.Empty ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
 		var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbName);
 		builder.Services.AddSingleton(TimeProvider.System);
 		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));

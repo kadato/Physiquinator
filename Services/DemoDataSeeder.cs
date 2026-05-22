@@ -32,16 +32,16 @@ public class DemoDataSeeder
         _preferences = preferences;
     }
 
-    public async Task SeedDemoDataIfNeededAsync()
+    public async Task<bool> SeedDemoDataIfNeededAsync()
     {
         if (_preferences.Get(InitialDemoSeedCompletedKey, false))
-            return;
+            return false;
 
         var existingPlans = await _planService.GetAllPlansAsync();
         if (existingPlans.Any())
         {
             _preferences.Set(InitialDemoSeedCompletedKey, true);
-            return;
+            return false;
         }
 
         var demoPlans = new List<WorkoutPlan>
@@ -56,28 +56,29 @@ public class DemoDataSeeder
             await _planService.SavePlanAsync(plan);
 
         _preferences.Set(InitialDemoSeedCompletedKey, true);
+        return true;
     }
 
     /// <summary>
     /// Seeds demo workout history once (empty sessions + preference gate). Requires all four demo plans.
     /// </summary>
-    public async Task SeedDemoHistoryIfNeededAsync()
+    public async Task<bool> SeedDemoHistoryIfNeededAsync()
     {
         if (_preferences.Get(DemoHistorySeedCompletedKey, false))
-            return;
+            return false;
 
         await _database.EnsureInitializedAsync();
 
         if (await _historyRepository.GetSessionCountAsync() > 0)
         {
             _preferences.Set(DemoHistorySeedCompletedKey, true);
-            return;
+            return false;
         }
 
         if (!await HasAllDemoPlansAsync())
         {
             _preferences.Set(DemoHistorySeedCompletedKey, true);
-            return;
+            return false;
         }
 
         var snapshots = new Dictionary<Guid, string>
@@ -136,6 +137,7 @@ public class DemoDataSeeder
         }
 
         _preferences.Set(DemoHistorySeedCompletedKey, true);
+        return true;
     }
 
     private async Task<bool> HasAllDemoPlansAsync() =>

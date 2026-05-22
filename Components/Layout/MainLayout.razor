@@ -15,10 +15,7 @@
 <div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
     <main class="app-main-scroll">
         <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
-            @if (AppInit.IsReady)
-            {
-                @Body
-            }
+            @Body
         </MudContainer>
     </main>
 
@@ -29,7 +26,7 @@
         </div>
     }
 
-    @if (_showBottomNav && AppInit.IsReady)
+    @if (_showBottomNav)
     {
         <nav class="app-tab-bar" aria-label="Main navigation">
             <div class="app-tab-bar__inner app-bottom-dock">
@@ -100,23 +97,21 @@
     private bool _showBottomNav = true;
     private bool _useFixedDockPadding;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        try
         {
-            try
-            {
-                await AppInit.EnsureInitializedAsync();
-                SyncThemeFromService();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "App initialization failed");
-            }
-
-            await InvokeAsync(StateHasChanged);
+            await AppInit.EnsureInitializedAsync();
+            SyncThemeFromService();
         }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "App initialization failed");
+        }
+    }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
         UpdateNavigationState();
     }
 

@@ -106,21 +106,36 @@ public class DemoDataSeederTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ClearData_AllowsReseed()
+    public async Task ClearData_WithPreferencesReset_AllowsReseed()
     {
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
         var expected = await _historyRepo.GetSessionCountAsync();
 
         await _db.ClearAllUserDataAsync();
-        _prefs.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, false);
-        _prefs.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, false);
+        _prefs.Clear(); // Explicitly reset pref flags to mimic clean reinstall or clear-seed-flags action
 
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
 
         Assert.Equal(4, (await _planService.GetAllPlansAsync()).Count);
         Assert.Equal(expected, await _historyRepo.GetSessionCountAsync());
+    }
+
+    [Fact]
+    public async Task ClearData_WithoutPreferencesReset_DoesNotReseed()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+
+        await _db.ClearAllUserDataAsync();
+        // Do not clear preferences, keeping the completed flags set to true
+
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+
+        Assert.Empty(await _planService.GetAllPlansAsync());
+        Assert.Equal(0, await _historyRepo.GetSessionCountAsync());
     }
 
     private static DateOnly GetMondayOfWeek(DateOnly date)

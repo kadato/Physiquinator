@@ -46,24 +46,28 @@ public sealed class AppInitializationService
 
             await _theme.EnsureInitializedAsync().ConfigureAwait(false);
 
-            if (NeedsFirstTimeDemoSeed())
+            if (_preferences.IsDefaultProfile)
             {
-                ShowSetupOverlay = true;
-                SetupStatusMessage = "Loading sample plans…";
-                NotifyProgress();
+                var didSeedPlans = await _demoSeeder.SeedDemoDataIfNeededAsync().ConfigureAwait(false);
 
-                await _demoSeeder.SeedDemoDataIfNeededAsync().ConfigureAwait(false);
+                if (didSeedPlans)
+                {
+                    ShowSetupOverlay = true;
+                    SetupStatusMessage = "Building workout history\u2026";
+                    NotifyProgress();
+                }
 
-                SetupStatusMessage = "Building workout history…";
-                NotifyProgress();
-                await _demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
+                var didSeedHistory = await _demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
 
-                // Set flag to show onboarding modal explaining that demo data was seeded
-                _preferences.Set("Physiquinator.ShowFirstTimeSeedModal", true);
+                if (didSeedPlans || didSeedHistory)
+                {
+                    // Set flag to show onboarding modal explaining that demo data was seeded
+                    _preferences.Set("Physiquinator.ShowFirstTimeSeedModal", true);
 
-                ShowSetupOverlay = false;
-                SetupStatusMessage = null;
-                NotifyProgress();
+                    ShowSetupOverlay = false;
+                    SetupStatusMessage = null;
+                    NotifyProgress();
+                }
             }
 
             IsReady = true;
@@ -89,11 +93,6 @@ public sealed class AppInitializationService
         }
         await EnsureInitializedAsync().ConfigureAwait(false);
     }
-
-    private bool NeedsFirstTimeDemoSeed() =>
-        _preferences.IsDefaultProfile
-        && !_preferences.Get(DemoDataSeeder.InitialDemoSeedCompletedKey, false)
-        && !_preferences.Get(DemoDataSeeder.DemoHistorySeedCompletedKey, false);
 
     private void NotifyProgress() => ProgressChanged?.Invoke();
 }

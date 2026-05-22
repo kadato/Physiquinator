@@ -31,18 +31,21 @@ public class AppInitializationServiceTests : IAsyncLifetime
     public async Task DisposeAsync() => await _db.Database.CloseAsync();
 
     [Fact]
-    public async Task EnsureInitializedAsync_WhenSeedFlagsSet_SkipsDemoSeedAndOverlay()
+    public async Task EnsureInitializedAsync_WhenDbAlreadyHasData_SkipsDemoSeedAndOverlay()
     {
-        _prefs.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, true);
-        _prefs.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, true);
+        // Pre-populate the DB so the seeders see existing data and skip
+        await _seeder.SeedDemoDataIfNeededAsync();
+        await _seeder.SeedDemoHistoryIfNeededAsync();
+        var planCountBefore = (await _planService.GetAllPlansAsync()).Count;
+        var sessionCountBefore = await _historyRepo.GetSessionCountAsync();
 
         var sut = CreateSut();
         await sut.EnsureInitializedAsync();
 
         Assert.True(sut.IsReady);
         Assert.False(sut.ShowSetupOverlay);
-        Assert.Equal(0, await _historyRepo.GetSessionCountAsync());
-        Assert.Empty(await _planService.GetAllPlansAsync());
+        Assert.Equal(planCountBefore, (await _planService.GetAllPlansAsync()).Count);
+        Assert.Equal(sessionCountBefore, await _historyRepo.GetSessionCountAsync());
         Assert.Equal(1, _theme.InitializeCallCount);
     }
 
@@ -77,14 +80,17 @@ public class AppInitializationServiceTests : IAsyncLifetime
     [Fact]
     public async Task EnsureInitializedAsync_AfterDbClearedWithSeedFlagsSet_DoesNotReseed()
     {
-        _prefs.Set(DemoDataSeeder.InitialDemoSeedCompletedKey, true);
-        _prefs.Set(DemoDataSeeder.DemoHistorySeedCompletedKey, true);
-        await _seeder.SeedDemoDataIfNeededAsync();
-        await _seeder.SeedDemoHistoryIfNeededAsync();
-        await _db.ClearAllUserDataAsync();
-
+        // First init seeds the DB
         var sut = CreateSut();
         await sut.EnsureInitializedAsync();
+        Assert.NotEmpty(await _planService.GetAllPlansAsync());
+
+        // Clear the DB
+        await _db.ClearAllUserDataAsync();
+
+        // Re-init with a fresh AppInitializationService — should NOT re-seed because preference flags are still true
+        var sut2 = CreateSut();
+        await sut2.EnsureInitializedAsync();
 
         Assert.Empty(await _planService.GetAllPlansAsync());
         Assert.Equal(0, await _historyRepo.GetSessionCountAsync());

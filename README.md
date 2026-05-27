@@ -11,13 +11,13 @@
 
 A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, comprehensive workout history, user profiles, and workout plan management.
 
-[Download](#-download--install) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started)
+[Download](#download--install) • [Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started)
 
 </div>
 
 ---
 
-## 📸 Preview
+## Preview
 
 <div align="center">
 
@@ -83,7 +83,7 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ---
 
-## 📥 Download & Install
+## Download & Install
 
 ### Available Builds
 
@@ -91,8 +91,8 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 | Platform | Package | Size | Requirements |
 |----------|---------|------|--------------|
-| 🤖 Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~30 MB | Android 7.0+ |
-| 🪟 Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~62 MB | .NET 10 Desktop Runtime* |
+| Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~30 MB | Android 7.0+ |
+| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~62 MB | .NET 10 Desktop Runtime* |
 
 **\*.NET 10 Desktop Runtime is free from Microsoft and installs in ~5 minutes (one-time setup)**  
 Download: https://dotnet.microsoft.com/download/dotnet/10.0
@@ -137,7 +137,7 @@ dotnet build -t:Run -f net10.0-windows10.0.19041.0
 dotnet build -t:Run -f net10.0-ios
 ```
 
-See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-started) for detailed instructions.
+See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for detailed instructions.
 
 #### Installation Instructions
 
@@ -145,7 +145,7 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 1. Enable "Install from Unknown Sources" in **Settings** → **Security**
 2. Transfer the APK to your device
 3. Open the APK file and tap **Install**
-4. Launch **Physiquinator** and start tracking! 🎉
+4. Launch **Physiquinator** and start tracking!
 
 **Windows:**
 1. Extract the ZIP file
@@ -153,7 +153,7 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 3. No installation required - runs standalone!
 4. Note: Requires .NET 10 Runtime (or use published version with runtime included)
 
-> **💡 Tip:** The app includes sample workout plans to get you started immediately!
+> **Tip:** The app includes sample workout plans to get you started immediately!
 
 ---
 
@@ -230,7 +230,7 @@ See [🐳 Docker Builds](#-docker-builds) or [🚀 Getting Started](#-getting-st
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -273,7 +273,7 @@ dotnet build -t:Run -f net10.0-ios
 - App bundle (AAB) format for Android
 - Self-contained Windows build
 
-### 🐳 Docker Builds
+### Docker Builds
 
 Build Android APK using Docker (no Android SDK setup required):
 
@@ -289,7 +289,7 @@ docker rm temp
 
 ---
 
-## 🎯 Key Design Decisions
+## Key Design Decisions
 
 ### Why .NET MAUI + Blazor Hybrid?
 - **Single Codebase** - Write once, run everywhere (Android, iOS, Windows, macOS)

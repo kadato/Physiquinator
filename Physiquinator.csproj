@@ -138,6 +138,12 @@
       <EmbeddedResource Remove="docs\screenshots\**" />
       <MauiXaml Remove="docs\screenshots\**" />
       <None Remove="docs\screenshots\**" />
+      <Compile Remove="artifacts\**" />
+      <Content Remove="artifacts\**" />
+      <None Remove="artifacts\**" />
+      <EmbeddedResource Remove="artifacts\**" />
+      <MauiXaml Remove="artifacts\**" />
+      <AndroidResource Remove="artifacts\**" />
     </ItemGroup>
 
     <ItemGroup>

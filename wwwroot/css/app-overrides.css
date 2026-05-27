@@ -309,7 +309,6 @@ html, body, #app, .mud-typography, .mud-button, .mud-input {
     padding: 1rem 1.125rem !important;
     border-radius: 16px !important;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 24%, transparent) !important;
-    border-left: 5px solid var(--mud-palette-primary) !important;
     background: linear-gradient(
         135deg,
         color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) 0%,

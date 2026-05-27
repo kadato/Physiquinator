@@ -1,12 +1,17 @@
 @inject IJSRuntime JSRuntime
 
 <div class="activity-heatmap mb-0">
+    <div class="heatmap-labels" aria-hidden="true">
+        @for (var r = 0; r < 7; r++)
+        {
+            <div class="heatmap-day-label">@DayLabel(r)</div>
+        }
+    </div>
     <div class="heatmap-scroll" @ref="_heatmapScroll">
         <div class="heatmap-grid" style="@_gridStyle">
             @for (var r = 0; r < 7; r++)
             {
                 var row = r;
-                <div class="heatmap-day-label" aria-hidden="true">@DayLabel(row)</div>
                 @for (var c = 0; c < Weeks; c++)
                 {
                     var col = c;
@@ -60,7 +65,7 @@
         var mondayOfEndWeek = GetMondayOfWeek(_endLocal);
         _leftMonday = mondayOfEndWeek.AddDays(-7 * (Weeks - 1));
         _gridStyle =
-            $"grid-template-columns: 2.25rem repeat({Weeks}, 11px); grid-template-rows: repeat(7, 11px);";
+            $"grid-template-columns: repeat({Weeks}, var(--heatmap-cell-size, 11px)); grid-template-rows: repeat(7, var(--heatmap-cell-size, 11px));";
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -109,9 +114,9 @@
 
     private static string? DayLabel(int row) => row switch
     {
-        0 => "Mon",
-        2 => "Wed",
-        4 => "Fri",
+        0 => "M",
+        2 => "W",
+        4 => "F",
         _ => null
     };
 

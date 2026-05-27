@@ -108,11 +108,11 @@ else
                 {
                     <MudCard Class="mb-2" @key="item.ExerciseIndex">
                         <MudCardContent>
-                            <MudText Typo="Typo.h5" Align="Align.Center" Class="font-weight-bold mb-2">@item.ExerciseName</MudText>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2 mb-3">
-                                <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
+                            <div class="d-flex align-center justify-center gap-2 mb-2">
+                                <MudText Typo="Typo.h5" Class="font-weight-bold">@item.ExerciseName</MudText>
                                 <MudChip T="string" Size="Size.Small" Color="Color.Primary">@item.CompletedSets/@item.TotalSets</MudChip>
-                            </MudStack>
+                            </div>
+                            <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="mb-3" />
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Primary"
                                        FullWidth="true"
@@ -147,11 +147,11 @@ else
                     {
                         <MudCard Class="mb-2" @key="item.ExerciseIndex">
                             <MudCardContent>
-                                <MudText Typo="Typo.h5" Align="Align.Center" Class="font-weight-bold mb-2">@item.ExerciseName</MudText>
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
-                                    <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="flex-grow-1" />
+                                <div class="d-flex align-center justify-center gap-2 mb-2">
+                                    <MudText Typo="Typo.h5" Class="font-weight-bold">@item.ExerciseName</MudText>
                                     <MudChip T="string" Size="Size.Small" Color="Color.Success">@item.CompletedSets/@item.TotalSets</MudChip>
-                                </MudStack>
+                                </div>
+                                <MudProgressLinear Color="Color.Success" Value="@GetProgressValue(item.CompletedSets, item.TotalSets)" Class="mb-1" />
                             </MudCardContent>
                         </MudCard>
                     }

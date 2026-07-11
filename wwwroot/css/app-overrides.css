@@ -1879,4 +1879,200 @@ button.heatmap-cell:disabled {
 }
 .mud-snackbar-close-button {
     display: none !important;
+}
+
+/* Inline Set Accordion styling */
+.exercise-accordion-card {
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px !important;
+}
+
+.exercise-accordion-card--completed {
+    background: color-mix(in srgb, var(--mud-palette-success) 4%, var(--mud-palette-surface)) !important;
+    border-color: color-mix(in srgb, var(--mud-palette-success) 16%, transparent) !important;
+}
+
+.exercise-accordion-card--expanded {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 35%, transparent) !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--mud-palette-primary) 8%, transparent) !important;
+}
+
+.exercise-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.exercise-accordion-header .header-left,
+.exercise-accordion-header .header-right {
+    display: flex;
+    align-items: center;
+}
+
+.exercise-order-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--mud-palette-text-secondary) 15%, transparent);
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.set-progress-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-secondary);
+}
+
+.exercise-accordion-card--completed .set-progress-text {
+    color: var(--mud-palette-success);
+}
+
+/* Set Rows styling */
+.set-logging-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.set-logging-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 3%, transparent);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.set-row--completed {
+    background-color: color-mix(in srgb, var(--mud-palette-success) 8%, transparent);
+}
+
+.set-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    position: relative;
+    max-width: 5.5rem;
+}
+
+.inline-set-input {
+    width: 100%;
+    height: 2.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
+    background-color: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inline-set-input:focus {
+    outline: none;
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
+}
+
+.inline-set-input::placeholder {
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 50%, transparent);
+    font-weight: 500;
+}
+
+.inline-set-input:disabled {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--mud-palette-text-secondary);
+    font-weight: 500;
+}
+
+.unit-label {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    font-weight: 500;
+}
+
+.times-separator {
+    font-weight: 600;
+    color: var(--mud-palette-text-secondary);
+    user-select: none;
+    margin: 0 0.25rem;
+}
+
+/* Log Action Check Button */
+.log-check-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--mud-palette-text-secondary) 25%, transparent);
+    background-color: transparent;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.log-check-btn:hover {
+    border-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary);
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
+    transform: scale(1.05);
+}
+
+.log-check-btn:active {
+    transform: scale(0.92);
+}
+
+@keyframes pop-check {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1.0); }
+}
+
+.log-check-btn--completed {
+    animation: pop-check 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: #10B981 !important;
+    border-color: #10B981 !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.log-check-btn--completed:hover {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: white !important;
+}
+
+.completed-icon {
+    color: #10B981 !important;
+    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.2));
+}
+
+/* Progress bar overrides for active state */
+.exercise-accordion-card .mud-progress-linear {
+    height: 6px !important;
+    border-radius: 999px !important;
+}
+
+.workout-completed-divider-title {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-left: 0.5rem;
 }

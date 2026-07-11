@@ -1233,10 +1233,10 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-edge-fill {
+    width: 0%;
     height: 100%;
     background: linear-gradient(90deg, var(--mud-palette-secondary) 0%, var(--mud-palette-primary) 100%);
     border-radius: 6px;
-    transition: width 0.35s linear;
 }
 
 .rest-timer-edge-fill--paused {

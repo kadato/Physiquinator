@@ -44,6 +44,27 @@ public class WorkoutSessionService : IDisposable
     /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
     public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
 
+    /// <summary>Continuous progress fraction [0, 1] based on wall clock, for smooth progress bar animation.</summary>
+    public double RestProgressFraction
+    {
+        get
+        {
+            if (!_isResting || _activeRestDurationSeconds <= 0) return 0;
+            if (_userPaused && _pausedRemainingSeconds.HasValue)
+            {
+                var elapsed = _activeRestDurationSeconds - Math.Max(0, _pausedRemainingSeconds.Value);
+                return Math.Clamp(elapsed / (double)_activeRestDurationSeconds, 0, 1);
+            }
+            if (_restEndsAtUtc.HasValue)
+            {
+                var remaining = (_restEndsAtUtc.Value - UtcNow).TotalSeconds;
+                var elapsed = _activeRestDurationSeconds - Math.Max(0, remaining);
+                return Math.Clamp(elapsed / _activeRestDurationSeconds, 0, 1);
+            }
+            return 0;
+        }
+    }
+
     /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
     public event EventHandler? RestCompletedWhileBackground;
 

@@ -1,18 +1,70 @@
-// Audio & timer helper module for workout notifications.
-// A single AudioContext is reused across calls to avoid exhausting
-// native audio resources on Android WebView (which limits concurrent contexts).
 let sharedCtx = null;
 let restTimerActive = false;
 let restTimerId = null;
+let rafId = null;
+let restStartTime = 0;
+let restTotalMs = 0;
 
-// Starts a JS-driven rest timer that calls back into .NET on each tick.
-// Self-rescheduling setTimeout (not setInterval) guarantees only one
-// invokeMethodAsync call is in-flight at a time — on slow Android release
-// builds, setInterval can stack up pending bridge calls and crash the WebView.
-export function startRestTimer(dotNetRef, intervalMs) {
+export function startRestTimer(dotNetRef, intervalMs, totalMs) {
     stopRestTimer();
+    if (!totalMs || totalMs <= 0) return;
+
     restTimerActive = true;
+    restStartTime = performance.now();
+    restTotalMs = totalMs;
+
+    startProgressRaf();
     scheduleTick(dotNetRef, intervalMs);
+}
+
+function startProgressRaf() {
+    function update() {
+        if (!restTimerActive) return;
+        const elapsed = performance.now() - restStartTime;
+        const progress = Math.min(elapsed / restTotalMs, 1);
+
+        const fill = document.querySelector('.rest-timer-edge-fill');
+        if (fill) {
+            fill.style.width = `${progress * 100}%`;
+        }
+
+        if (progress < 1) {
+            rafId = requestAnimationFrame(update);
+        }
+    }
+    rafId = requestAnimationFrame(update);
+}
+
+export function pauseRestTimer() {
+    if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+    if (restTimerId !== null) {
+        clearTimeout(restTimerId);
+        restTimerId = null;
+    }
+}
+
+export function resumeRestTimer(dotNetRef, intervalMs, totalMs) {
+    if (!restTimerActive || !totalMs || totalMs <= 0) return;
+
+    restStartTime = performance.now();
+    restTotalMs = totalMs;
+    startProgressRaf();
+    scheduleTick(dotNetRef, intervalMs);
+}
+
+export function stopRestTimer() {
+    restTimerActive = false;
+    if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+    if (restTimerId !== null) {
+        clearTimeout(restTimerId);
+        restTimerId = null;
+    }
 }
 
 function scheduleTick(dotNetRef, intervalMs) {
@@ -30,26 +82,16 @@ function scheduleTick(dotNetRef, intervalMs) {
     }, intervalMs);
 }
 
-export function stopRestTimer() {
-    restTimerActive = false;
-    if (restTimerId !== null) {
-        clearTimeout(restTimerId);
-        restTimerId = null;
-    }
-}
-
 function getAudioContext() {
     if (!sharedCtx || sharedCtx.state === 'closed') {
         sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    // Resume if suspended by autoplay policy (timer callbacks are not user gestures)
     if (sharedCtx.state === 'suspended') {
         sharedCtx.resume();
     }
     return sharedCtx;
 }
 
-// Call once from a user gesture (e.g. Complete set) so mobile WebViews allow audio on timer fire.
 export function unlockAudioContext() {
     try {
         const ctx = getAudioContext();
@@ -93,9 +135,9 @@ export function playWorkoutCompleteSound() {
             oscillator.stop(startTime + duration);
         };
         const now = audioContext.currentTime;
-        playTone(523, now, 0.15);        // C5
-        playTone(659, now + 0.15, 0.15); // E5
-        playTone(784, now + 0.3, 0.3);   // G5
+        playTone(523, now, 0.15);
+        playTone(659, now + 0.15, 0.15);
+        playTone(784, now + 0.3, 0.3);
     } catch (error) {
         console.warn('Audio playback failed:', error);
     }

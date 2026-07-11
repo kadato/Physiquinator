@@ -94,8 +94,7 @@ else
                             </MudStack>
 
                             <div class="rest-timer-edge-track" aria-hidden="true">
-                                <div class="rest-timer-edge-fill @RestTimerEdgeFillClass"
-                                     style="width: @(RestTimerEdgeFillWidth)%"></div>
+                                <div class="rest-timer-edge-fill @RestTimerEdgeFillClass"></div>
                             </div>
                         </div>
             </MudPaper>
@@ -506,17 +505,6 @@ else
             ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
             : "rest-timer-panel rest-timer-panel--active";
 
-    private double RestProgressValue
-    {
-        get
-        {
-            var total = SessionService.ActiveRestDurationSeconds;
-            if (total <= 0) return 0;
-            var elapsed = total - SessionService.RestSecondsRemaining;
-            return Math.Clamp(elapsed * 100.0 / total, 0, 100);
-        }
-    }
-
     private string RestDigitsClass =>
         SessionService.IsRestPaused
             ? "rest-timer-digits--paused"
@@ -540,11 +528,6 @@ else
         _isRestComplete ? "Rest complete" : RestTimerAriaLabel;
 
     private string RestTimerEdgeFillClass => _isRestComplete ? "" : RestEdgeFillClass;
-
-    private string RestTimerEdgeFillWidth =>
-        _isRestComplete
-            ? "100"
-            : RestProgressValue.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
 
     private async Task ConfirmLeaveWorkoutInProgress()
     {
@@ -934,7 +917,7 @@ else
     {
         if (_disposed) return;
 
-        await StopJsTimerAsync();
+        await CallJsVoidAsync("pauseRestTimer");
         RestNotifications.CancelAllRestNotifications();
         SessionService.PauseRest();
         await SafeStateHasChangedAsync();
@@ -954,7 +937,8 @@ else
         }
         else
         {
-            await StartJsTimerAsync();
+            var remaining = SessionService.RestSecondsRemaining;
+            await ResumeJsTimerAsync(remaining);
             await ScheduleRestNotificationIfRestingAsync();
             await SafeStateHasChangedAsync();
         }
@@ -1133,14 +1117,17 @@ else
         return false;
     }
 
-    private async Task StartJsTimerAsync()
+    private async Task StartJsTimerAsync(int? durationSeconds = null)
     {
         if (_disposed) return;
 
         try
         {
             if (_audioModule != null && _dotNetRef != null)
-                await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000);
+            {
+                var totalMs = (durationSeconds ?? SessionService.ActiveRestDurationSeconds) * 1000;
+                await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000, totalMs);
+            }
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
@@ -1153,6 +1140,34 @@ else
         {
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("stopRestTimer");
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private async Task ResumeJsTimerAsync(int durationSeconds)
+    {
+        if (_disposed || durationSeconds <= 0) return;
+
+        try
+        {
+            if (_audioModule != null && _dotNetRef != null)
+                await _audioModule.InvokeVoidAsync("resumeRestTimer", _dotNetRef, 1000, durationSeconds * 1000);
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private async Task CallJsVoidAsync(string method)
+    {
+        if (_disposed) return;
+
+        try
+        {
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync(method);
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }

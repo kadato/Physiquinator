@@ -11,8 +11,6 @@ public partial class App : Application
 	{
 		var window = new Window(new MainPage());
 
-		// When the window loses focus, the Blazor WebView may stop firing JS timers.
-		// Rest still advances in real time via wall-clock end in WorkoutSessionService.
 		window.Deactivated += (_, _) =>
 		{
 			var session = Handler?.MauiContext?.Services.GetService<Services.WorkoutSessionService>();

@@ -7,9 +7,7 @@
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(-1))"
-                aria-label="@($"Decrease {Label}")">
-            -
-        </button>
+                aria-label="@($"Decrease {Label}")">&#x2212;</button>
         @if (_editing)
         {
             <input @ref="_inputRef"
@@ -37,16 +35,17 @@
                     data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                     data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                     data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
-                <span class="set-metric-stepper__drag-hint">⬌</span>
                 @DisplayText
+                @if (!string.IsNullOrEmpty(Unit))
+                {
+                    <span class="set-metric-stepper__value-unit">@Unit</span>
+                }
             </button>
         }
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(1))"
-                aria-label="@($"Increase {Label}")">
-            +
-        </button>
+                aria-label="@($"Increase {Label}")">&#x2B;</button>
     </div>
 }
 else
@@ -133,6 +132,9 @@ else
 
     [Parameter]
     public double? Placeholder { get; set; }
+
+    [Parameter]
+    public string Unit { get; set; } = "";
 
     private bool _editing;
     private string _editText = "";

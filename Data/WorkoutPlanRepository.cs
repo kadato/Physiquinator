@@ -15,14 +15,23 @@ public class WorkoutPlanRepository
     {
         await _database.EnsureInitializedAsync().ConfigureAwait(false);
         var planEntities = await _database.Database.Table<WorkoutPlanEntity>().ToListAsync().ConfigureAwait(false);
+        if (planEntities.Count == 0)
+            return new List<WorkoutPlan>();
+
+        var planIds = planEntities.Select(p => p.Id).ToList();
+        var allExercises = await _database.Database.Table<ExercisePlanEntity>()
+            .Where(e => planIds.Contains(e.WorkoutPlanId))
+            .ToListAsync().ConfigureAwait(false);
+
+        var exercisesGrouped = allExercises.GroupBy(e => e.WorkoutPlanId)
+            .ToDictionary(g => g.Key, g => g.OrderBy(e => e.Order).ToList());
+
         var plans = new List<WorkoutPlan>();
 
         foreach (var planEntity in planEntities)
         {
-            var exercises = await _database.Database.Table<ExercisePlanEntity>()
-                .Where(e => e.WorkoutPlanId == planEntity.Id)
-                .OrderBy(e => e.Order)
-                .ToListAsync().ConfigureAwait(false);
+            exercisesGrouped.TryGetValue(planEntity.Id, out var exercises);
+            exercises ??= new List<ExercisePlanEntity>();
 
             var plan = new WorkoutPlan
             {
@@ -97,29 +106,31 @@ public class WorkoutPlanRepository
             CreatedAt = plan.CreatedAt
         };
 
-        await _database.Database.InsertOrReplaceAsync(planEntity).ConfigureAwait(false);
-
         var planIdString = plan.Id.ToString();
-        await _database.Database.Table<ExercisePlanEntity>()
-            .Where(e => e.WorkoutPlanId == planIdString)
-            .DeleteAsync().ConfigureAwait(false);
 
-        foreach (var exercise in plan.Exercises)
+        await _database.Database.RunInTransactionAsync(conn =>
         {
-            var exerciseEntity = new ExercisePlanEntity
-            {
-                Id = exercise.Id.ToString(),
-                WorkoutPlanId = plan.Id.ToString(),
-                Name = exercise.Name,
-                SetCount = exercise.SetCount,
-                Order = exercise.Order,
-                RestIntervalSeconds = exercise.RestIntervalSeconds,
-                DefaultReps = exercise.DefaultReps,
-                DefaultWeightKg = exercise.DefaultWeightKg
-            };
+            conn.InsertOrReplace(planEntity);
 
-            await _database.Database.InsertAsync(exerciseEntity).ConfigureAwait(false);
-        }
+            conn.Execute("DELETE FROM ExercisePlans WHERE WorkoutPlanId = ?", planIdString);
+
+            foreach (var exercise in plan.Exercises)
+            {
+                var exerciseEntity = new ExercisePlanEntity
+                {
+                    Id = exercise.Id.ToString(),
+                    WorkoutPlanId = planIdString,
+                    Name = exercise.Name,
+                    SetCount = exercise.SetCount,
+                    Order = exercise.Order,
+                    RestIntervalSeconds = exercise.RestIntervalSeconds,
+                    DefaultReps = exercise.DefaultReps,
+                    DefaultWeightKg = exercise.DefaultWeightKg
+                };
+
+                conn.Insert(exerciseEntity);
+            }
+        }).ConfigureAwait(false);
     }
 
     public async Task DeletePlanAsync(Guid id)

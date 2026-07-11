@@ -358,6 +358,16 @@ public class WorkoutHistoryRepository
         return true;
     }
 
+    public async Task DeleteSetLogAsync(string sessionId, int exerciseIndex, int setIndex)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+        await _db.EnsureInitializedAsync();
+
+        await _db.Database.Table<WorkoutSetLogEntity>()
+            .Where(s => s.SessionId == sessionId && s.ExerciseIndex == exerciseIndex && s.SetIndex == setIndex)
+            .DeleteAsync();
+    }
+
     public async Task DeleteSessionAsync(string sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId)) return;

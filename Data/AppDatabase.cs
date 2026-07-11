@@ -15,6 +15,19 @@ public class AppDatabase
 
     private async Task InitializeAsync()
     {
+        try
+        {
+            // Execute PRAGMAs safely. Some pragmas return row values and must use ExecuteScalarAsync.
+            await _database.ExecuteScalarAsync<string>("PRAGMA journal_mode = WAL;").ConfigureAwait(false);
+            await _database.ExecuteScalarAsync<string>("PRAGMA synchronous = NORMAL;").ConfigureAwait(false);
+            await _database.ExecuteScalarAsync<string>("PRAGMA temp_store = MEMORY;").ConfigureAwait(false);
+            await _database.ExecuteScalarAsync<string>("PRAGMA cache_size = -2000;").ConfigureAwait(false);
+        }
+        catch
+        {
+            // Ignore PRAGMA failures (e.g. for in-memory unit testing databases)
+        }
+
         await _database.CreateTableAsync<WorkoutPlanEntity>();
         await _database.CreateTableAsync<ExercisePlanEntity>();
         await _database.CreateTableAsync<WorkoutSessionLogEntity>();

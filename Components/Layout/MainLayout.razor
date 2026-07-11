@@ -13,11 +13,14 @@
 <MudSnackbarProvider />
 
 <div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
-    <main class="app-main-scroll">
-        <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
-            @Body
-        </MudContainer>
-    </main>
+    @if (AppInit.IsReady)
+    {
+        <main class="app-main-scroll">
+            <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
+                @Body
+            </MudContainer>
+        </main>
+    }
 
     @if (AppInit.ShowSetupOverlay)
     {

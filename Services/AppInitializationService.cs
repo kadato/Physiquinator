@@ -72,6 +72,7 @@ public sealed class AppInitializationService
 
             IsReady = true;
             InitializationCompleted?.Invoke();
+            NotifyProgress();
         }
         finally
         {

@@ -40,6 +40,7 @@ public class WorkoutPlanRepository
                 RestIntervalSeconds = planEntity.RestIntervalSeconds,
                 DefaultSetCount = planEntity.DefaultSetCount,
                 CreatedAt = planEntity.CreatedAt,
+                SortOrder = planEntity.SortOrder,
                 Exercises = exercises.Select(e => new ExercisePlan
                 {
                     Id = Guid.Parse(e.Id),
@@ -55,7 +56,7 @@ public class WorkoutPlanRepository
             plans.Add(plan);
         }
 
-        return plans;
+        return plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt).ToList();
     }
 
     public async Task<WorkoutPlan?> GetPlanAsync(Guid id)
@@ -81,6 +82,7 @@ public class WorkoutPlanRepository
             RestIntervalSeconds = planEntity.RestIntervalSeconds,
             DefaultSetCount = planEntity.DefaultSetCount,
             CreatedAt = planEntity.CreatedAt,
+            SortOrder = planEntity.SortOrder,
             Exercises = exercises.Select(e => new ExercisePlan
             {
                 Id = Guid.Parse(e.Id),
@@ -103,7 +105,8 @@ public class WorkoutPlanRepository
             Name = plan.Name,
             RestIntervalSeconds = plan.RestIntervalSeconds,
             DefaultSetCount = plan.DefaultSetCount,
-            CreatedAt = plan.CreatedAt
+            CreatedAt = plan.CreatedAt,
+            SortOrder = plan.SortOrder
         };
 
         var planIdString = plan.Id.ToString();

@@ -10,4 +10,5 @@ public class WorkoutPlan
     /// <summary>Default number of sets for new exercises.</summary>
     public int DefaultSetCount { get; set; } = 4;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int SortOrder { get; set; }
 }

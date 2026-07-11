@@ -15,4 +15,6 @@ public class WorkoutPlanEntity
     public int DefaultSetCount { get; set; }
     
     public DateTime CreatedAt { get; set; }
+    
+    public int SortOrder { get; set; }
 }

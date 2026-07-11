@@ -52,8 +52,11 @@ public class DemoDataSeeder
             CreateFullBodyPlan()
         };
 
-        foreach (var plan in demoPlans)
-            await _planService.SavePlanAsync(plan);
+        for (int i = 0; i < demoPlans.Count; i++)
+        {
+            demoPlans[i].SortOrder = i;
+            await _planService.SavePlanAsync(demoPlans[i]);
+        }
 
         _preferences.Set(InitialDemoSeedCompletedKey, true);
         return true;

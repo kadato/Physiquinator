@@ -1,6 +1,7 @@
 @page "/"
 @using Physiquinator.Formatting
 @using Physiquinator.Services
+@implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
 @inject WorkoutSessionService SessionService
@@ -9,6 +10,7 @@
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
 @inject IDemoSeedPreferences DemoSeedPreferences
+@inject IJSRuntime JS
 
 <PageTitle>Home</PageTitle>
 
@@ -89,8 +91,8 @@
         }
         else
         {
-            <div class="home-plan-list">
-                @foreach (var plan in _plans.OrderByDescending(p => p.CreatedAt))
+            <div id="home-plan-sortable-list" class="home-plan-list">
+                @foreach (var plan in _plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt))
                 {
                     <PlanCard PlanName="@plan.Name"
                               ExerciseCount="@plan.Exercises.Count"
@@ -114,6 +116,9 @@
     private WorkoutDaySummary? _summary;
     private WorkoutSessionLogEntity? _lastSession;
     private bool _isLoading = true;
+    private DotNetObjectReference<Home>? _dotNetRef;
+    private int _lastSortableCount = -1;
+    private bool _sortableReady;
 
     private string LastSessionLabel =>
         _lastSession == null
@@ -281,5 +286,95 @@
                 await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>("Welcome", options);
             }
         }
+
+        if (_plans == null || _plans.Count <= 1)
+        {
+            if (_lastSortableCount > 0)
+            {
+                await DestroySortableAsync();
+                _lastSortableCount = 0;
+                _sortableReady = false;
+            }
+            return;
+        }
+
+        var needsInit = !_sortableReady || _lastSortableCount != _plans.Count || firstRender;
+        if (needsInit)
+        {
+            var ready = await InitSortableAsync();
+            if (ready)
+            {
+                _sortableReady = true;
+                _lastSortableCount = _plans.Count;
+            }
+        }
+    }
+
+    private async ValueTask<bool> InitSortableAsync()
+    {
+        try
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await DestroySortableAsync();
+            return await JS.InvokeAsync<bool>("homePlansReorder.init", "home-plan-sortable-list", _dotNetRef);
+        }
+        catch (JSException)
+        {
+            return false;
+        }
+    }
+
+    private async ValueTask DestroySortableAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("homePlansReorder.destroy");
+        }
+        catch (JSException)
+        {
+            // Scripts not ready yet
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnPlanReordered(int oldIndex, int newIndex)
+    {
+        if (_plans == null || oldIndex < 0 || newIndex < 0 || oldIndex >= _plans.Count || newIndex >= _plans.Count)
+            return;
+
+        if (oldIndex == newIndex)
+            return;
+
+        // Perform local reordering
+        var sortedPlans = _plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt).ToList();
+        var itemToMove = sortedPlans[oldIndex];
+        sortedPlans.RemoveAt(oldIndex);
+        sortedPlans.Insert(newIndex, itemToMove);
+
+        // Update SortOrder on all plans
+        for (int i = 0; i < sortedPlans.Count; i++)
+        {
+            sortedPlans[i].SortOrder = i;
+            await PlanService.SavePlanAsync(sortedPlans[i]);
+        }
+
+        // Reload plans from DB to make sure they are in sync
+        _plans = await PlanService.GetAllPlansAsync();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await DestroySortableAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // WebView disposed
+        }
+
+        _dotNetRef?.Dispose();
     }
 }

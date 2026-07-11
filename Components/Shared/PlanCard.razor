@@ -1,6 +1,11 @@
 <MudCard Class="plan-card" Elevation="1">
     <MudCardContent Class="plan-card__content">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
+            <button type="button"
+                    class="plan-card-handle"
+                    aria-label="Drag to reorder @PlanName">
+                <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Medium" />
+            </button>
             <MudStack Spacing="0" Class="plan-card__info">
                 <MudText Typo="Typo.subtitle1" Class="plan-card-name">@PlanName</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel</MudText>

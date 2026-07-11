@@ -160,6 +160,50 @@
         }
     };
 
+    window.homePlansReorder = {
+        sortable: null,
+        init: function (listId, dotNetRef) {
+            const el = document.getElementById(listId);
+            if (!el || typeof Sortable === "undefined") {
+                return false;
+            }
+            this.destroy();
+            this.sortable = Sortable.create(el, {
+                handle: ".plan-card-handle",
+                animation: 150,
+                delay: 80,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 6,
+                forceFallback: true,
+                fallbackTolerance: 8,
+                swapThreshold: 0.65,
+                scroll: true,
+                bubbleScroll: true,
+                scrollSensitivity: 40,
+                scrollSpeed: 12,
+                fallbackClass: "plan-card--fallback",
+                ghostClass: "plan-card--ghost",
+                chosenClass: "plan-card--chosen",
+                dragClass: "plan-card--drag",
+                draggable: ".plan-card",
+                onEnd: function (evt) {
+                    if (evt.oldIndex === evt.newIndex) {
+                        return;
+                    }
+                    revertDomOrder(evt);
+                    dotNetRef.invokeMethodAsync("OnPlanReordered", evt.oldIndex, evt.newIndex);
+                }
+            });
+            return true;
+        },
+        destroy: function () {
+            if (this.sortable) {
+                this.sortable.destroy();
+                this.sortable = null;
+            }
+        }
+    };
+
     // Dismiss MudBlazor snackbars on click
     document.addEventListener("click", (e) => {
         const snackbar = e.target.closest(".mud-snackbar");

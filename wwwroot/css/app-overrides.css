@@ -2075,4 +2075,62 @@ button.heatmap-cell:disabled {
     align-items: center;
     gap: 0.25rem;
     padding-left: 0.5rem;
+}
+
+/* Drag and drop for plan cards */
+.plan-card-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mud-palette-text-secondary);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.plan-card-handle:hover {
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.plan-card-handle:active {
+    cursor: grabbing;
+    background: var(--mud-palette-action-default-hover);
+}
+
+.plan-card--ghost {
+    opacity: 0.35;
+    border: 2px dashed var(--mud-palette-primary);
+    border-radius: 12px;
+    background: var(--mud-palette-action-default-hover);
+}
+
+.plan-card--chosen {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.plan-card--drag,
+.plan-card--fallback {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+    opacity: 0.95;
+    z-index: 1000;
+}
+
+@media (max-width: 576px) {
+    .plan-card-handle {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+    }
 }

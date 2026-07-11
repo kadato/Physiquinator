@@ -87,3 +87,89 @@
 .set-metric-stepper__input:focus {
     outline: none;
 }
+
+/* Compact Mode Styles */
+.set-metric-stepper__row--compact {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: 2px;
+}
+
+.set-metric-stepper__btn--compact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.75rem;
+    width: 1.75rem;
+    height: 2.25rem;
+    min-width: 1.75rem;
+    min-height: 2.25rem;
+    padding: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
+    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 5%, transparent);
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.set-metric-stepper__btn--compact:active {
+    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
+    transform: scale(0.95);
+}
+
+.set-metric-stepper__value--compact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    height: 2.25rem;
+    min-height: 2.25rem;
+    margin: 0;
+    padding: 0 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
+    border-radius: 8px;
+    background-color: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.set-metric-stepper__value--compact .set-metric-stepper__drag-hint {
+    display: none;
+}
+
+.set-metric-stepper__input--compact {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    height: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0 0.25rem;
+    border: 1px solid var(--mud-palette-primary);
+    border-radius: 8px;
+    background-color: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.set-metric-stepper__input--compact:focus {
+    outline: none;
+}
+

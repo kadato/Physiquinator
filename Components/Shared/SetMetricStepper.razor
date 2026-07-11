@@ -1,19 +1,19 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
-<MudStack Class="set-metric-stepper" Spacing="1">
-    <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
-    <div class="set-metric-stepper__row">
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
-                   OnClick="@(() => Adjust(-1))"
-                   aria-label="@($"Decrease {Label}")">
+
+@if (Compact)
+{
+    <div class="set-metric-stepper__row set-metric-stepper__row--compact">
+        <button type="button"
+                class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
+                @onclick="@(() => Adjust(-1))"
+                aria-label="@($"Decrease {Label}")">
             -
-        </MudButton>
+        </button>
         @if (_editing)
         {
             <input @ref="_inputRef"
-                   class="set-metric-stepper__input"
+                   class="set-metric-stepper__input set-metric-stepper__input--compact"
                    type="number"
                    inputmode="@InputMode"
                    min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
@@ -30,7 +30,7 @@
         {
             <button @ref="_valueButtonRef"
                     type="button"
-                    class="set-metric-stepper__value"
+                    class="set-metric-stepper__value set-metric-stepper__value--compact"
                     aria-label="@($"Edit {Label}")"
                     @onclick="StartEdit"
                     data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
@@ -41,15 +41,67 @@
                 @DisplayText
             </button>
         }
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
-                   OnClick="@(() => Adjust(1))"
-                   aria-label="@($"Increase {Label}")">
+        <button type="button"
+                class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
+                @onclick="@(() => Adjust(1))"
+                aria-label="@($"Increase {Label}")">
             +
-        </MudButton>
+        </button>
     </div>
-</MudStack>
+}
+else
+{
+    <MudStack Class="set-metric-stepper" Spacing="1">
+        <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
+        <div class="set-metric-stepper__row">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
+                       OnClick="@(() => Adjust(-1))"
+                       aria-label="@($"Decrease {Label}")">
+                -
+            </MudButton>
+            @if (_editing)
+            {
+                <input @ref="_inputRef"
+                       class="set-metric-stepper__input"
+                       type="number"
+                       inputmode="@InputMode"
+                       min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       placeholder="@PlaceholderText"
+                       @bind="EditText"
+                       @bind:event="oninput"
+                       @onblur="CommitEdit"
+                       @onkeydown="OnEditKeyDown"
+                       onfocus="this.select()"
+                       autofocus />
+            }
+            else
+            {
+                <button @ref="_valueButtonRef"
+                        type="button"
+                        class="set-metric-stepper__value"
+                        aria-label="@($"Edit {Label}")"
+                        @onclick="StartEdit"
+                        data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                        data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                        data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                        data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
+                    <span class="set-metric-stepper__drag-hint">⬌</span>
+                    @DisplayText
+                </button>
+            }
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
+                       OnClick="@(() => Adjust(1))"
+                       aria-label="@($"Increase {Label}")">
+                +
+            </MudButton>
+        </div>
+    </MudStack>
+}
 
 @code {
     [Parameter]
@@ -75,6 +127,12 @@
 
     [Parameter]
     public string InputMode { get; set; } = "decimal";
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    [Parameter]
+    public double? Placeholder { get; set; }
 
     private bool _editing;
     private string _editText = "";
@@ -111,12 +169,10 @@
     {
         get
         {
-            if (!Value.HasValue)
-                return "0";
-
+            var pVal = Placeholder ?? (Value ?? 0);
             return IsInteger
-                ? ((int)Math.Round(Value.Value)).ToString(System.Globalization.CultureInfo.InvariantCulture)
-                : Value.Value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture);
+                ? ((int)Math.Round(pVal)).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : pVal.ToString(Format, System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 

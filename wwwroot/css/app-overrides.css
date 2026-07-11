@@ -1966,6 +1966,12 @@ button.heatmap-cell:disabled {
     max-width: 5.5rem;
 }
 
+.set-input-group--stepper {
+    max-width: none;
+    flex: 1 1 auto;
+}
+
+
 .inline-set-input {
     width: 100%;
     height: 2.25rem;
@@ -2133,4 +2139,39 @@ button.heatmap-cell:disabled {
         min-width: 44px;
         height: 44px;
     }
+}
+
+/* Active/Inactive/Completed set tracking rows */
+.set-number-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    min-width: 3.5rem;
+    text-align: left;
+    user-select: none;
+}
+
+.set-row--active {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
+}
+
+/* Completed Set Summary Row */
+.set-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    background-color: color-mix(in srgb, var(--mud-palette-success) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-success) 15%, transparent);
+}
+
+.set-values {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+    flex-grow: 1;
+    text-align: center;
+    user-select: none;
 }

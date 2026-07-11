@@ -13,6 +13,7 @@ public class WorkoutSetLogEntity
 
     public int ExerciseIndex { get; set; }
 
+    [Indexed]
     public string ExerciseName { get; set; } = string.Empty;
 
     public int SetIndex { get; set; }

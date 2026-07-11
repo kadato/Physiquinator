@@ -172,8 +172,8 @@ else
                                         : (inputs.Reps ?? exercise.DefaultReps ?? 10);
                                 }
 
-                                <div class="set-logging-row set-row--active">
-                                    <div class="set-input-group set-input-group--stepper">
+                                <div class="set-active-panel">
+                                    <div class="set-stepper-rows">
                                         <SetMetricStepper Value="@inputs.Weight"
                                                           ValueChanged="@(val => HandleWeightStepperChanged(exerciseIndex, setIndex, val))"
                                                           Step="2.5"
@@ -181,13 +181,8 @@ else
                                                           IsInteger="false"
                                                           Format="0.##"
                                                           Compact="true"
+                                                          Unit="kg"
                                                           Placeholder="@defaultWeight" />
-                                        <span class="unit-label">kg</span>
-                                    </div>
-
-                                    <span class="times-separator">×</span>
-
-                                    <div class="set-input-group set-input-group--stepper">
                                         <SetMetricStepper Value="@((double?)inputs.Reps)"
                                                           ValueChanged="@(val => HandleRepsStepperChanged(exerciseIndex, setIndex, val))"
                                                           Step="1"
@@ -195,15 +190,15 @@ else
                                                           IsInteger="true"
                                                           Format="0"
                                                           Compact="true"
+                                                          Unit="reps"
                                                           Placeholder="@((double)defaultReps)" />
-                                        <span class="unit-label">reps</span>
                                     </div>
-
-                                    <button type="button" 
-                                            class="log-check-btn"
+                                    <button type="button"
+                                            class="log-set-btn"
                                             @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
                                             disabled="@_isCompleting">
-                                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
+                                        Log Set
                                     </button>
                                 </div>
                             </div>
@@ -229,7 +224,18 @@ else
                     <MudCard Class="@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id">
                         <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
                             <div class="header-left">
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mr-2 completed-icon" />
+                                <span class="completed-icon mr-2" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                                        <defs>
+                                            <linearGradient id="chk-grad" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stop-color="#34d399"/>
+                                                <stop offset="100%" stop-color="#059669"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <circle cx="11" cy="11" r="11" fill="url(#chk-grad)"/>
+                                        <polyline points="6.5,11.5 9.5,14.5 15.5,8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                    </svg>
+                                </span>
                                 <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@exercise.Name</MudText>
                             </div>
                             <div class="header-right">

@@ -13,6 +13,16 @@
     }
     else
     {
+        <MudTextField T="string"
+                      Value="_searchText"
+                      ValueChanged="OnSearchTextChanged"
+                      Placeholder="Search by plan name..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Clearable="true"
+                      Variant="Variant.Outlined"
+                      Class="mb-2" />
+
         <MudPaper Class="pa-4 history-heatmap-panel" Elevation="1">
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HeatmapWeeks"
@@ -120,48 +130,78 @@
 
 @code {
     private const int HeatmapWeeks = 53;
-
+ 
     private IReadOnlyList<WorkoutSessionLogEntity>? _sessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
+    private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
     private IReadOnlyDictionary<DateOnly, int>? _activityByDay;
     private DateOnly _heatmapEndLocal;
     private WorkoutDaySummary? _summary;
     private DateOnly? _selectedDay;
-
+    private string _searchText = "";
+ 
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo($"/history/{Uri.EscapeDataString(sessionId)}");
-
+ 
     private void ContinueWorkout(Guid planId) =>
         Navigation.NavigateTo($"/workout/{planId}");
-
+ 
     protected override async Task OnInitializedAsync()
     {
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
         var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(_heatmapEndLocal, HeatmapWeeks);
         var gridStart = ActivityHeatmap.GetMondayOfWeek(_heatmapEndLocal).AddDays(-7 * (HeatmapWeeks - 1));
-
+ 
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);
         var activityTask = HistoryRepo.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
         await Task.WhenAll(sessionsTask, activityTask);
-
+ 
         _sessions = await sessionsTask;
         _activityByDay = await activityTask;
         _summary = WorkoutDayStats.Compute(_activityByDay, _heatmapEndLocal, gridStart);
-        _listSessions = _sessions;
+        await UpdateSessionsListAsync();
     }
 
+    private async Task UpdateSessionsListAsync()
+    {
+        if (_sessions == null) return;
+
+        IEnumerable<WorkoutSessionLogEntity> source;
+        if (_selectedDay == null)
+        {
+            source = _sessions;
+        }
+        else
+        {
+            if (_daySessions == null)
+            {
+                _daySessions = await HistoryRepo.GetSessionsForLocalDayAsync(_selectedDay.Value);
+            }
+            source = _daySessions;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var query = _searchText.Trim();
+            source = source.Where(s => s.PlanName.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        _listSessions = source.ToList();
+    }
+
+    private async Task OnSearchTextChanged(string text)
+    {
+        _searchText = text;
+        await UpdateSessionsListAsync();
+    }
+ 
     private async Task OnSelectedDayChanged(DateOnly? day)
     {
         _selectedDay = day;
-        if (_sessions == null) return;
-
-        if (day == null)
-            _listSessions = _sessions;
-        else
-            _listSessions = await HistoryRepo.GetSessionsForLocalDayAsync(day.Value);
-
+        _daySessions = null;
+        await UpdateSessionsListAsync();
         StateHasChanged();
     }
-
+ 
     private Task ClearDayFilter() => OnSelectedDayChanged(null);
 }

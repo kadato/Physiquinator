@@ -552,16 +552,8 @@ else
             {
                 if (!SessionService.IsSetCompleted(exerciseIndex, si))
                 {
-                    var completedCount = 0;
-                    for (var checkSi = 0; checkSi < exercise.SetCount; checkSi++)
-                    {
-                        if (SessionService.IsSetCompleted(exerciseIndex, checkSi))
-                            completedCount++;
-                    }
+                    var willBeLastSetOfWorkout = SessionService.WouldCompleteWorkout(exerciseIndex, si);
 
-                    var isLastExercise = exerciseIndex == plan.Exercises.Count - 1;
-                    var willBeLastSetOfExercise = (completedCount + 1) >= exercise.SetCount;
-                    var willBeLastSetOfWorkout = isLastExercise && willBeLastSetOfExercise;
 
                     if (willBeLastSetOfWorkout && SessionService.IsResting)
                     {

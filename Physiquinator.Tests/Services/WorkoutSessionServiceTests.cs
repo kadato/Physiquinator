@@ -159,4 +159,41 @@ public class WorkoutSessionServiceTests
         Assert.Equal(new SetCompletion(0, 0), removed);
         Assert.False(svc.TryUndoLastSet(out _));
     }
+
+    [Fact]
+    public void WouldCompleteWorkout_tracks_completion_correctly_out_of_order()
+    {
+        var plan = new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Multi-Exercise Plan",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0 },
+                new ExercisePlan { Name = "Bench Press", SetCount = 1, Order = 1 }
+            ]
+        };
+
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(plan);
+
+        // Squat: 2 sets, Bench: 1 set.
+        // Initially, completing Squat set 0 should not complete the workout.
+        Assert.False(svc.WouldCompleteWorkout(0, 0));
+        svc.CompleteSet(0, 0);
+
+        // Completing Squat set 1 (last set of first exercise) should not complete the workout because Bench set 0 is not completed.
+        Assert.False(svc.WouldCompleteWorkout(0, 1));
+
+        // If we do it out of order:
+        // Let's complete Bench set 0.
+        // Completing Bench set 0 should not complete the workout because Squat set 1 is still incomplete.
+        Assert.False(svc.WouldCompleteWorkout(1, 0));
+        svc.CompleteSet(1, 0);
+
+        // Now Squat set 0 and Bench set 0 are completed.
+        // Completing Squat set 1 (the remaining incomplete set) should complete the workout!
+        Assert.True(svc.WouldCompleteWorkout(0, 1));
+    }
 }

@@ -75,6 +75,29 @@ public class WorkoutSessionService : IDisposable
     public bool IsSetCompleted(int exerciseIndex, int setIndex) =>
         CompletedSets.Contains(new SetCompletion(exerciseIndex, setIndex));
 
+    /// <summary>
+    /// Checks if completing the specified set would complete the entire workout.
+    /// </summary>
+    public bool WouldCompleteWorkout(int exerciseIndex, int setIndex)
+    {
+        if (CurrentPlan == null) return false;
+
+        for (int ei = 0; ei < CurrentPlan.Exercises.Count; ei++)
+        {
+            var ex = CurrentPlan.Exercises[ei];
+            for (int si = 0; si < ex.SetCount; si++)
+            {
+                if (ei == exerciseIndex && si == setIndex)
+                    continue;
+
+                if (!IsSetCompleted(ei, si))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     public void CompleteSet(int exerciseIndex, int setIndex)
     {
         if (CurrentPlan == null) return;

@@ -1885,6 +1885,7 @@ button.heatmap-cell:disabled {
 .exercise-accordion-card {
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     border-radius: 16px !important;
+    scroll-margin-top: 1rem;
 }
 
 .exercise-accordion-card--completed {
@@ -1925,13 +1926,23 @@ button.heatmap-cell:disabled {
     font-weight: 700;
 }
 
-.set-progress-text {
-    font-size: 0.85rem;
-    font-weight: 600;
+/* Set progress pill */
+.set-progress-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--mud-palette-text-secondary) 12%, transparent);
     color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
 }
 
-.exercise-accordion-card--completed .set-progress-text {
+.set-progress-pill--completed {
+    background-color: color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
     color: var(--mud-palette-success);
 }
 

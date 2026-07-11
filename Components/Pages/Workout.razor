@@ -132,14 +132,13 @@ else
                 var completedSetsCount = item.CompletedCount;
                 var isExpanded = _activeExerciseIndex == exerciseIndex;
 
-                <MudCard Class="@($"mb-3 exercise-accordion-card {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id">
+                <MudCard Class="@($"mb-3 exercise-accordion-card {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id" data-exercise-index="@exerciseIndex">
                     <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
                         <div class="header-left">
-                            <span class="exercise-order-badge mr-2">@(exerciseIndex + 1)</span>
                             <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@exercise.Name</MudText>
                         </div>
                         <div class="header-right">
-                            <span class="set-progress-text">@completedSetsCount / @exercise.SetCount sets</span>
+                            <span class="set-progress-pill">@completedSetsCount/@exercise.SetCount</span>
                             <MudIcon Icon="@(isExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
                         </div>
                     </div>
@@ -221,7 +220,7 @@ else
                     var completedSetsCount = item.CompletedCount;
                     var isExpanded = _activeExerciseIndex == exerciseIndex;
 
-                    <MudCard Class="@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id">
+                    <MudCard Class="@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id" data-exercise-index="@exerciseIndex">
                         <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
                             <div class="header-left">
                                 <span class="completed-icon mr-2" aria-hidden="true">
@@ -239,7 +238,7 @@ else
                                 <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@exercise.Name</MudText>
                             </div>
                             <div class="header-right">
-                                <span class="set-progress-text text-success">@completedSetsCount / @exercise.SetCount sets</span>
+                                <span class="set-progress-pill set-progress-pill--completed">@completedSetsCount/@exercise.SetCount</span>
                                 <MudIcon Icon="@(isExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
                             </div>
                         </div>
@@ -321,6 +320,7 @@ else
     private string? _historySessionId;
     private bool _completedExpanded;
     private Snackbar? _undoSnackbar;
+    private int _pendingScrollToExercise = -1;
 
     private Dictionary<(int ExIdx, int SetIdx), (double? Weight, int? Reps)> _setInputs = new();
     private Dictionary<(int ExIdx, int SetIdx), (double Weight, int Reps)> _originalValues = new();
@@ -856,6 +856,7 @@ else
                     if (nextIdx != -1)
                     {
                         _activeExerciseIndex = nextIdx;
+                        _pendingScrollToExercise = nextIdx;
                     }
                 }
             }
@@ -1228,5 +1229,28 @@ else
     private void ToggleCompletedExpanded()
     {
         _completedExpanded = !_completedExpanded;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingScrollToExercise >= 0)
+        {
+            var idx = _pendingScrollToExercise;
+            _pendingScrollToExercise = -1;
+            await ScrollToExerciseAsync(idx);
+        }
+    }
+
+    private async Task ScrollToExerciseAsync(int exerciseIndex)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval",
+                $"(function(){{" +
+                $"  var el = document.querySelector('[data-exercise-index=\"{exerciseIndex}\"]');" +
+                $"  if(el) el.scrollIntoView({{behavior:'smooth',block:'start'}});" +
+                $"}})();");
+        }
+        catch { /* JS not ready or disposed */ }
     }
 }

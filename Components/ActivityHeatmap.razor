@@ -23,6 +23,7 @@
                     var isSelected = SelectedDay == cellDate;
                     var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                     <button type="button"
+                            @key="cellDate"
                             class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null)"
                             title="@title"
                             aria-label="@title"
@@ -57,6 +58,30 @@
     private DateOnly _leftMonday;
     private ElementReference _heatmapScroll;
     private string _gridStyle = "";
+
+    private IReadOnlyDictionary<DateOnly, int>? _prevCountsByDay;
+    private int _prevWeeks;
+    private DateOnly? _prevEndLocal;
+    private DateOnly? _prevSelectedDay;
+
+    protected override bool ShouldRender()
+    {
+        var shouldRender =
+            !ReferenceEquals(CountsByDay, _prevCountsByDay) ||
+            Weeks != _prevWeeks ||
+            EndLocal != _prevEndLocal ||
+            SelectedDay != _prevSelectedDay;
+
+        if (shouldRender)
+        {
+            _prevCountsByDay = CountsByDay;
+            _prevWeeks = Weeks;
+            _prevEndLocal = EndLocal;
+            _prevSelectedDay = SelectedDay;
+        }
+
+        return shouldRender;
+    }
 
     protected override void OnParametersSet()
     {

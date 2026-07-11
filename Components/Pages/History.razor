@@ -74,7 +74,7 @@
                 @foreach (var s in _listSessions)
                 {
                     var sid = s.Id;
-                    <div class="history-session-card" @onclick="@(() => OpenSession(sid))">
+                    <div @key="s.Id" class="history-session-card" @onclick="@(() => OpenSession(sid))">
                         <div class="history-session-card__inner">
                             <div class="history-session-card__left">
                                 <div class="history-session-card__info">

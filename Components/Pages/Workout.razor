@@ -149,13 +149,17 @@ else
                         <MudCardContent Class="pt-0">
                             <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(completedSetsCount, exercise.SetCount)" Class="mb-3" />
                             
-                            <div class="set-logging-rows">
-                                @for (var si = 0; si < exercise.SetCount; si++)
+                            @{
+                                var activeSetIndex = _activeSetIndices.GetValueOrDefault(exerciseIndex, 0);
+                                if (activeSetIndex >= exercise.SetCount)
                                 {
-                                    var setIndex = si;
-                                    var isSetCompleted = SessionService.IsSetCompleted(exerciseIndex, setIndex);
-                                    if (isSetCompleted) continue;
+                                    activeSetIndex = 0;
+                                }
+                            }
 
+                            <div class="set-logging-rows">
+                                @{
+                                    var setIndex = activeSetIndex;
                                     var inputKey = (exerciseIndex, setIndex);
                                     (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? 10));
 
@@ -166,43 +170,42 @@ else
                                     var defaultReps = _originalValues.TryGetValue(inputKey, out origVal) 
                                         ? origVal.Reps 
                                         : (inputs.Reps ?? exercise.DefaultReps ?? 10);
-
-                                    <div class="set-logging-row">
-                                        <div class="set-input-group">
-                                            <input type="number" 
-                                                   step="any"
-                                                   inputmode="decimal" 
-                                                   class="inline-set-input weight-input" 
-                                                   value="@(inputs.Weight == null ? "" : inputs.Weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" 
-                                                   placeholder="@defaultWeight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
-                                                   @onchange="@(e => HandleWeightChanged(exerciseIndex, setIndex, e.Value))"
-                                                   @onfocus="@(() => HandleFocus(exerciseIndex, setIndex, true))"
-                                                   @onblur="@(() => HandleBlur(exerciseIndex, setIndex, true))" />
-                                            <span class="unit-label">kg</span>
-                                        </div>
-
-                                        <span class="times-separator">×</span>
-
-                                        <div class="set-input-group">
-                                            <input type="number" 
-                                                   inputmode="numeric" 
-                                                   class="inline-set-input reps-input" 
-                                                   value="@(inputs.Reps == null ? "" : inputs.Reps.Value.ToString())" 
-                                                   placeholder="@defaultReps.ToString()"
-                                                   @onchange="@(e => HandleRepsChanged(exerciseIndex, setIndex, e.Value))"
-                                                   @onfocus="@(() => HandleFocus(exerciseIndex, setIndex, false))"
-                                                   @onblur="@(() => HandleBlur(exerciseIndex, setIndex, false))" />
-                                            <span class="unit-label">reps</span>
-                                        </div>
-
-                                        <button type="button" 
-                                                class="log-check-btn"
-                                                @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                                disabled="@_isCompleting">
-                                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                                        </button>
-                                    </div>
                                 }
+
+                                <div class="set-logging-row set-row--active">
+                                    <div class="set-input-group set-input-group--stepper">
+                                        <SetMetricStepper Value="@inputs.Weight"
+                                                          ValueChanged="@(val => HandleWeightStepperChanged(exerciseIndex, setIndex, val))"
+                                                          Step="2.5"
+                                                          Min="0"
+                                                          IsInteger="false"
+                                                          Format="0.##"
+                                                          Compact="true"
+                                                          Placeholder="@defaultWeight" />
+                                        <span class="unit-label">kg</span>
+                                    </div>
+
+                                    <span class="times-separator">×</span>
+
+                                    <div class="set-input-group set-input-group--stepper">
+                                        <SetMetricStepper Value="@((double?)inputs.Reps)"
+                                                          ValueChanged="@(val => HandleRepsStepperChanged(exerciseIndex, setIndex, val))"
+                                                          Step="1"
+                                                          Min="1"
+                                                          IsInteger="true"
+                                                          Format="0"
+                                                          Compact="true"
+                                                          Placeholder="@((double)defaultReps)" />
+                                        <span class="unit-label">reps</span>
+                                    </div>
+
+                                    <button type="button" 
+                                            class="log-check-btn"
+                                            @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
+                                            disabled="@_isCompleting">
+                                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                    </button>
+                                </div>
                             </div>
                         </MudCardContent>
                     }
@@ -246,58 +249,18 @@ else
                                         var setIndex = si;
                                         var inputKey = (exerciseIndex, setIndex);
                                         (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? 10));
-                                        var isSetCompleted = SessionService.IsSetCompleted(exerciseIndex, setIndex);
                                         
-                                        var defaultWeight = _originalValues.TryGetValue(inputKey, out var origVal) 
-                                            ? origVal.Weight 
-                                            : (inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0);
-                                             
-                                        var defaultReps = _originalValues.TryGetValue(inputKey, out origVal) 
-                                            ? origVal.Reps 
-                                            : (inputs.Reps ?? exercise.DefaultReps ?? 10);
+                                        var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
+                                        var finalReps = inputs.Reps ?? exercise.DefaultReps ?? 10;
 
-                                        <div class="@($"set-logging-row {(isSetCompleted ? "set-row--completed" : "")}")">
-                                            <div class="set-input-group">
-                                                <input type="number" 
-                                                       step="any"
-                                                       inputmode="decimal" 
-                                                       class="inline-set-input weight-input" 
-                                                       value="@(inputs.Weight == null ? "" : inputs.Weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" 
-                                                       placeholder="@defaultWeight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
-                                                       @onchange="@(e => HandleWeightChanged(exerciseIndex, setIndex, e.Value))"
-                                                       @onfocus="@(() => HandleFocus(exerciseIndex, setIndex, true))"
-                                                       @onblur="@(() => HandleBlur(exerciseIndex, setIndex, true))"
-                                                       disabled="@isSetCompleted" />
-                                                <span class="unit-label">kg</span>
-                                            </div>
-
-                                            <span class="times-separator">×</span>
-
-                                            <div class="set-input-group">
-                                                <input type="number" 
-                                                       inputmode="numeric" 
-                                                       class="inline-set-input reps-input" 
-                                                       value="@(inputs.Reps == null ? "" : inputs.Reps.Value.ToString())" 
-                                                       placeholder="@defaultReps.ToString()"
-                                                       @onchange="@(e => HandleRepsChanged(exerciseIndex, setIndex, e.Value))"
-                                                       @onfocus="@(() => HandleFocus(exerciseIndex, setIndex, false))"
-                                                       @onblur="@(() => HandleBlur(exerciseIndex, setIndex, false))"
-                                                       disabled="@isSetCompleted" />
-                                                <span class="unit-label">reps</span>
-                                            </div>
-
+                                        <div class="set-summary-row">
+                                            <span class="set-number-label">Set @(setIndex + 1)</span>
+                                            <span class="set-values">@finalWeight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) kg × @finalReps reps</span>
                                             <button type="button" 
-                                                    class="@($"log-check-btn {(isSetCompleted ? "log-check-btn--completed" : "")}")"
+                                                    class="log-check-btn log-check-btn--completed"
                                                     @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
                                                     disabled="@_isCompleting">
-                                                @if (isSetCompleted)
-                                                {
-                                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
-                                                }
-                                                else
-                                                {
-                                                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                                                }
+                                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
                                             </button>
                                         </div>
                                     }
@@ -356,6 +319,7 @@ else
     private Dictionary<(int ExIdx, int SetIdx), (double? Weight, int? Reps)> _setInputs = new();
     private Dictionary<(int ExIdx, int SetIdx), (double Weight, int Reps)> _originalValues = new();
     private int _activeExerciseIndex = 0;
+    private Dictionary<int, int> _activeSetIndices = new();
 
     private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
 
@@ -430,6 +394,7 @@ else
     private async Task InitializeWorkoutStateAsync(WorkoutPlan plan)
     {
         _setInputs.Clear();
+        _activeSetIndices.Clear();
         int firstUncompletedExIdx = -1;
 
         for (int e = 0; e < plan.Exercises.Count; e++)
@@ -444,15 +409,21 @@ else
                 _setInputs[(e, s)] = (initialWeight, initialReps);
             }
 
+            int firstUncompletedSetIdx = -1;
             bool exerciseDone = true;
             for (int s = 0; s < exercise.SetCount; s++)
             {
                 if (!SessionService.IsSetCompleted(e, s))
                 {
                     exerciseDone = false;
-                    break;
+                    if (firstUncompletedSetIdx == -1)
+                    {
+                        firstUncompletedSetIdx = s;
+                    }
                 }
             }
+
+            _activeSetIndices[e] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
 
             if (!exerciseDone && firstUncompletedExIdx == -1)
             {
@@ -466,6 +437,22 @@ else
             foreach (var set in currentSets)
             {
                 _setInputs[(set.ExerciseIndex, set.SetIndex)] = (set.WeightKg ?? 0, set.Reps ?? 0);
+            }
+
+            // Re-evaluate first uncompleted set index after loading session sets
+            for (int e = 0; e < plan.Exercises.Count; e++)
+            {
+                var exercise = plan.Exercises[e];
+                int firstUncompletedSetIdx = -1;
+                for (int s = 0; s < exercise.SetCount; s++)
+                {
+                    if (!SessionService.IsSetCompleted(e, s))
+                    {
+                        firstUncompletedSetIdx = s;
+                        break;
+                    }
+                }
+                _activeSetIndices[e] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
             }
         }
 
@@ -666,6 +653,21 @@ else
         }
     }
 
+    private void HandleWeightStepperChanged(int exIdx, int setIdx, double? val)
+    {
+        var key = (exIdx, setIdx);
+        var current = _setInputs.GetValueOrDefault(key, (null, null));
+        _setInputs[key] = (val, current.Reps);
+    }
+
+    private void HandleRepsStepperChanged(int exIdx, int setIdx, double? val)
+    {
+        var key = (exIdx, setIdx);
+        var current = _setInputs.GetValueOrDefault(key, (null, null));
+        _setInputs[key] = (current.Weight, val.HasValue ? (int)Math.Round(val.Value) : null);
+    }
+
+
     private void HandleFocus(int exIdx, int setIdx, bool isWeight)
     {
         var key = (exIdx, setIdx);
@@ -733,6 +735,8 @@ else
                 _isRestComplete = false;
                 SessionService.SkipRest();
 
+                _activeSetIndices[exerciseIndex] = setIndex; // Make uncompleted set active
+
                 Snackbar.Add("Set unlogged.", Severity.Info);
             }
             catch (Exception ex)
@@ -772,6 +776,18 @@ else
 
                 _isRestComplete = false;
                 SessionService.CompleteSet(exerciseIndex, setIndex);
+
+                // Auto active set update
+                int firstUncompletedSetIdx = -1;
+                for (int s = 0; s < exercise.SetCount; s++)
+                {
+                    if (!SessionService.IsSetCompleted(exerciseIndex, s))
+                    {
+                        firstUncompletedSetIdx = s;
+                        break;
+                    }
+                }
+                _activeSetIndices[exerciseIndex] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
 
                 if (_historySessionId != null)
                 {
@@ -874,13 +890,15 @@ else
     private async Task UndoLastSetCoreAsync()
     {
         if (_disposed || _isCompleting) return;
-        if (!SessionService.TryUndoLastSet(out _)) return;
+        if (!SessionService.TryUndoLastSet(out var removed)) return;
 
         HideUndoToast();
         await StopJsTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
+
+        _activeSetIndices[removed.ExerciseIndex] = removed.SetIndex;
 
         if (_historySessionId != null)
         {
@@ -895,6 +913,14 @@ else
         }
 
         await SafeStateHasChangedAsync();
+    }
+
+    private void SelectActiveSet(int exerciseIndex, int setIndex)
+    {
+        if (!SessionService.IsSetCompleted(exerciseIndex, setIndex))
+        {
+            _activeSetIndices[exerciseIndex] = setIndex;
+        }
     }
 
     private async Task PauseRest()

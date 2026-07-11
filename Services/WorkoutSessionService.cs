@@ -119,6 +119,12 @@ public class WorkoutSessionService : IDisposable
         return true;
     }
 
+    public bool TryRemoveSet(int exerciseIndex, int setIndex)
+    {
+        var target = new SetCompletion(exerciseIndex, setIndex);
+        return CompletedSets.Remove(target);
+    }
+
     public void StartRest(int restIntervalSeconds)
     {
         if (CurrentPlan == null) return;

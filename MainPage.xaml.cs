@@ -41,5 +41,23 @@ public partial class MainPage : ContentPage
 		{
 			System.Diagnostics.Debug.WriteLine($"BlazorWebView init error: {ex}");
 		}
+
+#if WINDOWS
+		if (args.WebView is Microsoft.UI.Xaml.Controls.WebView2 wv2)
+		{
+			var app = Microsoft.Maui.Controls.Application.Current;
+			var server = app?.Handler?.MauiContext?.Services.GetService<ScreenshotServer>();
+			if (server != null)
+			{
+				System.Diagnostics.Debug.WriteLine("ScreenshotServer found, starting...");
+				server.SetWebView(wv2);
+				server.Start();
+			}
+			else
+			{
+				System.Diagnostics.Debug.WriteLine("ScreenshotServer NOT found in DI container");
+			}
+		}
+#endif
 	}
 }

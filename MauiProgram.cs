@@ -69,6 +69,13 @@ public static class MauiProgram
 		builder.Services.AddScoped<Services.AppInitializationService>();
 		builder.Services.AddSingleton<Services.UserProfileService>();
 
+#if WINDOWS
+		if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
+		{
+			builder.Services.AddSingleton<Services.ScreenshotServer>();
+		}
+#endif
+
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();

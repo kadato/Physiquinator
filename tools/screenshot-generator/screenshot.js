@@ -224,20 +224,17 @@ async function run() {
             await delay(1000); // Give the progression line chart time to draw
             await capture(`exercise-progression-${theme}.png`);
 
-            // 9. Workout (Active Workout Rest Timer & Log Set Dialog)
-            // Navigate to the in-progress workout
+            // 9. Workout (Active Workout Log Set & Rest Timer)
+            // Navigate to the in-progress workout. The first uncompleted exercise
+            // accordion is already expanded by default, revealing the inline set panel.
             await blazorNavigate(page, `/workout/${PUSH_PLAN_ID}`);
             await page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
-            await delay(500);
-
-            // Click Done to open the Log Set Dialog
-            await page.click('.workout-upcoming-section button:has-text("Done")');
-            await page.waitForSelector('.set-log-dialog', { timeout: 5000 });
+            await page.waitForSelector('.set-active-panel', { timeout: 5000 });
             await delay(500);
             await capture(`log-set-${theme}.png`);
 
-            // Confirm set log to start rest timer
-            await page.click('.set-log-dialog__footer button:has-text("Log set")');
+            // Click the inline Log Set button to complete a set and start the rest timer
+            await page.click('.log-set-btn');
             await page.waitForSelector('.rest-timer-panel', { timeout: 5000 });
             await delay(500);
             await capture(`rest-timer-${theme}.png`);

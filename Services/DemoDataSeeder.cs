@@ -92,49 +92,52 @@ public class DemoDataSeeder
         var todayUtc = DateTime.UtcNow.Date;
         var specs = GenerateDemoSchedule(todayUtc);
 
-        for (var i = 0; i < specs.Count; i++)
+        await _database.Database.RunInTransactionAsync(conn =>
         {
-            var spec = specs[i];
-            var started = todayUtc
-                .AddDays(-spec.DaysAgo)
-                .AddHours(spec.StartHourUtc)
-                .AddMinutes(spec.StartMinuteUtc);
-            var ended = spec.Ended
-                ? started.AddMinutes(spec.DurationMinutes)
-                : (DateTime?)null;
-
-            var planName = GetPlanName(spec.PlanId);
-
-            var session = new WorkoutSessionLogEntity
+            for (var i = 0; i < specs.Count; i++)
             {
-                Id = DemoDataIds.SessionId(i),
-                WorkoutPlanId = spec.PlanId.ToString(),
-                PlanName = planName,
-                StartedAtUtc = started,
-                EndedAtUtc = ended,
-                PlanSnapshotJson = snapshots[spec.PlanId]
-            };
+                var spec = specs[i];
+                var started = todayUtc
+                    .AddDays(-spec.DaysAgo)
+                    .AddHours(spec.StartHourUtc)
+                    .AddMinutes(spec.StartMinuteUtc);
+                var ended = spec.Ended
+                    ? started.AddMinutes(spec.DurationMinutes)
+                    : (DateTime?)null;
 
-            await _database.Database.InsertOrReplaceAsync(session);
+                var planName = GetPlanName(spec.PlanId);
 
-            List<WorkoutSetLogEntity> sets;
-            if (!spec.Ended)
-            {
-                var benchKg = BenchWeightKg(spec.PlanTypeOrdinal, deload: false);
-                sets = BuildInProgressPushSets(i, started, benchKg);
+                var session = new WorkoutSessionLogEntity
+                {
+                    Id = DemoDataIds.SessionId(i),
+                    WorkoutPlanId = spec.PlanId.ToString(),
+                    PlanName = planName,
+                    StartedAtUtc = started,
+                    EndedAtUtc = ended,
+                    PlanSnapshotJson = snapshots[spec.PlanId]
+                };
+
+                conn.InsertOrReplace(session);
+
+                List<WorkoutSetLogEntity> sets;
+                if (!spec.Ended)
+                {
+                    var benchKg = BenchWeightKg(spec.PlanTypeOrdinal, deload: false);
+                    sets = BuildInProgressPushSets(i, started, benchKg);
+                }
+                else if (spec.PlanId == DemoDataIds.PushPlan)
+                    sets = BuildCompletedPushSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+                else if (spec.PlanId == DemoDataIds.PullPlan)
+                    sets = BuildCompletedPullSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+                else if (spec.PlanId == DemoDataIds.LegPlan)
+                    sets = BuildCompletedLegSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+                else
+                    sets = BuildCompletedFullBodySets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+
+                foreach (var set in sets)
+                    conn.InsertOrReplace(set);
             }
-            else if (spec.PlanId == DemoDataIds.PushPlan)
-                sets = BuildCompletedPushSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
-            else if (spec.PlanId == DemoDataIds.PullPlan)
-                sets = BuildCompletedPullSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
-            else if (spec.PlanId == DemoDataIds.LegPlan)
-                sets = BuildCompletedLegSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
-            else
-                sets = BuildCompletedFullBodySets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
-
-            foreach (var set in sets)
-                await _database.Database.InsertOrReplaceAsync(set);
-        }
+        });
 
         _preferences.Set(DemoHistorySeedCompletedKey, true);
         return true;

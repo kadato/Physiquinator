@@ -231,14 +231,26 @@ public class WorkoutHistoryRepository
     {
         await _db.EnsureInitializedAsync();
         var sessions = await GetAllSessionsAsync();
+
+        var allSets = await _db.Database.Table<WorkoutSetLogEntity>().ToListAsync();
+        var setsBySession = allSets
+            .GroupBy(s => s.SessionId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(s => s.CompletedAtUtc)
+                      .ThenBy(s => s.ExerciseIndex)
+                      .ThenBy(s => s.SetIndex)
+                      .ToList()
+            );
+
         var entries = new List<WorkoutHistoryBackupEntry>(sessions.Count);
         foreach (var session in sessions)
         {
-            var sets = await GetSetsForSessionAsync(session.Id);
+            setsBySession.TryGetValue(session.Id, out var sets);
             entries.Add(new WorkoutHistoryBackupEntry
             {
                 Session = session,
-                Sets = sets.ToList()
+                Sets = sets ?? new List<WorkoutSetLogEntity>()
             });
         }
 
@@ -254,24 +266,27 @@ public class WorkoutHistoryRepository
         ArgumentNullException.ThrowIfNull(backup);
         await _db.EnsureInitializedAsync();
 
-        foreach (var entry in backup.Sessions ?? new List<WorkoutHistoryBackupEntry>())
+        await _db.Database.RunInTransactionAsync(conn =>
         {
-            if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
-                continue;
-
-            var sessionId = entry.Session.Id;
-            await _db.Database.InsertOrReplaceAsync(entry.Session);
-
-            foreach (var set in entry.Sets ?? new List<WorkoutSetLogEntity>())
+            foreach (var entry in backup.Sessions ?? new List<WorkoutHistoryBackupEntry>())
             {
-                if (set is null)
+                if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
                     continue;
-                set.SessionId = sessionId;
-                if (string.IsNullOrWhiteSpace(set.Id))
-                    set.Id = Guid.NewGuid().ToString();
-                await _db.Database.InsertOrReplaceAsync(set);
+
+                var sessionId = entry.Session.Id;
+                conn.InsertOrReplace(entry.Session);
+
+                foreach (var set in entry.Sets ?? new List<WorkoutSetLogEntity>())
+                {
+                    if (set is null)
+                        continue;
+                    set.SessionId = sessionId;
+                    if (string.IsNullOrWhiteSpace(set.Id))
+                        set.Id = Guid.NewGuid().ToString();
+                    conn.InsertOrReplace(set);
+                }
             }
-        }
+        });
     }
 
     public async Task<WorkoutSessionLogEntity?> GetSessionAsync(string sessionId)

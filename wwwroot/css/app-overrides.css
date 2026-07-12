@@ -75,46 +75,65 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     display: none !important; /* Chrome, Safari, and Opera */
 }
 
-/* Elegant, thin scrollbars for main content area, dialogs, and tables */
-.app-main-scroll,
-.history-data-table .mud-table-container,
-.mud-dialog-content {
-    --scrollbar-thumb: color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent);
-    --scrollbar-track: transparent;
-
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    scrollbar-width: thin;
-    scrollbar-gutter: stable;
-}
-
-@supports not (scrollbar-color: auto) {
-    .app-main-scroll::-webkit-scrollbar,
-    .history-data-table .mud-table-container::-webkit-scrollbar,
-    .mud-dialog-content::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    .app-main-scroll::-webkit-scrollbar-thumb,
-    .history-data-table .mud-table-container::-webkit-scrollbar-thumb,
-    .mud-dialog-content::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb);
-        border-radius: 4px;
-    }
-    .app-main-scroll::-webkit-scrollbar-track,
-    .history-data-table .mud-table-container::-webkit-scrollbar-track,
-    .mud-dialog-content::-webkit-scrollbar-track {
-        background: var(--scrollbar-track);
-    }
-}
-
-/* High contrast overrides for users who prefer contrast */
-@media (prefers-contrast: more) {
+/* Elegant, thin scrollbars for main content area, dialogs, and tables (only on desktop/large viewports) */
+@media (min-width: 960px) {
     .app-main-scroll,
     .history-data-table .mud-table-container,
     .mud-dialog-content {
-        --scrollbar-thumb: var(--mud-palette-text-primary);
-        --scrollbar-track: var(--mud-palette-background);
-        scrollbar-width: auto;
+        --scrollbar-thumb: color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent);
+        --scrollbar-track: transparent;
+
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        scrollbar-width: thin;
+        scrollbar-gutter: stable;
+    }
+
+    @supports not (scrollbar-color: auto) {
+        .app-main-scroll::-webkit-scrollbar,
+        .history-data-table .mud-table-container::-webkit-scrollbar,
+        .mud-dialog-content::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .app-main-scroll::-webkit-scrollbar-thumb,
+        .history-data-table .mud-table-container::-webkit-scrollbar-thumb,
+        .mud-dialog-content::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        .app-main-scroll::-webkit-scrollbar-track,
+        .history-data-table .mud-table-container::-webkit-scrollbar-track,
+        .mud-dialog-content::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+    }
+
+    /* High contrast overrides for users who prefer contrast on desktop */
+    @media (prefers-contrast: more) {
+        .app-main-scroll,
+        .history-data-table .mud-table-container,
+        .mud-dialog-content {
+            --scrollbar-thumb: var(--mud-palette-text-primary);
+            --scrollbar-track: var(--mud-palette-background);
+            scrollbar-width: auto;
+        }
+    }
+}
+
+/* Hide scrollbars completely on mobile/tablet viewports to maximize screen space */
+@media (max-width: 959px) {
+    .app-main-scroll,
+    .history-data-table .mud-table-container,
+    .mud-dialog-content {
+        scrollbar-width: none !important; /* Firefox */
+        scrollbar-gutter: auto !important; /* Do not reserve space for scrollbars */
+        -ms-overflow-style: none !important; /* IE and Edge */
+    }
+
+    .app-main-scroll::-webkit-scrollbar,
+    .history-data-table .mud-table-container::-webkit-scrollbar,
+    .mud-dialog-content::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari, and Opera */
     }
 }
 

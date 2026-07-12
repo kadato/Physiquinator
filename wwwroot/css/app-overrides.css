@@ -1932,6 +1932,11 @@ button.heatmap-cell:disabled {
     align-items: center;
 }
 
+.exercise-name {
+    font-size: 1.35rem !important;
+    letter-spacing: -0.01em;
+}
+
 .exercise-order-badge {
     display: inline-flex;
     align-items: center;
@@ -2188,8 +2193,25 @@ button.heatmap-cell:disabled {
 
 /* Progress bar overrides for active state */
 .exercise-accordion-card .mud-progress-linear {
-    height: 6px !important;
-    border-radius: 999px !important;
+    height: 8px !important;
+    border-radius: 6px !important;
+    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent) !important;
+    overflow: hidden;
+}
+
+.exercise-accordion-card .mud-progress-linear .mud-progress-linear-bar {
+    border-radius: 6px !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Gradient fill for active/upcoming exercise progress, matching the timer progress bar */
+.exercise-accordion-card .mud-progress-linear.mud-progress-linear-primary .mud-progress-linear-bar {
+    background: linear-gradient(90deg, var(--mud-palette-secondary) 0%, var(--mud-palette-primary) 100%) !important;
+}
+
+/* Completed exercise set progress bar fill */
+.exercise-accordion-card .mud-progress-linear.mud-progress-linear-success .mud-progress-linear-bar {
+    background: var(--mud-palette-success) !important;
 }
 
 .workout-completed-divider-title {

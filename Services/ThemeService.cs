@@ -20,6 +20,39 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         _js = js;
         _userProfileService = userProfileService;
+
+        try
+        {
+            var suffix = GetSuffix();
+            var key = "physiquinator-theme-preference" + suffix;
+            Preference = AppPreferences.Get(key, "system");
+            var systemTheme = GetSystemThemeFromMaui();
+            EffectiveTheme = Preference == "system" ? systemTheme : Preference;
+        }
+        catch
+        {
+            Preference = "system";
+            EffectiveTheme = GetSystemThemeFromMaui();
+        }
+
+        ApplyAppThemeOverride();
+    }
+
+    private static string GetSystemThemeFromMaui()
+    {
+        if (Application.Current != null)
+        {
+            var requested = Application.Current.RequestedTheme;
+            if (requested == AppTheme.Dark)
+            {
+                return "dark";
+            }
+            if (requested == AppTheme.Light)
+            {
+                return "light";
+            }
+        }
+        return "dark";
     }
 
     private string GetSuffix()
@@ -54,6 +87,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
+        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), Preference);
         ApplyAppThemeOverride();
 
         _initialized = true;
@@ -71,6 +105,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = preference;
         EffectiveTheme = effective;
+        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -85,6 +120,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
+        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), "system");
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -95,6 +131,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         Preference = preference;
         EffectiveTheme = effective;
+        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();

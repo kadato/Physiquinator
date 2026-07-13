@@ -486,7 +486,7 @@ else
             }
         }
 
-        _activeExerciseIndex = firstUncompletedExIdx == -1 ? 0 : firstUncompletedExIdx;
+        _activeExerciseIndex = firstUncompletedExIdx == -1 ? -1 : firstUncompletedExIdx;
     }
 
     private List<ExerciseProgress> GetExerciseProgress(bool completed)
@@ -824,6 +824,7 @@ else
 
                 if (willBeLastSetOfWorkout)
                 {
+                    _activeExerciseIndex = -1;
                     RestNotifications.CancelAllRestNotifications();
                     await SafeStateHasChangedAsync();
                     await OnWorkoutComplete();
@@ -873,6 +874,10 @@ else
                     if (nextIdx != -1)
                     {
                         _activeExerciseIndex = nextIdx;
+                    }
+                    else
+                    {
+                        _activeExerciseIndex = -1;
                     }
                 }
             }

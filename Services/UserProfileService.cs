@@ -54,7 +54,7 @@ public sealed class UserProfileService
         var profiles = GetProfiles();
         var activeIdStr = AppPreferences.Get(ActiveProfileIdKey, Guid.Empty.ToString());
         var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
-        return profiles.FirstOrDefault(p => p.Id == activeId) ?? profiles.First();
+        return profiles.FirstOrDefault(p => p.Id == activeId) ?? profiles[0];
     }
 
     public async Task SwitchProfileAsync(Guid profileId)
@@ -144,7 +144,17 @@ public sealed class UserProfileService
         SaveProfiles(profiles);
     }
 
-    private void SaveProfiles(List<UserProfile> profiles)
+    public void UpdateBodyweight(Guid profileId, double? bodyweightKg)
+    {
+        var profiles = GetProfiles();
+        var profile = profiles.FirstOrDefault(p => p.Id == profileId);
+        if (profile == null) return;
+
+        profile.BodyweightKg = bodyweightKg;
+        SaveProfiles(profiles);
+    }
+
+    private static void SaveProfiles(List<UserProfile> profiles)
     {
         var json = JsonSerializer.Serialize(profiles);
         AppPreferences.Set(ProfilesKey, json);

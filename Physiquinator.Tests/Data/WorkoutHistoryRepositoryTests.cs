@@ -346,6 +346,34 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetExerciseSessionProgressAsync_WithBodyweight_ComputesAdjustedVolume()
+    {
+        var planId = Guid.NewGuid();
+        var tz = TimeZoneInfo.Local;
+        var day1 = new DateOnly(2024, 4, 1);
+        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var s1 = await InsertSessionAtUtcAsync(planId, "Bodyweight", t1);
+        // Set 1: 10 reps, null weight (offset 0)
+        await _sut.LogSetAsync(s1, 0, "Pull-Up", 0, reps: 10, weightKg: null);
+        // Set 2: 8 reps, +5 kg offset
+        await _sut.LogSetAsync(s1, 0, "Pull-Up", 1, reps: 8, weightKg: 5);
+        // Set 3: 6 reps, -10 kg offset
+        await _sut.LogSetAsync(s1, 0, "Pull-Up", 2, reps: 6, weightKg: -10);
+
+        // Bodyweight is set to 80 kg
+        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10, bodyweightKg: 80);
+        Assert.Single(rows);
+        // Best weight should still be the max offset (5 kg)
+        Assert.Equal(5, rows[0].BestWeightKg);
+        Assert.Equal(24, rows[0].TotalReps);
+        Assert.Equal(3, rows[0].SetCount);
+        // Total Volume = 10 * (80 + 0) + 8 * (80 + 5) + 6 * (80 - 10)
+        //              = 800 + 680 + 420 = 1900
+        Assert.Equal(1900, rows[0].TotalVolumeKg);
+    }
+
+    [Fact]
     public async Task ImportBackupAsync_Idempotent_WhenReImportingSameBackup()
     {
         var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);

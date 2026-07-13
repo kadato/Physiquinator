@@ -15,8 +15,10 @@ public sealed record ExerciseSessionProgressEntry(
     int SetCount,
     double TotalVolumeKg);
 
-public class WorkoutHistoryRepository
+public class WorkoutHistoryRepository(AppDatabase db)
 {
+#pragma warning disable S1144 // Unused private types or members should be removed
+#pragma warning disable S3459 // Unassigned members should be removed
     private sealed class LastSetMetricsRow
     {
         public int? Reps { get; set; }
@@ -37,11 +39,11 @@ public class WorkoutHistoryRepository
         public int SetCount { get; set; }
         public double TotalVolumeKg { get; set; }
     }
+#pragma warning restore S1144
+#pragma warning restore S3459
     private static readonly JsonSerializerOptions s_jsonReadOptions = new() { PropertyNameCaseInsensitive = true };
 
-    private readonly AppDatabase _db;
-
-    public WorkoutHistoryRepository(AppDatabase db) => _db = db;
+    private readonly AppDatabase _db = db;
 
     public async Task<string> BeginSessionAsync(Guid planId, string planName, string? planSnapshotJson = null)
     {
@@ -173,43 +175,66 @@ public class WorkoutHistoryRepository
     public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAsync(
         Guid workoutPlanId,
         string exerciseName,
-        int maxSessions = 30)
+        int maxSessions = 30,
+        double? bodyweightKg = null)
     {
-        if (string.IsNullOrWhiteSpace(exerciseName)) return Array.Empty<ExerciseSessionProgressEntry>();
+        if (string.IsNullOrWhiteSpace(exerciseName)) return [];
         maxSessions = Math.Clamp(maxSessions, 1, 200);
         await _db.EnsureInitializedAsync();
 
         var planIdStr = workoutPlanId.ToString();
-        var rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(
-            @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
-                     MAX(s.WeightKg) AS BestWeightKg,
-                     IFNULL(SUM(s.Reps), 0) AS TotalReps,
-                     COUNT(*) AS SetCount,
-                     SUM(CASE
-                           WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg
-                           WHEN s.Reps IS NOT NULL THEN s.Reps
-                           WHEN s.WeightKg IS NOT NULL THEN s.WeightKg
-                           ELSE 0
-                         END) AS TotalVolumeKg
-              FROM WorkoutSessionLogs sess
-              INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
-              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
-              GROUP BY sess.Id
-              ORDER BY sess.StartedAtUtc DESC
-              LIMIT ?",
-            planIdStr,
-            exerciseName,
-            maxSessions);
+        string query;
+        object[] args;
 
-        return rows
+        if (bodyweightKg.HasValue && bodyweightKg.Value > 0)
+        {
+            query = @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
+                             MAX(s.WeightKg) AS BestWeightKg,
+                             IFNULL(SUM(s.Reps), 0) AS TotalReps,
+                             COUNT(*) AS SetCount,
+                             SUM(CASE
+                                   WHEN s.Reps IS NOT NULL THEN s.Reps * (? + IFNULL(s.WeightKg, 0))
+                                   ELSE 0
+                                 END) AS TotalVolumeKg
+                      FROM WorkoutSessionLogs sess
+                      INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+                      WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+                      GROUP BY sess.Id
+                      ORDER BY sess.StartedAtUtc DESC
+                      LIMIT ?";
+            args = [ bodyweightKg.Value, planIdStr, exerciseName, maxSessions ];
+        }
+        else
+        {
+            query = @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
+                             MAX(s.WeightKg) AS BestWeightKg,
+                             IFNULL(SUM(s.Reps), 0) AS TotalReps,
+                             COUNT(*) AS SetCount,
+                             SUM(CASE
+                                   WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg
+                                   WHEN s.Reps IS NOT NULL THEN s.Reps
+                                   WHEN s.WeightKg IS NOT NULL THEN s.WeightKg
+                                   ELSE 0
+                                 END) AS TotalVolumeKg
+                      FROM WorkoutSessionLogs sess
+                      INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+                      WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+                      GROUP BY sess.Id
+                      ORDER BY sess.StartedAtUtc DESC
+                      LIMIT ?";
+            args = [ planIdStr, exerciseName, maxSessions ];
+        }
+
+        var rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
+
+        return [.. rows
             .Select(r => new ExerciseSessionProgressEntry(
                 r.SessionId,
                 r.StartedAtUtc,
                 r.BestWeightKg,
                 r.TotalReps,
                 r.SetCount,
-                r.TotalVolumeKg))
-            .ToList();
+                r.TotalVolumeKg))];
     }
 
     public async Task<int> GetSessionCountAsync()
@@ -250,7 +275,7 @@ public class WorkoutHistoryRepository
             entries.Add(new WorkoutHistoryBackupEntry
             {
                 Session = session,
-                Sets = sets ?? new List<WorkoutSetLogEntity>()
+                Sets = sets ?? []
             });
         }
 
@@ -268,25 +293,32 @@ public class WorkoutHistoryRepository
 
         await _db.Database.RunInTransactionAsync(conn =>
         {
-            foreach (var entry in backup.Sessions ?? new List<WorkoutHistoryBackupEntry>())
+            if (backup.Sessions == null) return;
+            foreach (var entry in backup.Sessions)
             {
-                if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
-                    continue;
-
-                var sessionId = entry.Session.Id;
-                conn.InsertOrReplace(entry.Session);
-
-                foreach (var set in entry.Sets ?? new List<WorkoutSetLogEntity>())
-                {
-                    if (set is null)
-                        continue;
-                    set.SessionId = sessionId;
-                    if (string.IsNullOrWhiteSpace(set.Id))
-                        set.Id = Guid.NewGuid().ToString();
-                    conn.InsertOrReplace(set);
-                }
+                ImportBackupEntry(conn, entry);
             }
         });
+    }
+
+    private static void ImportBackupEntry(SQLite.SQLiteConnection conn, WorkoutHistoryBackupEntry entry)
+    {
+        if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
+            return;
+
+        var sessionId = entry.Session.Id;
+        conn.InsertOrReplace(entry.Session);
+
+        if (entry.Sets == null) return;
+        foreach (var set in entry.Sets)
+        {
+            if (set is null)
+                continue;
+            set.SessionId = sessionId;
+            if (string.IsNullOrWhiteSpace(set.Id))
+                set.Id = Guid.NewGuid().ToString();
+            conn.InsertOrReplace(set);
+        }
     }
 
     public async Task<WorkoutSessionLogEntity?> GetSessionAsync(string sessionId)
@@ -299,18 +331,17 @@ public class WorkoutHistoryRepository
     public async Task<IReadOnlyList<WorkoutSetLogEntity>> GetSetsForSessionAsync(string sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
-            return Array.Empty<WorkoutSetLogEntity>();
+            return [];
 
         await _db.EnsureInitializedAsync();
         var rows = await _db.Database.Table<WorkoutSetLogEntity>()
             .Where(s => s.SessionId == sessionId)
             .ToListAsync();
 
-        return rows
+        return [.. rows
             .OrderBy(s => s.CompletedAtUtc)
             .ThenBy(s => s.ExerciseIndex)
-            .ThenBy(s => s.SetIndex)
-            .ToList();
+            .ThenBy(s => s.SetIndex)];
     }
 
     /// <summary>

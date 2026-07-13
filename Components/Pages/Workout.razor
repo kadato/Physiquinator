@@ -8,6 +8,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject UserProfileService UserProfileService
 @implements IAsyncDisposable
 
 <PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkoutInProgress" />
@@ -35,7 +36,7 @@ else
                                 }
                                 else
                                 {
-                                    <div class="rest-timer-digits @RestDigitsClass @(SessionService.RestSecondsRemaining < 60 ? "rest-timer-digits--seconds-only" : "") @(SessionService.RestSecondsRemaining < 10 ? "rest-timer-digits--single-digit" : "")" role="timer">
+                                    <div class='rest-timer-digits @RestDigitsClass @(60 > SessionService.RestSecondsRemaining ? "rest-timer-digits--seconds-only" : "") @(10 > SessionService.RestSecondsRemaining ? "rest-timer-digits--single-digit" : "")' role="timer">
                                         <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(SessionService.RestSecondsRemaining)</span>
                                         <span class="rest-timer-separator">:</span>
                                         <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(SessionService.RestSecondsRemaining)</span>
@@ -131,7 +132,7 @@ else
                 var completedSetsCount = item.CompletedCount;
                 var isExpanded = _activeExerciseIndex == exerciseIndex;
 
-                <MudCard Class="@($"mb-3 exercise-accordion-card {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id" data-exercise-index="@exerciseIndex">
+                 <MudCard Class='@($"mb-3 exercise-accordion-card {(isExpanded ? "exercise-accordion-card--expanded" : "")}")' @key="exercise.Id" data-exercise-index="@exerciseIndex">
                     <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
                         <div class="header-left">
                             <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@exercise.Name</MudText>
@@ -181,7 +182,7 @@ else
                                                               IsInteger="false"
                                                               Format="0.##"
                                                               Compact="true"
-                                                              Unit="@(exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")"
+                                                              Unit='@(exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")'
                                                               CustomDisplayText="@(exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
                                                               Placeholder="@defaultWeight" />
                                         }
@@ -192,13 +193,13 @@ else
                                                           IsInteger="true"
                                                           Format="0"
                                                           Compact="true"
-                                                          Unit="@(exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")"
+                                                          Unit='@(exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
                                                           Placeholder="@((double)defaultReps)" />
                                     </div>
                                     <button type="button"
                                             class="log-set-btn"
                                             @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                            disabled="@_isCompleting">
+                                            disabled="@(_isCompleting ? "disabled" : null)">
                                         <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
                                         Log Set
                                     </button>
@@ -223,7 +224,7 @@ else
                     var completedSetsCount = item.CompletedCount;
                     var isExpanded = _activeExerciseIndex == exerciseIndex;
 
-                    <MudCard Class="@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")" @key="exercise.Id" data-exercise-index="@exerciseIndex">
+                     <MudCard Class='@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")' @key="exercise.Id" data-exercise-index="@exerciseIndex">
                         <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
                             <div class="header-left">
                                 <span class="completed-icon mr-2" aria-hidden="true">
@@ -267,7 +268,7 @@ else
                                             <button type="button" 
                                                     class="log-check-btn log-check-btn--completed"
                                                     @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                                    disabled="@_isCompleting">
+                                                     disabled="@(_isCompleting ? "disabled" : null)">
                                                 <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
                                             </button>
                                         </div>
@@ -323,9 +324,13 @@ else
     private string? _historySessionId;
     private bool _completedExpanded;
     private Snackbar? _undoSnackbar;
+    private double? _bodyweightKg;
 
-    private Dictionary<(int ExIdx, int SetIdx), (double? Weight, int? Reps)> _setInputs = new();
-    private Dictionary<(int ExIdx, int SetIdx), (double Weight, int Reps)> _originalValues = new();
+    private sealed class SetInputsDictionary : Dictionary<System.ValueTuple<int, int>, (double? Weight, int? Reps)> { }
+    private sealed class OriginalValuesDictionary : Dictionary<System.ValueTuple<int, int>, (double Weight, int Reps)> { }
+
+    private SetInputsDictionary _setInputs = new();
+    private OriginalValuesDictionary _originalValues = new();
     private int _activeExerciseIndex = 0;
     private Dictionary<int, int> _activeSetIndices = new();
 
@@ -339,6 +344,7 @@ else
         SessionService.RestCompletedWhileBackground += OnSessionRestCompletedWhileBackground;
 
         _dotNetRef = DotNetObjectReference.Create(this);
+        _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
 
         try
         {
@@ -1259,15 +1265,21 @@ else
     {
         if (weight == null || weight.Value == 0)
         {
-            return $"BW × {reps} reps";
+            return _bodyweightKg.HasValue 
+                ? $"BW ({_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
+                : $"BW × {reps} reps";
         }
         else if (weight.Value > 0)
         {
-            return $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
+            return _bodyweightKg.HasValue
+                ? $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(weight.Value + _bodyweightKg.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
+                : $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
         }
         else
         {
-            return $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
+            return _bodyweightKg.HasValue
+                ? $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(_bodyweightKg.Value - Math.Abs(weight.Value)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
+                : $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
         }
     }
 

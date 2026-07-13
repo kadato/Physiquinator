@@ -52,6 +52,25 @@
 
     <MudPaper Class="pa-4 settings-card" Elevation="0">
         <div class="settings-card__header">
+            <MudIcon Icon="@Icons.Material.Outlined.MonitorWeight" Class="settings-card__icon" />
+            <MudText Typo="Typo.h6" Class="settings-card__title">Bodyweight</MudText>
+        </div>
+        <MudNumericField T="double?"
+                         Label="Bodyweight (kg)"
+                         Variant="Variant.Filled"
+                         Value="_bodyweight"
+                         ValueChanged="OnBodyweightChanged"
+                         Min="0"
+                         Max="500"
+                         Format="0.##"
+                         Clearable="true" />
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+            Provide your bodyweight to calculate absolute weight and total volume for bodyweight exercises (optional).
+        </MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 settings-card" Elevation="0">
+        <div class="settings-card__header">
             <MudIcon Icon="@Icons.Material.Outlined.Backup" Class="settings-card__icon" />
             <MudText Typo="Typo.h6" Class="settings-card__title">Plans backup</MudText>
         </div>
@@ -114,7 +133,7 @@
             {
                 var isActive = profile.Id == _activeProfile.Id;
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-3 rounded-lg"
-                          Style="@(isActive ? "background-color: var(--mud-palette-primary-hover); border: 1px solid var(--mud-palette-primary);" : "background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-divider);")">
+                          Style='@(isActive ? "background-color: var(--mud-palette-primary-hover); border: 1px solid var(--mud-palette-primary);" : "background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-divider);")'>
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                         <MudAvatar Color="@(isActive ? Color.Primary : Color.Default)" Size="Size.Medium">
                             @profile.Name.Substring(0, Math.Min(profile.Name.Length, 2)).ToUpper()
@@ -199,6 +218,7 @@
     private int _historySessionCount;
     private List<UserProfile> _profiles = new();
     private UserProfile _activeProfile = null!;
+    private double? _bodyweight;
 
     private string _effectiveThemeLabel => _effectiveTheme == "light" ? "Light" : "Dark";
 
@@ -211,6 +231,17 @@
         await RefreshHistoryCountAsync();
         _profiles = UserProfileService.GetProfiles();
         _activeProfile = UserProfileService.GetActiveProfile();
+        _bodyweight = _activeProfile.BodyweightKg;
+    }
+
+    private void OnBodyweightChanged(double? value)
+    {
+        _bodyweight = value;
+        if (_activeProfile != null)
+        {
+            UserProfileService.UpdateBodyweight(_activeProfile.Id, value);
+            _activeProfile.BodyweightKg = value;
+        }
     }
 
     private async Task RefreshPlanCountAsync()
@@ -273,16 +304,17 @@
     {
         try
         {
+            var fileTypesDict = new PlatformFileTypes
+            {
+                { DevicePlatform.iOS, ["public.json"] },
+                { DevicePlatform.Android, ["application/json"] },
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.MacCatalyst, ["public.json"] }
+            };
             var result = await FilePicker.PickAsync(new PickOptions
             {
                 PickerTitle = "Select workout plan JSON file",
-                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.iOS, new[] { "public.json" } },
-                    { DevicePlatform.Android, new[] { "application/json" } },
-                    { DevicePlatform.WinUI, new[] { ".json" } },
-                    { DevicePlatform.MacCatalyst, new[] { "public.json" } }
-                })
+                FileTypes = new FilePickerFileType(fileTypesDict)
             });
 
             if (result == null)
@@ -333,16 +365,17 @@
     {
         try
         {
+            var fileTypesDict = new PlatformFileTypes
+            {
+                { DevicePlatform.iOS, ["public.json"] },
+                { DevicePlatform.Android, ["application/json"] },
+                { DevicePlatform.WinUI, [".json"] },
+                { DevicePlatform.MacCatalyst, ["public.json"] }
+            };
             var result = await FilePicker.PickAsync(new PickOptions
             {
                 PickerTitle = "Select workout history JSON file",
-                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.iOS, new[] { "public.json" } },
-                    { DevicePlatform.Android, new[] { "application/json" } },
-                    { DevicePlatform.WinUI, new[] { ".json" } },
-                    { DevicePlatform.MacCatalyst, new[] { "public.json" } }
-                })
+                FileTypes = new FilePickerFileType(fileTypesDict)
             });
 
             if (result == null)
@@ -467,6 +500,8 @@
             Snackbar.Add($"Failed to switch profile: {ex.Message}", Severity.Error);
         }
     }
+
+    private sealed class PlatformFileTypes : Dictionary<DevicePlatform, IEnumerable<string>> { }
 
     public void Dispose()
     {

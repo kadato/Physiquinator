@@ -2,6 +2,7 @@
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
+@inject UserProfileService UserProfileService
 
 <PageHeader Title="Session" OnBack="GoHistoryList">
     <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
@@ -135,6 +136,7 @@ else
     private List<WorkoutSetLogEntity> _sets = new();
     private Guid? _planGuid;
     private List<string> _distinctExerciseNames = new();
+    private double? _bodyweightKg;
 
     private void GoHistoryList() => Navigation.NavigateTo("/history");
 
@@ -153,6 +155,7 @@ else
         var id = Uri.UnescapeDataString(SessionId ?? "");
         _session = string.IsNullOrWhiteSpace(id) ? null : await HistoryRepo.GetSessionAsync(id);
         _snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(_session?.PlanSnapshotJson);
+        _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
 
         var sets = _session != null
             ? (await HistoryRepo.GetSetsForSessionAsync(_session.Id)).ToList()
@@ -205,9 +208,21 @@ else
         if (type == ExerciseLogType.Duration) return "—";
         if (type == ExerciseLogType.BodyweightReps)
         {
-            if (weight == null || weight.Value == 0) return "BW";
-            if (weight.Value > 0) return $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
-            return $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            if (weight == null || weight.Value == 0)
+            {
+                return _bodyweightKg.HasValue 
+                    ? $"BW ({_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
+                    : "BW";
+            }
+            if (weight.Value > 0)
+            {
+                return _bodyweightKg.HasValue 
+                    ? $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} ({(weight.Value + _bodyweightKg.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
+                    : $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            }
+            return _bodyweightKg.HasValue 
+                ? $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} ({(_bodyweightKg.Value - Math.Abs(weight.Value)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
+                : $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
         }
         return weight is { } w ? w.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) : "—";
     }

@@ -1933,8 +1933,8 @@ button.heatmap-cell:disabled {
 }
 
 .exercise-name {
-    font-size: 1.35rem !important;
-    letter-spacing: -0.01em;
+    font-size: 1.6rem !important;
+    letter-spacing: -0.015em;
 }
 
 .exercise-order-badge {

@@ -372,9 +372,19 @@ public class DemoDataSeeder
         }
 
         var pullUpReps = 6 + Math.Min(pullOrdinal, 4);
+        double? pullUpWeight = null;
+        if (pullOrdinal < 12)
+        {
+            pullUpWeight = -15.0 + pullOrdinal;
+        }
+        else if (pullOrdinal >= 28)
+        {
+            pullUpWeight = 2.5 + Math.Floor((pullOrdinal - 28) / 3.0) * 1.25;
+        }
+
         for (var s = 0; s < 4; s++)
         {
-            sets.Add(CreateSet(sessionIndex, 1, s, "Pull-Ups", t, pullUpReps - Math.Min(s, 2), null));
+            sets.Add(CreateSet(sessionIndex, 1, s, "Pull-Ups", t, pullUpReps - Math.Min(s, 2), pullUpWeight));
             t = t.AddMinutes(2);
         }
 
@@ -506,9 +516,19 @@ public class DemoDataSeeder
         }
 
         var pullUpReps = 6 + Math.Min(fbOrdinal, 3);
+        double? pullUpWeight = null;
+        if (fbOrdinal < 8)
+        {
+            pullUpWeight = -10.0 + fbOrdinal;
+        }
+        else if (fbOrdinal >= 18)
+        {
+            pullUpWeight = 2.5 + (fbOrdinal - 18) * 0.5;
+        }
+
         for (var s = 0; s < 3; s++)
         {
-            sets.Add(CreateSet(sessionIndex, 4, s, "Pull-Ups", t, pullUpReps - Math.Min(s, 1), null));
+            sets.Add(CreateSet(sessionIndex, 4, s, "Pull-Ups", t, pullUpReps - Math.Min(s, 1), pullUpWeight));
             t = t.AddMinutes(2);
         }
 
@@ -660,7 +680,8 @@ public class DemoDataSeeder
                     Order = 1,
                     RestIntervalSeconds = 90,
                     DefaultReps = 8,
-                    DefaultWeightKg = null
+                    DefaultWeightKg = null,
+                    LogType = ExerciseLogType.BodyweightReps
                 },
                 new ExercisePlan
                 {
@@ -742,8 +763,8 @@ public class DemoDataSeeder
                 new ExercisePlan { Id = DemoDataIds.FbBench, Name = "Bench Press", SetCount = 3, Order = 1, RestIntervalSeconds = 120, DefaultReps = 8, DefaultWeightKg = 60 },
                 new ExercisePlan { Id = DemoDataIds.FbRow, Name = "Barbell Rows", SetCount = 3, Order = 2, RestIntervalSeconds = 90, DefaultReps = 10, DefaultWeightKg = 50 },
                 new ExercisePlan { Id = DemoDataIds.FbOhp, Name = "Overhead Press", SetCount = 3, Order = 3, RestIntervalSeconds = 90, DefaultReps = 8, DefaultWeightKg = 35 },
-                new ExercisePlan { Id = DemoDataIds.FbPullup, Name = "Pull-Ups", SetCount = 3, Order = 4, RestIntervalSeconds = 90, DefaultReps = 8, DefaultWeightKg = null },
-                new ExercisePlan { Id = DemoDataIds.FbPlank, Name = "Plank", SetCount = 3, Order = 5, RestIntervalSeconds = 45, DefaultReps = 45, DefaultWeightKg = null }
+                new ExercisePlan { Id = DemoDataIds.FbPullup, Name = "Pull-Ups", SetCount = 3, Order = 4, RestIntervalSeconds = 90, DefaultReps = 8, DefaultWeightKg = null, LogType = ExerciseLogType.BodyweightReps },
+                new ExercisePlan { Id = DemoDataIds.FbPlank, Name = "Plank", SetCount = 3, Order = 5, RestIntervalSeconds = 45, DefaultReps = 45, DefaultWeightKg = null, LogType = ExerciseLogType.Duration }
             ]
         };
     }

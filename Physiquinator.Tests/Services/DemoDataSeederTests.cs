@@ -72,6 +72,14 @@ public class DemoDataSeederTests : IAsyncLifetime
         var pullUpProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PullPlan, "Pull-Ups", 30);
         Assert.True(pullUpProgress.Count >= 12);
         Assert.True(pullUpProgress[0].TotalReps > pullUpProgress[^1].TotalReps);
+        Assert.Contains(pullUpProgress, p => p.BestWeightKg < 0); // Assisted
+        Assert.Contains(pullUpProgress, p => p.BestWeightKg is null); // Bodyweight only
+        Assert.Contains(pullUpProgress, p => p.BestWeightKg > 0); // Weighted
+
+        var plankProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Plank", 30);
+        Assert.True(plankProgress.Count >= 8);
+        Assert.All(plankProgress, p => Assert.Null(p.BestWeightKg));
+        Assert.True(plankProgress[0].TotalReps > plankProgress[^1].TotalReps);
 
         var fbBench = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Bench Press", 30);
         Assert.True(fbBench.Count >= 8);

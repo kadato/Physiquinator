@@ -22,4 +22,6 @@ public class ExercisePlanEntity
     public int? DefaultReps { get; set; }
 
     public double? DefaultWeightKg { get; set; }
+
+    public int LogType { get; set; }
 }

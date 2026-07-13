@@ -149,6 +149,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         var expected = plan.Exercises[0];
         expected.DefaultReps = 12;
         expected.DefaultWeightKg = 60.5;
+        expected.LogType = ExerciseLogType.BodyweightReps;
         await _sut.SavePlanAsync(plan);
 
         var result = await _sut.GetPlanAsync(plan.Id);
@@ -160,6 +161,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Assert.Equal(expected.RestIntervalSeconds, actual.RestIntervalSeconds);
         Assert.Equal(12, actual.DefaultReps);
         Assert.Equal(60.5, actual.DefaultWeightKg);
+        Assert.Equal(ExerciseLogType.BodyweightReps, actual.LogType);
     }
 
     // ──────────────────────────────────────────────────────────────

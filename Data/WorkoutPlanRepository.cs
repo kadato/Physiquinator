@@ -49,7 +49,8 @@ public class WorkoutPlanRepository
                     Order = e.Order,
                     RestIntervalSeconds = e.RestIntervalSeconds,
                     DefaultReps = e.DefaultReps,
-                    DefaultWeightKg = e.DefaultWeightKg
+                    DefaultWeightKg = e.DefaultWeightKg,
+                    LogType = (ExerciseLogType)e.LogType
                 }).ToList()
             };
 
@@ -91,7 +92,8 @@ public class WorkoutPlanRepository
                 Order = e.Order,
                 RestIntervalSeconds = e.RestIntervalSeconds,
                 DefaultReps = e.DefaultReps,
-                DefaultWeightKg = e.DefaultWeightKg
+                DefaultWeightKg = e.DefaultWeightKg,
+                LogType = (ExerciseLogType)e.LogType
             }).ToList()
         };
     }
@@ -128,7 +130,8 @@ public class WorkoutPlanRepository
                     Order = exercise.Order,
                     RestIntervalSeconds = exercise.RestIntervalSeconds,
                     DefaultReps = exercise.DefaultReps,
-                    DefaultWeightKg = exercise.DefaultWeightKg
+                    DefaultWeightKg = exercise.DefaultWeightKg,
+                    LogType = (int)exercise.LogType
                 };
 
                 conn.Insert(exerciseEntity);

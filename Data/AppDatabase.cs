@@ -71,6 +71,10 @@ public class AppDatabase
         if (await db.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM pragma_table_info('WorkoutPlans') WHERE name='SortOrder'") == 0)
             await db.ExecuteAsync("ALTER TABLE WorkoutPlans ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0");
+
+        if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'") == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0");
     }
 
     public async Task EnsureInitializedAsync()

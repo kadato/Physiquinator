@@ -14,4 +14,8 @@ public class ExercisePlan
 
     /// <summary>Optional default load in kilograms for set logging.</summary>
     public double? DefaultWeightKg { get; set; }
+
+    /// <summary>The logging style used for this exercise.</summary>
+    public ExerciseLogType LogType { get; set; } = ExerciseLogType.WeightAndReps;
 }
+

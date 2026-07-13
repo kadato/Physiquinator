@@ -394,4 +394,15 @@ public class WorkoutHistoryRepository
             return null;
         }
     }
+
+    public async Task UpdateSessionSnapshotAsync(string sessionId, string planSnapshotJson)
+    {
+        await _db.EnsureInitializedAsync();
+        var row = await _db.Database.FindAsync<WorkoutSessionLogEntity>(sessionId);
+        if (row != null)
+        {
+            row.PlanSnapshotJson = planSnapshotJson;
+            await _db.Database.UpdateAsync(row);
+        }
+    }
 }

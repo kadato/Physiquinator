@@ -21,6 +21,7 @@
   <!-- Link source files from the main project to avoid MAUI platform-TFM issues -->
   <ItemGroup>
     <Compile Include="..\Models\SetCompletion.cs" Link="Models\SetCompletion.cs" />
+    <Compile Include="..\Models\ExerciseLogType.cs" Link="Models\ExerciseLogType.cs" />
     <Compile Include="..\Models\ExercisePlan.cs" Link="Models\ExercisePlan.cs" />
     <Compile Include="..\Models\WorkoutPlan.cs" Link="Models\WorkoutPlan.cs" />
     <Compile Include="..\Services\WorkoutSessionService.cs" Link="Services\WorkoutSessionService.cs" />

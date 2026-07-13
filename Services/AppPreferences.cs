@@ -9,8 +9,8 @@ public static class AppPreferences
 {
     private static readonly bool IsScreenshotMode = Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true";
     private static readonly string? CustomDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-    private static Dictionary<string, string> _inMemoryPrefs = new();
-    private static string? _filePath;
+    private static readonly Dictionary<string, string> _inMemoryPrefs = [];
+    private static readonly string? _filePath;
 
     static AppPreferences()
     {
@@ -23,7 +23,7 @@ public static class AppPreferences
                 if (File.Exists(_filePath))
                 {
                     var json = File.ReadAllText(_filePath);
-                    _inMemoryPrefs = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new();
+                    _inMemoryPrefs = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
                 }
             }
             catch

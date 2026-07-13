@@ -21,7 +21,7 @@
 ::deep .app-page-container {
     padding-left: var(--app-page-x) !important;
     padding-right: var(--app-page-x) !important;
-    padding-top: calc(var(--app-page-top) + env(safe-area-inset-top, 0px)) !important;
+    padding-top: var(--app-page-top) !important;
     padding-bottom: var(--app-page-bottom-extra) !important;
     max-width: 600px !important;
     margin-left: auto !important;

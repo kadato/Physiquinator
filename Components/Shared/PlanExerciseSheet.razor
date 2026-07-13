@@ -13,6 +13,17 @@
                           Required="true"
                           Immediate="true" />
 
+            <MudSelect Value="_logType"
+                       ValueChanged="OnLogTypeChanged"
+                       Variant="Variant.Filled"
+                       Label="Exercise type"
+                       Class="mb-2"
+                       T="ExerciseLogType">
+                <MudSelectItem Value="ExerciseLogType.WeightAndReps">Weight &amp; Reps</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.BodyweightReps">Bodyweight (Reps)</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.Duration">Duration (Time)</MudSelectItem>
+            </MudSelect>
+
             <SetMetricStepper Label="Sets"
                               @bind-Value="_setCount"
                               Step="1"
@@ -27,19 +38,25 @@
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="Default reps"
+            <SetMetricStepper @key="@($"reps-stepper-{_logType}")"
+                              Label="@(_logType == ExerciseLogType.Duration ? "Default duration (seconds)" : "Default reps")"
                               @bind-Value="_defaultReps"
                               Step="1"
                               Min="0"
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="Default weight (kg)"
-                              @bind-Value="_defaultWeightKg"
-                              Step="2.5"
-                              Min="0"
-                              Format="0.#"
-                              InputMode="decimal" />
+            
+            @if (_logType != ExerciseLogType.Duration)
+            {
+                <SetMetricStepper @key="@($"weight-stepper-{_logType}")"
+                                  Label="@(_logType == ExerciseLogType.BodyweightReps ? "Default weight offset (kg)" : "Default weight (kg)")"
+                                  @bind-Value="_defaultWeightKg"
+                                  Step="2.5"
+                                  Min="@(_logType == ExerciseLogType.BodyweightReps ? -200 : 0)"
+                                  Format="0.#"
+                                  InputMode="decimal" />
+            }
 
             <div class="plan-exercise-sheet__footer">
                 <MudButton Color="Color.Primary"
@@ -74,6 +91,7 @@
     private double? _restSeconds;
     private double? _defaultReps;
     private double? _defaultWeightKg;
+    private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
 
     private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
 
@@ -84,6 +102,7 @@
         _restSeconds = Exercise.RestIntervalSeconds;
         _defaultReps = Exercise.DefaultReps;
         _defaultWeightKg = Exercise.DefaultWeightKg;
+        _logType = Exercise.LogType;
     }
 
     private void Cancel() => MudDialog.Cancel();
@@ -101,9 +120,19 @@
             RestIntervalSeconds = Math.Max(0, (int)Math.Round(_restSeconds ?? 0)),
             Order = Exercise.Order,
             DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
-            DefaultWeightKg = _defaultWeightKg
+            DefaultWeightKg = _logType == ExerciseLogType.Duration ? null : _defaultWeightKg,
+            LogType = _logType
         };
 
         MudDialog.Close(DialogResult.Ok(updated));
+    }
+
+    private async Task OnLogTypeChanged(ExerciseLogType type)
+    {
+        // Add a small delay to allow event propagation to finish
+        // and popovers to close before structural changes occur.
+        await Task.Delay(50);
+        _logType = type;
+        StateHasChanged();
     }
 }

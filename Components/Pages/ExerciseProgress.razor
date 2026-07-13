@@ -2,6 +2,7 @@
 @using System.Globalization
 @using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
+@inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
 
 <PageHeader Title="@_decodedExerciseName" OnBack="GoHistory" />
@@ -54,15 +55,37 @@ else
             <MudPaper Class="premium-table" Elevation="0">
                 <MudTable Items="_rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
-                        <MudTh>kg (Best)</MudTh>
-                        <MudTh>Reps (Total)</MudTh>
-                        <MudTh>Sets</MudTh>
+                        @if (_logType == ExerciseLogType.Duration)
+                        {
+                            <MudTh>Total Time</MudTh>
+                            <MudTh>Sets</MudTh>
+                        }
+                        else if (_logType == ExerciseLogType.BodyweightReps)
+                        {
+                            <MudTh>Best Offset</MudTh>
+                            <MudTh>Reps (Total)</MudTh>
+                            <MudTh>Sets</MudTh>
+                        }
+                        else
+                        {
+                            <MudTh>kg (Best)</MudTh>
+                            <MudTh>Reps (Total)</MudTh>
+                            <MudTh>Sets</MudTh>
+                        }
                         <MudTh Class="exercise-progress-table__action" />
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@(context.BestWeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
-                        <MudTd>@context.TotalReps</MudTd>
-                        <MudTd>@context.SetCount</MudTd>
+                        @if (_logType == ExerciseLogType.Duration)
+                        {
+                            <MudTd>@(context.TotalReps)s</MudTd>
+                            <MudTd>@context.SetCount</MudTd>
+                        }
+                        else
+                        {
+                            <MudTd>@FormatBestWeight(context.BestWeightKg)</MudTd>
+                            <MudTd>@context.TotalReps</MudTd>
+                            <MudTd>@context.SetCount</MudTd>
+                        }
                         <MudTd Class="exercise-progress-table__action">
                             <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
                                            Size="Size.Small"
@@ -86,6 +109,7 @@ else
     public string ExerciseName { get; set; } = "";
 
     private const int _maxSessions = 30;
+    private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
 
     private bool _ready;
     private string _decodedExerciseName = "";
@@ -117,6 +141,9 @@ else
         }
 
         _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, _maxSessions);
+        var plan = await PlanService.GetPlanAsync(PlanId);
+        var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
+        _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
         BuildChartData();
         _ready = true;
     }
@@ -136,11 +163,13 @@ else
         _chartLabels = BuildSparseChartLabels(
             chronological.Select(r => r.StartedAtUtc).ToList(),
             _maxChartAxisLabels);
-        var values = chronological.Select(r => r.TotalVolumeKg).ToArray();
+        var values = _logType == ExerciseLogType.WeightAndReps 
+            ? chronological.Select(r => r.TotalVolumeKg).ToArray()
+            : chronological.Select(r => (double)r.TotalReps).ToArray();
         _hasChartData = values.Any(v => v > 0);
         _chartSeries = new ChartSeries<double>
         {
-            Name = "Progression",
+            Name = _logType == ExerciseLogType.Duration ? "Total Duration" : (_logType == ExerciseLogType.BodyweightReps ? "Total Reps" : "Progression"),
             Data = values
         }.AsList();
 
@@ -186,5 +215,16 @@ else
         }
 
         return labels;
+    }
+
+    private string FormatBestWeight(double? weight)
+    {
+        if (_logType == ExerciseLogType.BodyweightReps)
+        {
+            if (weight == null || weight.Value == 0) return "BW";
+            if (weight.Value > 0) return $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg";
+            return $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg";
+        }
+        return weight is { } w ? $"{w.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg" : "—";
     }
 }

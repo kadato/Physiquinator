@@ -1,6 +1,7 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
 @inject WorkoutPlanService PlanService
+@inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -262,7 +263,8 @@
         Order = source.Order,
         RestIntervalSeconds = source.RestIntervalSeconds,
         DefaultReps = source.DefaultReps,
-        DefaultWeightKg = source.DefaultWeightKg
+        DefaultWeightKg = source.DefaultWeightKg,
+        LogType = source.LogType
     };
 
     private async Task ConfirmRemoveExerciseAsync(int index)
@@ -311,10 +313,20 @@
                 Order = i,
                 RestIntervalSeconds = e.RestIntervalSeconds,
                 DefaultReps = e.DefaultReps,
-                DefaultWeightKg = e.DefaultWeightKg
+                DefaultWeightKg = e.DefaultWeightKg,
+                LogType = e.LogType
             }).ToList()
         };
         await PlanService.SavePlanAsync(plan);
+
+        // Update in-progress session snapshot if one exists for this plan
+        var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(plan.Id);
+        if (openSession != null)
+        {
+            var newSnapshot = PlanService.SerializePlanToJson(plan);
+            await HistoryRepository.UpdateSessionSnapshotAsync(openSession.Id, newSnapshot);
+        }
+
         Snackbar.Add("Plan saved.", Severity.Success);
         Navigation.NavigateTo("/");
     }

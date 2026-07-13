@@ -94,8 +94,8 @@ else
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.ExerciseName</MudTd>
-                        <MudTd>@(context.Reps?.ToString() ?? "—")</MudTd>
-                        <MudTd>@(context.WeightKg is { } w ? w.ToString("0.##") : "—")</MudTd>
+                        <MudTd>@FormatReps(context.ExerciseName, context.Reps)</MudTd>
+                        <MudTd>@FormatWeight(context.ExerciseName, context.WeightKg)</MudTd>
                         <MudTd>@UiDateFormats.LocalTimeOnly(context.CompletedAtUtc)</MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -184,5 +184,31 @@ else
 
         await HistoryRepo.DeleteSessionAsync(_session.Id);
         Navigation.NavigateTo("/history");
+    }
+
+    private ExerciseLogType GetLogType(string exerciseName)
+    {
+        var ex = _snapshot?.Exercises.FirstOrDefault(e => string.Equals(e.Name, exerciseName, StringComparison.OrdinalIgnoreCase));
+        return ex?.LogType ?? ExerciseLogType.WeightAndReps;
+    }
+
+    private string FormatReps(string exerciseName, int? reps)
+    {
+        if (reps == null) return "—";
+        var type = GetLogType(exerciseName);
+        return type == ExerciseLogType.Duration ? $"{reps}s" : reps.Value.ToString();
+    }
+
+    private string FormatWeight(string exerciseName, double? weight)
+    {
+        var type = GetLogType(exerciseName);
+        if (type == ExerciseLogType.Duration) return "—";
+        if (type == ExerciseLogType.BodyweightReps)
+        {
+            if (weight == null || weight.Value == 0) return "BW";
+            if (weight.Value > 0) return $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            return $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+        }
+        return weight is { } w ? w.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) : "—";
     }
 }

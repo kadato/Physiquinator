@@ -136,6 +136,9 @@ else
     [Parameter]
     public string Unit { get; set; } = "";
 
+    [Parameter]
+    public string? CustomDisplayText { get; set; }
+
     private bool _editing;
     private string _editText = "";
     private ElementReference _inputRef;
@@ -143,6 +146,7 @@ else
     private DotNetObjectReference<SetMetricStepper>? _selfRef;
     private bool _shouldFocusInput;
     private bool _hasTyped;
+    private bool _jsInitialized;
 
     private string EditText
     {
@@ -158,6 +162,9 @@ else
     {
         get
         {
+            if (!string.IsNullOrEmpty(CustomDisplayText))
+                return CustomDisplayText;
+
             if (!Value.HasValue)
                 return "0";
 
@@ -193,12 +200,13 @@ else
             }
         }
 
-        if (!_editing && _valueButtonRef.Context != null)
+        if (!_editing && !_jsInitialized && _valueButtonRef.Context != null)
         {
             _selfRef ??= DotNetObjectReference.Create(this);
             try
             {
                 await JSRuntime.InvokeVoidAsync("physiquinatorStepper.init", _valueButtonRef, _selfRef);
+                _jsInitialized = true;
             }
             catch
             {
@@ -224,6 +232,7 @@ else
         _hasTyped = false;
         _editing = true;
         _shouldFocusInput = true;
+        _jsInitialized = false;
     }
 
     private async Task CommitEdit()

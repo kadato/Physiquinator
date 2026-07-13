@@ -172,15 +172,19 @@ else
 
                                 <div class="set-active-panel">
                                     <div class="set-stepper-rows">
-                                        <SetMetricStepper Value="@inputs.Weight"
-                                                          ValueChanged="@(val => HandleWeightStepperChanged(exerciseIndex, setIndex, val))"
-                                                          Step="2.5"
-                                                          Min="0"
-                                                          IsInteger="false"
-                                                          Format="0.##"
-                                                          Compact="true"
-                                                          Unit="kg"
-                                                          Placeholder="@defaultWeight" />
+                                        @if (exercise.LogType != ExerciseLogType.Duration)
+                                        {
+                                            <SetMetricStepper Value="@inputs.Weight"
+                                                              ValueChanged="@(val => HandleWeightStepperChanged(exerciseIndex, setIndex, val))"
+                                                              Step="2.5"
+                                                              Min="@(exercise.LogType == ExerciseLogType.BodyweightReps ? -200 : 0)"
+                                                              IsInteger="false"
+                                                              Format="0.##"
+                                                              Compact="true"
+                                                              Unit="@(exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")"
+                                                              CustomDisplayText="@(exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
+                                                              Placeholder="@defaultWeight" />
+                                        }
                                         <SetMetricStepper Value="@((double?)inputs.Reps)"
                                                           ValueChanged="@(val => HandleRepsStepperChanged(exerciseIndex, setIndex, val))"
                                                           Step="1"
@@ -188,7 +192,7 @@ else
                                                           IsInteger="true"
                                                           Format="0"
                                                           Compact="true"
-                                                          Unit="reps"
+                                                          Unit="@(exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")"
                                                           Placeholder="@((double)defaultReps)" />
                                     </div>
                                     <button type="button"
@@ -259,7 +263,7 @@ else
 
                                         <div class="set-summary-row">
                                             <span class="set-number-label">Set @(setIndex + 1)</span>
-                                            <span class="set-values">@finalWeight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) kg × @finalReps reps</span>
+                                            <span class="set-values">@FormatSetDisplay(exercise.LogType, finalWeight, finalReps)</span>
                                             <button type="button" 
                                                     class="log-check-btn log-check-btn--completed"
                                                     @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
@@ -805,7 +809,8 @@ else
 
                 if (_historySessionId != null)
                 {
-                    await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, finalWeight);
+                    var loggedWeight = exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight;
+                    await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight);
                 }
 
                 _setInputs[inputKey] = (finalWeight, finalReps);
@@ -1238,6 +1243,41 @@ else
     {
         var s = totalSeconds % 60;
         return $"{s % 10}";
+    }
+
+    private string FormatSetDisplay(ExerciseLogType logType, double? weight, int reps)
+    {
+        return logType switch
+        {
+            ExerciseLogType.BodyweightReps => GetBodyweightSetDisplayText(weight, reps),
+            ExerciseLogType.Duration => $"{reps}s",
+            _ => $"{weight?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) ?? "0"} kg × {reps} reps"
+        };
+    }
+
+    private string GetBodyweightSetDisplayText(double? weight, int reps)
+    {
+        if (weight == null || weight.Value == 0)
+        {
+            return $"BW × {reps} reps";
+        }
+        else if (weight.Value > 0)
+        {
+            return $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
+        }
+        else
+        {
+            return $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
+        }
+    }
+
+    private string? GetBodyweightStepperDisplayText(double? value)
+    {
+        if (value == null || value.Value == 0)
+            return "BW";
+        if (value.Value > 0)
+            return $"+{value.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+        return $"-{Math.Abs(value.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
     }
 
     public async ValueTask DisposeAsync()

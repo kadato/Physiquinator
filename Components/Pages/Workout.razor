@@ -319,7 +319,6 @@ else
     private string? _historySessionId;
     private bool _completedExpanded;
     private Snackbar? _undoSnackbar;
-    private int _pendingScrollToExercise = -1;
 
     private Dictionary<(int ExIdx, int SetIdx), (double? Weight, int? Reps)> _setInputs = new();
     private Dictionary<(int ExIdx, int SetIdx), (double Weight, int Reps)> _originalValues = new();
@@ -874,7 +873,6 @@ else
                     if (nextIdx != -1)
                     {
                         _activeExerciseIndex = nextIdx;
-                        _pendingScrollToExercise = nextIdx;
                     }
                 }
             }
@@ -1281,26 +1279,4 @@ else
         _completedExpanded = !_completedExpanded;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_pendingScrollToExercise >= 0)
-        {
-            var idx = _pendingScrollToExercise;
-            _pendingScrollToExercise = -1;
-            await ScrollToExerciseAsync(idx);
-        }
-    }
-
-    private async Task ScrollToExerciseAsync(int exerciseIndex)
-    {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("eval",
-                $"(function(){{" +
-                $"  var el = document.querySelector('[data-exercise-index=\"{exerciseIndex}\"]');" +
-                $"  if(el) el.scrollIntoView({{behavior:'smooth',block:'start'}});" +
-                $"}})();");
-        }
-        catch { /* JS not ready or disposed */ }
-    }
 }

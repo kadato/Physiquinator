@@ -444,6 +444,32 @@ else
                 _setInputs[(set.ExerciseIndex, set.SetIndex)] = (set.WeightKg ?? 0, set.Reps ?? 0);
             }
 
+            // For each exercise, find the last completed set in the current session (if any)
+            // and use its values to default the remaining uncompleted sets.
+            for (int e = 0; e < plan.Exercises.Count; e++)
+            {
+                var exercise = plan.Exercises[e];
+                var completedSets = currentSets
+                    .Where(s => s.ExerciseIndex == e)
+                    .OrderBy(s => s.CompletedAtUtc)
+                    .ToList();
+
+                if (completedSets.Any())
+                {
+                    var lastCompletedSet = completedSets.Last();
+                    var lastWeight = lastCompletedSet.WeightKg ?? 0;
+                    var lastReps = lastCompletedSet.Reps ?? 0;
+
+                    for (int s = 0; s < exercise.SetCount; s++)
+                    {
+                        if (!SessionService.IsSetCompleted(e, s))
+                        {
+                            _setInputs[(e, s)] = (lastWeight, lastReps);
+                        }
+                    }
+                }
+            }
+
             // Re-evaluate first uncompleted set index after loading session sets
             for (int e = 0; e < plan.Exercises.Count; e++)
             {
@@ -785,6 +811,15 @@ else
 
                 _setInputs[inputKey] = (finalWeight, finalReps);
                 _originalValues.Remove(inputKey);
+
+                // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
+                for (int s = 0; s < exercise.SetCount; s++)
+                {
+                    if (!SessionService.IsSetCompleted(exerciseIndex, s))
+                    {
+                        _setInputs[(exerciseIndex, s)] = (finalWeight, finalReps);
+                    }
+                }
 
                 ShowUndoSetToast();
 

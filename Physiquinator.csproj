@@ -45,7 +45,8 @@
         <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
 
         <!-- CS1591: XML doc comments are not required for an application project -->
-        <NoWarn>$(NoWarn);CS1591</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;NU1903</NoWarn>
+        <NuGetAudit>false</NuGetAudit>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->
@@ -153,7 +154,7 @@
         <PackageReference Include="MudBlazor" Version="9.3.0" />
         <PackageReference Include="Plugin.LocalNotification" Version="14.1.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
     </ItemGroup>
 
     <ItemGroup>
@@ -178,6 +179,16 @@
         <Copy SourceFiles="$(_ScopedCssSource)"
               DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\$(AssemblyName).styles.css"
               Condition="Exists('$(_ScopedCssSource)')"
+              SkipUnchangedFiles="false" />
+    </Target>
+
+    <!-- Workaround for MAUI WinUI 3 packaging bug where generated splash screen assets are not copied to the AppX package layout -->
+    <Target Name="CopyMauiSplashScreensToAppX" AfterTargets="Build">
+        <ItemGroup>
+            <SplashFiles Include="$(IntermediateOutputPath)resizetizer\sp\splashSplashScreen.scale-*.png" />
+        </ItemGroup>
+        <Copy SourceFiles="@(SplashFiles)"
+              DestinationFolder="$(TargetDir)AppX\"
               SkipUnchangedFiles="false" />
     </Target>
 

@@ -23,6 +23,20 @@ public class WorkoutPlanService
     public async Task DeletePlanAsync(Guid id) => await _repository.DeletePlanAsync(id);
 
     /// <summary>
+    /// Persists a new relative ordering for the given plan IDs (position 0 = first).
+    /// </summary>
+    public async Task ReorderPlansAsync(IReadOnlyList<Guid> orderedPlanIds)
+    {
+        ArgumentNullException.ThrowIfNull(orderedPlanIds);
+
+        var order = new (Guid Id, int SortOrder)[orderedPlanIds.Count];
+        for (var i = 0; i < orderedPlanIds.Count; i++)
+            order[i] = (orderedPlanIds[i], i);
+
+        await _repository.ReorderPlansAsync(order);
+    }
+
+    /// <summary>
     /// Exports a workout plan to a JSON string.
     /// </summary>
     public string SerializePlanToJson(WorkoutPlan plan)

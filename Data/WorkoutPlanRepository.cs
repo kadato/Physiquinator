@@ -151,4 +151,19 @@ public class WorkoutPlanRepository
             .Where(p => p.Id == idString)
             .DeleteAsync().ConfigureAwait(false);
     }
+
+    /// <summary>Persists a new relative ordering for the given plans in a single transaction.</summary>
+    public async Task ReorderPlansAsync(IReadOnlyList<(Guid Id, int SortOrder)> orderedPlans)
+    {
+        ArgumentNullException.ThrowIfNull(orderedPlans);
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
+
+        await _database.Database.RunInTransactionAsync(conn =>
+        {
+            foreach (var (id, sortOrder) in orderedPlans)
+            {
+                conn.Execute("UPDATE WorkoutPlans SET SortOrder = ? WHERE Id = ?", sortOrder, id.ToString());
+            }
+        }).ConfigureAwait(false);
+    }
 }

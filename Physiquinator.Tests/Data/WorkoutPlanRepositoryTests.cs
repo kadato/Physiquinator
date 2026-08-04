@@ -272,4 +272,39 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         var all = await _sut.GetAllPlansAsync();
         Assert.Empty(all);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    // ReorderPlansAsync
+    // ──────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task ReorderPlansAsync_PersistsNewSortOrder()
+    {
+        var planA = MakePlan("A");
+        var planB = MakePlan("B");
+        var planC = MakePlan("C");
+        await _sut.SavePlanAsync(planA);
+        await _sut.SavePlanAsync(planB);
+        await _sut.SavePlanAsync(planC);
+
+        // New order: C (0), A (1), B (2)
+        await _sut.ReorderPlansAsync([(planC.Id, 0), (planA.Id, 1), (planB.Id, 2)]);
+
+        var result = await _sut.GetAllPlansAsync();
+
+        Assert.Equal([planC.Id, planA.Id, planB.Id], result.Select(p => p.Id));
+        Assert.Equal([0, 1, 2], result.Select(p => p.SortOrder));
+    }
+
+    [Fact]
+    public async Task ReorderPlansAsync_IsNoOp_WhenPlanIdsDoNotExist()
+    {
+        var planA = MakePlan("A");
+        await _sut.SavePlanAsync(planA);
+
+        await _sut.ReorderPlansAsync([(Guid.NewGuid(), 0)]);
+
+        var result = await _sut.GetAllPlansAsync();
+        Assert.Single(result);
+    }
 }

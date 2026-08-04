@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Physiquinator.Core/Physiquinator.Core.csproj" />
+  <Project Path="Physiquinator.csproj" />
+  <Project Path="Physiquinator.Tests/Physiquinator.Tests.csproj" />
+</Solution>

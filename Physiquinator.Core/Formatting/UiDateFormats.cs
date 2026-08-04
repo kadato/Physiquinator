@@ -9,8 +9,8 @@ public static class UiDateFormats
 
     public static string LocalDateTimeCompact(DateTime utc)
     {
-        var l = utc.ToLocalTime();
-        var today = DateTime.Today;
+        DateTime l = utc.ToLocalTime();
+        DateTime today = DateTime.Today;
         var time = l.ToString("HH:mm", Invariant);
         if (l.Date == today)
             return time;

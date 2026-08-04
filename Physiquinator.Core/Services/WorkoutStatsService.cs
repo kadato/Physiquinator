@@ -4,14 +4,9 @@ using Physiquinator.Formatting;
 namespace Physiquinator.Services;
 
 /// <summary>Computes streak/week summaries and the per-day activity map for a heatmap grid.</summary>
-public sealed class WorkoutStatsService
+public sealed class WorkoutStatsService(WorkoutHistoryRepository repository)
 {
-    private readonly WorkoutHistoryRepository _repository;
-
-    public WorkoutStatsService(WorkoutHistoryRepository repository)
-    {
-        _repository = repository;
-    }
+    private readonly WorkoutHistoryRepository _repository = repository;
 
     /// <summary>
     /// Loads session counts across the last <paramref name="weeks"/> weeks (Monday–Sunday grid,
@@ -21,11 +16,11 @@ public sealed class WorkoutStatsService
         DateOnly endLocal,
         int weeks)
     {
-        var (utcStart, utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks);
-        var gridStart = HeatmapGrid.GetMondayOfWeek(endLocal).AddDays(-7 * (weeks - 1));
+        (DateTime utcStart, DateTime utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks);
+        DateOnly gridStart = HeatmapGrid.GetMondayOfWeek(endLocal).AddDays(-7 * (weeks - 1));
 
-        var activityByDay = await _repository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
-        var summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart);
+        IReadOnlyDictionary<DateOnly, int> activityByDay = await _repository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
+        WorkoutDaySummary summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart);
         return (summary, activityByDay);
     }
 }

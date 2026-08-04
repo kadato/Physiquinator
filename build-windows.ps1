@@ -38,13 +38,13 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 # Build the application
 Write-Host "Building Windows application..." -ForegroundColor Yellow
 Write-Host "Includes: WindowsAppSDK runtime bundled" -ForegroundColor Yellow
-Write-Host "Requires: .NET 10 Desktop Runtime (on user's machine)" -ForegroundColor Yellow
+Write-Host "Requires: .NET 11 Desktop Runtime (on user's machine)" -ForegroundColor Yellow
 
 $buildStartTime = Get-Date
 
 try {
     dotnet publish Physiquinator.csproj `
-        -f net10.0-windows10.0.19041.0 `
+        -f net11.0-windows10.0.19041.0 `
         -c Release `
         -p:WindowsPackageType=None `
         -p:WindowsAppSDKSelfContained=true `

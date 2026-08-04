@@ -1,7 +1,7 @@
 # Dockerfile for building .NET MAUI Android APK
-# Based on .NET 10 with Android SDK
+# Based on .NET 11 with Android SDK
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -26,23 +26,27 @@ RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
 
 # Accept licenses and install required Android SDK components
 RUN yes | sdkmanager --licenses && \
-    sdkmanager "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0"
+    sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
 # Install .NET MAUI Android workload
 RUN dotnet workload install maui-android --skip-sign-check
 
 WORKDIR /src
 
-# Copy project files
+# Copy solution-level config
+COPY Directory.Build.props ./
+COPY Directory.Packages.props ./
+
+# Copy Core project
+COPY Physiquinator.Core/Physiquinator.Core.csproj ./Physiquinator.Core/
+COPY Physiquinator.Core/ ./Physiquinator.Core/
+
+# Copy app project
 COPY Physiquinator.csproj .
 COPY *.xaml .
 COPY *.razor .
 COPY *.cs .
-
-# Copy directories
 COPY Components/ ./Components/
-COPY Data/ ./Data/
-COPY Models/ ./Models/
 COPY Platforms/ ./Platforms/
 COPY Properties/ ./Properties/
 COPY Resources/ ./Resources/
@@ -51,13 +55,13 @@ COPY wwwroot/ ./wwwroot/
 
 # Restore dependencies for Android only
 RUN dotnet restore Physiquinator.csproj \
-    -p:TargetFrameworks=net10.0-android
+    -p:TargetFrameworks=net11.0-android
 
 # Build Android APK
 RUN dotnet publish Physiquinator.csproj \
-    -f net10.0-android \
+    -f net11.0-android \
     -c Release \
-    -p:TargetFrameworks=net10.0-android \
+    -p:TargetFrameworks=net11.0-android \
     -p:AndroidPackageFormat=apk \
     -p:AndroidKeyStore=false \
     -p:NoWarn=XA0141 \

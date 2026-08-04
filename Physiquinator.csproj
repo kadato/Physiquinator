@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
-        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
-        <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-        <!-- <TargetFrameworks>$(TargetFrameworks);net10.0-tizen</TargetFrameworks> -->
+        <TargetFrameworks>net11.0-android;net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
 
         <!-- Note for MacCatalyst:
             The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -17,9 +15,7 @@
         <RootNamespace>Physiquinator</RootNamespace>
         <UseMaui>true</UseMaui>
         <SingleProject>true</SingleProject>
-        <ImplicitUsings>enable</ImplicitUsings>
         <EnableDefaultCssItems>true</EnableDefaultCssItems>
-        <Nullable>enable</Nullable>
         <!-- MAUI Debug AppX only ships wwwroot files; ensure scoped CSS bundle is generated and copied -->
         <GenerateScopedCssFiles>true</GenerateScopedCssFiles>
         <BundleScopedCssFiles>true</BundleScopedCssFiles>
@@ -28,11 +24,11 @@
         <ApplicationTitle>Physiquinator</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.physiquinator</ApplicationId>
+        <ApplicationId>dev.karoly.physiquinator</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.0.35</ApplicationDisplayVersion>
-        <ApplicationVersion>6</ApplicationVersion>
+        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>7</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -45,8 +41,7 @@
         <WindowsAppSDKSelfContained Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">true</WindowsAppSDKSelfContained>
 
         <!-- CS1591: XML doc comments are not required for an application project -->
-        <NoWarn>$(NoWarn);CS1591;NU1903</NoWarn>
-        <NuGetAudit>false</NuGetAudit>
+        <NoWarn>$(NoWarn);CS1591;XA0141</NoWarn>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->
@@ -82,30 +77,25 @@
         <AndroidDexTool>d8</AndroidDexTool>
         <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
 
+        <!-- .NET 11 preview SDK workarounds (dotnet/android#11025): R8 9.1.31 crashes on R2R
+             inputs and on pre-desugared androidx 1.17 classes -->
+        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
+        <AndroidEnableDesugar Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</AndroidEnableDesugar>
+
         <!-- iOS release optimizations -->
         <MtouchLink>SdkOnly</MtouchLink>
-        <EnableLLVM>true</EnableLLVM>
         <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
-
-        <!-- .NET 10 trimming optimizations (kept for Apple targets; disabled on Android for Blazor WebView runtime stability) -->
-        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</PublishTrimmed>
-        <PublishTrimmed Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishTrimmed>
-        <TrimMode Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">partial</TrimMode>
-        <EnableTrimAnalyzer Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</EnableTrimAnalyzer>
-        <SuppressTrimAnalysisWarnings Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">false</SuppressTrimAnalysisWarnings>
+        <EnableLLVM Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">true</EnableLLVM>
 
         <!-- General release optimizations -->
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
         <Optimize>true</Optimize>
 
-        <!-- .NET 10 performance features -->
+        <!-- .NET 11 performance features -->
         <EventSourceSupport>false</EventSourceSupport>
         <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
         <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
-
-        <!-- Suppress Android 16 KB page size warning for SQLite -->
-        <NoWarn>$(NoWarn);XA0141</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">
@@ -133,6 +123,10 @@
       <AndroidResource Remove="docs\screenshots\**" />
       <Compile Remove="docs\screenshots\**" />
       <Content Remove="docs\screenshots\**" />
+      <Compile Remove="Physiquinator.Core\**" />
+      <Content Remove="Physiquinator.Core\**" />
+      <None Remove="Physiquinator.Core\**" />
+      <EmbeddedResource Remove="Physiquinator.Core\**" />
       <Compile Remove="Physiquinator.Tests\**" />
       <Content Remove="Physiquinator.Tests\**" />
       <None Remove="Physiquinator.Tests\**" />
@@ -148,13 +142,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.40" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.40" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-        <PackageReference Include="MudBlazor" Version="9.3.0" />
-        <PackageReference Include="Plugin.LocalNotification" Version="14.1.0" />
-        <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+        <ProjectReference Include="Physiquinator.Core\Physiquinator.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Maui.Controls" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+        <PackageReference Include="MudBlazor" />
+        <PackageReference Include="Plugin.LocalNotification" />
     </ItemGroup>
 
     <ItemGroup>
@@ -172,7 +168,7 @@
     <Target Name="CopyScopedCssBundleToWwwRoot" AfterTargets="Build">
         <PropertyGroup>
             <_ScopedCssBundle>$(IntermediateOutputPath)scopedcss\bundle\$(AssemblyName).styles.css</_ScopedCssBundle>
-            <_ScopedCssBundleRelease>$(MSBuildProjectDirectory)\obj\Release\net10.0-windows10.0.19041.0\win-x64\scopedcss\bundle\$(AssemblyName).styles.css</_ScopedCssBundleRelease>
+            <_ScopedCssBundleRelease>$(MSBuildProjectDirectory)\obj\Release\net11.0-windows10.0.19041.0\win-x64\scopedcss\bundle\$(AssemblyName).styles.css</_ScopedCssBundleRelease>
             <_ScopedCssSource>$(_ScopedCssBundle)</_ScopedCssSource>
             <_ScopedCssSource Condition="!Exists('$(_ScopedCssBundle)') and Exists('$(_ScopedCssBundleRelease)')">$(_ScopedCssBundleRelease)</_ScopedCssSource>
         </PropertyGroup>

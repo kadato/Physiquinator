@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Physiquinator.Models;
+using System.Text.Json;
 
 namespace Physiquinator.Data;
 
@@ -15,7 +15,7 @@ public sealed record ExerciseSessionProgressEntry(
     int SetCount,
     double TotalVolumeKg);
 
-public class WorkoutHistoryRepository(AppDatabase db)
+public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 {
 #pragma warning disable S1144 // Unused private types or members should be removed
 #pragma warning disable S3459 // Unassigned members should be removed
@@ -44,6 +44,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
     private static readonly JsonSerializerOptions s_jsonReadOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly AppDatabase _db = db;
+    private readonly TimeProvider _time = time;
 
     public async Task<string> BeginSessionAsync(Guid planId, string planName, string? planSnapshotJson = null)
     {
@@ -54,7 +55,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
             Id = id,
             WorkoutPlanId = planId.ToString(),
             PlanName = planName,
-            StartedAtUtc = DateTime.UtcNow,
+            StartedAtUtc = _time.GetUtcNow().UtcDateTime,
             PlanSnapshotJson = planSnapshotJson
         });
         return id;
@@ -70,7 +71,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
             ExerciseIndex = exerciseIndex,
             ExerciseName = exerciseName,
             SetIndex = setIndex,
-            CompletedAtUtc = DateTime.UtcNow,
+            CompletedAtUtc = _time.GetUtcNow().UtcDateTime,
             Reps = reps,
             WeightKg = weightKg
         });
@@ -80,9 +81,9 @@ public class WorkoutHistoryRepository(AppDatabase db)
     {
         if (string.IsNullOrEmpty(sessionId)) return;
         await _db.EnsureInitializedAsync();
-        var row = await _db.Database.FindAsync<WorkoutSessionLogEntity>(sessionId);
+        WorkoutSessionLogEntity row = await _db.Database.FindAsync<WorkoutSessionLogEntity>(sessionId);
         if (row == null) return;
-        row.EndedAtUtc = DateTime.UtcNow;
+        row.EndedAtUtc = _time.GetUtcNow().UtcDateTime;
         await _db.Database.UpdateAsync(row);
     }
 
@@ -100,26 +101,20 @@ public class WorkoutHistoryRepository(AppDatabase db)
     {
         await _db.EnsureInitializedAsync();
         var planIdStr = planId.ToString();
-        var rows = await _db.Database.Table<WorkoutSessionLogEntity>()
+        return await _db.Database.Table<WorkoutSessionLogEntity>()
             .Where(s => s.WorkoutPlanId == planIdStr && s.EndedAtUtc == null)
-            .ToListAsync();
-
-        return rows
             .OrderByDescending(s => s.StartedAtUtc)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
     }
 
     /// <summary>Any open session (newest first), for home banner and cross-plan prompts.</summary>
     public async Task<WorkoutSessionLogEntity?> GetAnyInProgressSessionAsync()
     {
         await _db.EnsureInitializedAsync();
-        var rows = await _db.Database.Table<WorkoutSessionLogEntity>()
+        return await _db.Database.Table<WorkoutSessionLogEntity>()
             .Where(s => s.EndedAtUtc == null)
-            .ToListAsync();
-
-        return rows
             .OrderByDescending(s => s.StartedAtUtc)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -131,13 +126,13 @@ public class WorkoutHistoryRepository(AppDatabase db)
         DateTime utcRangeEndExclusive)
     {
         await _db.EnsureInitializedAsync();
-        var rows = await _db.Database.QueryAsync<SessionStartUtcRow>(
+        List<SessionStartUtcRow> rows = await _db.Database.QueryAsync<SessionStartUtcRow>(
             "SELECT StartedAtUtc FROM WorkoutSessionLogs WHERE StartedAtUtc >= ? AND StartedAtUtc < ?",
             utcRangeStart,
             utcRangeEndExclusive);
 
         var map = new Dictionary<DateOnly, int>();
-        foreach (var row in rows)
+        foreach (SessionStartUtcRow row in rows)
         {
             var localDay = DateOnly.FromDateTime(row.StartedAtUtc.ToLocalTime().Date);
             map.TryGetValue(localDay, out var n);
@@ -153,15 +148,15 @@ public class WorkoutHistoryRepository(AppDatabase db)
     public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetSessionsForLocalDayAsync(DateOnly localDay)
     {
         await _db.EnsureInitializedAsync();
-        var tz = TimeZoneInfo.Local;
+        TimeZoneInfo tz = TimeZoneInfo.Local;
         var startLocalUnspecified = DateTime.SpecifyKind(
             localDay.ToDateTime(TimeOnly.MinValue),
             DateTimeKind.Unspecified);
         var endExclusiveUnspecified = DateTime.SpecifyKind(
             localDay.AddDays(1).ToDateTime(TimeOnly.MinValue),
             DateTimeKind.Unspecified);
-        var utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
-        var utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
+        DateTime utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
+        DateTime utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
 
         return await _db.Database.Table<WorkoutSessionLogEntity>()
             .Where(s => s.StartedAtUtc >= utcStart && s.StartedAtUtc < utcEndExclusive)
@@ -202,7 +197,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
                       GROUP BY sess.Id
                       ORDER BY sess.StartedAtUtc DESC
                       LIMIT ?";
-            args = [ bodyweightKg.Value, planIdStr, exerciseName, maxSessions ];
+            args = [bodyweightKg.Value, planIdStr, exerciseName, maxSessions];
         }
         else
         {
@@ -222,10 +217,10 @@ public class WorkoutHistoryRepository(AppDatabase db)
                       GROUP BY sess.Id
                       ORDER BY sess.StartedAtUtc DESC
                       LIMIT ?";
-            args = [ planIdStr, exerciseName, maxSessions ];
+            args = [planIdStr, exerciseName, maxSessions];
         }
 
-        var rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
+        List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
 
         return [.. rows
             .Select(r => new ExerciseSessionProgressEntry(
@@ -255,9 +250,9 @@ public class WorkoutHistoryRepository(AppDatabase db)
     public async Task<WorkoutHistoryBackup> CreateBackupSnapshotAsync()
     {
         await _db.EnsureInitializedAsync();
-        var sessions = await GetAllSessionsAsync();
+        IReadOnlyList<WorkoutSessionLogEntity> sessions = await GetAllSessionsAsync();
 
-        var allSets = await _db.Database.Table<WorkoutSetLogEntity>().ToListAsync();
+        List<WorkoutSetLogEntity> allSets = await _db.Database.Table<WorkoutSetLogEntity>().ToListAsync();
         var setsBySession = allSets
             .GroupBy(s => s.SessionId)
             .ToDictionary(
@@ -269,9 +264,9 @@ public class WorkoutHistoryRepository(AppDatabase db)
             );
 
         var entries = new List<WorkoutHistoryBackupEntry>(sessions.Count);
-        foreach (var session in sessions)
+        foreach (WorkoutSessionLogEntity session in sessions)
         {
-            setsBySession.TryGetValue(session.Id, out var sets);
+            setsBySession.TryGetValue(session.Id, out List<WorkoutSetLogEntity>? sets);
             entries.Add(new WorkoutHistoryBackupEntry
             {
                 Session = session,
@@ -294,7 +289,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
         await _db.Database.RunInTransactionAsync(conn =>
         {
             if (backup.Sessions == null) return;
-            foreach (var entry in backup.Sessions)
+            foreach (WorkoutHistoryBackupEntry entry in backup.Sessions)
             {
                 ImportBackupEntry(conn, entry);
             }
@@ -310,7 +305,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
         conn.InsertOrReplace(entry.Session);
 
         if (entry.Sets == null) return;
-        foreach (var set in entry.Sets)
+        foreach (WorkoutSetLogEntity? set in entry.Sets)
         {
             if (set is null)
                 continue;
@@ -334,14 +329,12 @@ public class WorkoutHistoryRepository(AppDatabase db)
             return [];
 
         await _db.EnsureInitializedAsync();
-        var rows = await _db.Database.Table<WorkoutSetLogEntity>()
+        return await _db.Database.Table<WorkoutSetLogEntity>()
             .Where(s => s.SessionId == sessionId)
-            .ToListAsync();
-
-        return [.. rows
             .OrderBy(s => s.CompletedAtUtc)
             .ThenBy(s => s.ExerciseIndex)
-            .ThenBy(s => s.SetIndex)];
+            .ThenBy(s => s.SetIndex)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -353,7 +346,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
         await _db.EnsureInitializedAsync();
 
         var planIdStr = workoutPlanId.ToString();
-        var rows = await _db.Database.QueryAsync<LastSetMetricsRow>(
+        List<LastSetMetricsRow> rows = await _db.Database.QueryAsync<LastSetMetricsRow>(
             @"SELECT s.Reps AS Reps, s.WeightKg AS WeightKg
               FROM WorkoutSetLogs s
               INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
@@ -362,7 +355,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
               LIMIT 1",
             planIdStr, exerciseName);
 
-        var row = rows.FirstOrDefault();
+        LastSetMetricsRow? row = rows.FirstOrDefault();
         if (row == null) return null;
         return new LastSetMetrics(row.Reps, row.WeightKg);
     }
@@ -373,15 +366,12 @@ public class WorkoutHistoryRepository(AppDatabase db)
         if (string.IsNullOrWhiteSpace(sessionId)) return false;
         await _db.EnsureInitializedAsync();
 
-        var rows = await _db.Database.Table<WorkoutSetLogEntity>()
+        WorkoutSetLogEntity last = await _db.Database.Table<WorkoutSetLogEntity>()
             .Where(s => s.SessionId == sessionId)
-            .ToListAsync();
-
-        var last = rows
             .OrderByDescending(s => s.CompletedAtUtc)
             .ThenByDescending(s => s.ExerciseIndex)
             .ThenByDescending(s => s.SetIndex)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
 
         if (last == null) return false;
 
@@ -429,7 +419,7 @@ public class WorkoutHistoryRepository(AppDatabase db)
     public async Task UpdateSessionSnapshotAsync(string sessionId, string planSnapshotJson)
     {
         await _db.EnsureInitializedAsync();
-        var row = await _db.Database.FindAsync<WorkoutSessionLogEntity>(sessionId);
+        WorkoutSessionLogEntity row = await _db.Database.FindAsync<WorkoutSessionLogEntity>(sessionId);
         if (row != null)
         {
             row.PlanSnapshotJson = planSnapshotJson;

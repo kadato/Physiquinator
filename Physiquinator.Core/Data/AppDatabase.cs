@@ -2,8 +2,9 @@ using SQLite;
 
 namespace Physiquinator.Data;
 
-public class AppDatabase
+public sealed class AppDatabase
 {
+    private readonly SemaphoreSlim _switchLock = new(1, 1);
     private SQLiteAsyncConnection _database;
     private Task _initializationTask;
 
@@ -35,22 +36,34 @@ public class AppDatabase
         await MigrateAsync(_database);
     }
 
+    /// <summary>
+    /// Closes the current connection and swaps in a new database file.
+    /// Serialized so concurrent switches (or switch vs. initialization) cannot race.
+    /// </summary>
     public async Task SwitchDatabaseAsync(string dbPath)
     {
-        if (_database != null)
+        await _switchLock.WaitAsync().ConfigureAwait(false);
+        try
         {
-            try
+            if (_database != null)
             {
-                await _database.CloseAsync().ConfigureAwait(false);
+                try
+                {
+                    await _database.CloseAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Ignore connection closing errors
+                }
             }
-            catch
-            {
-                // Ignore connection closing errors
-            }
+            _database = new SQLiteAsyncConnection(dbPath);
+            _initializationTask = InitializeAsync();
+            await _initializationTask.ConfigureAwait(false);
         }
-        _database = new SQLiteAsyncConnection(dbPath);
-        _initializationTask = InitializeAsync();
-        await _initializationTask.ConfigureAwait(false);
+        finally
+        {
+            _switchLock.Release();
+        }
     }
 
     /// <summary>sqlite-net CreateTable does not add columns on existing installs.</summary>

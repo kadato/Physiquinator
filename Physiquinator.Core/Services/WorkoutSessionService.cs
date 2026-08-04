@@ -7,9 +7,9 @@ namespace Physiquinator.Services;
 /// (<see cref="RestEndsAtUtc"/>) while ticking is still driven by the UI/JS bridge
 /// (<see cref="TickRest"/>) to avoid background threads in the WebView.
 /// </summary>
-public class WorkoutSessionService
+public sealed class WorkoutSessionService(TimeProvider time)
 {
-    private readonly TimeProvider _time;
+    private readonly TimeProvider _time = time;
 
     private DateTime? _restEndsAtUtc;
     private int _activeRestDurationSeconds;
@@ -17,10 +17,13 @@ public class WorkoutSessionService
     private bool _userPaused;
     private int? _pausedRemainingSeconds;
 
-    public WorkoutSessionService(TimeProvider time) => _time = time;
+    private readonly List<SetCompletion> _completedSets = [];
+    private readonly HashSet<SetCompletion> _completedSetLookup = [];
 
     public WorkoutPlan? CurrentPlan { get; private set; }
-    public List<SetCompletion> CompletedSets { get; } = new();
+
+    /// <summary>Completed sets in chronological (append) order.</summary>
+    public IReadOnlyList<SetCompletion> CompletedSets => _completedSets;
 
     /// <summary>UTC instant when the current rest period ends, if running on wall clock.</summary>
     public DateTime? RestEndsAtUtc => _isResting && !_userPaused ? _restEndsAtUtc : null;
@@ -73,7 +76,7 @@ public class WorkoutSessionService
     public void StartWorkout(WorkoutPlan plan)
     {
         CurrentPlan = plan;
-        CompletedSets.Clear();
+        ClearCompletedSets();
         StopRest();
     }
 
@@ -81,20 +84,21 @@ public class WorkoutSessionService
     public void ResumeWorkout(WorkoutPlan plan, IEnumerable<SetCompletion> completedSets)
     {
         CurrentPlan = plan;
-        CompletedSets.Clear();
-        CompletedSets.AddRange(completedSets);
+        ClearCompletedSets();
+        _completedSets.AddRange(completedSets);
+        _completedSetLookup.UnionWith(_completedSets);
         StopRest();
     }
 
     public void EndWorkout()
     {
         CurrentPlan = null;
-        CompletedSets.Clear();
+        ClearCompletedSets();
         StopRest();
     }
 
     public bool IsSetCompleted(int exerciseIndex, int setIndex) =>
-        CompletedSets.Contains(new SetCompletion(exerciseIndex, setIndex));
+        _completedSetLookup.Contains(new SetCompletion(exerciseIndex, setIndex));
 
     /// <summary>First uncompleted set index for an exercise, or -1 when the exercise is fully completed.</summary>
     public int GetFirstUncompletedSetIndex(int exerciseIndex)
@@ -102,7 +106,7 @@ public class WorkoutSessionService
         if (CurrentPlan == null || exerciseIndex < 0 || exerciseIndex >= CurrentPlan.Exercises.Count)
             return -1;
 
-        var exercise = CurrentPlan.Exercises[exerciseIndex];
+        ExercisePlan exercise = CurrentPlan.Exercises[exerciseIndex];
         for (var s = 0; s < exercise.SetCount; s++)
         {
             if (!IsSetCompleted(exerciseIndex, s))
@@ -136,10 +140,10 @@ public class WorkoutSessionService
     {
         if (CurrentPlan == null) return false;
 
-        for (int ei = 0; ei < CurrentPlan.Exercises.Count; ei++)
+        for (var ei = 0; ei < CurrentPlan.Exercises.Count; ei++)
         {
-            var ex = CurrentPlan.Exercises[ei];
-            for (int si = 0; si < ex.SetCount; si++)
+            ExercisePlan ex = CurrentPlan.Exercises[ei];
+            for (var si = 0; si < ex.SetCount; si++)
             {
                 if (ei == exerciseIndex && si == setIndex)
                     continue;
@@ -156,27 +160,33 @@ public class WorkoutSessionService
     {
         if (CurrentPlan == null) return;
         if (exerciseIndex < 0 || exerciseIndex >= CurrentPlan.Exercises.Count) return;
-        var ex = CurrentPlan.Exercises[exerciseIndex];
+        ExercisePlan ex = CurrentPlan.Exercises[exerciseIndex];
         if (setIndex < 0 || setIndex >= ex.SetCount) return;
 
-        CompletedSets.Add(new SetCompletion(exerciseIndex, setIndex));
+        var completion = new SetCompletion(exerciseIndex, setIndex);
+        _completedSets.Add(completion);
+        _completedSetLookup.Add(completion);
     }
 
     /// <summary>Removes the last completed set (chronological append order). Returns false when none.</summary>
     public bool TryUndoLastSet(out SetCompletion removed)
     {
         removed = default!;
-        if (CompletedSets.Count == 0) return false;
-        var i = CompletedSets.Count - 1;
-        removed = CompletedSets[i];
-        CompletedSets.RemoveAt(i);
+        if (_completedSets.Count == 0) return false;
+        var i = _completedSets.Count - 1;
+        removed = _completedSets[i];
+        _completedSets.RemoveAt(i);
+        _completedSetLookup.Remove(removed);
         return true;
     }
 
     public bool TryRemoveSet(int exerciseIndex, int setIndex)
     {
         var target = new SetCompletion(exerciseIndex, setIndex);
-        return CompletedSets.Remove(target);
+        if (!_completedSetLookup.Remove(target))
+            return false;
+        _completedSets.Remove(target);
+        return true;
     }
 
     public void StartRest(int restIntervalSeconds)
@@ -275,6 +285,12 @@ public class WorkoutSessionService
 
     /// <summary>Stop the rest timer without firing any completion callback.</summary>
     public void CancelRest() => StopRest();
+
+    private void ClearCompletedSets()
+    {
+        _completedSets.Clear();
+        _completedSetLookup.Clear();
+    }
 
     private void StopRest()
     {

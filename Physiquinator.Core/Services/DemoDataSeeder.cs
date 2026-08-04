@@ -1,14 +1,15 @@
-using System.Text.Json;
 using Physiquinator.Data;
 using Physiquinator.Models;
+using System.Text.Json;
 
 namespace Physiquinator.Services;
 
-public class DemoDataSeeder(
+public sealed class DemoDataSeeder(
     WorkoutPlanService planService,
     AppDatabase database,
     WorkoutHistoryRepository historyRepository,
-    IDemoSeedPreferences preferences)
+    IDemoSeedPreferences preferences,
+    TimeProvider time)
 {
     public const string InitialDemoSeedCompletedKey = PreferenceKeys.DemoDataInitialSeedCompleted;
     public const string DemoHistorySeedCompletedKey = PreferenceKeys.DemoHistorySeedCompleted;
@@ -29,13 +30,14 @@ public class DemoDataSeeder(
     private readonly AppDatabase _database = database;
     private readonly WorkoutHistoryRepository _historyRepository = historyRepository;
     private readonly IDemoSeedPreferences _preferences = preferences;
+    private readonly TimeProvider _time = time;
 
     public async Task<bool> SeedDemoDataIfNeededAsync()
     {
         if (_preferences.Get(InitialDemoSeedCompletedKey, false))
             return false;
 
-        var existingPlans = await _planService.GetAllPlansAsync();
+        List<WorkoutPlan> existingPlans = await _planService.GetAllPlansAsync();
         if (existingPlans.Count > 0)
         {
             _preferences.Set(InitialDemoSeedCompletedKey, true);
@@ -50,7 +52,7 @@ public class DemoDataSeeder(
             CreateFullBodyPlan()
         };
 
-        for (int i = 0; i < demoPlans.Count; i++)
+        for (var i = 0; i < demoPlans.Count; i++)
         {
             demoPlans[i].SortOrder = i;
             await _planService.SavePlanAsync(demoPlans[i]);
@@ -90,14 +92,14 @@ public class DemoDataSeeder(
             [DemoDataIds.FullBodyPlan] = JsonSerializer.Serialize(CreateFullBodyPlan(), s_snapshotJson)
         };
 
-        var todayUtc = DateTime.UtcNow.Date;
-        var specs = GenerateDemoSchedule(todayUtc);
+        DateTime todayUtc = _time.GetUtcNow().UtcDateTime.Date;
+        List<DemoSessionSpec> specs = GenerateDemoSchedule(todayUtc);
 
         await _database.Database.RunInTransactionAsync(conn =>
         {
             for (var i = 0; i < specs.Count; i++)
             {
-                var spec = specs[i];
+                DemoSessionSpec spec = specs[i];
                 SeedSession(conn, i, spec, todayUtc, snapshots[spec.PlanId]);
             }
         });
@@ -113,11 +115,11 @@ public class DemoDataSeeder(
         DateTime todayUtc,
         string planSnapshotJson)
     {
-        var started = todayUtc
+        DateTime started = todayUtc
             .AddDays(-spec.DaysAgo)
             .AddHours(spec.StartHourUtc)
             .AddMinutes(spec.StartMinuteUtc);
-        var ended = spec.Ended
+        DateTime? ended = spec.Ended
             ? started.AddMinutes(spec.DurationMinutes)
             : (DateTime?)null;
 
@@ -150,7 +152,7 @@ public class DemoDataSeeder(
         else
             sets = BuildCompletedFullBodySets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
 
-        foreach (var set in sets)
+        foreach (WorkoutSetLogEntity set in sets)
             conn.InsertOrReplace(set);
     }
 
@@ -172,7 +174,7 @@ public class DemoDataSeeder(
     private static List<DemoSessionSpec> GenerateDemoSchedule(DateTime todayUtc)
     {
         var today = DateOnly.FromDateTime(todayUtc);
-        var gridStartMonday = GetMondayOfWeek(today)
+        DateOnly gridStartMonday = GetMondayOfWeek(today)
             .AddDays(-7 * (DemoHistoryWeeks - 1));
 
         var specs = new List<DemoSessionSpec>();
@@ -183,7 +185,7 @@ public class DemoDataSeeder(
 
         for (var week = 0; week < DemoHistoryWeeks; week++)
         {
-            var weekMonday = gridStartMonday.AddDays(week * 7);
+            DateOnly weekMonday = gridStartMonday.AddDays(week * 7);
 
             TryAdd(specs, today, week, weekMonday.AddDays(OffsetFromMonday(DayOfWeek.Monday)), DemoDataIds.PushPlan, slotKey: 0, ref pushOrd);
             TryAdd(specs, today, week, weekMonday.AddDays(OffsetFromMonday(DayOfWeek.Wednesday)), DemoDataIds.PullPlan, slotKey: 1, ref pullOrd);
@@ -215,30 +217,30 @@ public class DemoDataSeeder(
         int slotKey,
         ref int planOrdinal)
     {
-            if (ShouldSkipSession(week, slotKey))
-                return;
+        if (ShouldSkipSession(week, slotKey))
+            return;
 
-            if (sessionDate > today)
-                return;
+        if (sessionDate > today)
+            return;
 
-            var daysAgo = today.DayNumber - sessionDate.DayNumber;
-            if (daysAgo < 0)
-                return;
+        var daysAgo = today.DayNumber - sessionDate.DayNumber;
+        if (daysAgo < 0)
+            return;
 
-            if (daysAgo == 0 && planId == DemoDataIds.PushPlan)
-                return;
+        if (daysAgo == 0 && planId == DemoDataIds.PushPlan)
+            return;
 
-            var hash = week * 31 + slotKey * 17;
-            var startHour = hash % 4 switch
-            {
-                0 => 7,
-                1 => 9,
-                2 => 17,
-                _ => 18
-            };
-            var startMinute = (hash % 3) * 15;
-            var duration = 45 + (hash % 31);
-            var isDeload = IsDeloadSession(planOrdinal);
+        var hash = (week * 31) + (slotKey * 17);
+        var startHour = hash % 4 switch
+        {
+            0 => 7,
+            1 => 9,
+            2 => 17,
+            _ => 18
+        };
+        var startMinute = hash % 3 * 15;
+        var duration = 45 + (hash % 31);
+        var isDeload = IsDeloadSession(planOrdinal);
 
         specs.Add(new DemoSessionSpec(
             daysAgo,
@@ -267,7 +269,7 @@ public class DemoDataSeeder(
         if (weekIndex >= DemoHistoryWeeks - 2)
             return false;
 
-        return (weekIndex * 31 + slotKey * 17) % 100 < SkipSessionThresholdPercent;
+        return ((weekIndex * 31) + (slotKey * 17)) % 100 < SkipSessionThresholdPercent;
     }
 
     private static bool IsDeloadSession(int planOrdinal) =>
@@ -277,17 +279,17 @@ public class DemoDataSeeder(
         isDeload ? kg * 0.9 : kg;
 
     private static double BenchWeightKg(int ordinal, bool deload) =>
-        ApplyDeload(60.0 + Math.Min(ordinal, 17) * 2.5, deload);
+        ApplyDeload(60.0 + (Math.Min(ordinal, 17) * 2.5), deload);
 
     private static double SquatWeightKg(int ordinal, bool deload, double baseKg = 100.0) =>
-        ApplyDeload(baseKg + Math.Min(ordinal, 14) * 2.5, deload);
+        ApplyDeload(baseKg + (Math.Min(ordinal, 14) * 2.5), deload);
 
     private static void ClampLastSetTime(List<WorkoutSetLogEntity> sets, DateTime ended)
     {
         if (sets.Count == 0)
             return;
 
-        var t = ended.AddMinutes(-1);
+        DateTime t = ended.AddMinutes(-1);
         if (sets[^1].CompletedAtUtc > t)
             sets[^1].CompletedAtUtc = t;
     }
@@ -310,7 +312,7 @@ public class DemoDataSeeder(
         bool isDeload)
     {
         var sets = new List<WorkoutSetLogEntity>();
-        var t = started.AddMinutes(3);
+        DateTime t = started.AddMinutes(3);
         var benchKg = BenchWeightKg(pushOrdinal, isDeload);
         var benchReps = new[] { 10, 9, 9, 8 };
 
@@ -320,35 +322,35 @@ public class DemoDataSeeder(
             t = t.AddMinutes(3);
         }
 
-        var ohpKg = ApplyDeload(42.5 + Math.Min(pushOrdinal, 16) * 1.25, isDeload);
+        var ohpKg = ApplyDeload(42.5 + (Math.Min(pushOrdinal, 16) * 1.25), isDeload);
         for (var s = 0; s < 4; s++)
         {
             sets.Add(CreateSet(sessionIndex, 1, s, OverheadPressName, t, 9 - Math.Min(s, 2), ohpKg));
             t = t.AddMinutes(2);
         }
 
-        var inclineBase = ApplyDeload(22.5 + Math.Min(pushOrdinal, 12) * 1.25, isDeload);
+        var inclineBase = ApplyDeload(22.5 + (Math.Min(pushOrdinal, 12) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
-            sets.Add(CreateSet(sessionIndex, 2, s, "Incline Dumbbell Press", t, 10, inclineBase + s * 2.5));
+            sets.Add(CreateSet(sessionIndex, 2, s, "Incline Dumbbell Press", t, 10, inclineBase + (s * 2.5)));
             t = t.AddMinutes(2);
         }
 
-        var lateralKg = ApplyDeload(8.0 + Math.Min(pushOrdinal, 10) * 0.5, isDeload);
+        var lateralKg = ApplyDeload(8.0 + (Math.Min(pushOrdinal, 10) * 0.5), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 3, s, "Lateral Raises", t, 12 + (s == 0 ? 2 : 0), lateralKg));
             t = t.AddMinutes(2);
         }
 
-        var triPushKg = ApplyDeload(20.0 + Math.Min(pushOrdinal, 8) * 1.25, isDeload);
+        var triPushKg = ApplyDeload(20.0 + (Math.Min(pushOrdinal, 8) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 4, s, "Tricep Pushdowns", t, 12, triPushKg));
             t = t.AddMinutes(2);
         }
 
-        var triOverKg = ApplyDeload(16.0 + Math.Min(pushOrdinal, 8) * 1.0, isDeload);
+        var triOverKg = ApplyDeload(16.0 + (Math.Min(pushOrdinal, 8) * 1.0), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 5, s, "Overhead Tricep Extension", t, 10, triOverKg));
@@ -367,9 +369,9 @@ public class DemoDataSeeder(
         bool isDeload)
     {
         var sets = new List<WorkoutSetLogEntity>();
-        var t = started.AddMinutes(4);
+        DateTime t = started.AddMinutes(4);
         var dlStep = pullOrdinal / 2;
-        var dlKg = ApplyDeload(100.0 + dlStep * 5.0, isDeload);
+        var dlKg = ApplyDeload(100.0 + (dlStep * 5.0), isDeload);
 
         for (var s = 0; s < 3; s++)
         {
@@ -385,7 +387,7 @@ public class DemoDataSeeder(
         }
         else if (pullOrdinal >= 28)
         {
-            pullUpWeight = 2.5 + Math.Floor((pullOrdinal - 28) / 3.0) * 1.25;
+            pullUpWeight = 2.5 + (Math.Floor((pullOrdinal - 28) / 3.0) * 1.25);
         }
 
         for (var s = 0; s < 4; s++)
@@ -394,28 +396,28 @@ public class DemoDataSeeder(
             t = t.AddMinutes(2);
         }
 
-        var rowKg = ApplyDeload(55.0 + Math.Min(pullOrdinal, 12) * 2.5, isDeload);
+        var rowKg = ApplyDeload(55.0 + (Math.Min(pullOrdinal, 12) * 2.5), isDeload);
         for (var s = 0; s < 4; s++)
         {
             sets.Add(CreateSet(sessionIndex, 2, s, BarbellRowsName, t, 10, rowKg));
             t = t.AddMinutes(2);
         }
 
-        var faceKg = ApplyDeload(15.0 + Math.Min(pullOrdinal, 6) * 0.5, isDeload);
+        var faceKg = ApplyDeload(15.0 + (Math.Min(pullOrdinal, 6) * 0.5), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 3, s, "Face Pulls", t, 15, faceKg));
             t = t.AddMinutes(2);
         }
 
-        var curlKg = ApplyDeload(14.0 + Math.Min(pullOrdinal, 10) * 1.25, isDeload);
+        var curlKg = ApplyDeload(14.0 + (Math.Min(pullOrdinal, 10) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 4, s, "Bicep Curls", t, 12, curlKg));
             t = t.AddMinutes(2);
         }
 
-        var hammerKg = ApplyDeload(14.0 + Math.Min(pullOrdinal, 10) * 1.25, isDeload);
+        var hammerKg = ApplyDeload(14.0 + (Math.Min(pullOrdinal, 10) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 5, s, "Hammer Curls", t, 12, hammerKg));
@@ -434,7 +436,7 @@ public class DemoDataSeeder(
         bool isDeload)
     {
         var sets = new List<WorkoutSetLogEntity>();
-        var t = started.AddMinutes(4);
+        DateTime t = started.AddMinutes(4);
         var squatKg = SquatWeightKg(legOrdinal, isDeload);
         var squatReps = new[] { 5, 5, 5, 5 };
 
@@ -444,35 +446,35 @@ public class DemoDataSeeder(
             t = t.AddMinutes(4);
         }
 
-        var rdlKg = ApplyDeload(80.0 + Math.Min(legOrdinal, 12) * 2.5, isDeload);
+        var rdlKg = ApplyDeload(80.0 + (Math.Min(legOrdinal, 12) * 2.5), isDeload);
         for (var s = 0; s < 4; s++)
         {
             sets.Add(CreateSet(sessionIndex, 1, s, "Romanian Deadlift", t, 8, rdlKg));
             t = t.AddMinutes(3);
         }
 
-        var pressKg = ApplyDeload(140.0 + Math.Min(legOrdinal, 8) * 5.0, isDeload);
+        var pressKg = ApplyDeload(140.0 + (Math.Min(legOrdinal, 8) * 5.0), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 2, s, "Leg Press", t, 12, pressKg));
             t = t.AddMinutes(2);
         }
 
-        var curlKg = ApplyDeload(35.0 + Math.Min(legOrdinal, 8) * 1.25, isDeload);
+        var curlKg = ApplyDeload(35.0 + (Math.Min(legOrdinal, 8) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 3, s, "Leg Curls", t, 12, curlKg));
             t = t.AddMinutes(2);
         }
 
-        var calfKg = ApplyDeload(50.0 + Math.Min(legOrdinal, 10) * 2.5, isDeload);
+        var calfKg = ApplyDeload(50.0 + (Math.Min(legOrdinal, 10) * 2.5), isDeload);
         for (var s = 0; s < 4; s++)
         {
             sets.Add(CreateSet(sessionIndex, 4, s, "Calf Raises", t, 15, calfKg));
             t = t.AddMinutes(2);
         }
 
-        var extKg = ApplyDeload(40.0 + Math.Min(legOrdinal, 8) * 1.25, isDeload);
+        var extKg = ApplyDeload(40.0 + (Math.Min(legOrdinal, 8) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 5, s, "Leg Extensions", t, 12, extKg));
@@ -491,7 +493,7 @@ public class DemoDataSeeder(
         bool isDeload)
     {
         var sets = new List<WorkoutSetLogEntity>();
-        var t = started.AddMinutes(3);
+        DateTime t = started.AddMinutes(3);
 
         var squatKg = SquatWeightKg(fbOrdinal, isDeload, baseKg: 70.0);
         for (var s = 0; s < 3; s++)
@@ -507,14 +509,14 @@ public class DemoDataSeeder(
             t = t.AddMinutes(3);
         }
 
-        var rowKg = ApplyDeload(50.0 + Math.Min(fbOrdinal, 10) * 2.5, isDeload);
+        var rowKg = ApplyDeload(50.0 + (Math.Min(fbOrdinal, 10) * 2.5), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 2, s, BarbellRowsName, t, 10, rowKg));
             t = t.AddMinutes(2);
         }
 
-        var ohpKg = ApplyDeload(35.0 + Math.Min(fbOrdinal, 10) * 1.25, isDeload);
+        var ohpKg = ApplyDeload(35.0 + (Math.Min(fbOrdinal, 10) * 1.25), isDeload);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 3, s, OverheadPressName, t, 8, ohpKg));
@@ -529,7 +531,7 @@ public class DemoDataSeeder(
         }
         else if (fbOrdinal >= 18)
         {
-            pullUpWeight = 2.5 + (fbOrdinal - 18) * 0.5;
+            pullUpWeight = 2.5 + ((fbOrdinal - 18) * 0.5);
         }
 
         for (var s = 0; s < 3; s++)
@@ -538,7 +540,7 @@ public class DemoDataSeeder(
             t = t.AddMinutes(2);
         }
 
-        var plankSeconds = 45 + Math.Min(fbOrdinal, 6) * 5;
+        var plankSeconds = 45 + (Math.Min(fbOrdinal, 6) * 5);
         for (var s = 0; s < 3; s++)
         {
             sets.Add(CreateSet(sessionIndex, 5, s, "Plank", t, plankSeconds, null));
@@ -554,7 +556,7 @@ public class DemoDataSeeder(
         DateTime started,
         double benchKg)
     {
-        var t = started.AddMinutes(2);
+        DateTime t = started.AddMinutes(2);
         return
         [
             CreateSet(sessionIndex, 0, 0, BenchPressName, t, 8, benchKg),

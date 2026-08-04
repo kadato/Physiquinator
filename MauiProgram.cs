@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
+using Physiquinator.Data;
 using Physiquinator.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
@@ -9,93 +10,95 @@ namespace Physiquinator;
 
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		SQLitePCL.Batteries_V2.Init();
+    public static MauiApp CreateMauiApp()
+    {
+        SQLitePCL.Batteries_V2.Init();
 
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.UseLocalNotification(config =>
-			{
-				config.AddAndroid(android =>
-				{
-					android.AddChannel(new AndroidNotificationChannelRequest
-					{
-						Id = RestNotificationService.AndroidChannelId,
-						Name = "Rest timer",
-						Description = "Alerts when rest periods end",
-						Importance = AndroidImportance.High
-					});
-				});
-			})
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-			});
+        MauiAppBuilder builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>()
+            .UseLocalNotification(config =>
+            {
+                config.AddAndroid(android =>
+                {
+                    android.AddChannel(new AndroidNotificationChannelRequest
+                    {
+                        Id = RestNotificationService.AndroidChannelId,
+                        Name = "Rest timer",
+                        Description = "Alerts when rest periods end",
+                        Importance = AndroidImportance.High
+                    });
+                });
+            })
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            });
 
-		builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddMauiBlazorWebView();
 
-		builder.Services.AddMudServices(config =>
-		{
-			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
-			config.SnackbarConfiguration.VisibleStateDuration = 3000;
-			config.SnackbarConfiguration.HideTransitionDuration = 100;
-			config.SnackbarConfiguration.ShowTransitionDuration = 100;
-			config.SnackbarConfiguration.PreventDuplicates = true;
-			config.SnackbarConfiguration.ShowCloseIcon = true;
-		});
+        builder.Services.AddMudServices(config =>
+        {
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+            config.SnackbarConfiguration.VisibleStateDuration = 3000;
+            config.SnackbarConfiguration.HideTransitionDuration = 100;
+            config.SnackbarConfiguration.ShowTransitionDuration = 100;
+            config.SnackbarConfiguration.PreventDuplicates = true;
+            config.SnackbarConfiguration.ShowCloseIcon = true;
+        });
 
-		var activeIdStr = Physiquinator.Services.AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
-		var activeId = Guid.TryParse(activeIdStr, out var g) ? g : UserProfileService.DemoProfileId;
-		var dbName = activeId == UserProfileService.DemoProfileId ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
-		var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-		var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
-		var dbPath = Path.Combine(appDataDir, dbName);
-		builder.Services.AddSingleton(TimeProvider.System);
-		builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
-		builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
-		builder.Services.AddSingleton<Data.WorkoutHistoryRepository>();
-		builder.Services.AddSingleton<Services.WorkoutHistoryService>();
-		builder.Services.AddSingleton<Services.WorkoutPlanService>();
-		builder.Services.AddSingleton<Services.WorkoutStatsService>();
-		builder.Services.AddSingleton<Services.FileTransferService>();
-		builder.Services.AddSingleton<Services.WorkoutSessionService>();
-		builder.Services.AddSingleton<Services.RestAlertSettingsService>();
-		builder.Services.AddSingleton<Services.RestNotificationService>();
-		builder.Services.AddSingleton<Services.IDemoSeedPreferences, Services.MauiDemoSeedPreferences>();
-		builder.Services.AddSingleton<Services.DemoDataSeeder>();
-		builder.Services.AddScoped<Services.AppDataResetService>();
-		builder.Services.AddScoped<Services.ThemeService>();
-		builder.Services.AddScoped<Services.IThemeInitialization>(sp => sp.GetRequiredService<Services.ThemeService>());
-		builder.Services.AddScoped<Services.AppInitializationService>();
-		builder.Services.AddSingleton<Services.UserProfileService>();
+        var appPreferences = new AppPreferences();
+        var dbPathProvider = new DatabasePathProvider();
+        builder.Services.AddSingleton<IAppPreferences>(appPreferences);
+        builder.Services.AddSingleton<IDatabasePathProvider>(dbPathProvider);
+
+        var activeIdStr = appPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+        Guid activeId = Guid.TryParse(activeIdStr, out Guid g) ? g : UserProfileService.DemoProfileId;
+        var dbPath = dbPathProvider.GetDatabasePath(activeId);
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
+        builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
+        builder.Services.AddSingleton<Data.WorkoutHistoryRepository>();
+        builder.Services.AddSingleton<Services.WorkoutHistoryService>();
+        builder.Services.AddSingleton<Services.WorkoutPlanService>();
+        builder.Services.AddSingleton<Services.WorkoutStatsService>();
+        builder.Services.AddSingleton<Services.FileTransferService>();
+        builder.Services.AddSingleton<Services.WorkoutSessionService>();
+        builder.Services.AddSingleton<Services.RestAlertSettingsService>();
+        builder.Services.AddSingleton<Services.RestNotificationService>();
+        builder.Services.AddSingleton<Services.IDemoSeedPreferences, Services.MauiDemoSeedPreferences>();
+        builder.Services.AddSingleton<Services.DemoDataSeeder>();
+        builder.Services.AddScoped<Services.AppDataResetService>();
+        builder.Services.AddScoped<Services.ThemeService>();
+        builder.Services.AddScoped<Services.IThemeInitialization>(sp => sp.GetRequiredService<Services.ThemeService>());
+        builder.Services.AddScoped<Services.AppInitializationService>();
+        builder.Services.AddSingleton<Services.UserProfileService>();
 
 #if WINDOWS
-		if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
-		{
-			builder.Services.AddSingleton<Services.ScreenshotServer>();
-		}
+        if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
+        {
+            builder.Services.AddSingleton<Services.ScreenshotServer>();
+        }
 #endif
 
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+        builder.Services.AddBlazorWebViewDeveloperTools();
+        builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
-	}
+        return builder.Build();
+    }
 
-	public static MauiApp? CreateMauiAppSafe()
-	{
-		try
-		{
-			return CreateMauiApp();
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"FATAL: MauiProgram.CreateMauiApp failed: {ex}");
-			throw;
-		}
-	}
+    public static MauiApp? CreateMauiAppSafe()
+    {
+        try
+        {
+            return CreateMauiApp();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"FATAL: MauiProgram.CreateMauiApp failed: {ex}");
+            throw;
+        }
+    }
 }

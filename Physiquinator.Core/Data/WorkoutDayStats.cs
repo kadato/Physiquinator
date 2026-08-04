@@ -23,7 +23,7 @@ public static class WorkoutDayStats
 
         var currentStreak = ComputeCurrentStreak(activityByDay, endLocal);
         var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal);
-        var (thisWeek, lastWeek) = ComputeWeekSessionTotals(activityByDay, endLocal);
+        (var thisWeek, var lastWeek) = ComputeWeekSessionTotals(activityByDay, endLocal);
 
         return new WorkoutDaySummary(currentStreak, longest, thisWeek, lastWeek);
     }
@@ -45,11 +45,11 @@ public static class WorkoutDayStats
         }
 
         var streak = 0;
-        for (var d = startDay; ; d = d.AddDays(-1))
+        var d = startDay;
+        while (activityByDay.GetValueOrDefault(d, 0) > 0)
         {
-            if (activityByDay.GetValueOrDefault(d, 0) <= 0)
-                break;
             streak++;
+            d = d.AddDays(-1);
         }
 
         return streak;
@@ -62,7 +62,7 @@ public static class WorkoutDayStats
     {
         var best = 0;
         var run = 0;
-        for (var d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
+        for (DateOnly d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
         {
             if (activityByDay.GetValueOrDefault(d, 0) > 0)
             {
@@ -82,16 +82,16 @@ public static class WorkoutDayStats
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly endLocal)
     {
-        var thisMonday = GetMondayOfWeek(endLocal);
-        var lastMonday = thisMonday.AddDays(-7);
+        DateOnly thisMonday = GetMondayOfWeek(endLocal);
+        DateOnly lastMonday = thisMonday.AddDays(-7);
 
         var thisWeek = 0;
-        for (var d = thisMonday; d <= endLocal; d = d.AddDays(1))
+        for (DateOnly d = thisMonday; d <= endLocal; d = d.AddDays(1))
             thisWeek += activityByDay.GetValueOrDefault(d, 0);
 
         var lastWeek = 0;
-        var lastSunday = thisMonday.AddDays(-1);
-        for (var d = lastMonday; d <= lastSunday; d = d.AddDays(1))
+        DateOnly lastSunday = thisMonday.AddDays(-1);
+        for (DateOnly d = lastMonday; d <= lastSunday; d = d.AddDays(1))
             lastWeek += activityByDay.GetValueOrDefault(d, 0);
 
         return (thisWeek, lastWeek);

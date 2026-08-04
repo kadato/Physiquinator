@@ -4,15 +4,10 @@ using System.Text.Json;
 
 namespace Physiquinator.Services;
 
-public class WorkoutPlanService
+public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 {
-    private readonly WorkoutPlanRepository _repository;
+    private readonly WorkoutPlanRepository _repository = repository;
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
-
-    public WorkoutPlanService(WorkoutPlanRepository repository)
-    {
-        _repository = repository;
-    }
 
     public async Task<List<WorkoutPlan>> GetAllPlansAsync() => await _repository.GetAllPlansAsync();
 
@@ -39,7 +34,7 @@ public class WorkoutPlanService
     /// <summary>
     /// Exports a workout plan to a JSON string.
     /// </summary>
-    public string SerializePlanToJson(WorkoutPlan plan)
+    public static string SerializePlanToJson(WorkoutPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
         return JsonSerializer.Serialize(plan, s_jsonOptions);
@@ -47,7 +42,7 @@ public class WorkoutPlanService
 
     public async Task<string> ExportPlanToJsonAsync(Guid id)
     {
-        var plan = await GetPlanAsync(id);
+        WorkoutPlan? plan = await GetPlanAsync(id);
         if (plan == null)
             throw new InvalidOperationException($"Plan with ID {id} not found.");
 
@@ -59,7 +54,7 @@ public class WorkoutPlanService
     /// </summary>
     public async Task<string> ExportAllPlansToJsonAsync()
     {
-        var plans = await GetAllPlansAsync();
+        List<WorkoutPlan> plans = await GetAllPlansAsync();
         return JsonSerializer.Serialize(plans, s_jsonOptions);
     }
 
@@ -71,7 +66,7 @@ public class WorkoutPlanService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        var plan = JsonSerializer.Deserialize<WorkoutPlan>(json);
+        WorkoutPlan? plan = JsonSerializer.Deserialize<WorkoutPlan>(json);
         if (plan == null)
             throw new InvalidOperationException("Failed to deserialize workout plan from JSON.");
 
@@ -86,11 +81,11 @@ public class WorkoutPlanService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        var plans = JsonSerializer.Deserialize<List<WorkoutPlan>>(json);
+        List<WorkoutPlan>? plans = JsonSerializer.Deserialize<List<WorkoutPlan>>(json);
         if (plans == null)
             throw new InvalidOperationException("Failed to deserialize workout plans from JSON.");
 
-        foreach (var plan in plans)
+        foreach (WorkoutPlan plan in plans)
         {
             await SavePlanAsync(plan);
         }

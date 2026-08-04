@@ -16,9 +16,9 @@ public static class HeatmapGrid
     public static (DateTime UtcStart, DateTime UtcEndExclusive) GetHeatmapQueryUtcBounds(DateOnly endLocal, int weeks = 53)
     {
         weeks = Math.Clamp(weeks, 1, 104);
-        var tz = TimeZoneInfo.Local;
-        var mondayOfEndWeek = GetMondayOfWeek(endLocal);
-        var gridStartMonday = mondayOfEndWeek.AddDays(-7 * (weeks - 1));
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateOnly mondayOfEndWeek = GetMondayOfWeek(endLocal);
+        DateOnly gridStartMonday = mondayOfEndWeek.AddDays(-7 * (weeks - 1));
 
         var startLocalUnspecified = DateTime.SpecifyKind(
             gridStartMonday.ToDateTime(TimeOnly.MinValue),
@@ -27,8 +27,8 @@ public static class HeatmapGrid
             endLocal.AddDays(1).ToDateTime(TimeOnly.MinValue),
             DateTimeKind.Unspecified);
 
-        var utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
-        var utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
+        DateTime utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
+        DateTime utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
         return (utcStart, utcEndExclusive);
     }
 }

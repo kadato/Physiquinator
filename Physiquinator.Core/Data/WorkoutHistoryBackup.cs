@@ -5,12 +5,12 @@ public sealed class WorkoutHistoryBackup
 {
     public int FormatVersion { get; set; } = 1;
 
-    public List<WorkoutHistoryBackupEntry> Sessions { get; set; } = new();
+    public List<WorkoutHistoryBackupEntry> Sessions { get; set; } = [];
 }
 
 public sealed class WorkoutHistoryBackupEntry
 {
     public WorkoutSessionLogEntity Session { get; set; } = null!;
 
-    public List<WorkoutSetLogEntity> Sets { get; set; } = new();
+    public List<WorkoutSetLogEntity> Sets { get; set; } = [];
 }

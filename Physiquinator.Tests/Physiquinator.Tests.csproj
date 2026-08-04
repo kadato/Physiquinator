@@ -42,9 +42,14 @@
     <Compile Include="..\Services\IDemoSeedPreferences.cs" Link="Services\IDemoSeedPreferences.cs" />
     <Compile Include="..\Services\DemoDataSeeder.cs" Link="Services\DemoDataSeeder.cs" />
     <Compile Include="..\Services\AppInitializationService.cs" Link="Services\AppInitializationService.cs" />
+    <Compile Include="..\Services\PreferenceKeys.cs" Link="Services\PreferenceKeys.cs" />
     <Compile Include="..\Services\IThemeInitialization.cs" Link="Services\IThemeInitialization.cs" />
     <Compile Include="..\Formatting\UiDateFormats.cs" Link="Formatting\UiDateFormats.cs" />
     <Compile Include="..\Formatting\ChartAxisScale.cs" Link="Formatting\ChartAxisScale.cs" />
+    <Compile Include="..\Formatting\ExerciseWeightFormatter.cs" Link="Formatting\ExerciseWeightFormatter.cs" />
+    <Compile Include="..\Formatting\HeatmapGrid.cs" Link="Formatting\HeatmapGrid.cs" />
+    <Compile Include="..\Services\WorkoutStatsService.cs" Link="Services\WorkoutStatsService.cs" />
+    <Compile Include="..\Data\WorkoutSessionLogEntityExtensions.cs" Link="Data\WorkoutSessionLogEntityExtensions.cs" />
   </ItemGroup>
 
 </Project>

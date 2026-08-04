@@ -33,19 +33,19 @@
     {
         <nav class="app-tab-bar" aria-label="Main navigation">
             <div class="app-tab-bar__inner app-bottom-dock">
-                <NavLink href="/" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
+                <NavLink href="@AppRoutes.Home" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
                     <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
                     <span class="app-tab__label">Home</span>
                 </NavLink>
-                <NavLink href="/history" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                <NavLink href="@AppRoutes.History" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
                     <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Medium" />
                     <span class="app-tab__label">History</span>
                 </NavLink>
-                <NavLink href="/plan" class="app-tab app-tab--create" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                <NavLink href="@AppRoutes.PlanEditor" class="app-tab app-tab--create" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
                     <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Medium" />
                     <span class="app-tab__label">New plan</span>
                 </NavLink>
-                <NavLink href="/settings" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                <NavLink href="@AppRoutes.Settings" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
                     <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" />
                     <span class="app-tab__label">Settings</span>
                 </NavLink>
@@ -145,22 +145,27 @@
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private void SyncThemeFromService() => _isDark = ThemeService.EffectiveTheme == "dark";
+    private void SyncThemeFromService() => _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
 
     private void UpdateNavigationState()
     {
         var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
         _showBottomNav = ShouldShowBottomNav(path);
-        _useFixedDockPadding = !_showBottomNav && !path.StartsWith("workout/", StringComparison.Ordinal);
+        _useFixedDockPadding = !_showBottomNav && !path.StartsWith(WorkoutRoutePrefix, StringComparison.Ordinal);
     }
 
     private static bool ShouldShowBottomNav(string path)
     {
-        if (path.StartsWith("workout/", StringComparison.Ordinal)) return false;
-        if (path == "plan" || path.StartsWith("plan/", StringComparison.Ordinal)) return false;
-        if (path.StartsWith("history/", StringComparison.Ordinal)) return false;
+        if (path.StartsWith(WorkoutRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path == PlanRoute || path.StartsWith(PlanRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path.StartsWith(HistoryRoutePrefix, StringComparison.Ordinal)) return false;
         return true;
     }
+
+    private const string WorkoutRoutePrefix = "workout/";
+    private const string PlanRoute = "plan";
+    private const string PlanRoutePrefix = "plan/";
+    private const string HistoryRoutePrefix = "history/";
 
     public void Dispose()
     {

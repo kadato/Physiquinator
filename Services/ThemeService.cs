@@ -24,14 +24,14 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         try
         {
             var suffix = GetSuffix();
-            var key = "physiquinator-theme-preference" + suffix;
-            Preference = AppPreferences.Get(key, "system");
+            var key = PreferenceKeys.ThemePreference + suffix;
+            Preference = AppPreferences.Get(key, ThemePreference.System);
             var systemTheme = GetSystemThemeFromMaui();
-            EffectiveTheme = Preference == "system" ? systemTheme : Preference;
+            EffectiveTheme = Preference == ThemePreference.System ? systemTheme : Preference;
         }
         catch
         {
-            Preference = "system";
+            Preference = ThemePreference.System;
             EffectiveTheme = GetSystemThemeFromMaui();
         }
 
@@ -45,14 +45,14 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
             var requested = Application.Current.RequestedTheme;
             if (requested == AppTheme.Dark)
             {
-                return "dark";
+                return ThemePreference.Dark;
             }
             if (requested == AppTheme.Light)
             {
-                return "light";
+                return ThemePreference.Light;
             }
         }
-        return "dark";
+        return ThemePreference.Dark;
     }
 
     private string GetSuffix()
@@ -61,9 +61,9 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         return $"_{activeId}";
     }
 
-    public string Preference { get; private set; } = "system";
+    public string Preference { get; private set; } = ThemePreference.System;
 
-    public string EffectiveTheme { get; private set; } = "dark";
+    public string EffectiveTheme { get; private set; } = ThemePreference.Dark;
 
     public event Action? ThemeChanged;
 
@@ -87,7 +87,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
-        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), Preference);
+        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), Preference);
         ApplyAppThemeOverride();
 
         _initialized = true;
@@ -105,7 +105,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = preference;
         EffectiveTheme = effective;
-        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), preference);
+        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -120,7 +120,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
-        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), "system");
+        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), "system");
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -131,7 +131,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         Preference = preference;
         EffectiveTheme = effective;
-        AppPreferences.Set("physiquinator-theme-preference" + GetSuffix(), preference);
+        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -156,8 +156,8 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
             Application.Current.UserAppTheme = Preference switch
             {
-                "light" => AppTheme.Light,
-                "dark" => AppTheme.Dark,
+                ThemePreference.Light => AppTheme.Light,
+                ThemePreference.Dark => AppTheme.Dark,
                 _ => AppTheme.Unspecified
             };
 
@@ -184,7 +184,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
             return;
         }
 
-        var isDark = EffectiveTheme == "dark";
+        var isDark = EffectiveTheme == ThemePreference.Dark;
 
         Application.Current.Resources["PageBackgroundColor"] =
             Color.FromArgb(isDark ? "#0B0C10" : "#F8F9FA");

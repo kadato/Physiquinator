@@ -34,7 +34,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         RestIntervalSeconds = 60,
         DefaultSetCount = 3,
         Exercises = Enumerable.Range(0, exerciseCount)
-            .Select(i => new ExercisePlan { Name = $"Ex{i}", SetCount = i + 1, Order = i, RestIntervalSeconds = 30 + i * 10 })
+            .Select(i => new ExercisePlan { Name = $"Ex{i}", SetCount = i + 1, Order = i, RestIntervalSeconds = 30 + (i * 10) })
             .ToList()
     };
 
@@ -45,7 +45,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetAllPlansAsync_ReturnsEmpty_WhenNoPlansSaved()
     {
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
 
         Assert.Empty(result);
     }
@@ -56,7 +56,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         await _sut.SavePlanAsync(MakePlan("Plan A"));
         await _sut.SavePlanAsync(MakePlan("Plan B"));
 
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
 
         Assert.Equal(2, result.Count);
     }
@@ -66,7 +66,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     {
         await _sut.SavePlanAsync(MakePlan("Leg Day"));
 
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
 
         Assert.Equal("Leg Day", result[0].Name);
     }
@@ -76,7 +76,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     {
         await _sut.SavePlanAsync(MakePlan(exerciseCount: 3));
 
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
 
         Assert.Equal(3, result[0].Exercises.Count);
     }
@@ -84,11 +84,11 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetAllPlansAsync_ExercisesReturnedInOrder()
     {
-        var plan = MakePlan(exerciseCount: 3);
+        WorkoutPlan plan = MakePlan(exerciseCount: 3);
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetAllPlansAsync();
-        var exercises = result[0].Exercises;
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
+        List<ExercisePlan> exercises = result[0].Exercises;
 
         Assert.Equal([0, 1, 2], exercises.Select(e => e.Order));
     }
@@ -100,7 +100,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetPlanAsync_ReturnsNull_WhenPlanDoesNotExist()
     {
-        var result = await _sut.GetPlanAsync(Guid.NewGuid());
+        WorkoutPlan? result = await _sut.GetPlanAsync(Guid.NewGuid());
 
         Assert.Null(result);
     }
@@ -108,10 +108,10 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetPlanAsync_ReturnsPlan_WhenItExists()
     {
-        var plan = MakePlan("Push Day");
+        WorkoutPlan plan = MakePlan("Push Day");
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
 
         Assert.NotNull(result);
         Assert.Equal(plan.Id, result.Id);
@@ -121,11 +121,11 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetPlanAsync_ReturnsCorrectRestIntervalSeconds()
     {
-        var plan = MakePlan();
+        WorkoutPlan plan = MakePlan();
         plan.RestIntervalSeconds = 90;
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
 
         Assert.Equal(90, result!.RestIntervalSeconds);
     }
@@ -133,10 +133,10 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetPlanAsync_IncludesExercisesInOrder()
     {
-        var plan = MakePlan(exerciseCount: 3);
+        WorkoutPlan plan = MakePlan(exerciseCount: 3);
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
 
         Assert.Equal(3, result!.Exercises.Count);
         Assert.Equal([0, 1, 2], result.Exercises.Select(e => e.Order));
@@ -145,15 +145,15 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetPlanAsync_ExercisesHaveCorrectFields()
     {
-        var plan = MakePlan(exerciseCount: 1);
-        var expected = plan.Exercises[0];
+        WorkoutPlan plan = MakePlan(exerciseCount: 1);
+        ExercisePlan expected = plan.Exercises[0];
         expected.DefaultReps = 12;
         expected.DefaultWeightKg = 60.5;
         expected.LogType = ExerciseLogType.BodyweightReps;
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
-        var actual = result!.Exercises[0];
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
+        ExercisePlan actual = result!.Exercises[0];
 
         Assert.Equal(expected.Id, actual.Id);
         Assert.Equal(expected.Name, actual.Name);
@@ -171,37 +171,37 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SavePlanAsync_PersistsPlan()
     {
-        var plan = MakePlan();
+        WorkoutPlan plan = MakePlan();
 
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
         Assert.NotNull(result);
     }
 
     [Fact]
     public async Task SavePlanAsync_UpdatesExistingPlan()
     {
-        var plan = MakePlan("Original");
+        WorkoutPlan plan = MakePlan("Original");
         await _sut.SavePlanAsync(plan);
 
         plan.Name = "Updated";
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
         Assert.Equal("Updated", result!.Name);
     }
 
     [Fact]
     public async Task SavePlanAsync_ReplacesExercises_WhenUpdating()
     {
-        var plan = MakePlan(exerciseCount: 3);
+        WorkoutPlan plan = MakePlan(exerciseCount: 3);
         await _sut.SavePlanAsync(plan);
 
         plan.Exercises = [new ExercisePlan { Name = "Only One", SetCount = 5, Order = 0 }];
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
         Assert.Single(result!.Exercises);
         Assert.Equal("Only One", result.Exercises[0].Name);
     }
@@ -209,11 +209,11 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task SavePlanAsync_PersistsDefaultSetCount()
     {
-        var plan = MakePlan();
+        WorkoutPlan plan = MakePlan();
         plan.DefaultSetCount = 5;
         await _sut.SavePlanAsync(plan);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
 
         Assert.Equal(5, result!.DefaultSetCount);
     }
@@ -225,19 +225,19 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeletePlanAsync_RemovesPlan()
     {
-        var plan = MakePlan();
+        WorkoutPlan plan = MakePlan();
         await _sut.SavePlanAsync(plan);
 
         await _sut.DeletePlanAsync(plan.Id);
 
-        var result = await _sut.GetPlanAsync(plan.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(plan.Id);
         Assert.Null(result);
     }
 
     [Fact]
     public async Task DeletePlanAsync_RemovesExercisesOfDeletedPlan()
     {
-        var plan = MakePlan(exerciseCount: 3);
+        WorkoutPlan plan = MakePlan(exerciseCount: 3);
         await _sut.SavePlanAsync(plan);
 
         await _sut.DeletePlanAsync(plan.Id);
@@ -252,14 +252,14 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DeletePlanAsync_DoesNotRemoveOtherPlans()
     {
-        var planA = MakePlan("A");
-        var planB = MakePlan("B");
+        WorkoutPlan planA = MakePlan("A");
+        WorkoutPlan planB = MakePlan("B");
         await _sut.SavePlanAsync(planA);
         await _sut.SavePlanAsync(planB);
 
         await _sut.DeletePlanAsync(planA.Id);
 
-        var result = await _sut.GetPlanAsync(planB.Id);
+        WorkoutPlan? result = await _sut.GetPlanAsync(planB.Id);
         Assert.NotNull(result);
     }
 
@@ -269,7 +269,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         // Should not throw
         await _sut.DeletePlanAsync(Guid.NewGuid());
 
-        var all = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> all = await _sut.GetAllPlansAsync();
         Assert.Empty(all);
     }
 
@@ -280,9 +280,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task ReorderPlansAsync_PersistsNewSortOrder()
     {
-        var planA = MakePlan("A");
-        var planB = MakePlan("B");
-        var planC = MakePlan("C");
+        WorkoutPlan planA = MakePlan("A");
+        WorkoutPlan planB = MakePlan("B");
+        WorkoutPlan planC = MakePlan("C");
         await _sut.SavePlanAsync(planA);
         await _sut.SavePlanAsync(planB);
         await _sut.SavePlanAsync(planC);
@@ -290,7 +290,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         // New order: C (0), A (1), B (2)
         await _sut.ReorderPlansAsync([(planC.Id, 0), (planA.Id, 1), (planB.Id, 2)]);
 
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
 
         Assert.Equal([planC.Id, planA.Id, planB.Id], result.Select(p => p.Id));
         Assert.Equal([0, 1, 2], result.Select(p => p.SortOrder));
@@ -299,12 +299,12 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task ReorderPlansAsync_IsNoOp_WhenPlanIdsDoNotExist()
     {
-        var planA = MakePlan("A");
+        WorkoutPlan planA = MakePlan("A");
         await _sut.SavePlanAsync(planA);
 
         await _sut.ReorderPlansAsync([(Guid.NewGuid(), 0)]);
 
-        var result = await _sut.GetAllPlansAsync();
+        List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
         Assert.Single(result);
     }
 }

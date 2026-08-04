@@ -1,7 +1,6 @@
-using System.Text.Json;
-using Microsoft.Maui.Storage;
 using Physiquinator.Data;
 using Physiquinator.Models;
+using System.Text.Json;
 
 namespace Physiquinator.Services;
 
@@ -16,18 +15,27 @@ public sealed class UserProfileService
 
     private readonly AppDatabase _database;
     private readonly WorkoutSessionService _sessionService;
+    private readonly IAppPreferences _preferences;
+    private readonly IDatabasePathProvider _dbPathProvider;
+    private readonly TimeProvider _time;
 
     public UserProfileService(
         AppDatabase database,
-        WorkoutSessionService sessionService)
+        WorkoutSessionService sessionService,
+        IAppPreferences preferences,
+        IDatabasePathProvider dbPathProvider,
+        TimeProvider time)
     {
         _database = database;
         _sessionService = sessionService;
+        _preferences = preferences;
+        _dbPathProvider = dbPathProvider;
+        _time = time;
     }
 
     public List<UserProfile> GetProfiles()
     {
-        var json = AppPreferences.Get(ProfilesKey, string.Empty);
+        var json = _preferences.Get(ProfilesKey, string.Empty);
         if (string.IsNullOrEmpty(json))
         {
             // First time initialization: create the default Demo User profile
@@ -35,7 +43,7 @@ public sealed class UserProfileService
             {
                 Id = DemoProfileId, // DemoProfileId corresponds to the legacy/default database name "physiquinator.db3"
                 Name = "Demo User",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = _time.GetUtcNow().UtcDateTime
             };
             var list = new List<UserProfile> { defaultProfile };
             SaveProfiles(list);
@@ -44,17 +52,17 @@ public sealed class UserProfileService
 
         try
         {
-            return JsonSerializer.Deserialize<List<UserProfile>>(json) ?? new List<UserProfile>();
+            return JsonSerializer.Deserialize<List<UserProfile>>(json) ?? [];
         }
         catch
         {
-            return new List<UserProfile>();
+            return [];
         }
     }
 
     public UserProfile GetActiveProfile()
     {
-        var profiles = GetProfiles();
+        List<UserProfile> profiles = GetProfiles();
         if (profiles.Count == 0)
         {
             // Corrupt or empty profile list: recover with a fresh default profile
@@ -62,37 +70,32 @@ public sealed class UserProfileService
             {
                 Id = DemoProfileId,
                 Name = "Demo User",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = _time.GetUtcNow().UtcDateTime
             };
             profiles.Add(fallback);
             SaveProfiles(profiles);
             return fallback;
         }
 
-        var activeIdStr = AppPreferences.Get(ActiveProfileIdKey, DemoProfileId.ToString());
-        var activeId = Guid.TryParse(activeIdStr, out var g) ? g : DemoProfileId;
+        var activeIdStr = _preferences.Get(ActiveProfileIdKey, DemoProfileId.ToString());
+        Guid activeId = Guid.TryParse(activeIdStr, out Guid g) ? g : DemoProfileId;
         return profiles.FirstOrDefault(p => p.Id == activeId) ?? profiles[0];
     }
 
     public async Task SwitchProfileAsync(Guid profileId)
     {
-        var profiles = GetProfiles();
-        var targetProfile = profiles.FirstOrDefault(p => p.Id == profileId);
+        List<UserProfile> profiles = GetProfiles();
+        UserProfile? targetProfile = profiles.FirstOrDefault(p => p.Id == profileId);
         if (targetProfile == null) return;
 
         // 1. End any active workout session so memory state doesn't leak
         _sessionService.EndWorkout();
 
         // 2. Persist the active profile selection
-        AppPreferences.Set(ActiveProfileIdKey, profileId.ToString());
+        _preferences.Set(ActiveProfileIdKey, profileId.ToString());
 
-        // 3. Resolve the database path for the new user profile
-        var dbName = profileId == DemoProfileId ? "physiquinator.db3" : $"physiquinator_{profileId}.db3";
-        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-        var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
-        var dbPath = Path.Combine(appDataDir, dbName);
-
-        // 4. Hot-swap the database connection
+        // 3. Resolve the database path for the new user profile and hot-swap the connection
+        var dbPath = _dbPathProvider.GetDatabasePath(profileId);
         await _database.SwitchDatabaseAsync(dbPath).ConfigureAwait(false);
     }
 
@@ -100,12 +103,12 @@ public sealed class UserProfileService
     {
         if (string.IsNullOrWhiteSpace(name)) return;
 
-        var profiles = GetProfiles();
+        List<UserProfile> profiles = GetProfiles();
         var newProfile = new UserProfile
         {
             Id = Guid.NewGuid(),
             Name = name.Trim(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _time.GetUtcNow().UtcDateTime
         };
         profiles.Add(newProfile);
         SaveProfiles(profiles);
@@ -118,12 +121,12 @@ public sealed class UserProfileService
             throw new InvalidOperationException("The default Demo User profile cannot be deleted.");
         }
 
-        var profiles = GetProfiles();
-        var profileToDelete = profiles.FirstOrDefault(p => p.Id == profileId);
+        List<UserProfile> profiles = GetProfiles();
+        UserProfile? profileToDelete = profiles.FirstOrDefault(p => p.Id == profileId);
         if (profileToDelete == null) return;
 
         // If the profile to delete is active, switch to the default (Demo User) profile first
-        var active = GetActiveProfile();
+        UserProfile active = GetActiveProfile();
         if (active.Id == profileId)
         {
             await SwitchProfileAsync(DemoProfileId).ConfigureAwait(false);
@@ -133,9 +136,7 @@ public sealed class UserProfileService
         SaveProfiles(profiles);
 
         // Delete the profile's SQLite database file
-        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-        var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
-        var dbPath = Path.Combine(appDataDir, $"physiquinator_{profileId}.db3");
+        var dbPath = _dbPathProvider.GetDatabasePath(profileId);
         if (File.Exists(dbPath))
         {
             try
@@ -153,8 +154,8 @@ public sealed class UserProfileService
     {
         if (string.IsNullOrWhiteSpace(newName)) return;
 
-        var profiles = GetProfiles();
-        var profile = profiles.FirstOrDefault(p => p.Id == profileId);
+        List<UserProfile> profiles = GetProfiles();
+        UserProfile? profile = profiles.FirstOrDefault(p => p.Id == profileId);
         if (profile == null) return;
 
         profile.Name = newName.Trim();
@@ -163,17 +164,17 @@ public sealed class UserProfileService
 
     public void UpdateBodyweight(Guid profileId, double? bodyweightKg)
     {
-        var profiles = GetProfiles();
-        var profile = profiles.FirstOrDefault(p => p.Id == profileId);
+        List<UserProfile> profiles = GetProfiles();
+        UserProfile? profile = profiles.FirstOrDefault(p => p.Id == profileId);
         if (profile == null) return;
 
         profile.BodyweightKg = bodyweightKg;
         SaveProfiles(profiles);
     }
 
-    private static void SaveProfiles(List<UserProfile> profiles)
+    private void SaveProfiles(List<UserProfile> profiles)
     {
         var json = JsonSerializer.Serialize(profiles);
-        AppPreferences.Set(ProfilesKey, json);
+        _preferences.Set(ProfilesKey, json);
     }
 }

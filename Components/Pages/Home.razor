@@ -246,7 +246,7 @@
         {
             var json = await PlanService.ExportPlanToJsonAsync(planId);
             await FileTransfer.ExportJsonAsync(
-                FileTransferService.JsonFileName(FileTransferService.SafeFileStem(planName)),
+                FileTransfer.JsonFileName(FileTransfer.SafeFileStem(planName)),
                 json);
             Snackbar.Add($"'{planName}' exported.", Severity.Success);
         }

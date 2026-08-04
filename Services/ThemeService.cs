@@ -1,6 +1,4 @@
 using Microsoft.JSInterop;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
 
 namespace Physiquinator.Services;
 
@@ -13,19 +11,21 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 {
     private readonly IJSRuntime _js;
     private readonly UserProfileService _userProfileService;
+    private readonly IAppPreferences _preferences;
     private DotNetObjectReference<ThemeService>? _dotNetRef;
     private bool _initialized;
 
-    public ThemeService(IJSRuntime js, UserProfileService userProfileService)
+    public ThemeService(IJSRuntime js, UserProfileService userProfileService, IAppPreferences preferences)
     {
         _js = js;
         _userProfileService = userProfileService;
+        _preferences = preferences;
 
         try
         {
             var suffix = GetSuffix();
             var key = PreferenceKeys.ThemePreference + suffix;
-            Preference = AppPreferences.Get(key, ThemePreference.System);
+            Preference = _preferences.Get(key, ThemePreference.System);
             var systemTheme = GetSystemThemeFromMaui();
             EffectiveTheme = Preference == ThemePreference.System ? systemTheme : Preference;
         }
@@ -42,7 +42,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         if (Application.Current != null)
         {
-            var requested = Application.Current.RequestedTheme;
+            AppTheme requested = Application.Current.RequestedTheme;
             if (requested == AppTheme.Dark)
             {
                 return ThemePreference.Dark;
@@ -57,7 +57,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
     private string GetSuffix()
     {
-        var activeId = _userProfileService.GetActiveProfile().Id;
+        Guid activeId = _userProfileService.GetActiveProfile().Id;
         return $"_{activeId}";
     }
 
@@ -81,13 +81,13 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         _dotNetRef = DotNetObjectReference.Create(this);
 
-        var result = await _js.InvokeAsync<ThemeInitResult>(
+        ThemeInitResult result = await _js.InvokeAsync<ThemeInitResult>(
             "physiquinatorTheme.initialize",
             _dotNetRef, GetSuffix()).ConfigureAwait(true);
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
-        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), Preference);
+        _preferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), Preference);
         ApplyAppThemeOverride();
 
         _initialized = true;
@@ -105,7 +105,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
 
         Preference = preference;
         EffectiveTheme = effective;
-        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
+        _preferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -116,11 +116,11 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
-        var result = await _js.InvokeAsync<ThemeInitResult>("physiquinatorTheme.resetStoredPreferenceToSystem", GetSuffix()).ConfigureAwait(true);
+        ThemeInitResult result = await _js.InvokeAsync<ThemeInitResult>("physiquinatorTheme.resetStoredPreferenceToSystem", GetSuffix()).ConfigureAwait(true);
 
         Preference = result.Preference;
         EffectiveTheme = result.Effective;
-        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), "system");
+        _preferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), "system");
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();
@@ -131,7 +131,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     {
         Preference = preference;
         EffectiveTheme = effective;
-        AppPreferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
+        _preferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
         ApplyAppThemeOverride();
 
         ThemeChanged?.Invoke();

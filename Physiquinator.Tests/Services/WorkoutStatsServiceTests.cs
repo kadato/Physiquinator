@@ -15,7 +15,7 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
     {
         _db = new AppDatabase(":memory:");
         await _db.EnsureInitializedAsync();
-        _sut = new WorkoutStatsService(new WorkoutHistoryRepository(_db));
+        _sut = new WorkoutStatsService(new WorkoutHistoryRepository(_db, TimeProvider.System));
     }
 
     public async Task DisposeAsync() => await _db.Database.CloseAsync();
@@ -23,7 +23,7 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
     [Fact]
     public async Task GetSummaryAsync_returns_zero_summary_without_sessions()
     {
-        var (summary, activityByDay) = await _sut.GetSummaryAsync(DateOnly.FromDateTime(DateTime.Today), weeks: 12);
+        (WorkoutDaySummary? summary, IReadOnlyDictionary<DateOnly, int>? activityByDay) = await _sut.GetSummaryAsync(DateOnly.FromDateTime(DateTime.Today), weeks: 12);
 
         Assert.Equal(0, summary.CurrentStreakWorkoutDays);
         Assert.Equal(0, summary.LongestStreakWorkoutDays);
@@ -44,7 +44,7 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
             EndedAtUtc = DateTime.UtcNow
         });
 
-        var (summary, activityByDay) = await _sut.GetSummaryAsync(DateOnly.FromDateTime(DateTime.Today), weeks: 12);
+        (WorkoutDaySummary? summary, IReadOnlyDictionary<DateOnly, int>? activityByDay) = await _sut.GetSummaryAsync(DateOnly.FromDateTime(DateTime.Today), weeks: 12);
 
         Assert.True(summary.ThisWeekSessionCount >= 1);
         Assert.True(summary.CurrentStreakWorkoutDays >= 1);

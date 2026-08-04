@@ -1,39 +1,44 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 
 namespace Physiquinator.Services;
 
-public static class AppPreferences
+/// <summary>
+/// Production <see cref="IAppPreferences"/> implementation backed by MAUI
+/// <c>Preferences</c>. In screenshot mode (env var
+/// <c>PHYSIQUINATOR_SCREENSHOT_MODE</c>) persists to a JSON file instead so
+/// automated UI captures get a clean, isolated preference store.
+/// </summary>
+public sealed class AppPreferences : IAppPreferences
 {
-    private static readonly bool IsScreenshotMode = Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true";
-    private static readonly string? CustomDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-    private static readonly Dictionary<string, string> _inMemoryPrefs = [];
-    private static readonly string? _filePath;
+    private readonly bool _isScreenshotMode = Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true";
+    private readonly Dictionary<string, string> _inMemoryPrefs = [];
+    private readonly string? _filePath;
 
-    static AppPreferences()
+    public AppPreferences()
     {
-        if (IsScreenshotMode && !string.IsNullOrEmpty(CustomDbDir))
+        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+        if (!_isScreenshotMode || string.IsNullOrEmpty(customDbDir))
         {
-            try
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(customDbDir);
+            _filePath = Path.Combine(customDbDir, "screenshot_preferences.json");
+            if (File.Exists(_filePath))
             {
-                Directory.CreateDirectory(CustomDbDir);
-                _filePath = Path.Combine(CustomDbDir, "screenshot_preferences.json");
-                if (File.Exists(_filePath))
-                {
-                    var json = File.ReadAllText(_filePath);
-                    _inMemoryPrefs = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
-                }
+                var json = File.ReadAllText(_filePath);
+                _inMemoryPrefs = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
             }
-            catch
-            {
-                // Fallback to empty if file operations fail
-            }
+        }
+        catch
+        {
+            // Fallback to empty if file operations fail
         }
     }
 
-    private static void Save()
+    private void Save()
     {
         if (_filePath != null)
         {
@@ -49,18 +54,18 @@ public static class AppPreferences
         }
     }
 
-    public static string Get(string key, string defaultValue)
+    public string Get(string key, string defaultValue)
     {
-        if (IsScreenshotMode)
+        if (_isScreenshotMode)
         {
             return _inMemoryPrefs.TryGetValue(key, out var val) ? val : defaultValue;
         }
         return Microsoft.Maui.Storage.Preferences.Default.Get(key, defaultValue);
     }
 
-    public static bool Get(string key, bool defaultValue)
+    public bool Get(string key, bool defaultValue)
     {
-        if (IsScreenshotMode)
+        if (_isScreenshotMode)
         {
             if (key.StartsWith(PreferenceKeys.ShowFirstTimeSeedModal, StringComparison.OrdinalIgnoreCase))
             {
@@ -71,9 +76,9 @@ public static class AppPreferences
         return Microsoft.Maui.Storage.Preferences.Default.Get(key, defaultValue);
     }
 
-    public static void Set(string key, string value)
+    public void Set(string key, string value)
     {
-        if (IsScreenshotMode)
+        if (_isScreenshotMode)
         {
             _inMemoryPrefs[key] = value;
             Save();
@@ -82,9 +87,9 @@ public static class AppPreferences
         Microsoft.Maui.Storage.Preferences.Default.Set(key, value);
     }
 
-    public static void Set(string key, bool value)
+    public void Set(string key, bool value)
     {
-        if (IsScreenshotMode)
+        if (_isScreenshotMode)
         {
             _inMemoryPrefs[key] = value.ToString();
             Save();

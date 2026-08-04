@@ -1,0 +1,63 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    name: Analyze with SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '11.0.x'
+        dotnet-quality: 'preview'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Install SonarCloud scanner
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: Begin SonarCloud analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        dotnet-sonarscanner begin \
+          /k:"karoly_physiquinator" \
+          /o:"karoly" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.cs.opencover.reportsPaths="coverage.opencover.xml" \
+          /d:sonar.cs.vstest.reportsPaths="**/test-results.trx"
+
+    - name: Restore
+      run: dotnet restore Physiquinator.slnx
+
+    - name: Build
+      run: dotnet build Physiquinator.slnx --configuration Release --no-restore
+
+    - name: Test
+      run: |
+        dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --collect:"XPlat Code Coverage;Format=opencover" \
+          --logger "trx;LogFileName=test-results.trx"
+
+    - name: End SonarCloud analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet-sonarscanner end

@@ -1,4 +1,5 @@
 using Physiquinator.Data;
+using Physiquinator.Models;
 using Physiquinator.Services;
 using Xunit;
 
@@ -21,9 +22,9 @@ public class DemoDataSeederTests : IAsyncLifetime
         await _db.EnsureInitializedAsync();
         _planRepo = new WorkoutPlanRepository(_db);
         _planService = new WorkoutPlanService(_planRepo);
-        _historyRepo = new WorkoutHistoryRepository(_db);
+        _historyRepo = new WorkoutHistoryRepository(_db, TimeProvider.System);
         _prefs = new MemoryDemoSeedPreferences();
-        _sut = new DemoDataSeeder(_planService, _db, _historyRepo, _prefs);
+        _sut = new DemoDataSeeder(_planService, _db, _historyRepo, _prefs, TimeProvider.System);
     }
 
     public async Task DisposeAsync() => await _db.Database.CloseAsync();
@@ -34,67 +35,67 @@ public class DemoDataSeederTests : IAsyncLifetime
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
 
-        var plans = await _planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await _planService.GetAllPlansAsync();
         Assert.Equal(4, plans.Count);
         Assert.Contains(plans, p => p.Id == DemoDataIds.PushPlan);
 
         var sessionCount = await _historyRepo.GetSessionCountAsync();
         Assert.InRange(sessionCount, 100, 120);
 
-        var recent = await _historyRepo.GetRecentSessionsAsync(200);
+        IReadOnlyList<WorkoutSessionLogEntity> recent = await _historyRepo.GetRecentSessionsAsync(200);
         Assert.NotEmpty(recent);
         Assert.Contains(recent, s => s.PlanName == "Leg Day");
         Assert.Contains(recent, s => s.PlanName == "Full Body Workout");
 
-        var withSnapshot = recent.FirstOrDefault(s => s.PlanSnapshotJson != null && s.PlanName == "Push Day");
+        WorkoutSessionLogEntity? withSnapshot = recent.FirstOrDefault(s => s.PlanSnapshotJson != null && s.PlanName == "Push Day");
         Assert.NotNull(withSnapshot);
-        var parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(withSnapshot!.PlanSnapshotJson);
+        WorkoutPlan? parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(withSnapshot!.PlanSnapshotJson);
         Assert.NotNull(parsed);
         Assert.Equal("Push Day", parsed!.Name);
         Assert.NotEmpty(parsed.Exercises);
         Assert.Contains(parsed.Exercises, e => e.Name == "Bench Press" && e.DefaultReps is not null);
 
-        var inProgress = recent.First(s => s.EndedAtUtc is null);
+        WorkoutSessionLogEntity inProgress = recent.First(s => s.EndedAtUtc is null);
         Assert.Equal("Push Day", inProgress.PlanName);
-        var inProgressSets = await _historyRepo.GetSetsForSessionAsync(inProgress.Id);
+        IReadOnlyList<WorkoutSetLogEntity> inProgressSets = await _historyRepo.GetSetsForSessionAsync(inProgress.Id);
         Assert.True(inProgressSets.Count is >= 1 and <= 4);
 
-        var benchProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PushPlan, "Bench Press", 30);
+        IReadOnlyList<ExerciseSessionProgressEntry> benchProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PushPlan, "Bench Press", 30);
         Assert.True(benchProgress.Count >= 18);
         Assert.True(benchProgress[0].BestWeightKg >= benchProgress[^1].BestWeightKg);
         var benchCompleted = benchProgress.Where(r => r.SetCount >= 3).ToList();
         Assert.True(benchCompleted[0].TotalVolumeKg > benchCompleted[^1].TotalVolumeKg);
 
-        var squatProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.LegPlan, "Squats", 30);
+        IReadOnlyList<ExerciseSessionProgressEntry> squatProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.LegPlan, "Squats", 30);
         Assert.True(squatProgress.Count >= 12);
         Assert.True(squatProgress[0].TotalVolumeKg > squatProgress[^1].TotalVolumeKg);
 
-        var pullUpProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PullPlan, "Pull-Ups", 30);
+        IReadOnlyList<ExerciseSessionProgressEntry> pullUpProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PullPlan, "Pull-Ups", 30);
         Assert.True(pullUpProgress.Count >= 12);
         Assert.True(pullUpProgress[0].TotalReps > pullUpProgress[^1].TotalReps);
         Assert.Contains(pullUpProgress, p => p.BestWeightKg < 0); // Assisted
         Assert.Contains(pullUpProgress, p => p.BestWeightKg is null); // Bodyweight only
         Assert.Contains(pullUpProgress, p => p.BestWeightKg > 0); // Weighted
 
-        var plankProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Plank", 30);
+        IReadOnlyList<ExerciseSessionProgressEntry> plankProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Plank", 30);
         Assert.True(plankProgress.Count >= 8);
         Assert.All(plankProgress, p => Assert.Null(p.BestWeightKg));
         Assert.True(plankProgress[0].TotalReps > plankProgress[^1].TotalReps);
 
-        var fbBench = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Bench Press", 30);
+        IReadOnlyList<ExerciseSessionProgressEntry> fbBench = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.FullBodyPlan, "Bench Press", 30);
         Assert.True(fbBench.Count >= 8);
 
         var endLocal = DateOnly.FromDateTime(DateTime.Today);
-        var (utcStart, utcEndExclusive) = GetHeatmapQueryUtcBounds(endLocal, 53);
-        var activity = await _historyRepo.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
+        (DateTime utcStart, DateTime utcEndExclusive) = GetHeatmapQueryUtcBounds(endLocal, 53);
+        IReadOnlyDictionary<DateOnly, int> activity = await _historyRepo.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
         var weeksWithActivity = activity.Keys
             .Select(d => GetMondayOfWeek(d))
             .Distinct()
             .Count();
         Assert.True(weeksWithActivity >= 20);
 
-        var gridStart = GetMondayOfWeek(endLocal).AddDays(-7 * 52);
-        var summary = WorkoutDayStats.Compute(activity, endLocal, gridStart);
+        DateOnly gridStart = GetMondayOfWeek(endLocal).AddDays(-7 * 52);
+        WorkoutDaySummary summary = WorkoutDayStats.Compute(activity, endLocal, gridStart);
         Assert.True(summary.CurrentStreakWorkoutDays >= 1);
         Assert.True(summary.LongestStreakWorkoutDays >= 1);
     }
@@ -155,9 +156,9 @@ public class DemoDataSeederTests : IAsyncLifetime
     private static (DateTime UtcStart, DateTime UtcEndExclusive) GetHeatmapQueryUtcBounds(DateOnly endLocal, int weeks)
     {
         weeks = Math.Clamp(weeks, 1, 104);
-        var tz = TimeZoneInfo.Local;
-        var mondayOfEndWeek = GetMondayOfWeek(endLocal);
-        var gridStartMonday = mondayOfEndWeek.AddDays(-7 * (weeks - 1));
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateOnly mondayOfEndWeek = GetMondayOfWeek(endLocal);
+        DateOnly gridStartMonday = mondayOfEndWeek.AddDays(-7 * (weeks - 1));
 
         var startLocalUnspecified = DateTime.SpecifyKind(
             gridStartMonday.ToDateTime(TimeOnly.MinValue),
@@ -166,14 +167,14 @@ public class DemoDataSeederTests : IAsyncLifetime
             endLocal.AddDays(1).ToDateTime(TimeOnly.MinValue),
             DateTimeKind.Unspecified);
 
-        var utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
-        var utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
+        DateTime utcStart = TimeZoneInfo.ConvertTimeToUtc(startLocalUnspecified, tz);
+        DateTime utcEndExclusive = TimeZoneInfo.ConvertTimeToUtc(endExclusiveUnspecified, tz);
         return (utcStart, utcEndExclusive);
     }
 
     private sealed class MemoryDemoSeedPreferences : IDemoSeedPreferences
     {
-        private readonly Dictionary<string, bool> _values = new();
+        private readonly Dictionary<string, bool> _values = [];
 
         public bool Get(string key, bool defaultValue) =>
             _values.TryGetValue(key, out var v) ? v : defaultValue;

@@ -1,37 +1,32 @@
-using Microsoft.Extensions.DependencyInjection;
+using Physiquinator.Models;
 
 namespace Physiquinator.Services;
 
 /// <summary>Persisted preference for rest-end alerts (OS notifications, sound, vibration).</summary>
-public sealed class RestAlertSettingsService
+public sealed class RestAlertSettingsService(
+    IAppPreferences preferences,
+    UserProfileService userProfileService,
+    RestNotificationService restNotificationService)
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public RestAlertSettingsService(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     private string PreferenceKey
     {
         get
         {
-            var userProfileService = _serviceProvider.GetRequiredService<UserProfileService>();
-            var activeProfile = userProfileService.GetActiveProfile();
+            UserProfile activeProfile = userProfileService.GetActiveProfile();
             return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestAlertsEnabled : $"{PreferenceKeys.RestAlertsEnabled}_{activeProfile.Id}";
         }
     }
 
-    public bool Enabled => AppPreferences.Get(PreferenceKey, true);
+    public bool Enabled => preferences.Get(PreferenceKey, true);
 
     public event Action? Changed;
 
     public Task SetEnabledAsync(bool enabled)
     {
-        AppPreferences.Set(PreferenceKey, enabled);
+        preferences.Set(PreferenceKey, enabled);
 
         if (!enabled)
-            _serviceProvider.GetRequiredService<RestNotificationService>().CancelAllRestNotifications();
+            restNotificationService.CancelAllRestNotifications();
 
         Changed?.Invoke();
         return Task.CompletedTask;

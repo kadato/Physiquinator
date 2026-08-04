@@ -8,14 +8,10 @@ namespace Physiquinator.Services;
 /// Schedules and shows native rest alerts (Android/iOS). WebView Web Audio is unreliable on mobile;
 /// local notifications provide sound when the app is backgrounded and a fallback when foregrounded.
 /// </summary>
-public sealed class RestNotificationService
+public sealed class RestNotificationService(RestAlertSettingsService settings, TimeProvider time)
 {
-    private readonly RestAlertSettingsService _settings;
-
-    public RestNotificationService(RestAlertSettingsService settings)
-    {
-        _settings = settings;
-    }
+    private readonly RestAlertSettingsService _settings = settings;
+    private readonly TimeProvider _time = time;
 
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
@@ -64,10 +60,10 @@ public sealed class RestNotificationService
 
         CancelAllRestNotifications();
 
-        if (notifyUtc <= DateTime.UtcNow.AddSeconds(1))
+        if (notifyUtc <= _time.GetUtcNow().UtcDateTime.AddSeconds(1))
             return;
 
-        var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(notifyUtc, DateTimeKind.Utc), TimeZoneInfo.Local);
+        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(notifyUtc, DateTimeKind.Utc), TimeZoneInfo.Local);
 
         try
         {

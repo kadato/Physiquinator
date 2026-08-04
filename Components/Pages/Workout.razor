@@ -330,7 +330,7 @@ else
         }
 
         SessionService.StartWorkout(plan);
-        var snapshot = PlanService.SerializePlanToJson(plan);
+        var snapshot = WorkoutPlanService.SerializePlanToJson(plan);
         _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
         await InitializeWorkoutStateAsync(plan);
     }

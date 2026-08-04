@@ -1,10 +1,10 @@
 namespace Physiquinator.Services;
 
-public sealed class MauiDemoSeedPreferences : IDemoSeedPreferences
+public sealed class MauiDemoSeedPreferences(IAppPreferences preferences) : IDemoSeedPreferences
 {
     private string GetScopedKey(string key)
     {
-        var activeId = AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+        var activeId = preferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
         if (string.IsNullOrEmpty(activeId) || activeId == UserProfileService.DemoProfileId.ToString())
         {
             return key;
@@ -12,15 +12,15 @@ public sealed class MauiDemoSeedPreferences : IDemoSeedPreferences
         return $"{key}_{activeId}";
     }
 
-    public bool Get(string key, bool defaultValue) => AppPreferences.Get(GetScopedKey(key), defaultValue);
+    public bool Get(string key, bool defaultValue) => preferences.Get(GetScopedKey(key), defaultValue);
 
-    public void Set(string key, bool value) => AppPreferences.Set(GetScopedKey(key), value);
+    public void Set(string key, bool value) => preferences.Set(GetScopedKey(key), value);
 
     public bool IsDefaultProfile
     {
         get
         {
-            var activeId = AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+            var activeId = preferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
             return string.IsNullOrEmpty(activeId) || activeId == UserProfileService.DemoProfileId.ToString();
         }
     }

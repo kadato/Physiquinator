@@ -16,7 +16,7 @@ public class WorkoutHistoryServiceTests : IAsyncLifetime
     {
         _db = new AppDatabase(":memory:");
         await _db.EnsureInitializedAsync();
-        _repo = new WorkoutHistoryRepository(_db);
+        _repo = new WorkoutHistoryRepository(_db, TimeProvider.System);
         _sut = new WorkoutHistoryService(_repo);
     }
 
@@ -34,13 +34,13 @@ public class WorkoutHistoryServiceTests : IAsyncLifetime
         var json = await _sut.ExportToJsonAsync();
         await _repo.DeleteSessionAsync(sessionId);
 
-        var (sessions, sets) = await _sut.ImportFromJsonAsync(json);
+        (var sessions, var sets) = await _sut.ImportFromJsonAsync(json);
         Assert.Equal(1, sessions);
         Assert.Equal(1, sets);
 
-        var restored = await _repo.GetRecentSessionsAsync();
+        IReadOnlyList<WorkoutSessionLogEntity> restored = await _repo.GetRecentSessionsAsync();
         Assert.Single(restored);
-        var logged = await _repo.GetSetsForSessionAsync(restored[0].Id);
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _repo.GetSetsForSessionAsync(restored[0].Id);
         Assert.Single(logged);
         Assert.Equal(8, logged[0].Reps);
         Assert.Equal(30, logged[0].WeightKg);

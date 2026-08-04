@@ -337,7 +337,7 @@
         var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(plan.Id);
         if (openSession != null)
         {
-            var newSnapshot = PlanService.SerializePlanToJson(plan);
+            var newSnapshot = WorkoutPlanService.SerializePlanToJson(plan);
             await HistoryRepository.UpdateSessionSnapshotAsync(openSession.Id, newSnapshot);
         }
 
@@ -354,7 +354,7 @@
         {
             var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);
             await FileTransfer.ExportJsonAsync(
-                FileTransferService.JsonFileName(FileTransferService.SafeFileStem(PlanName)),
+                FileTransfer.JsonFileName(FileTransfer.SafeFileStem(PlanName)),
                 json);
             Snackbar.Add("Plan exported.", Severity.Success);
         }

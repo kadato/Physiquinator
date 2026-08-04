@@ -15,7 +15,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     {
         _db = new AppDatabase(":memory:");
         await _db.EnsureInitializedAsync();
-        _sut = new WorkoutHistoryRepository(_db);
+        _sut = new WorkoutHistoryRepository(_db, TimeProvider.System);
     }
 
     public async Task DisposeAsync()
@@ -26,7 +26,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task GetRecentSessionsAsync_ReturnsEmpty_WhenNoSessions()
     {
-        var result = await _sut.GetRecentSessionsAsync();
+        IReadOnlyList<WorkoutSessionLogEntity> result = await _sut.GetRecentSessionsAsync();
 
         Assert.Empty(result);
     }
@@ -44,14 +44,14 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(sessionId, 0, "Squat", 1, reps: 8, weightKg: 100);
         await _sut.EndSessionAsync(sessionId);
 
-        var sessions = await _sut.GetRecentSessionsAsync();
+        IReadOnlyList<WorkoutSessionLogEntity> sessions = await _sut.GetRecentSessionsAsync();
         Assert.Single(sessions);
         Assert.Equal("Leg day", sessions[0].PlanName);
         Assert.Equal(planId.ToString(), sessions[0].WorkoutPlanId);
         Assert.Equal(snapshot, sessions[0].PlanSnapshotJson);
         Assert.NotNull(sessions[0].EndedAtUtc);
 
-        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
         Assert.Equal(2, sets.Count);
         Assert.Equal([0, 1], sets.Select(s => s.SetIndex));
         Assert.Equal(8, sets[0].Reps);
@@ -65,7 +65,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(sessionId, 1, "B", 0);
         await _sut.LogSetAsync(sessionId, 0, "A", 0);
 
-        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
 
         Assert.Equal(["B", "A"], sets.Select(s => s.ExerciseName));
     }
@@ -78,7 +78,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(sessionId, 0, "A", 1);
 
         Assert.True(await _sut.TryDeleteLastSetLogAsync(sessionId));
-        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
         Assert.Single(sets);
         Assert.Equal(0, sets[0].SetIndex);
 
@@ -105,7 +105,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(s1, 0, "Squat", 0, reps: 10, weightKg: 60);
         await _sut.EndSessionAsync(s1);
 
-        var m = await _sut.GetLatestSetMetricsForExerciseAsync(planId, "Squat");
+        LastSetMetrics? m = await _sut.GetLatestSetMetricsForExerciseAsync(planId, "Squat");
         Assert.NotNull(m);
         Assert.Equal(10, m.Reps);
         Assert.Equal(60, m.WeightKg);
@@ -150,7 +150,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
             Exercises = [new ExercisePlan { Name = "Bench", SetCount = 3, Order = 0, RestIntervalSeconds = 90, DefaultReps = 10 }]
         };
         var json = System.Text.Json.JsonSerializer.Serialize(plan);
-        var parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(json);
+        WorkoutPlan? parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(json);
         Assert.NotNull(parsed);
         Assert.Equal("Push", parsed.Name);
         Assert.Single(parsed.Exercises);
@@ -175,7 +175,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(sessionId, 0, "Squat", 0, reps: 5, weightKg: 40);
         await _sut.EndSessionAsync(sessionId);
 
-        var backup = await _sut.CreateBackupSnapshotAsync();
+        WorkoutHistoryBackup backup = await _sut.CreateBackupSnapshotAsync();
         Assert.Single(backup.Sessions);
         Assert.Single(backup.Sessions[0].Sets);
         Assert.Equal(snapshot, backup.Sessions[0].Session.PlanSnapshotJson);
@@ -186,12 +186,12 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.ImportBackupAsync(backup);
 
         Assert.Equal(1, await _sut.GetSessionCountAsync());
-        var sessions = await _sut.GetRecentSessionsAsync();
+        IReadOnlyList<WorkoutSessionLogEntity> sessions = await _sut.GetRecentSessionsAsync();
         Assert.Single(sessions);
         Assert.Equal(sessionId, sessions[0].Id);
         Assert.Equal("Leg day", sessions[0].PlanName);
 
-        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
         Assert.Single(sets);
         Assert.Equal(5, sets[0].Reps);
         Assert.Equal(40, sets[0].WeightKg);
@@ -205,7 +205,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await InsertRawSessionAsync(started);
 
         var localDay = DateOnly.FromDateTime(started.ToLocalTime().Date);
-        var map = await _sut.GetSessionCountsByLocalDayAsync(
+        IReadOnlyDictionary<DateOnly, int> map = await _sut.GetSessionCountsByLocalDayAsync(
             new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
@@ -221,7 +221,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await InsertRawSessionAsync(inside);
         await InsertRawSessionAsync(outside);
 
-        var map = await _sut.GetSessionCountsByLocalDayAsync(
+        IReadOnlyDictionary<DateOnly, int> map = await _sut.GetSessionCountsByLocalDayAsync(
             new DateTime(2024, 4, 1, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc));
 
@@ -234,14 +234,14 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     public async Task GetSessionsForLocalDayAsync_ReturnsSessionsStartingThatLocalDay()
     {
         var localDay = new DateOnly(2024, 8, 20);
-        var tz = TimeZoneInfo.Local;
+        TimeZoneInfo tz = TimeZoneInfo.Local;
         var startLocal = DateTime.SpecifyKind(localDay.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified);
-        var startedUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal.AddHours(14), tz);
+        DateTime startedUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal.AddHours(14), tz);
 
         await InsertRawSessionAsync(startedUtc);
         await InsertRawSessionAsync(startedUtc.AddMinutes(30));
 
-        var list = await _sut.GetSessionsForLocalDayAsync(localDay);
+        IReadOnlyList<WorkoutSessionLogEntity> list = await _sut.GetSessionsForLocalDayAsync(localDay);
         Assert.Equal(2, list.Count);
         Assert.All(list, s => Assert.Equal(localDay, DateOnly.FromDateTime(s.StartedAtUtc.ToLocalTime().Date)));
     }
@@ -250,18 +250,18 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     public async Task GetSessionsForLocalDayAsync_ExcludesAdjacentLocalDays()
     {
         var localDay = new DateOnly(2024, 3, 10);
-        var tz = TimeZoneInfo.Local;
-        var prevUtc = TimeZoneInfo.ConvertTimeToUtc(
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateTime prevUtc = TimeZoneInfo.ConvertTimeToUtc(
             DateTime.SpecifyKind(localDay.AddDays(-1).ToDateTime(new TimeOnly(12, 0)), DateTimeKind.Unspecified),
             tz);
-        var nextUtc = TimeZoneInfo.ConvertTimeToUtc(
+        DateTime nextUtc = TimeZoneInfo.ConvertTimeToUtc(
             DateTime.SpecifyKind(localDay.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified),
             tz);
 
         await InsertRawSessionAsync(prevUtc);
         await InsertRawSessionAsync(nextUtc);
 
-        var list = await _sut.GetSessionsForLocalDayAsync(localDay);
+        IReadOnlyList<WorkoutSessionLogEntity> list = await _sut.GetSessionsForLocalDayAsync(localDay);
         Assert.Empty(list);
     }
 
@@ -269,11 +269,11 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     public async Task GetExerciseSessionProgressAsync_GroupsSetsPerSession_NewestFirst()
     {
         var planId = Guid.NewGuid();
-        var tz = TimeZoneInfo.Local;
+        TimeZoneInfo tz = TimeZoneInfo.Local;
         var day1 = new DateOnly(2024, 2, 1);
         var day2 = new DateOnly(2024, 2, 5);
-        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
-        var t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
 
         var s1 = await InsertSessionAtUtcAsync(planId, "Old", t1);
         await _sut.LogSetAsync(s1, 0, "Bench", 0, reps: 8, weightKg: 50);
@@ -282,7 +282,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         var s2 = await InsertSessionAtUtcAsync(planId, "New", t2);
         await _sut.LogSetAsync(s2, 0, "Bench", 0, reps: 5, weightKg: 60);
 
-        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Bench", maxSessions: 10);
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(planId, "Bench", maxSessions: 10);
         Assert.Equal(2, rows.Count);
         Assert.Equal(s2, rows[0].SessionId);
         Assert.Equal(60, rows[0].BestWeightKg);
@@ -301,13 +301,13 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     public async Task GetExerciseSessionProgressAsync_PartialSetMetrics_CountsSingleValue()
     {
         var planId = Guid.NewGuid();
-        var tz = TimeZoneInfo.Local;
+        TimeZoneInfo tz = TimeZoneInfo.Local;
         var day1 = new DateOnly(2024, 3, 1);
         var day2 = new DateOnly(2024, 3, 2);
         var day3 = new DateOnly(2024, 3, 3);
-        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
-        var t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
-        var t3 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day3.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day2.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t3 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day3.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
 
         var sRepsOnly = await InsertSessionAtUtcAsync(planId, "Reps", t1);
         await _sut.LogSetAsync(sRepsOnly, 0, "Pull-Up", 0, reps: 10, weightKg: null);
@@ -319,7 +319,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(sMixed, 0, "Pull-Up", 0, reps: 8, weightKg: 50);
         await _sut.LogSetAsync(sMixed, 0, "Pull-Up", 1, reps: 5, weightKg: null);
 
-        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10);
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10);
         Assert.Equal(3, rows.Count);
         Assert.Equal(sMixed, rows[0].SessionId);
         Assert.Equal(405, rows[0].TotalVolumeKg);
@@ -339,7 +339,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         var s2 = await _sut.BeginSessionAsync(p2, "B", null);
         await _sut.LogSetAsync(s2, 0, "X", 0, reps: 1, weightKg: 20);
 
-        var rows = await _sut.GetExerciseSessionProgressAsync(p1, "X", 10);
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(p1, "X", 10);
         Assert.Single(rows);
         Assert.Equal(10, rows[0].BestWeightKg);
         Assert.Equal(10, rows[0].TotalVolumeKg);
@@ -349,9 +349,9 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     public async Task GetExerciseSessionProgressAsync_WithBodyweight_ComputesAdjustedVolume()
     {
         var planId = Guid.NewGuid();
-        var tz = TimeZoneInfo.Local;
+        TimeZoneInfo tz = TimeZoneInfo.Local;
         var day1 = new DateOnly(2024, 4, 1);
-        var t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
 
         var s1 = await InsertSessionAtUtcAsync(planId, "Bodyweight", t1);
         // Set 1: 10 reps, null weight (offset 0)
@@ -362,7 +362,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await _sut.LogSetAsync(s1, 0, "Pull-Up", 2, reps: 6, weightKg: -10);
 
         // Bodyweight is set to 80 kg
-        var rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10, bodyweightKg: 80);
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(planId, "Pull-Up", maxSessions: 10, bodyweightKg: 80);
         Assert.Single(rows);
         // Best weight should still be the max offset (5 kg)
         Assert.Equal(5, rows[0].BestWeightKg);
@@ -378,13 +378,13 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     {
         var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);
         await _sut.LogSetAsync(sessionId, 0, "Move", 0, reps: 3, weightKg: null);
-        var backup = await _sut.CreateBackupSnapshotAsync();
+        WorkoutHistoryBackup backup = await _sut.CreateBackupSnapshotAsync();
 
         await _sut.ImportBackupAsync(backup);
         await _sut.ImportBackupAsync(backup);
 
         Assert.Equal(1, await _sut.GetSessionCountAsync());
-        var sets = await _sut.GetSetsForSessionAsync(sessionId);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
         Assert.Single(sets);
         Assert.Equal(3, sets[0].Reps);
     }
@@ -397,7 +397,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         var endedId = await _sut.BeginSessionAsync(planId, "Ended", null);
         await _sut.EndSessionAsync(endedId);
 
-        var result = await _sut.GetInProgressSessionForPlanAsync(planId);
+        WorkoutSessionLogEntity? result = await _sut.GetInProgressSessionForPlanAsync(planId);
 
         Assert.NotNull(result);
         Assert.Equal(openId, result!.Id);
@@ -412,7 +412,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         await InsertSessionAtUtcAsync(olderPlan, "Older", baseTime);
         var newerId = await InsertSessionAtUtcAsync(newerPlan, "Newer", baseTime.AddHours(1));
 
-        var result = await _sut.GetAnyInProgressSessionAsync();
+        WorkoutSessionLogEntity? result = await _sut.GetAnyInProgressSessionAsync();
 
         Assert.NotNull(result);
         Assert.Equal(newerId, result!.Id);

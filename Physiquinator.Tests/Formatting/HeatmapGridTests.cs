@@ -23,13 +23,13 @@ public class HeatmapGridTests
     {
         var endLocal = new DateOnly(2026, 8, 9); // Sunday
 
-        var (utcStart, utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks: 1);
+        (DateTime utcStart, DateTime utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks: 1);
 
         // Grid starts on the Monday of that week; end is exclusive the day after endLocal.
-        var tz = TimeZoneInfo.Local;
-        var expectedStart = TimeZoneInfo.ConvertTimeToUtc(
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateTime expectedStart = TimeZoneInfo.ConvertTimeToUtc(
             new DateTime(2026, 8, 3, 0, 0, 0, DateTimeKind.Unspecified), tz);
-        var expectedEnd = TimeZoneInfo.ConvertTimeToUtc(
+        DateTime expectedEnd = TimeZoneInfo.ConvertTimeToUtc(
             new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Unspecified), tz);
 
         Assert.Equal(expectedStart, utcStart);
@@ -41,10 +41,10 @@ public class HeatmapGridTests
     {
         var endLocal = new DateOnly(2026, 8, 3); // Monday
 
-        var (utcStart, _) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks: 53);
+        (DateTime utcStart, DateTime _) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks: 53);
 
-        var tz = TimeZoneInfo.Local;
-        var expectedStart = TimeZoneInfo.ConvertTimeToUtc(
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateTime expectedStart = TimeZoneInfo.ConvertTimeToUtc(
             new DateTime(2025, 8, 4, 0, 0, 0, DateTimeKind.Unspecified), tz); // 52 weeks earlier Monday
 
         Assert.Equal(expectedStart, utcStart);

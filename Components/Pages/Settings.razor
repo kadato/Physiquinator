@@ -290,7 +290,7 @@
         try
         {
             var json = await PlanService.ExportAllPlansToJsonAsync();
-            await FileTransfer.ExportJsonAsync(FileTransferService.JsonFileName("physiquinator_plans"), json);
+            await FileTransfer.ExportJsonAsync(FileTransfer.JsonFileName("physiquinator_plans"), json);
             Snackbar.Add("All plans exported.", Severity.Success);
         }
         catch (Exception ex)
@@ -335,7 +335,7 @@
         {
             var json = await HistoryService.ExportToJsonAsync();
             await FileTransfer.ExportJsonAsync(
-                FileTransferService.JsonFileName("physiquinator_history"),
+                FileTransfer.JsonFileName("physiquinator_history"),
                 json,
                 "Export workout history");
             Snackbar.Add("Workout history exported.", Severity.Success);

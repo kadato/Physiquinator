@@ -10,8 +10,8 @@ public class DemoDataSeeder(
     WorkoutHistoryRepository historyRepository,
     IDemoSeedPreferences preferences)
 {
-    public const string InitialDemoSeedCompletedKey = "Physiquinator.DemoDataInitialSeedCompleted";
-    public const string DemoHistorySeedCompletedKey = "Physiquinator.DemoHistorySeedCompleted";
+    public const string InitialDemoSeedCompletedKey = PreferenceKeys.DemoDataInitialSeedCompleted;
+    public const string DemoHistorySeedCompletedKey = PreferenceKeys.DemoHistorySeedCompleted;
 
     private const int DemoHistoryWeeks = 52;
     private const int SkipSessionThresholdPercent = 40;

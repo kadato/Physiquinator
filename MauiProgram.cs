@@ -46,9 +46,9 @@ public static class MauiProgram
 			config.SnackbarConfiguration.ShowCloseIcon = true;
 		});
 
-		var activeIdStr = Physiquinator.Services.AppPreferences.Get("Physiquinator.ActiveProfileId", string.Empty);
-		var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
-		var dbName = activeId == Guid.Empty ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
+		var activeIdStr = Physiquinator.Services.AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+		var activeId = Guid.TryParse(activeIdStr, out var g) ? g : UserProfileService.DemoProfileId;
+		var dbName = activeId == UserProfileService.DemoProfileId ? "physiquinator.db3" : $"physiquinator_{activeId}.db3";
 		var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
 		var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
 		var dbPath = Path.Combine(appDataDir, dbName);
@@ -58,6 +58,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Data.WorkoutHistoryRepository>();
 		builder.Services.AddSingleton<Services.WorkoutHistoryService>();
 		builder.Services.AddSingleton<Services.WorkoutPlanService>();
+		builder.Services.AddSingleton<Services.WorkoutStatsService>();
+		builder.Services.AddSingleton<Services.FileTransferService>();
 		builder.Services.AddSingleton<Services.WorkoutSessionService>();
 		builder.Services.AddSingleton<Services.RestAlertSettingsService>();
 		builder.Services.AddSingleton<Services.RestNotificationService>();

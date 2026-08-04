@@ -62,7 +62,7 @@ public sealed class AppInitializationService
                 if (didSeedPlans || didSeedHistory)
                 {
                     // Set flag to show onboarding modal explaining that demo data was seeded
-                    _preferences.Set("Physiquinator.ShowFirstTimeSeedModal", true);
+                    _preferences.Set(PreferenceKeys.ShowFirstTimeSeedModal, true);
 
                     ShowSetupOverlay = false;
                     SetupStatusMessage = null;

@@ -18,7 +18,7 @@ public sealed class RestAlertSettingsService
         {
             var userProfileService = _serviceProvider.GetRequiredService<UserProfileService>();
             var activeProfile = userProfileService.GetActiveProfile();
-            return activeProfile.Id == Guid.Empty ? "rest_alerts_enabled" : $"rest_alerts_enabled_{activeProfile.Id}";
+            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestAlertsEnabled : $"{PreferenceKeys.RestAlertsEnabled}_{activeProfile.Id}";
         }
     }
 

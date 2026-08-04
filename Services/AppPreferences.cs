@@ -62,7 +62,7 @@ public static class AppPreferences
     {
         if (IsScreenshotMode)
         {
-            if (key.StartsWith("Physiquinator.ShowFirstTimeSeedModal", StringComparison.OrdinalIgnoreCase))
+            if (key.StartsWith(PreferenceKeys.ShowFirstTimeSeedModal, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

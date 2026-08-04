@@ -1,13 +1,11 @@
-using Microsoft.Maui.Storage;
-
 namespace Physiquinator.Services;
 
 public sealed class MauiDemoSeedPreferences : IDemoSeedPreferences
 {
     private string GetScopedKey(string key)
     {
-        var activeId = AppPreferences.Get("Physiquinator.ActiveProfileId", string.Empty);
-        if (string.IsNullOrEmpty(activeId) || activeId == System.Guid.Empty.ToString())
+        var activeId = AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+        if (string.IsNullOrEmpty(activeId) || activeId == UserProfileService.DemoProfileId.ToString())
         {
             return key;
         }
@@ -22,8 +20,8 @@ public sealed class MauiDemoSeedPreferences : IDemoSeedPreferences
     {
         get
         {
-            var activeId = AppPreferences.Get("Physiquinator.ActiveProfileId", string.Empty);
-            return string.IsNullOrEmpty(activeId) || activeId == System.Guid.Empty.ToString();
+            var activeId = AppPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+            return string.IsNullOrEmpty(activeId) || activeId == UserProfileService.DemoProfileId.ToString();
         }
     }
 }

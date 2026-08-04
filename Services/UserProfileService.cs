@@ -7,9 +7,12 @@ namespace Physiquinator.Services;
 
 public sealed class UserProfileService
 {
-    public const string ProfilesKey = "Physiquinator.UserProfiles";
-    public const string ActiveProfileIdKey = "Physiquinator.ActiveProfileId";
-    public const string ShowFirstTimeSeedModalKey = "Physiquinator.ShowFirstTimeSeedModal";
+    public const string ProfilesKey = PreferenceKeys.UserProfiles;
+    public const string ActiveProfileIdKey = PreferenceKeys.ActiveProfileId;
+    public const string ShowFirstTimeSeedModalKey = PreferenceKeys.ShowFirstTimeSeedModal;
+
+    /// <summary>Legacy profile (Guid.Empty) that owns the default "physiquinator.db3" database.</summary>
+    public static readonly Guid DemoProfileId = Guid.Empty;
 
     private readonly AppDatabase _database;
     private readonly WorkoutSessionService _sessionService;
@@ -30,7 +33,7 @@ public sealed class UserProfileService
             // First time initialization: create the default Demo User profile
             var defaultProfile = new UserProfile
             {
-                Id = Guid.Empty, // Guid.Empty corresponds to the legacy/default database name "physiquinator.db3"
+                Id = DemoProfileId, // DemoProfileId corresponds to the legacy/default database name "physiquinator.db3"
                 Name = "Demo User",
                 CreatedAt = DateTime.UtcNow
             };
@@ -52,8 +55,22 @@ public sealed class UserProfileService
     public UserProfile GetActiveProfile()
     {
         var profiles = GetProfiles();
-        var activeIdStr = AppPreferences.Get(ActiveProfileIdKey, Guid.Empty.ToString());
-        var activeId = Guid.TryParse(activeIdStr, out var g) ? g : Guid.Empty;
+        if (profiles.Count == 0)
+        {
+            // Corrupt or empty profile list: recover with a fresh default profile
+            var fallback = new UserProfile
+            {
+                Id = DemoProfileId,
+                Name = "Demo User",
+                CreatedAt = DateTime.UtcNow
+            };
+            profiles.Add(fallback);
+            SaveProfiles(profiles);
+            return fallback;
+        }
+
+        var activeIdStr = AppPreferences.Get(ActiveProfileIdKey, DemoProfileId.ToString());
+        var activeId = Guid.TryParse(activeIdStr, out var g) ? g : DemoProfileId;
         return profiles.FirstOrDefault(p => p.Id == activeId) ?? profiles[0];
     }
 
@@ -70,7 +87,7 @@ public sealed class UserProfileService
         AppPreferences.Set(ActiveProfileIdKey, profileId.ToString());
 
         // 3. Resolve the database path for the new user profile
-        var dbName = profileId == Guid.Empty ? "physiquinator.db3" : $"physiquinator_{profileId}.db3";
+        var dbName = profileId == DemoProfileId ? "physiquinator.db3" : $"physiquinator_{profileId}.db3";
         var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
         var appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
         var dbPath = Path.Combine(appDataDir, dbName);
@@ -96,7 +113,7 @@ public sealed class UserProfileService
 
     public async Task DeleteProfileAsync(Guid profileId)
     {
-        if (profileId == Guid.Empty)
+        if (profileId == DemoProfileId)
         {
             throw new InvalidOperationException("The default Demo User profile cannot be deleted.");
         }
@@ -109,7 +126,7 @@ public sealed class UserProfileService
         var active = GetActiveProfile();
         if (active.Id == profileId)
         {
-            await SwitchProfileAsync(Guid.Empty).ConfigureAwait(false);
+            await SwitchProfileAsync(DemoProfileId).ConfigureAwait(false);
         }
 
         profiles.Remove(profileToDelete);

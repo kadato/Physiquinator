@@ -84,29 +84,12 @@
 
     private async ValueTask<bool> InitSortableAsync()
     {
-        try
-        {
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            await DestroySortableAsync();
-            return await JS.InvokeAsync<bool>("planReorder.init", SortableListId, _dotNetRef);
-        }
-        catch (JSException)
-        {
-            return false;
-        }
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        return await SortableJsInterop.TryInitAsync(JS, SortableListId, _dotNetRef, "planReorder.init", "planReorder.destroy");
     }
 
-    private async ValueTask DestroySortableAsync()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("planReorder.destroy");
-        }
-        catch (JSException)
-        {
-            // Scripts not ready yet
-        }
-    }
+    private async ValueTask DestroySortableAsync() =>
+        await SortableJsInterop.DestroyAsync(JS, "planReorder.destroy");
 
     [JSInvokable]
     public async Task OnExerciseReordered(int oldIndex, int newIndex)

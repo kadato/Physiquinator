@@ -1,27 +1,22 @@
+using Physiquinator.Services;
+
 namespace Physiquinator;
 
 public partial class App : Application
 {
-	public App()
+	private readonly WorkoutSessionService _sessionService;
+
+	public App(WorkoutSessionService sessionService)
 	{
 		InitializeComponent();
+		_sessionService = sessionService;
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
 		var window = new Window(new MainPage());
 
-		window.Deactivated += (_, _) =>
-		{
-			var session = Handler?.MauiContext?.Services.GetService<Services.WorkoutSessionService>();
-			session?.SuspendRest();
-		};
-
-		window.Activated += (_, _) =>
-		{
-			var session = Handler?.MauiContext?.Services.GetService<Services.WorkoutSessionService>();
-			session?.NotifyAppActivated();
-		};
+		window.Activated += (_, _) => _sessionService.NotifyAppActivated();
 
 		return window;
 	}

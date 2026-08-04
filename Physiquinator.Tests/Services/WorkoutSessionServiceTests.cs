@@ -196,4 +196,65 @@ public class WorkoutSessionServiceTests
         // Completing Squat set 1 (the remaining incomplete set) should complete the workout!
         Assert.True(svc.WouldCompleteWorkout(0, 1));
     }
+
+    [Fact]
+    public void GetFirstUncompletedSetIndex_returns_first_open_set()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 3, Order = 0 }
+            ]
+        };
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(plan);
+
+        Assert.Equal(0, svc.GetFirstUncompletedSetIndex(0));
+
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(0, 2);
+        Assert.Equal(1, svc.GetFirstUncompletedSetIndex(0));
+
+        svc.CompleteSet(0, 1);
+        Assert.Equal(-1, svc.GetFirstUncompletedSetIndex(0));
+    }
+
+    [Fact]
+    public void IsExerciseDone_and_first_uncompleted_exercise_track_progress()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0 },
+                new ExercisePlan { Name = "Bench Press", SetCount = 1, Order = 1 }
+            ]
+        };
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(plan);
+
+        Assert.False(svc.IsExerciseDone(0));
+        Assert.Equal(0, svc.GetFirstUncompletedExerciseIndex());
+
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(0, 1);
+        Assert.True(svc.IsExerciseDone(0));
+        Assert.False(svc.IsExerciseDone(1));
+        Assert.Equal(1, svc.GetFirstUncompletedExerciseIndex());
+
+        svc.CompleteSet(1, 0);
+        Assert.True(svc.IsExerciseDone(1));
+        Assert.Equal(-1, svc.GetFirstUncompletedExerciseIndex());
+    }
+
+    [Fact]
+    public void Completion_helpers_return_safe_defaults_without_plan()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+
+        Assert.Equal(-1, svc.GetFirstUncompletedSetIndex(0));
+        Assert.True(svc.IsExerciseDone(0));
+        Assert.Equal(-1, svc.GetFirstUncompletedExerciseIndex());
+    }
 }

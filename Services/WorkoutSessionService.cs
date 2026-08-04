@@ -7,7 +7,7 @@ namespace Physiquinator.Services;
 /// (<see cref="RestEndsAtUtc"/>) while ticking is still driven by the UI/JS bridge
 /// (<see cref="TickRest"/>) to avoid background threads in the WebView.
 /// </summary>
-public class WorkoutSessionService : IDisposable
+public class WorkoutSessionService
 {
     private readonly TimeProvider _time;
 
@@ -95,6 +95,39 @@ public class WorkoutSessionService : IDisposable
 
     public bool IsSetCompleted(int exerciseIndex, int setIndex) =>
         CompletedSets.Contains(new SetCompletion(exerciseIndex, setIndex));
+
+    /// <summary>First uncompleted set index for an exercise, or -1 when the exercise is fully completed.</summary>
+    public int GetFirstUncompletedSetIndex(int exerciseIndex)
+    {
+        if (CurrentPlan == null || exerciseIndex < 0 || exerciseIndex >= CurrentPlan.Exercises.Count)
+            return -1;
+
+        var exercise = CurrentPlan.Exercises[exerciseIndex];
+        for (var s = 0; s < exercise.SetCount; s++)
+        {
+            if (!IsSetCompleted(exerciseIndex, s))
+                return s;
+        }
+
+        return -1;
+    }
+
+    /// <summary>True when every set of the exercise has been completed.</summary>
+    public bool IsExerciseDone(int exerciseIndex) => GetFirstUncompletedSetIndex(exerciseIndex) == -1;
+
+    /// <summary>First exercise with at least one uncompleted set, or -1 when the whole workout is complete.</summary>
+    public int GetFirstUncompletedExerciseIndex()
+    {
+        if (CurrentPlan == null) return -1;
+
+        for (var e = 0; e < CurrentPlan.Exercises.Count; e++)
+        {
+            if (!IsExerciseDone(e))
+                return e;
+        }
+
+        return -1;
+    }
 
     /// <summary>
     /// Checks if completing the specified set would complete the entire workout.
@@ -243,12 +276,6 @@ public class WorkoutSessionService : IDisposable
     /// <summary>Stop the rest timer without firing any completion callback.</summary>
     public void CancelRest() => StopRest();
 
-    /// <summary>App window deactivated. Wall clock still applies; JS ticks may stop in WebView.</summary>
-    public void SuspendRest()
-    {
-        // Intentionally no-op: rest continues in real time via RestEndsAtUtc.
-    }
-
     private void StopRest()
     {
         _isResting = false;
@@ -257,6 +284,4 @@ public class WorkoutSessionService : IDisposable
         _restEndsAtUtc = null;
         _activeRestDurationSeconds = 0;
     }
-
-    public void Dispose() { }
 }

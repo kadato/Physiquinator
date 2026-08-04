@@ -1,10 +1,13 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
+@using Microsoft.Extensions.Logging
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject FileTransferService FileTransfer
+@inject ILogger<PlanWorkout> Logger
 
 <div class="plan-page">
     <PageHeader Title="@(IsNew ? "New plan" : "Edit plan")" OnBack="GoHome" />
@@ -176,7 +179,7 @@
         BumpSortable();
     }
 
-    private void GoHome() => Navigation.NavigateTo("/");
+    private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
 
     private async Task FocusAddExercise()
     {
@@ -204,7 +207,19 @@
     private void AddExerciseKeydown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
-            _ = AddExerciseAsync();
+            _ = AddExerciseFromKeyboardAsync();
+    }
+
+    private async Task AddExerciseFromKeyboardAsync()
+    {
+        try
+        {
+            await AddExerciseAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Add exercise error");
+        }
     }
 
     private async Task EditExerciseAsync(int index)
@@ -273,8 +288,7 @@
             return;
 
         var name = Exercises[index].Name;
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Remove exercise",
             $"Remove '{name}' from this plan?",
             confirmText: "Remove",
@@ -328,7 +342,7 @@
         }
 
         Snackbar.Add("Plan saved.", Severity.Success);
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo(AppRoutes.Home);
     }
 
     private async Task ExportCurrentPlan()
@@ -339,15 +353,9 @@
         try
         {
             var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);
-            var safeFileName = string.Join("_", PlanName.Split(Path.GetInvalidFileNameChars()));
-            var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-            await File.WriteAllTextAsync(filePath, json);
-            await Share.RequestAsync(new ShareFileRequest
-            {
-                Title = "Export Workout Plan",
-                File = new ShareFile(filePath)
-            });
+            await FileTransfer.ExportJsonAsync(
+                FileTransferService.JsonFileName(FileTransferService.SafeFileStem(PlanName)),
+                json);
             Snackbar.Add("Plan exported.", Severity.Success);
         }
         catch (Exception ex)

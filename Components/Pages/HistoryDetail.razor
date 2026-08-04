@@ -136,18 +136,19 @@ else
     private List<WorkoutSetLogEntity> _sets = new();
     private Guid? _planGuid;
     private List<string> _distinctExerciseNames = new();
+    private Dictionary<string, ExerciseLogType> _logTypesByExercise = new();
     private double? _bodyweightKg;
 
-    private void GoHistoryList() => Navigation.NavigateTo("/history");
+    private void GoHistoryList() => Navigation.NavigateTo(AppRoutes.History);
 
-    private void GoHome() => Navigation.NavigateTo("/");
+    private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
 
-    private void GoPlan(Guid planId) => Navigation.NavigateTo($"/plan/{planId}");
+    private void GoPlan(Guid planId) => Navigation.NavigateTo(AppRoutes.Plan(planId));
 
-    private void ContinueWorkout(Guid planId) => Navigation.NavigateTo($"/workout/{planId}");
+    private void ContinueWorkout(Guid planId) => Navigation.NavigateTo(AppRoutes.Workout(planId));
 
     private void GoExerciseProgress(Guid planId, string exerciseName) =>
-        Navigation.NavigateTo($"/history/exercise-progress/{planId}/{Uri.EscapeDataString(exerciseName)}");
+        Navigation.NavigateTo(AppRoutes.ExerciseProgress(planId, exerciseName));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -162,7 +163,9 @@ else
             : new List<WorkoutSetLogEntity>();
 
         _sets = sets;
-        _planGuid = Guid.TryParse(_session?.WorkoutPlanId, out var g) ? g : null;
+        _planGuid = _session?.TryGetPlanId();
+        _logTypesByExercise = _snapshot?.Exercises
+            .ToDictionary(e => e.Name, e => e.LogType, StringComparer.OrdinalIgnoreCase) ?? new();
         _distinctExerciseNames = sets
             .Select(s => s.ExerciseName)
             .Where(n => !string.IsNullOrWhiteSpace(n))
@@ -176,8 +179,7 @@ else
     {
         if (_session == null) return;
 
-        var ok = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var ok = await DialogService.ConfirmAsync(
             "Delete workout",
             "Remove this session and all logged sets? This cannot be undone.",
             confirmText: "Delete",
@@ -186,14 +188,13 @@ else
         if (!ok) return;
 
         await HistoryRepo.DeleteSessionAsync(_session.Id);
-        Navigation.NavigateTo("/history");
+        Navigation.NavigateTo(AppRoutes.History);
     }
 
-    private ExerciseLogType GetLogType(string exerciseName)
-    {
-        var ex = _snapshot?.Exercises.FirstOrDefault(e => string.Equals(e.Name, exerciseName, StringComparison.OrdinalIgnoreCase));
-        return ex?.LogType ?? ExerciseLogType.WeightAndReps;
-    }
+    private ExerciseLogType GetLogType(string exerciseName) =>
+        _logTypesByExercise.TryGetValue(exerciseName, out var type)
+            ? type
+            : ExerciseLogType.WeightAndReps;
 
     private string FormatReps(string exerciseName, int? reps)
     {
@@ -207,23 +208,7 @@ else
         var type = GetLogType(exerciseName);
         if (type == ExerciseLogType.Duration) return "—";
         if (type == ExerciseLogType.BodyweightReps)
-        {
-            if (weight == null || weight.Value == 0)
-            {
-                return _bodyweightKg.HasValue 
-                    ? $"BW ({_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                    : "BW";
-            }
-            if (weight.Value > 0)
-            {
-                return _bodyweightKg.HasValue 
-                    ? $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} ({(weight.Value + _bodyweightKg.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                    : $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
-            }
-            return _bodyweightKg.HasValue 
-                ? $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} ({(_bodyweightKg.Value - Math.Abs(weight.Value)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                : $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
-        }
-        return weight is { } w ? w.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) : "—";
+            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg);
+        return weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "—";
     }
 }

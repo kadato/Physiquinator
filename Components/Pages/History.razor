@@ -1,6 +1,7 @@
 @page "/history"
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
+@inject WorkoutStatsService StatsService
 <MudStack Spacing="3">
     <PageHeader Title="Workout history" ShowBack="false" />
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -58,7 +59,7 @@
         {
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                 <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
-                    @(_selectedDay.HasValue ? UiDateFormats.DateOnlyCompact(_selectedDay.Value) : "")
+                    @UiDateFormats.DateOnlyCompact(_selectedDay.Value)
                 </MudChip>
                 @if (!_listSessions.Any())
                 {
@@ -103,7 +104,7 @@
                                 </div>
                             </div>
                             <div class="history-session-card__right">
-                                @if (s.EndedAtUtc == null && Guid.TryParse(s.WorkoutPlanId, out var continuePlanId))
+                                @if (s.EndedAtUtc == null && s.TryGetPlanId() is { } continuePlanId)
                                 {
                                     <div @onclick:stopPropagation="true">
                                         <MudButton Variant="Variant.Filled"
@@ -141,24 +142,21 @@
     private string _searchText = "";
  
     private void OpenSession(string sessionId) =>
-        Navigation.NavigateTo($"/history/{Uri.EscapeDataString(sessionId)}");
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
  
     private void ContinueWorkout(Guid planId) =>
-        Navigation.NavigateTo($"/workout/{planId}");
+        Navigation.NavigateTo(AppRoutes.Workout(planId));
  
     protected override async Task OnInitializedAsync()
     {
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
-        var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(_heatmapEndLocal, HeatmapWeeks);
-        var gridStart = ActivityHeatmap.GetMondayOfWeek(_heatmapEndLocal).AddDays(-7 * (HeatmapWeeks - 1));
- 
+
+        var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);
-        var activityTask = HistoryRepo.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
-        await Task.WhenAll(sessionsTask, activityTask);
- 
+        await Task.WhenAll(sessionsTask, statsTask);
+
         _sessions = await sessionsTask;
-        _activityByDay = await activityTask;
-        _summary = WorkoutDayStats.Compute(_activityByDay, _heatmapEndLocal, gridStart);
+        (_summary, _activityByDay) = await statsTask;
         await UpdateSessionsListAsync();
     }
 
@@ -200,7 +198,6 @@
         _selectedDay = day;
         _daySessions = null;
         await UpdateSessionsListAsync();
-        StateHasChanged();
     }
  
     private Task ClearDayFilter() => OnSelectedDayChanged(null);

@@ -5,9 +5,9 @@
                 <RouteView RouteData="@routeData" DefaultLayout="@typeof(Components.Layout.MainLayout)" />
                 <FocusOnNavigate RouteData="@routeData" Selector="h1" />
             </ChildContent>
-            <ErrorContent Context="ex">
+            <ErrorContent>
                 <MudAlert Severity="Severity.Error" Class="ma-3">
-                    Something went wrong. @ex.Message
+                    Something went wrong while showing this page. Please try again.
                 </MudAlert>
             </ErrorContent>
         </Microsoft.AspNetCore.Components.Web.ErrorBoundary>

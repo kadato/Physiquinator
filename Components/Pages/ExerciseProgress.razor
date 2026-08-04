@@ -16,7 +16,7 @@ else
 {
     <MudStack Spacing="3">
         <MudText Typo="Typo.body2" Class="mud-text-secondary">
-            Logged performance on this plan — up to the last <strong>@_maxSessions</strong> sessions that include this exercise.
+            Logged performance on this plan — up to the last <strong>@MaxSessions</strong> sessions that include this exercise.
         </MudText>
 
         @if (!_rows.Any())
@@ -109,7 +109,7 @@ else
     [Parameter]
     public string ExerciseName { get; set; } = "";
 
-    private const int _maxSessions = 30;
+    private const int MaxSessions = 30;
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
 
     private bool _ready;
@@ -123,13 +123,13 @@ else
     private LineChartOptions _chartOptions = new();
     private string _chartHeightPx = "280px";
 
-    private const int _maxChartAxisLabels = 6;
+    private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
 
-    private void GoHistory() => Navigation.NavigateTo("/history");
+    private void GoHistory() => Navigation.NavigateTo(AppRoutes.History);
 
     private void GoSession(string sessionId) =>
-        Navigation.NavigateTo($"/history/{Uri.EscapeDataString(sessionId)}");
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -144,7 +144,7 @@ else
             return;
         }
 
-        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, _maxSessions, _bodyweightKg);
+        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, MaxSessions, _bodyweightKg);
         var plan = await PlanService.GetPlanAsync(PlanId);
         var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
@@ -166,7 +166,7 @@ else
         var chronological = _rows.Reverse().ToList();
         _chartLabels = BuildSparseChartLabels(
             chronological.Select(r => r.StartedAtUtc).ToList(),
-            _maxChartAxisLabels);
+            MaxChartAxisLabels);
         var isVolumePlot = _logType == ExerciseLogType.WeightAndReps || (_logType == ExerciseLogType.BodyweightReps && _bodyweightKg.HasValue);
         var values = isVolumePlot
             ? chronological.Select(r => r.TotalVolumeKg).ToArray()
@@ -201,7 +201,7 @@ else
         if (_logType == ExerciseLogType.BodyweightReps)
         {
             return _bodyweightKg.HasValue
-                ? $"Per set: reps × (bodyweight [{_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg] + offset)."
+                ? $"Per set: reps × (bodyweight [{ExerciseWeightFormatter.FormatKg(_bodyweightKg.Value)} kg] + offset)."
                 : "Per set: reps (bodyweight not set in settings).";
         }
         return "Per set: reps × kg when both are logged; otherwise reps or kg alone.";
@@ -240,23 +240,7 @@ else
     private string FormatBestWeight(double? weight)
     {
         if (_logType == ExerciseLogType.BodyweightReps)
-        {
-            if (weight == null || weight.Value == 0)
-            {
-                return _bodyweightKg.HasValue 
-                    ? $"BW ({_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                    : "BW";
-            }
-            if (weight.Value > 0)
-            {
-                return _bodyweightKg.HasValue 
-                    ? $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(weight.Value + _bodyweightKg.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                    : $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg";
-            }
-            return _bodyweightKg.HasValue 
-                ? $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(_bodyweightKg.Value - Math.Abs(weight.Value)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg)" 
-                : $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg";
-        }
-        return weight is { } w ? $"{w.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg" : "—";
+            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg);
+        return weight is { } w ? $"{ExerciseWeightFormatter.FormatKg(w)} kg" : "—";
     }
 }

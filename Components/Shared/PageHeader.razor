@@ -33,6 +33,6 @@
         if (OnBack.HasDelegate)
             await OnBack.InvokeAsync();
         else
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo(AppRoutes.Home);
     }
 }

@@ -5,8 +5,12 @@ namespace Physiquinator.Services;
 
 public static class ConfirmDialogService
 {
+    /// <summary>Shared wording for discarding an in-progress workout (Home and Workout page).</summary>
+    public static string DiscardWorkoutMessage(string planName) =>
+        $"Remove the in-progress session for '{planName}' and all logged sets? This cannot be undone.";
+
     public static async Task<bool> ConfirmAsync(
-        IDialogService dialogService,
+        this IDialogService dialogService,
         string title,
         string message,
         string confirmText = "Confirm",

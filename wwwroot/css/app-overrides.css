@@ -2313,3 +2313,33 @@ button.heatmap-cell:disabled {
     text-align: center;
     user-select: none;
 }
+/* Settings: profile rows, round icon buttons, and ghost action buttons */
+.profile-row {
+    background-color: var(--mud-palette-background-grey);
+    border: 1px solid var(--mud-palette-divider);
+    border-radius: 12px;
+}
+
+.profile-row--active {
+    background-color: var(--mud-palette-primary-hover);
+    border-color: var(--mud-palette-primary);
+}
+
+.icon-btn-round {
+    border-radius: 50%;
+}
+
+.btn-premium-ghost {
+    text-transform: none;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.active-badge {
+    font-size: 0.75rem;
+    background-color: var(--mud-palette-primary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}

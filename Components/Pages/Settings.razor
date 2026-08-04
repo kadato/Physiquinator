@@ -10,6 +10,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
+@inject FileTransferService FileTransfer
 @implements IDisposable
 
 <PageTitle>Settings</PageTitle>
@@ -27,9 +28,9 @@
                    Label="Light or dark mode"
                    Value="_preference"
                    ValueChanged="OnThemePreferenceChanged">
-            <MudSelectItem Value="@("system")">Match system</MudSelectItem>
-            <MudSelectItem Value="@("light")">Light (always)</MudSelectItem>
-            <MudSelectItem Value="@("dark")">Dark (always)</MudSelectItem>
+            <MudSelectItem Value="@ThemePreference.System">Match system</MudSelectItem>
+            <MudSelectItem Value="@ThemePreference.Light">Light (always)</MudSelectItem>
+            <MudSelectItem Value="@ThemePreference.Dark">Dark (always)</MudSelectItem>
         </MudSelect>
         <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
             Active mode: <strong>@_effectiveThemeLabel</strong>
@@ -132,8 +133,7 @@
             @foreach (var profile in _profiles)
             {
                 var isActive = profile.Id == _activeProfile.Id;
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-3 rounded-lg"
-                          Style='@(isActive ? "background-color: var(--mud-palette-primary-hover); border: 1px solid var(--mud-palette-primary);" : "background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-divider);")'>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="@($"pa-3 profile-row {(isActive ? "profile-row--active" : "")}")">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                         <MudAvatar Color="@(isActive ? Color.Primary : Color.Default)" Size="Size.Medium">
                             @profile.Name.Substring(0, Math.Min(profile.Name.Length, 2)).ToUpper()
@@ -143,7 +143,7 @@
                                 <MudText Typo="Typo.body1" Class="fw-semibold">@profile.Name</MudText>
                                 @if (isActive)
                                 {
-                                    <span style="font-size: 0.75rem; background-color: var(--mud-palette-primary); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Active</span>
+                                    <span class="active-badge">Active</span>
                                 }
                             </MudStack>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
@@ -161,7 +161,7 @@
                                            Size="Size.Small"
                                            OnClick="@(() => SwitchProfileAsync(profile.Id))"
                                            title="Switch Profile"
-                                           Style="border-radius: 50%;" />
+                                           Class="icon-btn-round" />
                         }
                         
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -170,9 +170,9 @@
                                        Size="Size.Small"
                                        OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
                                        title="Rename Profile"
-                                       Style="border-radius: 50%;" />
+                                       Class="icon-btn-round" />
 
-                        @if (profile.Id != Guid.Empty)
+                        @if (profile.Id != UserProfileService.DemoProfileId)
                         {
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Variant="Variant.Outlined"
@@ -180,14 +180,14 @@
                                            Size="Size.Small"
                                            OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
                                            title="Delete Profile"
-                                           Style="border-radius: 50%;" />
+                                           Class="icon-btn-round" />
                         }
                     </MudStack>
                 </MudStack>
             }
         </MudStack>
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateProfileAsync" Style="text-transform: none; border-radius: 12px; font-weight: 600;">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateProfileAsync" Class="btn-premium-ghost">
             Add Profile
         </MudButton>
     </MudPaper>
@@ -204,15 +204,15 @@
                    Color="Color.Error"
                    OnClick="RemoveAllDataAsync"
                    StartIcon="@Icons.Material.Filled.DeleteForever"
-                   Style="text-transform: none; border-radius: 12px; font-weight: 600;">
+                   Class="btn-premium-ghost">
             Remove all data…
         </MudButton>
     </MudPaper>
 </MudStack>
 
 @code {
-    private string _preference = "system";
-    private string _effectiveTheme = "dark";
+    private string _preference = ThemePreference.System;
+    private string _effectiveTheme = ThemePreference.Dark;
     private bool _restAlertsEnabled = true;
     private int _planCount;
     private int _historySessionCount;
@@ -220,7 +220,7 @@
     private UserProfile _activeProfile = null!;
     private double? _bodyweight;
 
-    private string _effectiveThemeLabel => _effectiveTheme == "light" ? "Light" : "Dark";
+    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
 
     protected override async Task OnInitializedAsync()
     {
@@ -290,8 +290,7 @@
         try
         {
             var json = await PlanService.ExportAllPlansToJsonAsync();
-            var fileName = $"physiquinator_plans_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            await SaveFile(fileName, json);
+            await FileTransfer.ExportJsonAsync(FileTransferService.JsonFileName("physiquinator_plans"), json);
             Snackbar.Add("All plans exported.", Severity.Success);
         }
         catch (Exception ex)
@@ -304,25 +303,9 @@
     {
         try
         {
-            var fileTypesDict = new PlatformFileTypes
-            {
-                { DevicePlatform.iOS, ["public.json"] },
-                { DevicePlatform.Android, ["application/json"] },
-                { DevicePlatform.WinUI, [".json"] },
-                { DevicePlatform.MacCatalyst, ["public.json"] }
-            };
-            var result = await FilePicker.PickAsync(new PickOptions
-            {
-                PickerTitle = "Select workout plan JSON file",
-                FileTypes = new FilePickerFileType(fileTypesDict)
-            });
-
-            if (result == null)
+            var json = await FileTransfer.PickJsonAsync("Select workout plan JSON file");
+            if (json == null)
                 return;
-
-            using var stream = await result.OpenReadAsync();
-            using var reader = new StreamReader(stream);
-            var json = await reader.ReadToEndAsync();
 
             var importedCount = 0;
             try
@@ -338,7 +321,7 @@
 
             await RefreshPlanCountAsync();
             Snackbar.Add($"Imported {importedCount} plan(s).", Severity.Success);
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo(AppRoutes.Home);
         }
         catch (Exception ex)
         {
@@ -351,8 +334,10 @@
         try
         {
             var json = await HistoryService.ExportToJsonAsync();
-            var fileName = $"physiquinator_history_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            await SaveFile(fileName, json, "Export workout history");
+            await FileTransfer.ExportJsonAsync(
+                FileTransferService.JsonFileName("physiquinator_history"),
+                json,
+                "Export workout history");
             Snackbar.Add("Workout history exported.", Severity.Success);
         }
         catch (Exception ex)
@@ -365,25 +350,10 @@
     {
         try
         {
-            var fileTypesDict = new PlatformFileTypes
-            {
-                { DevicePlatform.iOS, ["public.json"] },
-                { DevicePlatform.Android, ["application/json"] },
-                { DevicePlatform.WinUI, [".json"] },
-                { DevicePlatform.MacCatalyst, ["public.json"] }
-            };
-            var result = await FilePicker.PickAsync(new PickOptions
-            {
-                PickerTitle = "Select workout history JSON file",
-                FileTypes = new FilePickerFileType(fileTypesDict)
-            });
-
-            if (result == null)
+            var json = await FileTransfer.PickJsonAsync("Select workout history JSON file");
+            if (json == null)
                 return;
 
-            using var stream = await result.OpenReadAsync();
-            using var reader = new StreamReader(stream);
-            var json = await reader.ReadToEndAsync();
             var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
             await RefreshHistoryCountAsync();
             Snackbar.Add($"Imported {sessions} workout(s) and {sets} set log(s).", Severity.Success);
@@ -396,8 +366,7 @@
 
     private async Task RemoveAllDataAsync()
     {
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Remove all data?",
             "This cannot be undone. Export any backups you need before continuing.",
             confirmText: "Remove",
@@ -413,23 +382,12 @@
             await RefreshPlanCountAsync();
             await RefreshHistoryCountAsync();
             Snackbar.Add("All local data has been removed.", Severity.Success);
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo(AppRoutes.Home);
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Could not remove data: {ex.Message}", Severity.Error);
         }
-    }
-
-    private static async Task SaveFile(string fileName, string content, string shareTitle = "Export Workout Plan")
-    {
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllTextAsync(filePath, content);
-        await Share.RequestAsync(new ShareFileRequest
-        {
-            Title = shareTitle,
-            File = new ShareFile(filePath)
-        });
     }
 
     private async Task CreateProfileAsync()
@@ -466,8 +424,7 @@
 
     private async Task DeleteProfileAsync(Guid id, string name)
     {
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Delete profile?",
             $"Are you sure you want to delete profile '{name}'? This will permanently delete its workout history, plans, and database file.",
             confirmText: "Delete",
@@ -479,7 +436,7 @@
         {
             await UserProfileService.DeleteProfileAsync(id);
             Snackbar.Add($"Profile '{name}' deleted.", Severity.Success);
-            Navigation.NavigateTo("/settings", forceLoad: true);
+            Navigation.NavigateTo(AppRoutes.Settings, forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -493,15 +450,13 @@
         {
             await UserProfileService.SwitchProfileAsync(id);
             Snackbar.Add("Switched profile.", Severity.Success);
-            Navigation.NavigateTo("/settings", forceLoad: true);
+            Navigation.NavigateTo(AppRoutes.Settings, forceLoad: true);
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Failed to switch profile: {ex.Message}", Severity.Error);
         }
     }
-
-    private sealed class PlatformFileTypes : Dictionary<DevicePlatform, IEnumerable<string>> { }
 
     public void Dispose()
     {

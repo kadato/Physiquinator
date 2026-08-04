@@ -1,4 +1,5 @@
 @page "/workout/{PlanId:guid}"
+@using Microsoft.Extensions.Logging
 @inject WorkoutPlanService PlanService
 @inject WorkoutSessionService SessionService
 @inject RestNotificationService RestNotifications
@@ -9,6 +10,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
+@inject ILogger<Workout> Logger
 @implements IAsyncDisposable
 
 <PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkoutInProgress" />
@@ -25,80 +27,13 @@ else
     <MudStack Spacing="3">
         @if (SessionService.IsResting || _isRestComplete)
         {
-            <MudPaper Class="@RestTimerPanelClass" Elevation="2">
-                        <div class="rest-timer-active">
-                            <div class="rest-timer-display" aria-live="polite" aria-label="@RestTimerDisplayAriaLabel">
-                                @if (_isRestComplete)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Check"
-                                             Class="rest-timer-check"
-                                             aria-hidden="true" />
-                                }
-                                else
-                                {
-                                    <div class='rest-timer-digits @RestDigitsClass @(60 > SessionService.RestSecondsRemaining ? "rest-timer-digits--seconds-only" : "") @(10 > SessionService.RestSecondsRemaining ? "rest-timer-digits--single-digit" : "")' role="timer">
-                                        <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(SessionService.RestSecondsRemaining)</span>
-                                        <span class="rest-timer-separator">:</span>
-                                        <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(SessionService.RestSecondsRemaining)</span>
-                                        <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(SessionService.RestSecondsRemaining)</span>
-                                    </div>
-                                }
-                            </div>
-
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="4" Class="rest-timer-controls">
-                                @if (_isRestComplete)
-                                {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                                                   Color="Color.Default"
-                                                   aria-label="Reset rest"
-                                                   OnClick="ResetRest"
-                                                   Size="Size.Large" />
-                                    <div class="rest-timer-controls__slot" aria-hidden="true"></div>
-                                    <MudButton Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               OnClick="SkipRest"
-                                               aria-label="Continue to next set"
-                                               Size="Size.Large">
-                                        Continue
-                                    </MudButton>
-                                }
-                                else
-                                {
-                                    @if (SessionService.IsRestPaused)
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                                                       Color="Color.Success"
-                                                       aria-label="Resume rest"
-                                                       OnClick="ResumeRest"
-                                                       Size="Size.Large" />
-                                    }
-                                    else
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.Pause"
-                                                       Color="Color.Info"
-                                                       aria-label="Pause rest"
-                                                       OnClick="PauseRest"
-                                                       Size="Size.Large" />
-                                    }
-                                    <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                                                   Color="Color.Default"
-                                                   aria-label="Reset rest"
-                                                   OnClick="ResetRest"
-                                                   Size="Size.Large" />
-                                    <MudButton Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               OnClick="SkipRest"
-                                               Size="Size.Large">
-                                        Skip
-                                    </MudButton>
-                                }
-                            </MudStack>
-
-                            <div class="rest-timer-edge-track" aria-hidden="true">
-                                <div class="rest-timer-edge-fill @RestTimerEdgeFillClass"></div>
-                            </div>
-                        </div>
-            </MudPaper>
+            <RestTimerPanel IsRestComplete="_isRestComplete"
+                            IsRestPaused="@SessionService.IsRestPaused"
+                            RestSecondsRemaining="@SessionService.RestSecondsRemaining"
+                            OnPause="PauseRest"
+                            OnResume="ResumeRest"
+                            OnReset="ResetRest"
+                            OnSkip="SkipRest" />
         }
 
         <div class="workout-exercise-layout">
@@ -160,15 +95,10 @@ else
                                 @{
                                     var setIndex = activeSetIndex;
                                     var inputKey = (exerciseIndex, setIndex);
-                                    (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? 10));
+                                    (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? DefaultReps));
 
-                                    var defaultWeight = _originalValues.TryGetValue(inputKey, out var origVal) 
-                                        ? origVal.Weight 
-                                        : (inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0);
-                                             
-                                    var defaultReps = _originalValues.TryGetValue(inputKey, out origVal) 
-                                        ? origVal.Reps 
-                                        : (inputs.Reps ?? exercise.DefaultReps ?? 10);
+                                    var defaultWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
+                                    var defaultReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
                                 }
 
                                 <div class="set-active-panel">
@@ -199,7 +129,7 @@ else
                                     <button type="button"
                                             class="log-set-btn"
                                             @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                            disabled="@(_isCompleting ? "disabled" : null)">
+                                            disabled="@_isCompleting">
                                         <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
                                         Log Set
                                     </button>
@@ -257,10 +187,10 @@ else
                                     {
                                         var setIndex = si;
                                         var inputKey = (exerciseIndex, setIndex);
-                                        (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? 10));
+                                        (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? DefaultReps));
                                         
                                         var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
-                                        var finalReps = inputs.Reps ?? exercise.DefaultReps ?? 10;
+                                        var finalReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
 
                                         <div class="set-summary-row">
                                             <span class="set-number-label">Set @(setIndex + 1)</span>
@@ -268,7 +198,7 @@ else
                                             <button type="button" 
                                                     class="log-check-btn log-check-btn--completed"
                                                     @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                                     disabled="@(_isCompleting ? "disabled" : null)">
+                                                    disabled="@_isCompleting">
                                                 <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
                                             </button>
                                         </div>
@@ -313,6 +243,12 @@ else
     [SupplyParameterFromQuery(Name = "forceNew")]
     public bool ForceNew { get; set; }
 
+    private const int DefaultReps = 10;
+    private const int UrgentRestThresholdSeconds = 3;
+    private const int RestTickIntervalMs = 1000;
+    private const int RestCompleteVibrationMs = 500;
+    private const int WorkoutCompleteVibrationMs = 800;
+
     private bool _isRestComplete;
     private int _lastRestDurationSeconds;
     private Guid? _loadedPlanId;
@@ -322,15 +258,12 @@ else
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private string? _historySessionId;
-    private bool _completedExpanded;
     private Snackbar? _undoSnackbar;
     private double? _bodyweightKg;
 
     private sealed class SetInputsDictionary : Dictionary<System.ValueTuple<int, int>, (double? Weight, int? Reps)> { }
-    private sealed class OriginalValuesDictionary : Dictionary<System.ValueTuple<int, int>, (double Weight, int Reps)> { }
 
     private SetInputsDictionary _setInputs = new();
-    private OriginalValuesDictionary _originalValues = new();
     private int _activeExerciseIndex = 0;
     private Dictionary<int, int> _activeSetIndices = new();
 
@@ -346,13 +279,10 @@ else
         _dotNetRef = DotNetObjectReference.Create(this);
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
 
-        try
+        await InvokeAudioAsync(async () =>
         {
             _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/workoutTimer.js");
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
+        });
 
         await EnsureWorkoutStartedAsync();
     }
@@ -415,7 +345,7 @@ else
         {
             var exercise = plan.Exercises[e];
             var lastMetrics = await HistoryRepository.GetLatestSetMetricsForExerciseAsync(plan.Id, exercise.Name);
-            var initialReps = lastMetrics?.Reps ?? exercise.DefaultReps ?? 10;
+            var initialReps = lastMetrics?.Reps ?? exercise.DefaultReps ?? DefaultReps;
             var initialWeight = lastMetrics?.WeightKg ?? exercise.DefaultWeightKg ?? 0;
 
             for (int s = 0; s < exercise.SetCount; s++)
@@ -423,23 +353,10 @@ else
                 _setInputs[(e, s)] = (initialWeight, initialReps);
             }
 
-            int firstUncompletedSetIdx = -1;
-            bool exerciseDone = true;
-            for (int s = 0; s < exercise.SetCount; s++)
-            {
-                if (!SessionService.IsSetCompleted(e, s))
-                {
-                    exerciseDone = false;
-                    if (firstUncompletedSetIdx == -1)
-                    {
-                        firstUncompletedSetIdx = s;
-                    }
-                }
-            }
-
+            var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(e);
             _activeSetIndices[e] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
 
-            if (!exerciseDone && firstUncompletedExIdx == -1)
+            if (!SessionService.IsExerciseDone(e) && firstUncompletedExIdx == -1)
             {
                 firstUncompletedExIdx = e;
             }
@@ -482,16 +399,7 @@ else
             // Re-evaluate first uncompleted set index after loading session sets
             for (int e = 0; e < plan.Exercises.Count; e++)
             {
-                var exercise = plan.Exercises[e];
-                int firstUncompletedSetIdx = -1;
-                for (int s = 0; s < exercise.SetCount; s++)
-                {
-                    if (!SessionService.IsSetCompleted(e, s))
-                    {
-                        firstUncompletedSetIdx = s;
-                        break;
-                    }
-                }
+                var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(e);
                 _activeSetIndices[e] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
             }
         }
@@ -535,39 +443,12 @@ else
         return list;
     }
 
-    private string RestTimerPanelClass =>
-        _isRestComplete
-            ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
-            : "rest-timer-panel rest-timer-panel--active";
-
-    private string RestDigitsClass =>
-        SessionService.IsRestPaused
-            ? "rest-timer-digits--paused"
-            : SessionService.RestSecondsRemaining <= 3 && !SessionService.IsRestPaused
-                ? "rest-timer-digits--urgent"
-                : "";
-
-    private string RestEdgeFillClass =>
-        SessionService.IsRestPaused
-            ? "rest-timer-edge-fill--paused"
-            : SessionService.RestSecondsRemaining <= 3
-                ? "rest-timer-edge-fill--urgent"
-                : "";
-
-    private string RestTimerAriaLabel =>
-        SessionService.IsRestPaused
-            ? $"Rest paused, {FormatTime(SessionService.RestSecondsRemaining)} remaining"
-            : $"Rest, {FormatTime(SessionService.RestSecondsRemaining)} remaining";
-
-    private string RestTimerDisplayAriaLabel =>
-        _isRestComplete ? "Rest complete" : RestTimerAriaLabel;
-
-    private string RestTimerEdgeFillClass => _isRestComplete ? "" : RestEdgeFillClass;
+    private static double GetProgressValue(int completed, int total) =>
+        total == 0 ? 0 : (completed * 100.0) / total;
 
     private async Task ConfirmLeaveWorkoutInProgress()
     {
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Leave workout?",
             "Your progress is saved. You can continue this workout from home.",
             confirmText: "Leave",
@@ -584,13 +465,12 @@ else
         await StopJsTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         SessionService.EndWorkout();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo(AppRoutes.Home);
     }
 
     private async Task EndWorkoutClick()
     {
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "End workout?",
             "Save this session and return home?",
             confirmText: "End",
@@ -602,10 +482,9 @@ else
     private async Task DiscardWorkoutClick()
     {
         var planName = SessionService.CurrentPlan?.Name ?? "Workout";
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Discard workout?",
-            $"Remove this in-progress session for '{planName}' and all logged sets? This cannot be undone.",
+            ConfirmDialogService.DiscardWorkoutMessage(planName),
             confirmText: "Discard",
             cancelText: "Cancel",
             confirmColor: Color.Error);
@@ -628,53 +507,18 @@ else
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"History DeleteSession error: {ex}");
+                Logger.LogError(ex, "History DeleteSession error");
             }
         }
 
         _historySessionId = null;
         SessionService.EndWorkout();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo(AppRoutes.Home);
     }
-
-    private static double GetProgressValue(int completed, int total) =>
-        total == 0 ? 0 : (completed * 100.0) / total;
 
     private void ToggleAccordion(int exerciseIndex)
     {
         _activeExerciseIndex = _activeExerciseIndex == exerciseIndex ? -1 : exerciseIndex;
-    }
-
-    private void HandleWeightChanged(int exIdx, int setIdx, object? val)
-    {
-        var key = (exIdx, setIdx);
-        var current = _setInputs.GetValueOrDefault(key, (null, null));
-        if (double.TryParse(val?.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var w))
-        {
-            _setInputs[key] = (w, current.Reps);
-        }
-        else if (double.TryParse(val?.ToString(), out w))
-        {
-            _setInputs[key] = (w, current.Reps);
-        }
-        else
-        {
-            _setInputs[key] = (null, current.Reps);
-        }
-    }
-
-    private void HandleRepsChanged(int exIdx, int setIdx, object? val)
-    {
-        var key = (exIdx, setIdx);
-        var current = _setInputs.GetValueOrDefault(key, (null, null));
-        if (int.TryParse(val?.ToString(), out var r))
-        {
-            _setInputs[key] = (current.Weight, r);
-        }
-        else
-        {
-            _setInputs[key] = (current.Weight, null);
-        }
     }
 
     private void HandleWeightStepperChanged(int exIdx, int setIdx, double? val)
@@ -689,46 +533,6 @@ else
         var key = (exIdx, setIdx);
         var current = _setInputs.GetValueOrDefault(key, (null, null));
         _setInputs[key] = (current.Weight, val.HasValue ? (int)Math.Round(val.Value) : null);
-    }
-
-
-    private void HandleFocus(int exIdx, int setIdx, bool isWeight)
-    {
-        var key = (exIdx, setIdx);
-        var current = _setInputs.GetValueOrDefault(key, (null, null));
-        var plan = SessionService.CurrentPlan;
-        
-        if (plan != null && exIdx >= 0 && exIdx < plan.Exercises.Count)
-        {
-            var exercise = plan.Exercises[exIdx];
-            var lastWeight = current.Weight ?? (_originalValues.TryGetValue(key, out var orig) ? orig.Weight : (exercise.DefaultWeightKg ?? 0.0));
-            var lastReps = current.Reps ?? (_originalValues.TryGetValue(key, out orig) ? orig.Reps : (exercise.DefaultReps ?? 10));
-            
-            _originalValues[key] = (lastWeight, lastReps);
-        }
-
-        if (isWeight)
-            _setInputs[key] = (null, current.Reps);
-        else
-            _setInputs[key] = (current.Weight, null);
-    }
-
-    private void HandleBlur(int exIdx, int setIdx, bool isWeight)
-    {
-        var key = (exIdx, setIdx);
-        var current = _setInputs.GetValueOrDefault(key, (null, null));
-        
-        if (_originalValues.TryGetValue(key, out var original))
-        {
-            if (isWeight && current.Weight == null)
-            {
-                _setInputs[key] = (original.Weight, current.Reps);
-            }
-            else if (!isWeight && current.Reps == null)
-            {
-                _setInputs[key] = (current.Weight, original.Reps);
-            }
-        }
     }
 
     private async Task ToggleSetComplete(int exerciseIndex, int setIndex)
@@ -765,7 +569,7 @@ else
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error unlogging set: {ex}");
+                Logger.LogError(ex, "Error unlogging set");
             }
             finally
             {
@@ -784,11 +588,8 @@ else
                 var inputKey = (exerciseIndex, setIndex);
                 var inputs = _setInputs.GetValueOrDefault(inputKey, (null, null));
 
-                var origWeight = _originalValues.TryGetValue(inputKey, out var orig) ? orig.Weight : (exercise.DefaultWeightKg ?? 0.0);
-                var origReps = _originalValues.TryGetValue(inputKey, out orig) ? orig.Reps : (exercise.DefaultReps ?? 10);
-                
-                var finalWeight = inputs.Weight ?? origWeight;
-                var finalReps = inputs.Reps ?? origReps;
+                var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
+                var finalReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
 
                 var willBeLastSetOfWorkout = SessionService.WouldCompleteWorkout(exerciseIndex, setIndex);
 
@@ -802,15 +603,7 @@ else
                 SessionService.CompleteSet(exerciseIndex, setIndex);
 
                 // Auto active set update
-                int firstUncompletedSetIdx = -1;
-                for (int s = 0; s < exercise.SetCount; s++)
-                {
-                    if (!SessionService.IsSetCompleted(exerciseIndex, s))
-                    {
-                        firstUncompletedSetIdx = s;
-                        break;
-                    }
-                }
+                var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(exerciseIndex);
                 _activeSetIndices[exerciseIndex] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
 
                 if (_historySessionId != null)
@@ -820,7 +613,6 @@ else
                 }
 
                 _setInputs[inputKey] = (finalWeight, finalReps);
-                _originalValues.Remove(inputKey);
 
                 // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
                 for (int s = 0; s < exercise.SetCount; s++)
@@ -851,50 +643,14 @@ else
                 await ScheduleRestNotificationIfRestingAsync();
 
                 // Auto accordion transition
-                bool exerciseDone = true;
-                for (int s = 0; s < exercise.SetCount; s++)
+                if (SessionService.IsExerciseDone(exerciseIndex))
                 {
-                    if (!SessionService.IsSetCompleted(exerciseIndex, s))
-                    {
-                        exerciseDone = false;
-                        break;
-                    }
-                }
-
-                if (exerciseDone)
-                {
-                    int nextIdx = -1;
-                    for (int e = 0; e < plan.Exercises.Count; e++)
-                    {
-                        bool thisExDone = true;
-                        for (int s = 0; s < plan.Exercises[e].SetCount; s++)
-                        {
-                            if (!SessionService.IsSetCompleted(e, s))
-                            {
-                                thisExDone = false;
-                                break;
-                            }
-                        }
-                        if (!thisExDone)
-                        {
-                            nextIdx = e;
-                            break;
-                        }
-                    }
-
-                    if (nextIdx != -1)
-                    {
-                        _activeExerciseIndex = nextIdx;
-                    }
-                    else
-                    {
-                        _activeExerciseIndex = -1;
-                    }
+                    _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error logging set: {ex}");
+                Logger.LogError(ex, "Error logging set");
             }
             finally
             {
@@ -947,19 +703,11 @@ else
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"History undo set log error: {ex}");
+                Logger.LogError(ex, "History undo set log error");
             }
         }
 
         await SafeStateHasChangedAsync();
-    }
-
-    private void SelectActiveSet(int exerciseIndex, int setIndex)
-    {
-        if (!SessionService.IsSetCompleted(exerciseIndex, setIndex))
-        {
-            _activeSetIndices[exerciseIndex] = setIndex;
-        }
     }
 
     private async Task PauseRest()
@@ -1042,12 +790,12 @@ else
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Rest notification error: {ex}");
+            Logger.LogError(ex, "Rest notification error");
         }
 
         try
         {
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
+            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(RestCompleteVibrationMs));
         }
         catch
         {
@@ -1065,17 +813,12 @@ else
         }
     }
 
-    private async Task UnlockAudioContextAsync()
-    {
-        try
+    private async Task UnlockAudioContextAsync() =>
+        await InvokeAudioAsync(async () =>
         {
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("unlockAudioContext");
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
-    }
+        });
 
     private async Task ScheduleRestNotificationIfRestingAsync()
     {
@@ -1095,11 +838,18 @@ else
         {
             if (_disposed) return;
 
-            await StopJsTimerAsync();
-            _isRestComplete = true;
-            await SafeStateHasChangedAsync();
-            await PlayRestCompleteAlertsAsync();
-            await SafeStateHasChangedAsync();
+            try
+            {
+                await StopJsTimerAsync();
+                _isRestComplete = true;
+                await SafeStateHasChangedAsync();
+                await PlayRestCompleteAlertsAsync();
+                await SafeStateHasChangedAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Background rest completion error");
+            }
         });
     }
 
@@ -1107,7 +857,7 @@ else
     {
         try
         {
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(800));
+            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(WorkoutCompleteVibrationMs));
 
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("playWorkoutCompleteSound");
@@ -1131,12 +881,12 @@ else
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"History EndSession error: {ex}");
+            Logger.LogError(ex, "History EndSession error");
         }
 
         _historySessionId = null;
         SessionService.EndWorkout();
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo(AppRoutes.Home);
     }
 
     /// <summary>
@@ -1168,119 +918,56 @@ else
 
     private async Task StartJsTimerAsync(int? durationSeconds = null)
     {
-        if (_disposed) return;
+        if (_audioModule == null || _dotNetRef == null) return;
 
-        try
-        {
-            if (_audioModule != null && _dotNetRef != null)
-            {
-                var totalMs = (durationSeconds ?? SessionService.ActiveRestDurationSeconds) * 1000;
-                await _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, 1000, totalMs);
-            }
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
+        var totalMs = (durationSeconds ?? SessionService.ActiveRestDurationSeconds) * RestTickIntervalMs;
+        await InvokeAudioAsync(() => _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, RestTickIntervalMs, totalMs).AsTask());
     }
 
-    private async Task StopJsTimerAsync()
-    {
-        try
+    private async Task StopJsTimerAsync() =>
+        await InvokeAudioAsync(async () =>
         {
             if (_audioModule != null)
                 await _audioModule.InvokeVoidAsync("stopRestTimer");
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
-    }
+        });
 
     private async Task ResumeJsTimerAsync(int durationSeconds)
     {
-        if (_disposed || durationSeconds <= 0) return;
+        if (durationSeconds <= 0) return;
+        if (_audioModule == null || _dotNetRef == null) return;
 
-        try
-        {
-            if (_audioModule != null && _dotNetRef != null)
-                await _audioModule.InvokeVoidAsync("resumeRestTimer", _dotNetRef, 1000, durationSeconds * 1000);
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
+        await InvokeAudioAsync(() => _audioModule.InvokeVoidAsync("resumeRestTimer", _dotNetRef, RestTickIntervalMs, durationSeconds * RestTickIntervalMs).AsTask());
     }
 
-    private async Task CallJsVoidAsync(string method)
+    private async Task CallJsVoidAsync(string method) =>
+        await InvokeAudioAsync(async () =>
+        {
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync(method);
+        });
+
+    /// <summary>Invokes a JS call on the workout timer module, swallowing teardown-related exceptions.</summary>
+    private async Task InvokeAudioAsync(Func<Task> action)
     {
         if (_disposed) return;
 
         try
         {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync(method);
+            await action();
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
-    }
-
-    private static string FormatTime(int totalSeconds)
-    {
-        if (totalSeconds < 60)
-        {
-            return $"{totalSeconds}";
-        }
-        var m = totalSeconds / 60;
-        var s = totalSeconds % 60;
-        return $"{m:D2}:{s:D2}";
-    }
-
-    private static string FormatMinutes(int totalSeconds)
-    {
-        return $"{totalSeconds / 60:D2}";
-    }
-
-    private static string FormatSecondsTens(int totalSeconds)
-    {
-        var s = totalSeconds % 60;
-        return $"{s / 10}";
-    }
-
-    private static string FormatSecondsUnits(int totalSeconds)
-    {
-        var s = totalSeconds % 60;
-        return $"{s % 10}";
     }
 
     private string FormatSetDisplay(ExerciseLogType logType, double? weight, int reps)
     {
         return logType switch
         {
-            ExerciseLogType.BodyweightReps => GetBodyweightSetDisplayText(weight, reps),
+            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, reps),
             ExerciseLogType.Duration => $"{reps}s",
-            _ => $"{weight?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) ?? "0"} kg × {reps} reps"
+            _ => $"{(weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "0")} kg × {reps} reps"
         };
-    }
-
-    private string GetBodyweightSetDisplayText(double? weight, int reps)
-    {
-        if (weight == null || weight.Value == 0)
-        {
-            return _bodyweightKg.HasValue 
-                ? $"BW ({_bodyweightKg.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
-                : $"BW × {reps} reps";
-        }
-        else if (weight.Value > 0)
-        {
-            return _bodyweightKg.HasValue
-                ? $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(weight.Value + _bodyweightKg.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
-                : $"BW + {weight.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
-        }
-        else
-        {
-            return _bodyweightKg.HasValue
-                ? $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg ({(_bodyweightKg.Value - Math.Abs(weight.Value)).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg) × {reps} reps"
-                : $"BW - {Math.Abs(weight.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} kg × {reps} reps";
-        }
     }
 
     private string? GetBodyweightStepperDisplayText(double? value)
@@ -1288,25 +975,23 @@ else
         if (value == null || value.Value == 0)
             return "BW";
         if (value.Value > 0)
-            return $"+{value.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
-        return $"-{Math.Abs(value.Value).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}";
+            return $"+{ExerciseWeightFormatter.FormatKg(value.Value)}";
+        return $"-{ExerciseWeightFormatter.FormatKg(Math.Abs(value.Value))}";
     }
 
     public async ValueTask DisposeAsync()
     {
+        await InvokeAudioAsync(async () =>
+        {
+            if (_audioModule != null)
+                await _audioModule.InvokeVoidAsync("stopRestTimer");
+        });
+
         _disposed = true;
         HideUndoToast();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         RestNotifications.CancelAllRestNotifications();
         SessionService.CancelRest();
-        try
-        {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("stopRestTimer");
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
         _dotNetRef?.Dispose();
         if (_audioModule != null)
         {
@@ -1329,11 +1014,6 @@ else
         }
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
-    }
-
-    private void ToggleCompletedExpanded()
-    {
-        _completedExpanded = !_completedExpanded;
     }
 
 }

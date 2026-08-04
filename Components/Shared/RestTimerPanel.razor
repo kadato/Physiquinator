@@ -1,0 +1,143 @@
+@* Rest countdown panel with pause / resume / reset / skip controls. *@
+
+<MudPaper Class="@PanelClass" Elevation="2">
+    <div class="rest-timer-active">
+        <div class="rest-timer-display" aria-live="polite" aria-label="@DisplayAriaLabel">
+            @if (IsRestComplete)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Check"
+                         Class="rest-timer-check"
+                         aria-hidden="true" />
+            }
+            else
+            {
+                <div class='rest-timer-digits @DigitsClass @(60 > RestSecondsRemaining ? "rest-timer-digits--seconds-only" : "") @(10 > RestSecondsRemaining ? "rest-timer-digits--single-digit" : "")' role="timer">
+                    <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(RestSecondsRemaining)</span>
+                    <span class="rest-timer-separator">:</span>
+                    <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(RestSecondsRemaining)</span>
+                    <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(RestSecondsRemaining)</span>
+                </div>
+            }
+        </div>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="4" Class="rest-timer-controls">
+            @if (IsRestComplete)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                               Color="Color.Default"
+                               aria-label="Reset rest"
+                               OnClick="OnReset"
+                               Size="Size.Large" />
+                <div class="rest-timer-controls__slot" aria-hidden="true"></div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="OnSkip"
+                           aria-label="Continue to next set"
+                           Size="Size.Large">
+                    Continue
+                </MudButton>
+            }
+            else
+            {
+                @if (IsRestPaused)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                                   Color="Color.Success"
+                                   aria-label="Resume rest"
+                                   OnClick="OnResume"
+                                   Size="Size.Large" />
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Pause"
+                                   Color="Color.Info"
+                                   aria-label="Pause rest"
+                                   OnClick="OnPause"
+                                   Size="Size.Large" />
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                               Color="Color.Default"
+                               aria-label="Reset rest"
+                               OnClick="OnReset"
+                               Size="Size.Large" />
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="OnSkip"
+                           Size="Size.Large">
+                    Skip
+                </MudButton>
+            }
+        </MudStack>
+
+        <div class="rest-timer-edge-track" aria-hidden="true">
+            <div class="rest-timer-edge-fill @EdgeFillClass"></div>
+        </div>
+    </div>
+</MudPaper>
+
+@code {
+    private const int UrgentRestThresholdSeconds = 3;
+
+    [Parameter, EditorRequired]
+    public bool IsRestComplete { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool IsRestPaused { get; set; }
+
+    [Parameter, EditorRequired]
+    public int RestSecondsRemaining { get; set; }
+
+    [Parameter]
+    public EventCallback OnPause { get; set; }
+
+    [Parameter]
+    public EventCallback OnResume { get; set; }
+
+    [Parameter]
+    public EventCallback OnReset { get; set; }
+
+    [Parameter]
+    public EventCallback OnSkip { get; set; }
+
+    private string PanelClass =>
+        IsRestComplete
+            ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
+            : "rest-timer-panel rest-timer-panel--active";
+
+    private string DigitsClass =>
+        IsRestPaused
+            ? "rest-timer-digits--paused"
+            : RestSecondsRemaining <= UrgentRestThresholdSeconds
+                ? "rest-timer-digits--urgent"
+                : "";
+
+    private string EdgeFillClass =>
+        IsRestPaused
+            ? "rest-timer-edge-fill--paused"
+            : RestSecondsRemaining <= UrgentRestThresholdSeconds
+                ? "rest-timer-edge-fill--urgent"
+                : "";
+
+    private string DisplayAriaLabel =>
+        IsRestComplete
+            ? "Rest complete"
+            : IsRestPaused
+                ? $"Rest paused, {FormatTime(RestSecondsRemaining)} remaining"
+                : $"Rest, {FormatTime(RestSecondsRemaining)} remaining";
+
+    private static string FormatTime(int totalSeconds)
+    {
+        if (totalSeconds < 60)
+            return $"{totalSeconds}";
+
+        var m = totalSeconds / 60;
+        var s = totalSeconds % 60;
+        return $"{m:D2}:{s:D2}";
+    }
+
+    private static string FormatMinutes(int totalSeconds) => $"{totalSeconds / 60:D2}";
+
+    private static string FormatSecondsTens(int totalSeconds) => $"{totalSeconds % 60 / 10}";
+
+    private static string FormatSecondsUnits(int totalSeconds) => $"{totalSeconds % 60 % 10}";
+}

@@ -11,6 +11,8 @@
 @inject UserProfileService UserProfileService
 @inject IDemoSeedPreferences DemoSeedPreferences
 @inject IJSRuntime JS
+@inject WorkoutStatsService StatsService
+@inject FileTransferService FileTransfer
 
 <PageTitle>Home</PageTitle>
 
@@ -46,7 +48,7 @@
                            FullWidth="true"
                            Class="home-hero__continue"
                            StartIcon="@Icons.Material.Filled.PlayArrow"
-                           OnClick="@(() => Navigation.NavigateTo($"/workout/{heroPlanId}"))">
+                           OnClick="@(() => Navigation.NavigateTo(AppRoutes.Workout(heroPlanId)))">
                     Continue workout
                 </MudButton>
             </MudStack>
@@ -91,13 +93,13 @@
         }
         else
         {
-            <div id="home-plan-sortable-list" class="home-plan-list">
-                @foreach (var plan in _plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt))
+            <div id="@HomePlanSortableListId" class="home-plan-list">
+                @foreach (var plan in SortedPlans)
                 {
                     <PlanCard PlanName="@plan.Name"
                               ExerciseCount="@plan.Exercises.Count"
                               OnStart="@(() => StartWorkoutAsync(plan.Id, plan.Name))"
-                              OnEdit="@(() => Navigation.NavigateTo($"/plan/{plan.Id}"))"
+                              OnEdit="@(() => Navigation.NavigateTo(AppRoutes.Plan(plan.Id)))"
                               OnExport="@(() => ExportSinglePlan(plan.Id, plan.Name))"
                               OnDelete="@(() => DeletePlan(plan.Id, plan.Name))" />
                 }
@@ -109,6 +111,7 @@
 
 @code {
     private const int HomeStatsWeeks = 12;
+    private const string HomePlanSortableListId = "home-plan-sortable-list";
 
     private List<WorkoutPlan>? _plans;
     private WorkoutSessionLogEntity? _inProgressSession;
@@ -125,28 +128,26 @@
             ? "—"
             : UiDateFormats.LocalDateCompact(_lastSession.StartedAtUtc);
 
+    private IEnumerable<WorkoutPlan> SortedPlans =>
+        (_plans ?? []).OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt);
+
     protected override async Task OnInitializedAsync()
     {
         var endLocal = DateOnly.FromDateTime(DateTime.Today);
-        var (utcStart, utcEndExclusive) = ActivityHeatmap.GetHeatmapQueryUtcBounds(endLocal, HomeStatsWeeks);
-        var gridStart = ActivityHeatmap.GetMondayOfWeek(endLocal).AddDays(-7 * (HomeStatsWeeks - 1));
 
+        var summaryTask = StatsService.GetSummaryAsync(endLocal, HomeStatsWeeks);
         var plansTask = PlanService.GetAllPlansAsync();
-        var activityTask = HistoryRepository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
         var recentTask = HistoryRepository.GetRecentSessionsAsync(1);
         var inProgressTask = HistoryRepository.GetAnyInProgressSessionAsync();
 
-        await Task.WhenAll(plansTask, activityTask, recentTask, inProgressTask);
+        await Task.WhenAll(summaryTask, plansTask, recentTask, inProgressTask);
 
+        (_summary, _) = await summaryTask;
         _plans = await plansTask;
-        var activityByDay = await activityTask;
-        _summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart);
         var recent = await recentTask;
         _lastSession = recent.FirstOrDefault();
         _inProgressSession = await inProgressTask;
-        _inProgressPlanId = _inProgressSession != null && Guid.TryParse(_inProgressSession.WorkoutPlanId, out var g)
-            ? g
-            : null;
+        _inProgressPlanId = _inProgressSession?.TryGetPlanId();
         _isLoading = false;
     }
 
@@ -155,8 +156,7 @@
         var open = await HistoryRepository.GetInProgressSessionForPlanAsync(planId);
         if (open != null)
         {
-            var continueExisting = await ConfirmDialogService.ConfirmAsync(
-                DialogService,
+            var continueExisting = await DialogService.ConfirmAsync(
                 "Workout in progress",
                 $"You have an unfinished session for '{planName}'.",
                 confirmText: "Continue",
@@ -165,21 +165,20 @@
 
             if (continueExisting)
             {
-                Navigation.NavigateTo($"/workout/{planId}");
+                Navigation.NavigateTo(AppRoutes.Workout(planId));
                 return;
             }
 
             await HistoryRepository.EndSessionAsync(open.Id);
             await RefreshInProgressAsync();
-            Navigation.NavigateTo($"/workout/{planId}?forceNew=true");
+            Navigation.NavigateTo(AppRoutes.Workout(planId, forceNew: true));
             return;
         }
 
         var anyOpen = await HistoryRepository.GetAnyInProgressSessionAsync();
-        if (anyOpen != null && Guid.TryParse(anyOpen.WorkoutPlanId, out var otherPlanId) && otherPlanId != planId)
+        if (anyOpen != null && anyOpen.TryGetPlanId() is { } otherPlanId && otherPlanId != planId)
         {
-            var continueOther = await ConfirmDialogService.ConfirmAsync(
-                DialogService,
+            var continueOther = await DialogService.ConfirmAsync(
                 "Another workout in progress",
                 $"You have an unfinished session for '{anyOpen.PlanName}'. Continue that workout?",
                 confirmText: "Continue",
@@ -188,7 +187,7 @@
 
             if (continueOther)
             {
-                Navigation.NavigateTo($"/workout/{otherPlanId}");
+                Navigation.NavigateTo(AppRoutes.Workout(otherPlanId));
                 return;
             }
 
@@ -196,15 +195,13 @@
             await RefreshInProgressAsync();
         }
 
-        Navigation.NavigateTo($"/workout/{planId}");
+        Navigation.NavigateTo(AppRoutes.Workout(planId));
     }
 
     private async Task RefreshInProgressAsync()
     {
         _inProgressSession = await HistoryRepository.GetAnyInProgressSessionAsync();
-        _inProgressPlanId = _inProgressSession != null && Guid.TryParse(_inProgressSession.WorkoutPlanId, out var g)
-            ? g
-            : null;
+        _inProgressPlanId = _inProgressSession?.TryGetPlanId();
     }
 
     private async Task DeleteInProgressWorkoutAsync()
@@ -212,10 +209,9 @@
         if (_inProgressSession == null) return;
 
         var planName = _inProgressSession.PlanName;
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Discard workout",
-            $"Remove the in-progress session for '{planName}' and all logged sets? This cannot be undone.",
+            ConfirmDialogService.DiscardWorkoutMessage(planName),
             confirmText: "Discard",
             cancelText: "Cancel",
             confirmColor: Color.Error);
@@ -230,8 +226,7 @@
 
     private async Task DeletePlan(Guid planId, string planName)
     {
-        var confirmed = await ConfirmDialogService.ConfirmAsync(
-            DialogService,
+        var confirmed = await DialogService.ConfirmAsync(
             "Delete plan",
             $"Delete '{planName}'? This cannot be undone.",
             confirmText: "Delete",
@@ -250,26 +245,15 @@
         try
         {
             var json = await PlanService.ExportPlanToJsonAsync(planId);
-            var safeFileName = string.Join("_", planName.Split(Path.GetInvalidFileNameChars()));
-            var fileName = $"{safeFileName}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            await SaveFile(fileName, json);
+            await FileTransfer.ExportJsonAsync(
+                FileTransferService.JsonFileName(FileTransferService.SafeFileStem(planName)),
+                json);
             Snackbar.Add($"'{planName}' exported.", Severity.Success);
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
         }
-    }
-
-    private static async Task SaveFile(string fileName, string content)
-    {
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllTextAsync(filePath, content);
-        await Share.RequestAsync(new ShareFileRequest
-        {
-            Title = "Export Workout Plan",
-            File = new ShareFile(filePath)
-        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -312,29 +296,12 @@
 
     private async ValueTask<bool> InitSortableAsync()
     {
-        try
-        {
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            await DestroySortableAsync();
-            return await JS.InvokeAsync<bool>("homePlansReorder.init", "home-plan-sortable-list", _dotNetRef);
-        }
-        catch (JSException)
-        {
-            return false;
-        }
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        return await SortableJsInterop.TryInitAsync(JS, HomePlanSortableListId, _dotNetRef, "homePlansReorder.init", "homePlansReorder.destroy");
     }
 
-    private async ValueTask DestroySortableAsync()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("homePlansReorder.destroy");
-        }
-        catch (JSException)
-        {
-            // Scripts not ready yet
-        }
-    }
+    private async ValueTask DestroySortableAsync() =>
+        await SortableJsInterop.DestroyAsync(JS, "homePlansReorder.destroy");
 
     [JSInvokable]
     public async Task OnPlanReordered(int oldIndex, int newIndex)
@@ -346,17 +313,13 @@
             return;
 
         // Perform local reordering
-        var sortedPlans = _plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt).ToList();
+        var sortedPlans = SortedPlans.ToList();
         var itemToMove = sortedPlans[oldIndex];
         sortedPlans.RemoveAt(oldIndex);
         sortedPlans.Insert(newIndex, itemToMove);
 
-        // Update SortOrder on all plans
-        for (int i = 0; i < sortedPlans.Count; i++)
-        {
-            sortedPlans[i].SortOrder = i;
-            await PlanService.SavePlanAsync(sortedPlans[i]);
-        }
+        // Persist the new ordering in a single transaction
+        await PlanService.ReorderPlansAsync(sortedPlans.Select(p => p.Id).ToList());
 
         // Reload plans from DB to make sure they are in sync
         _plans = await PlanService.GetAllPlansAsync();

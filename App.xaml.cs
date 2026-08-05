@@ -1,4 +1,4 @@
-using Physiquinator.Services;
+using Physiquinator.Core.Services;
 
 namespace Physiquinator;
 

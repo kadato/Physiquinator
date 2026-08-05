@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
-using Physiquinator.Data;
+using Physiquinator.Core.Services;
 using Physiquinator.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
@@ -47,37 +47,18 @@ public static class MauiProgram
             config.SnackbarConfiguration.ShowCloseIcon = true;
         });
 
-        var appPreferences = new AppPreferences();
-        var dbPathProvider = new DatabasePathProvider();
-        builder.Services.AddSingleton<IAppPreferences>(appPreferences);
-        builder.Services.AddSingleton<IDatabasePathProvider>(dbPathProvider);
+        builder.Services.AddPhysiquinatorServices(
+            new AppPreferences(),
+            new DatabasePathProvider());
 
-        var activeIdStr = appPreferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
-        Guid activeId = Guid.TryParse(activeIdStr, out Guid g) ? g : UserProfileService.DemoProfileId;
-        var dbPath = dbPathProvider.GetDatabasePath(activeId);
-        builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddSingleton(new Data.AppDatabase(dbPath));
-        builder.Services.AddSingleton<Data.WorkoutPlanRepository>();
-        builder.Services.AddSingleton<Data.WorkoutHistoryRepository>();
-        builder.Services.AddSingleton<Services.WorkoutHistoryService>();
-        builder.Services.AddSingleton<Services.WorkoutPlanService>();
-        builder.Services.AddSingleton<Services.WorkoutStatsService>();
-        builder.Services.AddSingleton<Services.FileTransferService>();
-        builder.Services.AddSingleton<Services.WorkoutSessionService>();
-        builder.Services.AddSingleton<Services.RestAlertSettingsService>();
-        builder.Services.AddSingleton<Services.RestNotificationService>();
-        builder.Services.AddSingleton<Services.IDemoSeedPreferences, Services.MauiDemoSeedPreferences>();
-        builder.Services.AddSingleton<Services.DemoDataSeeder>();
-        builder.Services.AddScoped<Services.AppDataResetService>();
-        builder.Services.AddScoped<Services.ThemeService>();
-        builder.Services.AddScoped<Services.IThemeInitialization>(sp => sp.GetRequiredService<Services.ThemeService>());
-        builder.Services.AddScoped<Services.AppInitializationService>();
-        builder.Services.AddSingleton<Services.UserProfileService>();
+        builder.Services.AddSingleton<Physiquinator.Core.Services.INotificationService, RestNotificationService>();
+        builder.Services.AddSingleton<IVibrationService, MauiVibrationService>();
+        builder.Services.AddSingleton<IFileTransferService, FileTransferService>();
 
 #if WINDOWS
         if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
         {
-            builder.Services.AddSingleton<Services.ScreenshotServer>();
+            builder.Services.AddSingleton<ScreenshotServer>();
         }
 #endif
 

@@ -1,6 +1,7 @@
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
+using Physiquinator.Core.Services;
 
 namespace Physiquinator.Services;
 
@@ -8,7 +9,7 @@ namespace Physiquinator.Services;
 /// Schedules and shows native rest alerts (Android/iOS). WebView Web Audio is unreliable on mobile;
 /// local notifications provide sound when the app is backgrounded and a fallback when foregrounded.
 /// </summary>
-public sealed class RestNotificationService(RestAlertSettingsService settings, TimeProvider time)
+public sealed class RestNotificationService(RestAlertSettingsService settings, TimeProvider time) : Physiquinator.Core.Services.INotificationService
 {
     private readonly RestAlertSettingsService _settings = settings;
     private readonly TimeProvider _time = time;

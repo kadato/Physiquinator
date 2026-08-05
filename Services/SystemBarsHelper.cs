@@ -45,7 +45,14 @@ public static class SystemBarsHelper
     }
 
 #if ANDROID
+    private const int MaxDecorViewRetries = 5;
+
     private static void ApplyAndroid(Color pageBackground, bool isDark)
+    {
+        ApplyAndroid(pageBackground, isDark, retriesRemaining: MaxDecorViewRetries);
+    }
+
+    private static void ApplyAndroid(Color pageBackground, bool isDark, int retriesRemaining)
     {
         var activity = Platform.CurrentActivity;
         var window = activity?.Window;
@@ -80,7 +87,12 @@ public static class SystemBarsHelper
             var decorView = window.DecorView;
             if (decorView == null)
             {
-                new Handler(Looper.MainLooper!).Post(() => ApplyAndroid(pageBackground, isDark));
+                if (retriesRemaining <= 0)
+                {
+                    return;
+                }
+
+                new Handler(Looper.MainLooper!).Post(() => ApplyAndroid(pageBackground, isDark, retriesRemaining - 1));
                 return;
             }
 

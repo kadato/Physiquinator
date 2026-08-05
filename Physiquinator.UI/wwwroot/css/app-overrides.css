@@ -640,7 +640,7 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
     background: color-mix(in srgb, var(--mud-palette-surface) 55%, transparent);
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
 }
 
@@ -678,7 +678,7 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
 }
 
 .plan-add-exercise__input .mud-input-outlined-border {
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
 .plan-add-exercise__input input {
@@ -692,7 +692,7 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     height: 2.25rem;
     min-height: 2.25rem;
     padding: 0 0.875rem !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     font-size: 0.875rem;
     font-weight: 600;
     text-transform: none;
@@ -1001,7 +1001,7 @@ button.heatmap-cell:disabled {
 
 @media (max-width: 576px) {
     .activity-heatmap {
-        --heatmap-cell-size: 12px;
+        --heatmap-cell-size: 13px;
         --heatmap-gap: 4px;
         gap: 6px;
     }
@@ -1011,7 +1011,7 @@ button.heatmap-cell:disabled {
 /* Rest timer — global (MAUI WebView may not apply scoped Workout.razor.css) */
 .rest-timer-panel.mud-paper {
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
-    border-radius: 20px;
+    border-radius: 16px;
     background: var(--mud-palette-surface);
     transition:
         background 0.4s ease,
@@ -1026,7 +1026,7 @@ button.heatmap-cell:disabled {
 
 .rest-timer-panel--complete.mud-paper {
     border: 2px solid var(--mud-palette-success);
-    border-radius: 22px;
+    border-radius: 16px;
     background: linear-gradient(
         165deg,
         color-mix(in srgb, var(--mud-palette-success) 35%, transparent) 0%,
@@ -1176,10 +1176,10 @@ button.heatmap-cell:disabled {
 
 /* Icon Buttons (Play/Pause, Reset) */
 .rest-timer-controls .mud-icon-button {
-    width: 60px !important;
-    height: 60px !important;
-    padding: 12px !important;
-    border-radius: 18px !important;
+    width: 48px !important;
+    height: 48px !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
     background-color: color-mix(in srgb, var(--mud-palette-action-default) 8%, transparent);
     color: var(--mud-palette-text-secondary);
     box-shadow: 0 2px 8px color-mix(in srgb, #000 6%, transparent);
@@ -1216,10 +1216,11 @@ button.heatmap-cell:disabled {
 
 /* Text Buttons (Skip/Continue) */
 .rest-timer-controls .mud-button {
-    height: 60px !important;
-    min-width: 140px !important;
-    border-radius: 18px !important;
-    font-size: 1.1rem !important;
+    height: 48px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto;
+    border-radius: 12px !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
     text-transform: none !important;
     letter-spacing: 0.02em !important;
@@ -1237,8 +1238,8 @@ button.heatmap-cell:disabled {
 /* Control slot spacing consistency */
 .rest-timer-controls__slot {
     display: block;
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     flex-shrink: 0;
 }
 
@@ -1300,7 +1301,7 @@ button.heatmap-cell:disabled {
 
 .rest-timer-complete__action {
     font-weight: 700 !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     min-height: 3.25rem;
 }
 
@@ -1469,9 +1470,9 @@ button.heatmap-cell:disabled {
 }
 
 .exercise-progress-table .exercise-progress-table__open {
-    width: 1.75rem;
-    height: 1.75rem;
-    min-width: 1.75rem;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
     padding: 0;
     margin: 0 auto;
 }
@@ -1831,7 +1832,7 @@ button.heatmap-cell:disabled {
     background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
     color: var(--mud-palette-primary) !important;
     font-weight: 500 !important;
-    border-radius: 8px !important;
+    border-radius: 12px !important;
     transition: background-color 120ms ease, border-color 120ms ease !important;
 }
 
@@ -2135,52 +2136,32 @@ button.heatmap-cell:disabled {
     margin: 0 0.25rem;
 }
 
-/* Log Action Check Button */
-.log-check-btn {
+/* Completed set row: unlog action (red signals the log entry is removed) */
+.set-unlog-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid color-mix(in srgb, var(--mud-palette-text-secondary) 25%, transparent);
-    background-color: transparent;
-    color: var(--mud-palette-text-secondary);
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 30%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mud-palette-error) 7%, transparent);
+    color: var(--mud-palette-error);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: manipulation;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 120ms ease, border-color 120ms ease;
 }
 
-.log-check-btn:hover {
-    border-color: var(--mud-palette-primary);
-    color: var(--mud-palette-primary);
-    background-color: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
-    transform: scale(1.05);
-}
-
-.log-check-btn:active {
-    transform: scale(0.92);
-}
-
-@keyframes pop-check {
-    0% { transform: scale(0.8); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1.0); }
-}
-
-.log-check-btn--completed {
-    animation: pop-check 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    background-color: #10B981 !important;
-    border-color: #10B981 !important;
-    color: white !important;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-}
-
-.log-check-btn--completed:hover {
-    background-color: #059669 !important;
-    border-color: #059669 !important;
-    color: white !important;
+.set-unlog-btn:active {
+    background: color-mix(in srgb, var(--mud-palette-error) 15%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 50%, transparent);
 }
 
 .completed-icon {
@@ -2325,8 +2306,8 @@ button.heatmap-cell:disabled {
     border-color: var(--mud-palette-primary);
 }
 
-.icon-btn-round {
-    border-radius: 50%;
+.icon-btn-square {
+    border-radius: 12px;
 }
 
 .btn-premium-ghost {
@@ -2342,4 +2323,317 @@ button.heatmap-cell:disabled {
     padding: 2px 8px;
     border-radius: 4px;
     font-weight: 600;
+}
+
+/* ==========================================================================
+   Touch & small-screen tuning (Android-first: snappy, no hover-only chrome)
+   ========================================================================== */
+
+/* Remove the grey tap flash; the app provides its own :active feedback */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Taps register immediately (no double-tap zoom delay) on interactive elements.
+   Drag handles are excluded: they keep touch-action: none for reordering. */
+button,
+a,
+.mud-button-root,
+.mud-icon-button,
+.app-tab,
+.plan-exercise-row__body,
+.history-session-card,
+.exercise-accordion-header,
+.heatmap-cell,
+.set-metric-stepper__value,
+.set-metric-stepper__btn,
+.log-set-btn,
+.set-unlog-btn {
+    touch-action: manipulation;
+}
+
+/* No accidental text selection when long-pressing buttons, drag handles or values */
+.app-tab,
+.plan-card-handle,
+.plan-exercise-handle,
+.set-metric-stepper__value,
+.set-metric-stepper__btn,
+.log-set-btn,
+.set-unlog-btn,
+.set-values,
+.set-number-label,
+.rest-timer-digits,
+.home-stat,
+.history-stat {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Contain scroll chaining so the WebView never rubber-bands away from the app */
+.app-main-scroll {
+    overscroll-behavior-y: contain;
+}
+
+/* Sentence-case button labels everywhere (modern, compact on small screens) */
+.mud-button-label {
+    text-transform: none;
+}
+
+/* Stable numerals for stats, set values and the rest timer */
+.home-stat__value,
+.history-stat__value,
+.set-values,
+.rest-timer-digits {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Rest timer: "add rest time" square button, inline with the other controls */
+.rest-timer-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 52px;
+    min-width: 52px;
+    height: 48px;
+    min-height: 48px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+    color: var(--mud-palette-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.rest-timer-add-btn:active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+}
+
+/* Compact, refined snackbar toasts */
+.mud-snackbar {
+    min-width: min(288px, calc(100vw - 32px));
+    padding: 4px 10px 4px 14px;
+    border-radius: 16px;
+}
+
+/* Undo toast (Workout): floating pill, bottom-right, with a circular accent button */
+.undo-toast {
+    position: fixed;
+    right: calc(1rem + env(safe-area-inset-right, 0px));
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    z-index: 1400;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.25rem 0.25rem 0.25rem 1rem;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--mud-palette-lines-default);
+    box-shadow: 0 4px 24px color-mix(in srgb, #000 18%, transparent);
+    animation: undo-toast-in 160ms ease-out;
+}
+
+.undo-toast__message {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--mud-palette-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.undo-toast__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    background: var(--mud-palette-error);
+    color: #ffffff;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-error) 35%, transparent);
+    transition: background-color 120ms ease;
+}
+
+.undo-toast__btn:active {
+    background: color-mix(in srgb, var(--mud-palette-error) 82%, #000);
+}
+
+@keyframes undo-toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .undo-toast {
+        animation: none;
+    }
+}
+
+/* Page header back button meets the 44px touch-target guideline */
+.page-header .mud-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+}
+
+/* Plan card action buttons (edit + overflow menu) meet the touch-target guideline */
+.plan-card__actions .mud-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+}
+
+/* Skip rendering for off-screen list cards so long lists scroll smoothly */
+.history-session-card,
+.plan-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 76px;
+}
+
+/* ==========================================================================
+   Touch devices: drop hover-only styling so taps never leave ghost states
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+    .app-tab:hover {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .home-stat.mud-paper:hover,
+    .plan-card.mud-card:hover,
+    .app-page-container .mud-card:hover,
+    .settings-card.mud-paper:hover,
+    .history-stat.mud-paper:hover {
+        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    }
+
+    .history-session-card:hover {
+        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    }
+
+    .history-session-card:hover .history-session-card__chevron {
+        opacity: 0.5;
+    }
+
+    .history-stat.mud-paper:hover,
+    .settings-card.mud-paper:hover {
+        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    }
+
+    .settings-card--danger.mud-paper:hover {
+        border-color: color-mix(in srgb, var(--mud-palette-error) 25%, transparent);
+        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    }
+
+    .plan-card-handle:hover {
+        background: transparent;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .plan-exercise-row__body:hover {
+        background: transparent;
+    }
+
+    .premium-table .mud-table-body .mud-table-row:hover,
+    .premium-table .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+        background: transparent !important;
+    }
+
+    .premium-table .mud-table-body .mud-table-row:nth-of-type(odd) {
+        background: color-mix(in srgb, var(--mud-palette-text-primary) 1.5%, transparent) !important;
+    }
+
+    .exercise-chip.mud-chip-outlined:hover {
+        background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent);
+        border-color: color-mix(in srgb, var(--mud-palette-primary) 24%, transparent);
+    }
+
+    .workout-completed-header:hover {
+        background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface));
+        border-color: color-mix(in srgb, var(--mud-palette-success) 20%, transparent);
+        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    }
+
+    .premium-btn-filled.mud-button-root:hover {
+        background: var(--mud-palette-primary) !important;
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
+    }
+
+    .premium-btn-outlined.mud-button-root:hover {
+        background: color-mix(in srgb, var(--mud-palette-surface) 40%, transparent) !important;
+        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent) !important;
+    }
+
+    .premium-btn-error-outlined.mud-button-root:hover {
+        background: color-mix(in srgb, var(--mud-palette-error) 3%, transparent) !important;
+        border-color: color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
+    }
+
+    .rest-timer-controls .mud-icon-button:hover {
+        background-color: color-mix(in srgb, var(--mud-palette-action-default) 8%, transparent);
+        box-shadow: 0 2px 8px color-mix(in srgb, #000 6%, transparent);
+    }
+
+    .rest-timer-controls .mud-icon-button[aria-label*="Pause"]:hover {
+        background-color: color-mix(in srgb, var(--mud-palette-info) 10%, transparent) !important;
+    }
+
+    .rest-timer-controls .mud-icon-button[aria-label*="Resume"]:hover,
+    .rest-timer-controls .mud-icon-button[aria-label*="Play"]:hover {
+        background-color: color-mix(in srgb, var(--mud-palette-success) 10%, transparent) !important;
+    }
+
+    .rest-timer-controls .mud-button:hover {
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
+    }
+
+    .mud-table.mud-table-hover.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row:nth-of-type(odd):hover {
+        background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)) !important;
+    }
+}
+
+/* ==========================================================================
+   Visual consistency layer — one corner language everywhere
+   ========================================================================== */
+
+/* Buttons and icon buttons: square 12px corners, everywhere */
+.mud-button-root {
+    border-radius: 12px !important;
+}
+
+/* Chips: square 12px corners (match the button language) */
+.mud-chip {
+    border-radius: 12px !important;
+}
+
+/* Outlined text inputs: square 12px corners */
+.mud-input-outlined-border {
+    border-radius: 12px;
 }

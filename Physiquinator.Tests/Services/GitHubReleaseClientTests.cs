@@ -1,6 +1,6 @@
-using System.Net;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
+using System.Net;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;

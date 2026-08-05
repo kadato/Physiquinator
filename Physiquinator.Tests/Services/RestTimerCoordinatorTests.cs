@@ -113,7 +113,7 @@ public class RestTimerCoordinatorTests
     private static RestAlertSettingsService CreateSettings(InMemoryPreferences preferences)
     {
         var services = new ServiceCollection();
-        var provider = services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
         return new RestAlertSettingsService(preferences, CreateUserProfileService(preferences), provider);
     }
 
@@ -162,9 +162,9 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void StartWorkout_shows_ready_state_without_alarm()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
 
-        var state = Assert.Single(fix.Notifications.ShownStates);
+        WorkoutTimerState state = Assert.Single(fix.Notifications.ShownStates);
         Assert.Equal("Test", state.PlanName);
         Assert.Equal("Squat", state.NextExerciseName);
         Assert.Equal(1, state.NextSetIndex);
@@ -176,22 +176,22 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void StartRest_shows_timer_ui_and_schedules_alarm()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
-        var state = fix.Notifications.ShownStates[^1];
+        WorkoutTimerState state = fix.Notifications.ShownStates[^1];
         Assert.Equal(90, state.RestRemainingSeconds);
         Assert.NotNull(state.RestEndsAtUtc);
         Assert.Equal("Test", state.PlanName);
 
-        var alarm = Assert.Single(fix.Notifications.ScheduledAlarms);
+        DateTime alarm = Assert.Single(fix.Notifications.ScheduledAlarms);
         Assert.Equal(fix.Clock.GetUtcNow().UtcDateTime.AddSeconds(90), alarm);
     }
 
     [Fact]
     public void SkipRest_shows_ready_state_and_cancels_alarm()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
         fix.Session.SkipRest();
@@ -200,7 +200,7 @@ public class RestTimerCoordinatorTests
         Assert.Equal(0, fix.Notifications.HideUiCalls);
         Assert.True(fix.Notifications.CancelAlarmCalls > 0);
 
-        var state = fix.Notifications.ShownStates[^1];
+        WorkoutTimerState state = fix.Notifications.ShownStates[^1];
         Assert.Null(state.RestEndsAtUtc);
         Assert.Equal("Squat", state.NextExerciseName);
         Assert.Equal(1, state.NextSetIndex);
@@ -209,9 +209,9 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void EndWorkout_hides_ui_cancels_alarm_and_clears_snapshot()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
-        int hidesBefore = fix.Notifications.HideUiCalls;
+        var hidesBefore = fix.Notifications.HideUiCalls;
 
         fix.Session.EndWorkout();
 
@@ -225,13 +225,13 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void RestoreRestIfPending_restores_running_rest_from_snapshot()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
         // 40 seconds later the process restarts; only the snapshot survives.
         // The page flow: capture, load the workout, restore.
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
-        string? captured = restarted.Coordinator.CapturePendingSnapshot();
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
+        var captured = restarted.Coordinator.CapturePendingSnapshot();
         restarted.Session.StartWorkout(SamplePlan());
 
         Assert.True(restarted.Coordinator.RestoreRestIfPending(captured));
@@ -248,11 +248,11 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void RestoreRestIfPending_returns_false_and_clears_expired_snapshot()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(10);
 
         // Rest expired while the process was dead.
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 30, DateTimeKind.Utc));
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 30, DateTimeKind.Utc));
 
         Assert.False(restarted.Coordinator.RestoreRestIfPending());
         Assert.False(restarted.Session.IsResting);
@@ -264,11 +264,11 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void HandleRestEndAlarmFired_completes_rest_and_clears_snapshot_on_cold_start()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(10);
 
         // Fresh process; the OS-held alarm fires after the rest already ended.
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 30, DateTimeKind.Utc));
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 30, DateTimeKind.Utc));
         restarted.Coordinator.HandleRestEndAlarmFired();
 
         Assert.Equal(1, restarted.Notifications.ShowCompleteCalls);
@@ -281,14 +281,14 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void Cold_start_page_load_resume_workout_keeps_pending_snapshot()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
         // Process restarts; the user opens the workout page. The page captures
         // the snapshot, loads the in-progress workout (ResumeWorkout) and only
         // then restores the rest.
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
-        string? captured = restarted.Coordinator.CapturePendingSnapshot();
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
+        var captured = restarted.Coordinator.CapturePendingSnapshot();
         Assert.NotNull(captured);
 
         restarted.Session.ResumeWorkout(SamplePlan(), []);
@@ -300,10 +300,10 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void RestoreRestIfPending_falls_back_to_persisted_snapshot()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
         Assert.True(restarted.Coordinator.RestoreRestIfPending());
         Assert.Equal(50, restarted.Session.RestSecondsRemaining);
     }
@@ -311,7 +311,7 @@ public class RestTimerCoordinatorTests
     [Fact]
     public void AlertsDisabled_hides_ui_but_keeps_snapshot_for_restore()
     {
-        var fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc), alertsEnabled: false);
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc), alertsEnabled: false);
         fix.Session.StartRest(90);
 
         Assert.Empty(fix.Notifications.ShownStates);
@@ -319,7 +319,7 @@ public class RestTimerCoordinatorTests
         Assert.True(fix.Notifications.HideUiCalls > 0);
 
         // Rest state is still persisted so it survives process death.
-        var restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 10, DateTimeKind.Utc));
+        Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 10, DateTimeKind.Utc));
         Assert.True(restarted.Coordinator.RestoreRestIfPending());
         Assert.True(restarted.Session.IsResting);
     }

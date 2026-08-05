@@ -1,4 +1,4 @@
-using Physiquinator.Data;
+using Physiquinator.Core.Data;
 using Xunit;
 
 namespace Physiquinator.Tests.Data;

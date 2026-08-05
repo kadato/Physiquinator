@@ -1,5 +1,5 @@
-using Physiquinator.Data;
-using Physiquinator.Services;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Services;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;

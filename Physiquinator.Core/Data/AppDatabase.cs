@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 public sealed class AppDatabase
 {

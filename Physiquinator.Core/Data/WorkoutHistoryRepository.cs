@@ -1,7 +1,7 @@
-using Physiquinator.Models;
+using Physiquinator.Core.Models;
 using System.Text.Json;
 
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>Reps and weight from the most recent log row for an exercise (same plan).</summary>
 public sealed record LastSetMetrics(int? Reps, double? WeightKg);

@@ -1,6 +1,6 @@
-using Physiquinator.Models;
+using Physiquinator.Core.Models;
 
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 public sealed class WorkoutPlanRepository(AppDatabase database)
 {

@@ -1,4 +1,4 @@
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>Canonical preference keys shared across services. Values must not change (persisted user data).</summary>
 public static class PreferenceKeys

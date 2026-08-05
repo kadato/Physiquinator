@@ -1,18 +1,20 @@
 using Microsoft.JSInterop;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>
-/// Theme for Blazor WebView plus MAUI <see cref="AppTheme"/> / resources.
-/// <see cref="IJSRuntime"/> must run on the Blazor WebView dispatcher — do not marshal JS calls through <see cref="MainThread"/>.
-/// MAUI mutations (<see cref="Application.Current"/>) must run on the MAUI UI thread; use <see cref="RunOnMauiUiThread"/> when called from <see cref="JSInvokableAttribute"/> or other off-UI paths.
+/// Theme for the Blazor UI. <see cref="IJSRuntime"/> must run on the Blazor
+/// dispatcher — do not marshal JS calls through a platform main thread.
+/// Platform-specific shell mutations (MAUI app theme, system bars) are
+/// provided by subclasses overriding the <c>Apply*/Sync*</c> hooks.
 /// </summary>
-public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
+public class ThemeService : IAsyncDisposable, IThemeInitialization
 {
     private readonly IJSRuntime _js;
     private readonly UserProfileService _userProfileService;
     private readonly IAppPreferences _preferences;
     private DotNetObjectReference<ThemeService>? _dotNetRef;
+    private string? _effectiveTheme;
     private bool _initialized;
 
     public ThemeService(IJSRuntime js, UserProfileService userProfileService, IAppPreferences preferences)
@@ -21,38 +23,37 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         _userProfileService = userProfileService;
         _preferences = preferences;
 
+        Preference = ReadStoredPreference();
+    }
+
+    /// <summary>Resolves the OS-level appearance. Base returns dark; MAUI subclasses read the app theme.</summary>
+    protected virtual string GetSystemTheme() => ThemePreference.Dark;
+
+    /// <summary>Pushes the current preference to the platform shell (no-op by default).</summary>
+    protected virtual void ApplyAppThemeOverride()
+    {
+    }
+
+    /// <summary>Runs <paramref name="action"/> on the platform UI thread (inline by default).</summary>
+    protected virtual void RunOnUiThread(Action action) => action();
+
+    /// <summary>Refreshes platform resources (colors, system bars) after a theme change (no-op by default).</summary>
+    protected virtual void SyncAppResources()
+    {
+    }
+
+    private string ReadStoredPreference()
+    {
         try
         {
             var suffix = GetSuffix();
             var key = PreferenceKeys.ThemePreference + suffix;
-            Preference = _preferences.Get(key, ThemePreference.System);
-            var systemTheme = GetSystemThemeFromMaui();
-            EffectiveTheme = Preference == ThemePreference.System ? systemTheme : Preference;
+            return _preferences.Get(key, ThemePreference.System);
         }
         catch
         {
-            Preference = ThemePreference.System;
-            EffectiveTheme = GetSystemThemeFromMaui();
+            return ThemePreference.System;
         }
-
-        ApplyAppThemeOverride();
-    }
-
-    private static string GetSystemThemeFromMaui()
-    {
-        if (Application.Current != null)
-        {
-            AppTheme requested = Application.Current.RequestedTheme;
-            if (requested == AppTheme.Dark)
-            {
-                return ThemePreference.Dark;
-            }
-            if (requested == AppTheme.Light)
-            {
-                return ThemePreference.Light;
-            }
-        }
-        return ThemePreference.Dark;
     }
 
     private string GetSuffix()
@@ -61,9 +62,14 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         return $"_{activeId}";
     }
 
-    public string Preference { get; private set; } = ThemePreference.System;
+    public string Preference { get; private set; }
 
-    public string EffectiveTheme { get; private set; } = ThemePreference.Dark;
+    /// <summary>Resolved on first access; falls back to the system theme when the preference is System.</summary>
+    public string EffectiveTheme
+    {
+        get => _effectiveTheme ??= Preference == ThemePreference.System ? GetSystemTheme() : Preference;
+        private set => _effectiveTheme = value;
+    }
 
     public event Action? ThemeChanged;
 
@@ -95,7 +101,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     }
 
     /// <summary>
-    /// Persists theme preference (system/light/dark), updates WebView <c>data-theme</c>, MAUI <see cref="AppTheme"/>, and app resources.
+    /// Persists theme preference (system/light/dark), updates the webview <c>data-theme</c>, and the platform shell.
     /// </summary>
     public async Task SetPreferenceAsync(string preference)
     {
@@ -111,7 +117,7 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
         ThemeChanged?.Invoke();
     }
 
-    /// <summary>Clears the WebView theme preference so appearance matches the OS again.</summary>
+    /// <summary>Clears the stored theme preference so appearance matches the OS again.</summary>
     public async Task ResetStoredPreferenceToSystemAsync()
     {
         await EnsureInitializedCoreAsync().ConfigureAwait(true);
@@ -141,63 +147,8 @@ public sealed class ThemeService : IAsyncDisposable, IThemeInitialization
     public void OnSystemThemeChanged(string effectiveTheme)
     {
         EffectiveTheme = effectiveTheme;
-        RunOnMauiUiThread(SyncAppResources);
+        RunOnUiThread(SyncAppResources);
         ThemeChanged?.Invoke();
-    }
-
-    private void ApplyAppThemeOverride()
-    {
-        RunOnMauiUiThread(() =>
-        {
-            if (Application.Current == null)
-            {
-                return;
-            }
-
-            Application.Current.UserAppTheme = Preference switch
-            {
-                ThemePreference.Light => AppTheme.Light,
-                ThemePreference.Dark => AppTheme.Dark,
-                _ => AppTheme.Unspecified
-            };
-
-            SyncAppResources();
-        });
-    }
-
-    private static void RunOnMauiUiThread(Action action)
-    {
-        if (MainThread.IsMainThread)
-        {
-            action();
-        }
-        else
-        {
-            MainThread.BeginInvokeOnMainThread(action);
-        }
-    }
-
-    private void SyncAppResources()
-    {
-        if (Application.Current == null)
-        {
-            return;
-        }
-
-        var isDark = EffectiveTheme == ThemePreference.Dark;
-
-        Application.Current.Resources["PageBackgroundColor"] =
-            Color.FromArgb(isDark ? "#0B0C10" : "#F8F9FA");
-        Application.Current.Resources["PrimaryTextColor"] =
-            Color.FromArgb(isDark ? "#F3F4F6" : "#111827");
-        Application.Current.Resources["PrimaryButtonBackgroundColor"] =
-            Color.FromArgb(isDark ? "#10B981" : "#0F766E");
-        Application.Current.Resources["PrimaryButtonTextColor"] =
-            Color.FromArgb("#FFFFFF");
-
-        SystemBarsHelper.Apply(
-            (Color)Application.Current.Resources["PageBackgroundColor"],
-            isDark);
     }
 
     public async ValueTask DisposeAsync()

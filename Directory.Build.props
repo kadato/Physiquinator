@@ -4,10 +4,15 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NuGetAudit>true</NuGetAudit>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
+
+  <!-- Code quality analysis for non-MAUI projects (MAUI platform code and source generators would add noise) -->
+  <ItemGroup Condition="'$(UseMaui)' != 'true'">
+    <PackageReference Include="SonarAnalyzer.CSharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

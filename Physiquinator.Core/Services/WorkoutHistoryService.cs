@@ -1,7 +1,7 @@
-using Physiquinator.Data;
+using Physiquinator.Core.Data;
 using System.Text.Json;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 public sealed class WorkoutHistoryService(WorkoutHistoryRepository repository)
 {

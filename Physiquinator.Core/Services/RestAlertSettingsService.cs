@@ -1,13 +1,21 @@
-using Physiquinator.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Physiquinator.Core.Models;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>Persisted preference for rest-end alerts (OS notifications, sound, vibration).</summary>
 public sealed class RestAlertSettingsService(
     IAppPreferences preferences,
     UserProfileService userProfileService,
-    RestNotificationService restNotificationService)
+    IServiceProvider serviceProvider)
 {
+    /// <summary>
+    /// Resolved lazily: <see cref="INotificationService"/> implementations depend on this
+    /// service, so constructor injection would form a circular dependency.
+    /// </summary>
+    private INotificationService Notifications =>
+        serviceProvider.GetRequiredService<INotificationService>();
+
     private string PreferenceKey
     {
         get
@@ -21,14 +29,13 @@ public sealed class RestAlertSettingsService(
 
     public event Action? Changed;
 
-    public Task SetEnabledAsync(bool enabled)
+    public void SetEnabled(bool enabled)
     {
         preferences.Set(PreferenceKey, enabled);
 
         if (!enabled)
-            restNotificationService.CancelAllRestNotifications();
+            Notifications.CancelAllRestNotifications();
 
         Changed?.Invoke();
-        return Task.CompletedTask;
     }
 }

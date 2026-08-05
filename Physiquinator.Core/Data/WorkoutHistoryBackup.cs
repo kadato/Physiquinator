@@ -1,4 +1,4 @@
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>JSON backup of workout session logs and set logs (see <see cref="WorkoutHistoryRepository"/>).</summary>
 public sealed class WorkoutHistoryBackup

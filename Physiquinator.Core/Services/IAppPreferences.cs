@@ -1,4 +1,4 @@
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Abstraction over persisted key/value preferences so the core layer stays

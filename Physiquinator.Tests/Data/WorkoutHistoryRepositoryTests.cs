@@ -1,5 +1,5 @@
-using Physiquinator.Data;
-using Physiquinator.Models;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
 using Xunit;
 
 namespace Physiquinator.Tests.Data;
@@ -400,7 +400,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         WorkoutSessionLogEntity? result = await _sut.GetInProgressSessionForPlanAsync(planId);
 
         Assert.NotNull(result);
-        Assert.Equal(openId, result!.Id);
+        Assert.Equal(openId, result.Id);
     }
 
     [Fact]
@@ -415,7 +415,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         WorkoutSessionLogEntity? result = await _sut.GetAnyInProgressSessionAsync();
 
         Assert.NotNull(result);
-        Assert.Equal(newerId, result!.Id);
+        Assert.Equal(newerId, result.Id);
         Assert.Equal("Newer", result.PlanName);
     }
 

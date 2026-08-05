@@ -1,4 +1,4 @@
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>
 /// Resolves the on-disk location of the per-profile SQLite database file.

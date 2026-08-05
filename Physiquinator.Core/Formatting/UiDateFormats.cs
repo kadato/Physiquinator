@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Physiquinator.Formatting;
+namespace Physiquinator.Core.Formatting;
 
 /// <summary>Short date strings for dense mobile layouts (Y-M-D when year is shown).</summary>
 public static class UiDateFormats

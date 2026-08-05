@@ -2,22 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
-    <RootNamespace>Physiquinator</RootNamespace>
+    <RootNamespace>Physiquinator.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.JSInterop" />
     <PackageReference Include="sqlite-net-pcl" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" />
     <!-- Direct pins override the vulnerable transitive lib.e_sqlite3 2.1.11 (GHSA-2m69-gcr7-jv3q) -->
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="SonarAnalyzer.CSharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
 </Project>

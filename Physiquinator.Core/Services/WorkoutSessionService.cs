@@ -1,6 +1,6 @@
-using Physiquinator.Models;
+using Physiquinator.Core.Models;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Manages workout session state. Rest countdown uses wall-clock end time

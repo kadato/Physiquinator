@@ -1,8 +1,8 @@
-using Physiquinator.Data;
-using Physiquinator.Models;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
 using System.Text.Json;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 public sealed class UserProfileService
 {

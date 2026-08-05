@@ -1,4 +1,4 @@
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>Canonical theme preference values persisted in app preferences and passed to the WebView theme JS.</summary>
 public static class ThemePreference

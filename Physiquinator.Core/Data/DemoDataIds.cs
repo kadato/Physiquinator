@@ -1,4 +1,4 @@
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>Stable identifiers for first-run demo plans, exercises, sessions, and set rows.</summary>
 public static class DemoDataIds

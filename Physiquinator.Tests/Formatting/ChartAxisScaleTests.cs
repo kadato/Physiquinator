@@ -1,4 +1,4 @@
-using Physiquinator.Formatting;
+using Physiquinator.Core.Formatting;
 using Xunit;
 
 namespace Physiquinator.Tests.Formatting;

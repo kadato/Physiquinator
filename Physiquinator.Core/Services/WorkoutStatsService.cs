@@ -1,7 +1,7 @@
-using Physiquinator.Data;
-using Physiquinator.Formatting;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Formatting;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>Computes streak/week summaries and the per-day activity map for a heatmap grid.</summary>
 public sealed class WorkoutStatsService(WorkoutHistoryRepository repository)

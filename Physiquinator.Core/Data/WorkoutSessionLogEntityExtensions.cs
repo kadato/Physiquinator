@@ -1,4 +1,4 @@
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>Parsing helpers for <see cref="WorkoutSessionLogEntity"/>.</summary>
 public static class WorkoutSessionLogEntityExtensions

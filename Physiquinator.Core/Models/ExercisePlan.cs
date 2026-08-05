@@ -1,4 +1,4 @@
-namespace Physiquinator.Models;
+namespace Physiquinator.Core.Models;
 
 public class ExercisePlan
 {

@@ -1,6 +1,6 @@
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
-public sealed class MauiDemoSeedPreferences(IAppPreferences preferences) : IDemoSeedPreferences
+public sealed class ScopedDemoSeedPreferences(IAppPreferences preferences) : IDemoSeedPreferences
 {
     private string GetScopedKey(string key)
     {

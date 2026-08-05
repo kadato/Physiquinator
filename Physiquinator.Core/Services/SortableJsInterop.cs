@@ -1,6 +1,6 @@
 using Microsoft.JSInterop;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Shared init/destroy plumbing for the drag-sort JS modules (home plan list and plan exercise list).

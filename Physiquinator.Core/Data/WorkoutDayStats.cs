@@ -1,4 +1,4 @@
-namespace Physiquinator.Data;
+namespace Physiquinator.Core.Data;
 
 /// <summary>Streak and week-over-week session counts derived from local-day activity.</summary>
 public sealed record WorkoutDaySummary(

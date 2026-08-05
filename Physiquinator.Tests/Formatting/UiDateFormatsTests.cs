@@ -1,4 +1,4 @@
-using Physiquinator.Formatting;
+using Physiquinator.Core.Formatting;
 using System.Globalization;
 using Xunit;
 

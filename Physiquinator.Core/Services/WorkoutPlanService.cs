@@ -1,21 +1,21 @@
-using Physiquinator.Data;
-using Physiquinator.Models;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
 using System.Text.Json;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 {
     private readonly WorkoutPlanRepository _repository = repository;
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
 
-    public async Task<List<WorkoutPlan>> GetAllPlansAsync() => await _repository.GetAllPlansAsync();
+    public Task<List<WorkoutPlan>> GetAllPlansAsync() => _repository.GetAllPlansAsync();
 
-    public async Task<WorkoutPlan?> GetPlanAsync(Guid id) => await _repository.GetPlanAsync(id);
+    public Task<WorkoutPlan?> GetPlanAsync(Guid id) => _repository.GetPlanAsync(id);
 
-    public async Task SavePlanAsync(WorkoutPlan plan) => await _repository.SavePlanAsync(plan);
+    public Task SavePlanAsync(WorkoutPlan plan) => _repository.SavePlanAsync(plan);
 
-    public async Task DeletePlanAsync(Guid id) => await _repository.DeletePlanAsync(id);
+    public Task DeletePlanAsync(Guid id) => _repository.DeletePlanAsync(id);
 
     /// <summary>
     /// Persists a new relative ordering for the given plan IDs (position 0 = first).

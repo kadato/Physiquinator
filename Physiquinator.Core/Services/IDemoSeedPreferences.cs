@@ -1,4 +1,4 @@
-namespace Physiquinator.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>Abstraction for one-time demo seed flags (backed by MAUI Preferences in production).</summary>
 public interface IDemoSeedPreferences

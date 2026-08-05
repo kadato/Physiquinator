@@ -1,4 +1,4 @@
-namespace Physiquinator.Formatting;
+namespace Physiquinator.Core.Formatting;
 
 /// <summary>Suggested Y-axis bounds for progression charts (~12% headroom above max, ~8% below min).</summary>
 public static class ChartAxisScale

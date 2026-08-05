@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Physiquinator.Formatting;
+namespace Physiquinator.Core.Formatting;
 
 /// <summary>
 /// Weight display strings for set summaries, tables, and charts.

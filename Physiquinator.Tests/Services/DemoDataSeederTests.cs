@@ -1,6 +1,6 @@
-using Physiquinator.Data;
-using Physiquinator.Models;
-using Physiquinator.Services;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
+using Physiquinator.Core.Services;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;
@@ -49,9 +49,9 @@ public class DemoDataSeederTests : IAsyncLifetime
 
         WorkoutSessionLogEntity? withSnapshot = recent.FirstOrDefault(s => s.PlanSnapshotJson != null && s.PlanName == "Push Day");
         Assert.NotNull(withSnapshot);
-        WorkoutPlan? parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(withSnapshot!.PlanSnapshotJson);
+        WorkoutPlan? parsed = WorkoutHistoryRepository.TryParsePlanSnapshot(withSnapshot.PlanSnapshotJson);
         Assert.NotNull(parsed);
-        Assert.Equal("Push Day", parsed!.Name);
+        Assert.Equal("Push Day", parsed.Name);
         Assert.NotEmpty(parsed.Exercises);
         Assert.Contains(parsed.Exercises, e => e.Name == "Bench Press" && e.DefaultReps is not null);
 

@@ -1,5 +1,5 @@
-using Physiquinator.Data;
-using Physiquinator.Models;
+using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
 using Xunit;
 
 namespace Physiquinator.Tests.Data;

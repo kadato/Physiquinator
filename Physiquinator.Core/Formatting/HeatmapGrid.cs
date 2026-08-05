@@ -1,4 +1,4 @@
-namespace Physiquinator.Formatting;
+namespace Physiquinator.Core.Formatting;
 
 /// <summary>Grid geometry for the activity heatmap (weeks run Monday–Sunday, oldest left).</summary>
 public static class HeatmapGrid

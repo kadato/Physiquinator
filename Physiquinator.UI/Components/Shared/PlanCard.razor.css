@@ -22,11 +22,6 @@
     flex-shrink: 0;
 }
 
-.plan-card-start {
-    min-height: 40px;
-    min-width: 4.5rem;
-}
-
 .plan-card-icon-btn {
     min-width: 44px !important;
     min-height: 44px !important;

@@ -11,13 +11,12 @@
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel</MudText>
             </MudStack>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__actions">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           Class="plan-card-start"
-                           OnClick="OnStart">
-                    Start
-                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="plan-card-icon-btn"
+                               aria-label="@($"Start {PlanName}")"
+                               OnClick="OnStart" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Class="plan-card-icon-btn"
                                OnClick="OnEdit" />

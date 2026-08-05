@@ -1,8 +1,6 @@
 using Android.Content;
-using Microsoft.Maui.ApplicationModel;
-using Physiquinator.Core.Services;
-
 using Android.Runtime;
+using Physiquinator.Core.Services;
 
 namespace Physiquinator.Platforms.Android.Services;
 
@@ -20,7 +18,7 @@ public sealed class RestEndAlarmReceiver : BroadcastReceiver
     {
         try
         {
-            RestTimerCoordinator? coordinator =
+            var coordinator =
                 IPlatformApplication.Current?.Services.GetService(typeof(RestTimerCoordinator)) as RestTimerCoordinator;
             coordinator?.HandleRestEndAlarmFired();
         }

@@ -1,5 +1,4 @@
-﻿using Android.App;
-using Android.Content;
+using Android.App;
 using Android.Content.PM;
 using Android.OS;
 using Android.Views;
@@ -23,7 +22,7 @@ public class MainActivity : MauiAppCompatActivity
 
         // Tracks foreground state without overriding activity lifecycle
         // methods, which can interfere with MAUI's fragment setup.
-        this.Application?.RegisterActivityLifecycleCallbacks(new ForegroundTracker());
+        Application?.RegisterActivityLifecycleCallbacks(new ForegroundTracker());
     }
 
     private sealed class ForegroundTracker : Java.Lang.Object, global::Android.App.Application.IActivityLifecycleCallbacks

@@ -1,10 +1,6 @@
 using Android.Content;
-using Android.OS;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Maui.ApplicationModel;
-using Physiquinator.Core.Services;
-
 using Android.Runtime;
+using Physiquinator.Core.Services;
 
 namespace Physiquinator.Platforms.Android.Services;
 
@@ -31,11 +27,11 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
     {
         try
         {
-            string? action = intent?.GetStringExtra(ExtraAction);
+            var action = intent?.GetStringExtra(ExtraAction);
             if (action == null)
                 return;
 
-            var services = IPlatformApplication.Current?.Services;
+            IServiceProvider? services = IPlatformApplication.Current?.Services;
             if (services == null)
                 return;
 
@@ -49,7 +45,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
                 if (quickAction == null)
                     return;
 
-                var pendingResult = GoAsync();
+                PendingResult? pendingResult = GoAsync();
                 if (pendingResult == null)
                     return;
 
@@ -81,7 +77,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
     {
         try
         {
-            var result = await quickAction.LogNextSetAsync();
+            QuickActionResult result = await quickAction.LogNextSetAsync();
             if (result.Status != QuickActionResult.NothingToLog)
             {
                 var notifications = services.GetService(typeof(INotificationService)) as INotificationService;

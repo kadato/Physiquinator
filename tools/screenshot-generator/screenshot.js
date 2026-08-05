@@ -240,7 +240,7 @@ async function run() {
             await capture(`rest-timer-${theme}.png`);
 
             // Skip the rest timer so we are ready for next actions
-            await page.click('button:has-text("Skip")');
+            await page.click('button[aria-label="Skip rest"]');
             await page.waitForTimeout(500);
         }
 

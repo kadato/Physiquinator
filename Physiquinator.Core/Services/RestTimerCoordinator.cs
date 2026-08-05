@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Physiquinator.Core.Models;
+using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
 
@@ -70,7 +70,7 @@ public sealed class RestTimerCoordinator
     /// </summary>
     public string? CapturePendingSnapshot()
     {
-        string raw = _preferences.Get(PreferenceKeys.RestTimerSnapshot, string.Empty);
+        var raw = _preferences.Get(PreferenceKeys.RestTimerSnapshot, string.Empty);
         return string.IsNullOrEmpty(raw) ? null : raw;
     }
 
@@ -193,9 +193,9 @@ public sealed class RestTimerCoordinator
 
     private WorkoutTimerState BuildState()
     {
-        var plan = _session.CurrentPlan;
+        WorkoutPlan? plan = _session.CurrentPlan;
 
-        int exerciseIndex = _session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = _session.GetFirstUncompletedExerciseIndex();
         string? nextExerciseName = null;
         int? nextSetIndex = null;
         int? nextSetTotal = null;
@@ -204,7 +204,7 @@ public sealed class RestTimerCoordinator
             ExercisePlan exercise = plan.Exercises[exerciseIndex];
             nextExerciseName = exercise.Name;
             nextSetTotal = exercise.SetCount;
-            int setIndex = _session.GetFirstUncompletedSetIndex(exerciseIndex);
+            var setIndex = _session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
         }
 
@@ -220,7 +220,7 @@ public sealed class RestTimerCoordinator
 
     private string BuildRestCompleteDescription()
     {
-        string? planName = _session.CurrentPlan?.Name;
+        var planName = _session.CurrentPlan?.Name;
         return planName == null
             ? "Rest finished - time for your next set."
             : $"{planName}: start your next set when you are ready.";
@@ -241,7 +241,7 @@ public sealed class RestTimerCoordinator
 
     private RestTimerSnapshot? ReadSnapshot()
     {
-        string raw = _preferences.Get(PreferenceKeys.RestTimerSnapshot, string.Empty);
+        var raw = _preferences.Get(PreferenceKeys.RestTimerSnapshot, string.Empty);
         return string.IsNullOrEmpty(raw) ? null : TryParseSnapshot(raw);
     }
 

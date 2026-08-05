@@ -49,20 +49,20 @@ public sealed class WorkoutQuickActionService(
     /// <summary>Logs the next uncompleted set; explicit weight/reps override the exercise defaults.</summary>
     public async Task<QuickActionResult> LogNextSetAsync(double? weightKg, int? reps)
     {
-        var plan = session.CurrentPlan;
+        WorkoutPlan? plan = session.CurrentPlan;
         if (plan == null)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 
-        int exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = session.GetFirstUncompletedExerciseIndex();
         if (exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 
         ExercisePlan exercise = plan.Exercises[exerciseIndex];
-        int setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
+        var setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
         if (setIndex < 0)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 
-        bool duration = exercise.LogType == ExerciseLogType.Duration;
+        var duration = exercise.LogType == ExerciseLogType.Duration;
         double? loggedWeight = duration ? null : weightKg ?? exercise.DefaultWeightKg ?? 0.0;
         int? loggedReps = reps ?? exercise.DefaultReps ?? DefaultReps;
 
@@ -76,7 +76,7 @@ public sealed class WorkoutQuickActionService(
         if (open != null)
             await history.LogSetAsync(open.Id, exerciseIndex, exercise.Name, setIndex, loggedReps, loggedWeight);
 
-        var status = session.GetFirstUncompletedExerciseIndex() == -1
+        QuickActionStatus status = session.GetFirstUncompletedExerciseIndex() == -1
             ? QuickActionStatus.WorkoutCompleted
             : QuickActionStatus.Logged;
 

@@ -45,7 +45,7 @@ public static class WorkoutDayStats
         }
 
         var streak = 0;
-        var d = startDay;
+        DateOnly d = startDay;
         while (activityByDay.GetValueOrDefault(d, 0) > 0)
         {
             streak++;

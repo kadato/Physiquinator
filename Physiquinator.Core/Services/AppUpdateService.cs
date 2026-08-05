@@ -27,7 +27,7 @@ public sealed class AppUpdateService : IAppUpdateService
             return new UpdateCheckResult(null, false, null);
         }
 
-        bool isUpdateAvailable = release.IsNewerThan(CurrentVersion);
+        var isUpdateAvailable = release.IsNewerThan(CurrentVersion);
         if (!isUpdateAvailable)
         {
             return new UpdateCheckResult(release, false, null);

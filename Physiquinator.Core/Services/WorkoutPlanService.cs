@@ -1,5 +1,6 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
@@ -7,7 +8,7 @@ namespace Physiquinator.Core.Services;
 public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 {
     private readonly WorkoutPlanRepository _repository = repository;
-    private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions s_jsonOptions = new(PhysiquinatorJsonContext.Default.Options) { WriteIndented = true };
 
     public Task<List<WorkoutPlan>> GetAllPlansAsync() => _repository.GetAllPlansAsync();
 
@@ -66,7 +67,7 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        WorkoutPlan? plan = JsonSerializer.Deserialize<WorkoutPlan>(json);
+        WorkoutPlan? plan = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutPlan);
         if (plan == null)
             throw new InvalidOperationException("Failed to deserialize workout plan from JSON.");
 
@@ -81,7 +82,7 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        List<WorkoutPlan>? plans = JsonSerializer.Deserialize<List<WorkoutPlan>>(json);
+        List<WorkoutPlan>? plans = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListWorkoutPlan);
         if (plans == null)
             throw new InvalidOperationException("Failed to deserialize workout plans from JSON.");
 

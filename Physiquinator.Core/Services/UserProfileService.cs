@@ -1,5 +1,6 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
@@ -52,7 +53,7 @@ public sealed class UserProfileService
 
         try
         {
-            return JsonSerializer.Deserialize<List<UserProfile>>(json) ?? [];
+            return JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListUserProfile) ?? [];
         }
         catch
         {
@@ -174,7 +175,7 @@ public sealed class UserProfileService
 
     private void SaveProfiles(List<UserProfile> profiles)
     {
-        var json = JsonSerializer.Serialize(profiles);
+        var json = JsonSerializer.Serialize(profiles, PhysiquinatorJsonContext.Default.ListUserProfile);
         _preferences.Set(ProfilesKey, json);
     }
 }

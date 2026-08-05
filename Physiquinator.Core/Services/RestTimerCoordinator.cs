@@ -1,4 +1,5 @@
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
@@ -234,7 +235,7 @@ public sealed class RestTimerCoordinator
             ActiveRestDurationSeconds = _session.ActiveRestDurationSeconds
         };
 
-        _preferences.Set(PreferenceKeys.RestTimerSnapshot, JsonSerializer.Serialize(snapshot));
+        _preferences.Set(PreferenceKeys.RestTimerSnapshot, JsonSerializer.Serialize(snapshot, PhysiquinatorJsonContext.Default.RestTimerSnapshot));
     }
 
     private void ClearSnapshot() => _preferences.Set(PreferenceKeys.RestTimerSnapshot, string.Empty);
@@ -249,18 +250,11 @@ public sealed class RestTimerCoordinator
     {
         try
         {
-            return JsonSerializer.Deserialize<RestTimerSnapshot>(raw);
+            return JsonSerializer.Deserialize(raw, PhysiquinatorJsonContext.Default.RestTimerSnapshot);
         }
         catch (JsonException)
         {
             return null;
         }
-    }
-
-    private sealed class RestTimerSnapshot
-    {
-        public DateTime? EndUtc { get; set; }
-
-        public int ActiveRestDurationSeconds { get; set; }
     }
 }

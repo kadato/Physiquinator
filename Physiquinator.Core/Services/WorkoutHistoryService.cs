@@ -1,4 +1,5 @@
 using Physiquinator.Core.Data;
+using Physiquinator.Core.Serialization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
@@ -8,8 +9,7 @@ public sealed class WorkoutHistoryService(WorkoutHistoryRepository repository)
     public const int SupportedFormatVersion = 1;
 
     private readonly WorkoutHistoryRepository _repository = repository;
-    private static readonly JsonSerializerOptions s_jsonWrite = new() { WriteIndented = true };
-    private static readonly JsonSerializerOptions s_jsonRead = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions s_jsonWrite = new(PhysiquinatorJsonContext.Default.Options) { WriteIndented = true };
 
     public async Task<string> ExportToJsonAsync()
     {
@@ -24,7 +24,7 @@ public sealed class WorkoutHistoryService(WorkoutHistoryRepository repository)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
-        WorkoutHistoryBackup? backup = JsonSerializer.Deserialize<WorkoutHistoryBackup>(json, s_jsonRead);
+        WorkoutHistoryBackup? backup = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutHistoryBackup);
         if (backup is null)
             throw new InvalidOperationException("Failed to deserialize workout history from JSON.");
 

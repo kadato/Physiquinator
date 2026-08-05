@@ -1,5 +1,7 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
+using System.Collections.Frozen;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
@@ -24,7 +26,6 @@ public sealed class DemoDataSeeder(
     private const string SquatsName = "Squats";
 
     private static readonly DateTime s_demoPlanCreatedAt = new(2024, 6, 1, 12, 0, 0, DateTimeKind.Utc);
-    private static readonly JsonSerializerOptions s_snapshotJson = new() { WriteIndented = false };
 
     private readonly WorkoutPlanService _planService = planService;
     private readonly AppDatabase _database = database;
@@ -86,11 +87,11 @@ public sealed class DemoDataSeeder(
 
         var snapshots = new Dictionary<Guid, string>
         {
-            [DemoDataIds.PushPlan] = JsonSerializer.Serialize(CreatePushDayPlan(), s_snapshotJson),
-            [DemoDataIds.PullPlan] = JsonSerializer.Serialize(CreatePullDayPlan(), s_snapshotJson),
-            [DemoDataIds.LegPlan] = JsonSerializer.Serialize(CreateLegDayPlan(), s_snapshotJson),
-            [DemoDataIds.FullBodyPlan] = JsonSerializer.Serialize(CreateFullBodyPlan(), s_snapshotJson)
-        };
+            [DemoDataIds.PushPlan] = JsonSerializer.Serialize(CreatePushDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [DemoDataIds.PullPlan] = JsonSerializer.Serialize(CreatePullDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [DemoDataIds.LegPlan] = JsonSerializer.Serialize(CreateLegDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [DemoDataIds.FullBodyPlan] = JsonSerializer.Serialize(CreateFullBodyPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan)
+        }.ToFrozenDictionary();
 
         DateTime todayUtc = _time.GetUtcNow().UtcDateTime.Date;
         List<DemoSessionSpec> specs = GenerateDemoSchedule(todayUtc);

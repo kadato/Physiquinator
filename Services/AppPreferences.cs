@@ -1,3 +1,4 @@
+using Physiquinator.Core.Serialization;
 using Physiquinator.Core.Services;
 using System.Text.Json;
 
@@ -30,7 +31,7 @@ public sealed class AppPreferences : IAppPreferences
             if (File.Exists(_filePath))
             {
                 var json = File.ReadAllText(_filePath);
-                _inMemoryPrefs = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? [];
+                _inMemoryPrefs = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.DictionaryStringString) ?? [];
             }
         }
         catch
@@ -45,7 +46,7 @@ public sealed class AppPreferences : IAppPreferences
         {
             try
             {
-                var json = JsonSerializer.Serialize(_inMemoryPrefs);
+                var json = JsonSerializer.Serialize(_inMemoryPrefs, PhysiquinatorJsonContext.Default.DictionaryStringString);
                 File.WriteAllText(_filePath, json);
             }
             catch

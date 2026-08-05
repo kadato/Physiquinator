@@ -3,16 +3,16 @@
 ## System Requirements
 
 - **Windows 10** (version 1809 or later) or **Windows 11**
-- **.NET 10 Desktop Runtime** (downloadable for free from Microsoft)
+- **.NET 11 Desktop Runtime** (downloadable for free from Microsoft)
 - **64-bit (x64) processor**
 
 ## Installation
 
 ### Download and Install
 
-1. **Download .NET 10 Desktop Runtime** (one-time, 5-minute setup)
-   - Visit: https://dotnet.microsoft.com/download/dotnet/10.0
-   - Download: ".NET Desktop Runtime 10.0.x (x64)"
+1. **Download .NET 11 Desktop Runtime** (one-time, 5-minute setup)
+   - Visit: https://dotnet.microsoft.com/download/dotnet/11.0
+   - Download: ".NET Desktop Runtime 11.0.x (x64)"
    - Install the downloaded file
 
 2. **Download Physiquinator**
@@ -23,18 +23,18 @@
 **Package Details:**
 - Download size: 62 MB
 - Includes WindowsAppSDK runtime bundled
-- Requires .NET 10 Desktop Runtime (~55 MB, one-time install)
+- Requires .NET 11 Desktop Runtime (~55 MB, one-time install)
 
 ## Why Do I Need .NET Runtime?
 
-.NET MAUI applications use the Mono runtime for cross-platform compatibility, which requires the .NET Desktop Runtime to be installed. This is the same for all .NET MAUI Windows apps. The runtime needs to be installed only once and works for all .NET 10 apps on your system.
+.NET MAUI applications use the Mono runtime for cross-platform compatibility, which requires the .NET Desktop Runtime to be installed. This is the same for all .NET MAUI Windows apps. The runtime needs to be installed only once and works for all .NET 11 apps on your system.
 
 ## Troubleshooting
 
 ### "This application requires .NET Runtime"
 
-**Solution:** Install .NET 10 Desktop Runtime
-1. Visit: https://dotnet.microsoft.com/download/dotnet/10.0
+**Solution:** Install .NET 11 Desktop Runtime
+1. Visit: https://dotnet.microsoft.com/download/dotnet/11.0
 2. Download "Desktop Runtime" (x64)
 3. Install and restart the app
 
@@ -70,7 +70,7 @@ git clone https://github.com/tothKarolyDavid/Physiquinator.git
 cd Physiquinator
 
 # Run the app
-dotnet run --framework net10.0-windows10.0.19041.0
+dotnet run --framework net11.0-windows10.0.19041.0
 ```
 
 ## Features
@@ -91,3 +91,4 @@ For issues or questions:
 ## Building Your Own
 
 See [DOCKER.md](DOCKER.md) and [README.md](README.md) for build instructions.
+

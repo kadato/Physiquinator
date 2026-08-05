@@ -92,7 +92,7 @@ Example workflow step:
 
 ### Dockerfile.android
 
-- **Base Image**: `mcr.microsoft.com/dotnet/sdk:10.0`
+- **Base Image**: `mcr.microsoft.com/dotnet/sdk:11.0`
 - **Android SDK**: Version 35-36 (Android 15)
 - **Build Tools**: 35.0.0, 36.0.0
 - **Java**: OpenJDK 17

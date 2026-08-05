@@ -92,10 +92,10 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 | Platform | Package | Size | Requirements |
 |----------|---------|------|--------------|
 | Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~30 MB | Android 7.0+ |
-| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~62 MB | .NET 10 Desktop Runtime* |
+| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~62 MB | .NET 11 Desktop Runtime* |
 
-**\*.NET 10 Desktop Runtime is free from Microsoft and installs in ~5 minutes (one-time setup)**  
-Download: https://dotnet.microsoft.com/download/dotnet/10.0
+**\*.NET 11 Desktop Runtime is free from Microsoft and installs in ~5 minutes (one-time setup)**  
+Download: https://dotnet.microsoft.com/download/dotnet/11.0
 
 > **Windows Users**: See [WINDOWS-INSTALL.md](WINDOWS-INSTALL.md) for installation instructions and troubleshooting.
 
@@ -114,7 +114,7 @@ docker rm temp
 ```powershell
 # Build Windows application
 dotnet publish Physiquinator.csproj `
-  -f net10.0-windows10.0.19041.0 `
+  -f net11.0-windows10.0.19041.0 `
   -c Release `
   -p:WindowsPackageType=None `
   -p:SelfContained=false `
@@ -128,13 +128,13 @@ dotnet publish Physiquinator.csproj `
 **Option 3: Using .NET SDK (All platforms)**
 ```bash
 # Android (requires Android SDK)
-dotnet build -t:Run -f net10.0-android
+dotnet build -t:Run -f net11.0-android
 
 # Windows  
-dotnet build -t:Run -f net10.0-windows10.0.19041.0
+dotnet build -t:Run -f net11.0-windows10.0.19041.0
 
 # iOS (Mac only, requires Xcode)
-dotnet build -t:Run -f net10.0-ios
+dotnet build -t:Run -f net11.0-ios
 ```
 
 See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for detailed instructions.
@@ -151,7 +151,7 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 1. Extract the ZIP file
 2. Run `Physiquinator.exe`
 3. No installation required - runs standalone!
-4. Note: Requires .NET 10 Runtime (or use published version with runtime included)
+4. Note: Requires .NET 11 Runtime (or use published version with runtime included)
 
 > **Tip:** The app includes sample workout plans to get you started immediately!
 
@@ -208,7 +208,7 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 ## Tech Stack
 
 ### Core Technologies
-- **[.NET 10](https://dotnet.microsoft.com/)** - Latest .NET with performance improvements
+- **[.NET 11](https://dotnet.microsoft.com/)** - Latest .NET with performance improvements
 - **[.NET MAUI](https://dotnet.microsoft.com/apps/maui)** - Cross-platform native UI framework
 - **[Blazor Hybrid](https://learn.microsoft.com/aspnet/core/blazor/hybrid/)** - Rich web UI in native apps
 - **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - Local database
@@ -234,7 +234,7 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 
 ### Prerequisites
 
-- **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)** (Preview)
+- **[.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0)** (Preview)
 - **[Visual Studio 2026](https://visualstudio.microsoft.com/)** with MAUI workload, or
 - **[Visual Studio Code](https://code.visualstudio.com/)** with C# Dev Kit
 - **Android SDK** - For Android development (via Visual Studio)
@@ -251,13 +251,13 @@ cd Physiquinator
 dotnet restore
 
 # Run on Windows
-dotnet build -t:Run -f net10.0-windows10.0.19041.0
+dotnet build -t:Run -f net11.0-windows10.0.19041.0
 
 # Run on Android (device/emulator)
-dotnet build -t:Run -f net10.0-android
+dotnet build -t:Run -f net11.0-android
 
 # Run on iOS (Mac only)
-dotnet build -t:Run -f net10.0-ios
+dotnet build -t:Run -f net11.0-ios
 ```
 
 ### Build Configurations
@@ -315,3 +315,4 @@ docker rm temp
 
 
 </div>
+

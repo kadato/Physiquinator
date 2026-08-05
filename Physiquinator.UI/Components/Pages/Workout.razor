@@ -31,10 +31,12 @@ else
             <RestTimerPanel IsRestComplete="_isRestComplete"
                             IsRestPaused="@SessionService.IsRestPaused"
                             RestSecondsRemaining="@SessionService.RestSecondsRemaining"
+                            AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
                             OnPause="PauseRest"
                             OnResume="ResumeRest"
                             OnReset="ResetRest"
-                            OnSkip="SkipRest" />
+                            OnSkip="SkipRest"
+                            OnAddTime="AddRestTime" />
         }
 
         <div class="workout-exercise-layout">
@@ -106,6 +108,19 @@ else
     </MudStack>
 }
 
+@if (_undoVisible)
+{
+    <div class="undo-toast" role="status" aria-live="polite">
+        <span class="undo-toast__message">Set logged</span>
+        <button type="button"
+                class="undo-toast__btn"
+                aria-label="Undo"
+                @onclick="UndoLastSetCoreAsync">
+            <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Medium" />
+        </button>
+    </div>
+}
+
 @code {
     [Parameter]
     public Guid PlanId { get; set; }
@@ -117,6 +132,7 @@ else
     private const int RestTickIntervalMs = 1000;
     private const int RestCompleteVibrationMs = 500;
     private const int WorkoutCompleteVibrationMs = 800;
+    private const int UndoToastDurationMs = 4000;
 
     private bool _isRestComplete;
     private int _lastRestDurationSeconds;
@@ -126,8 +142,9 @@ else
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private string? _historySessionId;
-    private Snackbar? _undoSnackbar;
     private double? _bodyweightKg;
+    private bool _undoVisible;
+    private System.Threading.Timer? _undoTimer;
 
     private sealed class SetInputsDictionary : Dictionary<(int, int), (double? Weight, int? Reps)> { }
 
@@ -488,7 +505,7 @@ else
                     }
                 }
 
-                ShowUndoSetToast();
+                ShowUndoToast();
 
                 if (willBeLastSetOfWorkout)
                 {
@@ -525,26 +542,32 @@ else
         }
     }
 
-    private void ShowUndoSetToast()
+    private void ShowUndoToast()
     {
         HideUndoToast();
-        _undoSnackbar = Snackbar.Add("Set logged.", Severity.Info, config =>
-        {
-            config.Action = "Undo";
-            config.ActionColor = Color.Warning;
-            config.ShowCloseIcon = true;
-            config.RequireInteraction = false;
-            config.OnClick = snackbar => UndoLastSetCoreAsync();
-        });
+        _undoVisible = true;
+        _undoTimer = new System.Threading.Timer(
+            _ => OnUndoTimerElapsed(),
+            null,
+            TimeSpan.FromMilliseconds(UndoToastDurationMs),
+            Timeout.InfiniteTimeSpan);
     }
 
     private void HideUndoToast()
     {
-        if (_undoSnackbar != null)
+        _undoVisible = false;
+        _undoTimer?.Dispose();
+        _undoTimer = null;
+    }
+
+    private void OnUndoTimerElapsed()
+    {
+        _ = InvokeAsync(() =>
         {
-            Snackbar.Remove(_undoSnackbar);
-            _undoSnackbar = null;
-        }
+            if (_disposed) return;
+            HideUndoToast();
+            StateHasChanged();
+        });
     }
 
     private async Task UndoLastSetCoreAsync()
@@ -637,6 +660,29 @@ else
         RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
+        await SafeStateHasChangedAsync();
+    }
+
+    private async Task AddRestTime(int seconds)
+    {
+        if (_disposed || !SessionService.IsResting) return;
+
+        SessionService.AddRestSeconds(seconds);
+        RestNotifications.CancelAllRestNotifications();
+
+        if (SessionService.IsRestPaused)
+        {
+            await SafeStateHasChangedAsync();
+            return;
+        }
+
+        await TimerInterop.StopTimerAsync();
+        var remaining = SessionService.RestSecondsRemaining;
+        if (remaining > 0)
+        {
+            await ResumeJsTimerAsync(remaining);
+            await ScheduleRestNotificationIfRestingAsync();
+        }
         await SafeStateHasChangedAsync();
     }
 

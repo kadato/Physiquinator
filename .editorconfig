@@ -130,6 +130,13 @@ csharp_space_before_semicolon_in_for_statement = false
 csharp_space_around_arrow = before_and_after
 csharp_space_between_method_declaration_name_and_open_parenthesis = false
 
+# Razor components: null-forgiving on [Inject]/[CascadingParameter] members is
+# required because the Razor generator emits the class without constructor
+# assignment (DI happens at runtime). Sonar's S8970 does not account for this.
+# Build suppression lives in Physiquinator.UI.csproj (NoWarn).
+[*.razor]
+dotnet_diagnostic.S8970.severity = none
+
 # ---------------------------------------------------------------------------
 # Analyzer severities: meaningful rules on, noisy MAUI/legacy rules off
 # ---------------------------------------------------------------------------

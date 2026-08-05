@@ -6,7 +6,8 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-@inject FileTransferService FileTransfer
+@inject IFileTransferService FileTransfer
+@inject TimeProvider TimeProvider
 @inject ILogger<PlanWorkout> Logger
 
 <div class="plan-page">
@@ -17,7 +18,7 @@
         <MudText Typo="Typo.body2" Class="mud-text-secondary plan-page__subtitle mb-3">@PlanName</MudText>
     }
 
-    <MudForm @ref="_form" @bind-IsValid="_formValid">
+    <MudForm @bind-IsValid="_formValid">
         <MudStack Spacing="3">
             <section class="plan-section">
                 <MudText Typo="Typo.overline" Class="plan-section__label">Plan details</MudText>
@@ -111,7 +112,6 @@
     [Parameter]
     public Guid? PlanId { get; set; }
 
-    private MudForm? _form;
     private MudTextField<string>? _newExerciseField;
     private bool _formValid;
     private string PlanName { get; set; } = "Workout";
@@ -150,16 +150,7 @@
                 PlanName = plan.Name;
                 RestIntervalSeconds = plan.RestIntervalSeconds;
                 DefaultSetCount = plan.DefaultSetCount;
-                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(e => new ExercisePlan
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    SetCount = e.SetCount,
-                    Order = e.Order,
-                    RestIntervalSeconds = e.RestIntervalSeconds,
-                    DefaultReps = e.DefaultReps,
-                    DefaultWeightKg = e.DefaultWeightKg
-                }).ToList();
+                Exercises = plan.Exercises.OrderBy(e => e.Order).Select(CloneExercise).ToList();
             }
         }
     }
@@ -354,7 +345,7 @@
         {
             var json = await PlanService.ExportPlanToJsonAsync(PlanId.Value);
             await FileTransfer.ExportJsonAsync(
-                FileTransfer.JsonFileName(FileTransfer.SafeFileStem(PlanName)),
+                FileTransferNames.JsonFileName(FileTransferNames.SafeFileStem(PlanName), TimeProvider.GetLocalNow()),
                 json);
             Snackbar.Add("Plan exported.", Severity.Success);
         }

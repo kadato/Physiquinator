@@ -1,11 +1,10 @@
 @using Microsoft.JSInterop
-@using Physiquinator.Models
+@using Physiquinator.Core.Models
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
 <div id="plan-exercise-sortable-list"
-     class="plan-exercise-list"
-     @ref="_listRef">
+     class="plan-exercise-list">
     @for (var i = 0; i < Exercises.Count; i++)
     {
         var index = i;
@@ -34,7 +33,6 @@
     [Parameter]
     public EventCallback<int> OnDelete { get; set; }
 
-    private ElementReference _listRef;
     private DotNetObjectReference<PlanExerciseList>? _dotNetRef;
     private int _lastSortableCount = -1;
     private int _lastSortableVersion = -1;

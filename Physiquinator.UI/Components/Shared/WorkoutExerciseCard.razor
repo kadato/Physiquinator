@@ -1,0 +1,201 @@
+@* Accordion card for one exercise in the active workout. Shows set logging steppers for
+   upcoming exercises and summary rows with checkmarks for completed ones. *@
+@using Physiquinator.Core.Formatting
+@using Physiquinator.Core.Models
+
+<MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
+    <div class="exercise-accordion-header" @onclick="@(() => OnToggle.InvokeAsync(ExerciseIndex))">
+        <div class="header-left">
+            @if (IsCompleted)
+            {
+                <span class="completed-icon mr-2" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <defs>
+                            <linearGradient id="chk-grad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#34d399"/>
+                                <stop offset="100%" stop-color="#059669"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="11" cy="11" r="11" fill="url(#chk-grad)"/>
+                        <polyline points="6.5,11.5 9.5,14.5 15.5,8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </span>
+                <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@Exercise.Name</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@Exercise.Name</MudText>
+            }
+        </div>
+        <div class="header-right">
+            <span class="@PillClass">@CompletedSetsCount/@Exercise.SetCount</span>
+            <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
+        </div>
+    </div>
+
+    @if (IsExpanded)
+    {
+        <MudCardContent Class="pt-0">
+            @if (IsCompleted)
+            {
+                <MudProgressLinear Color="Color.Success" Value="100" Class="mb-3" />
+
+                <div class="set-logging-rows">
+                    @for (var si = 0; si < Exercise.SetCount; si++)
+                    {
+                        var setIndex = si;
+                        var inputs = GetInputs(ExerciseIndex, setIndex);
+                        var finalWeight = inputs.Weight ?? Exercise.DefaultWeightKg ?? 0.0;
+                        var finalReps = inputs.Reps ?? Exercise.DefaultReps ?? DefaultReps;
+
+                        <div class="set-summary-row">
+                            <span class="set-number-label">Set @(setIndex + 1)</span>
+                            <span class="set-values">@FormatSetDisplay(Exercise.LogType, finalWeight, finalReps)</span>
+                            <button type="button"
+                                    class="log-check-btn log-check-btn--completed"
+                                    @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, setIndex)))"
+                                    disabled="@IsCompleting">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(CompletedSetsCount, Exercise.SetCount)" Class="mb-3" />
+
+                <div class="set-logging-rows">
+                    @{
+                        var activeSetIndex = ActiveSetIndex >= Exercise.SetCount ? 0 : ActiveSetIndex;
+                        var inputs = GetInputs(ExerciseIndex, activeSetIndex);
+                        var defaultWeight = inputs.Weight ?? Exercise.DefaultWeightKg ?? 0.0;
+                        var defaultReps = inputs.Reps ?? Exercise.DefaultReps ?? DefaultReps;
+                    }
+
+                    <div class="set-active-panel">
+                        <div class="set-stepper-rows">
+                            @if (Exercise.LogType != ExerciseLogType.Duration)
+                            {
+                                <SetMetricStepper Value="@inputs.Weight"
+                                                  ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val)))"
+                                                  Step="2.5"
+                                                  Min="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? -200 : 0)"
+                                                  IsInteger="false"
+                                                  Format="0.##"
+                                                  Compact="true"
+                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")'
+                                                  CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
+                                                  Placeholder="@defaultWeight" />
+                            }
+                            <SetMetricStepper Value="@((double?)inputs.Reps)"
+                                              ValueChanged="@(val => OnRepsChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
+                                              Step="1"
+                                              Min="1"
+                                              IsInteger="true"
+                                              Format="0"
+                                              Compact="true"
+                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
+                                              Placeholder="@((double)defaultReps)" />
+                        </div>
+                        <button type="button"
+                                class="log-set-btn"
+                                @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, activeSetIndex)))"
+                                disabled="@IsCompleting">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
+                            Log Set
+                        </button>
+                    </div>
+                </div>
+            }
+        </MudCardContent>
+    }
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public ExercisePlan Exercise { get; set; }
+
+    [Parameter, EditorRequired]
+    public int ExerciseIndex { get; set; }
+
+    [Parameter, EditorRequired]
+    public int CompletedSetsCount { get; set; }
+
+    [Parameter]
+    public bool IsExpanded { get; set; }
+
+    [Parameter]
+    public bool IsCompleted { get; set; }
+
+    [Parameter]
+    public bool IsCompleting { get; set; }
+
+    [Parameter]
+    public int ActiveSetIndex { get; set; }
+
+    [Parameter]
+    public int DefaultReps { get; set; } = 10;
+
+    [Parameter]
+    public double? BodyweightKg { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<(int, int), (double? Weight, int? Reps)> SetInputs { get; set; } =
+        new Dictionary<(int, int), (double? Weight, int? Reps)>();
+
+    [Parameter]
+    public EventCallback<int> OnToggle { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, int SetIndex)> OnToggleSet { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, int SetIndex, double? Weight)> OnWeightChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, int SetIndex, int? Reps)> OnRepsChanged { get; set; }
+
+    private string CardClass
+    {
+        get
+        {
+            var baseClass = IsCompleted
+                ? "mb-3 exercise-accordion-card exercise-accordion-card--completed"
+                : "mb-3 exercise-accordion-card";
+            return $"{baseClass} {ExpandedClass}".TrimEnd();
+        }
+    }
+
+    private string ExpandedClass => IsExpanded ? "exercise-accordion-card--expanded" : "";
+
+    private string PillClass =>
+        IsCompleted
+            ? "set-progress-pill set-progress-pill--completed"
+            : "set-progress-pill";
+
+    private (double? Weight, int? Reps) GetInputs(int exerciseIndex, int setIndex) =>
+        SetInputs.GetValueOrDefault(
+            (exerciseIndex, setIndex),
+            (Exercise.DefaultWeightKg ?? 0.0, Exercise.DefaultReps ?? DefaultReps));
+
+    private static double GetProgressValue(int completed, int total) =>
+        total == 0 ? 0 : (completed * 100.0) / total;
+
+    private string FormatSetDisplay(ExerciseLogType logType, double? weight, int reps) =>
+        logType switch
+        {
+            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(weight, BodyweightKg, reps),
+            ExerciseLogType.Duration => $"{reps}s",
+            _ => $"{(weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "0")} kg × {reps} reps"
+        };
+
+    private static string? GetBodyweightStepperDisplayText(double? value)
+    {
+        if (value == null || value.Value == 0)
+            return "BW";
+        if (value.Value > 0)
+            return $"+{ExerciseWeightFormatter.FormatKg(value.Value)}";
+        return $"-{ExerciseWeightFormatter.FormatKg(Math.Abs(value.Value))}";
+    }
+}

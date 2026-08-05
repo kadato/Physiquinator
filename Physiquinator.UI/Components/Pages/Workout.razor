@@ -2,14 +2,15 @@
 @using Microsoft.Extensions.Logging
 @inject WorkoutPlanService PlanService
 @inject WorkoutSessionService SessionService
-@inject RestNotificationService RestNotifications
 @inject RestAlertSettingsService RestAlertSettings
+@inject INotificationService RestNotifications
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
+@inject IVibrationService VibrationService
+@inject WorkoutTimerInterop TimerInterop
 @inject ILogger<Workout> Logger
 @implements IAsyncDisposable
 
@@ -37,176 +38,47 @@ else
         }
 
         <div class="workout-exercise-layout">
-            @{
-                var plan = SessionService.CurrentPlan;
-                var upcoming = new List<(int Index, ExercisePlan Exercise, int CompletedCount)>();
-                var completed = new List<(int Index, ExercisePlan Exercise, int CompletedCount)>();
-
-                for (int e = 0; e < plan.Exercises.Count; e++)
-                {
-                    var exerciseIndex = e;
-                    var exercise = plan.Exercises[e];
-                    var completedSetsCount = 0;
-                    for (var si = 0; si < exercise.SetCount; si++)
-                    {
-                        if (SessionService.IsSetCompleted(exerciseIndex, si))
-                            completedSetsCount++;
-                    }
-
-                    if (completedSetsCount == exercise.SetCount)
-                        completed.Add((exerciseIndex, exercise, completedSetsCount));
-                    else
-                        upcoming.Add((exerciseIndex, exercise, completedSetsCount));
-                }
-            }
-
-            @foreach (var item in upcoming)
+            @foreach (var item in UpcomingExercises)
             {
-                var exerciseIndex = item.Index;
-                var exercise = item.Exercise;
-                var completedSetsCount = item.CompletedCount;
-                var isExpanded = _activeExerciseIndex == exerciseIndex;
-
-                 <MudCard Class='@($"mb-3 exercise-accordion-card {(isExpanded ? "exercise-accordion-card--expanded" : "")}")' @key="exercise.Id" data-exercise-index="@exerciseIndex">
-                    <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
-                        <div class="header-left">
-                            <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@exercise.Name</MudText>
-                        </div>
-                        <div class="header-right">
-                            <span class="set-progress-pill">@completedSetsCount/@exercise.SetCount</span>
-                            <MudIcon Icon="@(isExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
-                        </div>
-                    </div>
-
-                    @if (isExpanded)
-                    {
-                        <MudCardContent Class="pt-0">
-                            <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(completedSetsCount, exercise.SetCount)" Class="mb-3" />
-                            
-                            @{
-                                var activeSetIndex = _activeSetIndices.GetValueOrDefault(exerciseIndex, 0);
-                                if (activeSetIndex >= exercise.SetCount)
-                                {
-                                    activeSetIndex = 0;
-                                }
-                            }
-
-                            <div class="set-logging-rows">
-                                @{
-                                    var setIndex = activeSetIndex;
-                                    var inputKey = (exerciseIndex, setIndex);
-                                    (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? DefaultReps));
-
-                                    var defaultWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
-                                    var defaultReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
-                                }
-
-                                <div class="set-active-panel">
-                                    <div class="set-stepper-rows">
-                                        @if (exercise.LogType != ExerciseLogType.Duration)
-                                        {
-                                            <SetMetricStepper Value="@inputs.Weight"
-                                                              ValueChanged="@(val => HandleWeightStepperChanged(exerciseIndex, setIndex, val))"
-                                                              Step="2.5"
-                                                              Min="@(exercise.LogType == ExerciseLogType.BodyweightReps ? -200 : 0)"
-                                                              IsInteger="false"
-                                                              Format="0.##"
-                                                              Compact="true"
-                                                              Unit='@(exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")'
-                                                              CustomDisplayText="@(exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
-                                                              Placeholder="@defaultWeight" />
-                                        }
-                                        <SetMetricStepper Value="@((double?)inputs.Reps)"
-                                                          ValueChanged="@(val => HandleRepsStepperChanged(exerciseIndex, setIndex, val))"
-                                                          Step="1"
-                                                          Min="1"
-                                                          IsInteger="true"
-                                                          Format="0"
-                                                          Compact="true"
-                                                          Unit='@(exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
-                                                          Placeholder="@((double)defaultReps)" />
-                                    </div>
-                                    <button type="button"
-                                            class="log-set-btn"
-                                            @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                            disabled="@_isCompleting">
-                                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
-                                        Log Set
-                                    </button>
-                                </div>
-                            </div>
-                        </MudCardContent>
-                    }
-                </MudCard>
+                <WorkoutExerciseCard Exercise="@item.Exercise"
+                                     ExerciseIndex="@item.ExerciseIndex"
+                                     CompletedSetsCount="@item.CompletedSets"
+                                     IsExpanded="@(_activeExerciseIndex == item.ExerciseIndex)"
+                                     IsCompleted="false"
+                                     IsCompleting="@_isCompleting"
+                                     ActiveSetIndex="@_activeSetIndices.GetValueOrDefault(item.ExerciseIndex, 0)"
+                                     DefaultReps="@DefaultReps"
+                                     BodyweightKg="@_bodyweightKg"
+                                     SetInputs="@_setInputs"
+                                     OnToggle="ToggleAccordion"
+                                     OnToggleSet="ToggleSetComplete"
+                                     OnWeightChanged="HandleWeightStepperChanged"
+                                     OnRepsChanged="HandleRepsStepperChanged" />
             }
 
-            @if (completed.Any())
+            @if (DoneExercises.Any())
             {
                 <div class="workout-completed-divider-title mt-4 mb-2">
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Class="mr-1 completed-icon" Size="Size.Small" />
                     <MudText Typo="Typo.overline" Color="Color.Success" Class="font-weight-bold">Completed</MudText>
                 </div>
-                
-                @foreach (var item in completed)
+
+                @foreach (var item in DoneExercises)
                 {
-                    var exerciseIndex = item.Index;
-                    var exercise = item.Exercise;
-                    var completedSetsCount = item.CompletedCount;
-                    var isExpanded = _activeExerciseIndex == exerciseIndex;
-
-                     <MudCard Class='@($"mb-3 exercise-accordion-card exercise-accordion-card--completed {(isExpanded ? "exercise-accordion-card--expanded" : "")}")' @key="exercise.Id" data-exercise-index="@exerciseIndex">
-                        <div class="exercise-accordion-header" @onclick="@(() => ToggleAccordion(exerciseIndex))">
-                            <div class="header-left">
-                                <span class="completed-icon mr-2" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-                                        <defs>
-                                            <linearGradient id="chk-grad" x1="0" y1="0" x2="1" y2="1">
-                                                <stop offset="0%" stop-color="#34d399"/>
-                                                <stop offset="100%" stop-color="#059669"/>
-                                            </linearGradient>
-                                        </defs>
-                                        <circle cx="11" cy="11" r="11" fill="url(#chk-grad)"/>
-                                        <polyline points="6.5,11.5 9.5,14.5 15.5,8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                    </svg>
-                                </span>
-                                <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@exercise.Name</MudText>
-                            </div>
-                            <div class="header-right">
-                                <span class="set-progress-pill set-progress-pill--completed">@completedSetsCount/@exercise.SetCount</span>
-                                <MudIcon Icon="@(isExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
-                            </div>
-                        </div>
-
-                        @if (isExpanded)
-                        {
-                            <MudCardContent Class="pt-0">
-                                <MudProgressLinear Color="Color.Success" Value="100" Class="mb-3" />
-                                
-                                <div class="set-logging-rows">
-                                    @for (var si = 0; si < exercise.SetCount; si++)
-                                    {
-                                        var setIndex = si;
-                                        var inputKey = (exerciseIndex, setIndex);
-                                        (double? Weight, int? Reps) inputs = _setInputs.GetValueOrDefault(inputKey, (exercise.DefaultWeightKg ?? 0.0, exercise.DefaultReps ?? DefaultReps));
-                                        
-                                        var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
-                                        var finalReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
-
-                                        <div class="set-summary-row">
-                                            <span class="set-number-label">Set @(setIndex + 1)</span>
-                                            <span class="set-values">@FormatSetDisplay(exercise.LogType, finalWeight, finalReps)</span>
-                                            <button type="button" 
-                                                    class="log-check-btn log-check-btn--completed"
-                                                    @onclick="@(() => ToggleSetComplete(exerciseIndex, setIndex))"
-                                                    disabled="@_isCompleting">
-                                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
-                                            </button>
-                                        </div>
-                                    }
-                                </div>
-                            </MudCardContent>
-                        }
-                    </MudCard>
+                    <WorkoutExerciseCard Exercise="@item.Exercise"
+                                         ExerciseIndex="@item.ExerciseIndex"
+                                         CompletedSetsCount="@item.CompletedSets"
+                                         IsExpanded="@(_activeExerciseIndex == item.ExerciseIndex)"
+                                         IsCompleted="true"
+                                         IsCompleting="@_isCompleting"
+                                         ActiveSetIndex="@_activeSetIndices.GetValueOrDefault(item.ExerciseIndex, 0)"
+                                         DefaultReps="@DefaultReps"
+                                         BodyweightKg="@_bodyweightKg"
+                                         SetInputs="@_setInputs"
+                                         OnToggle="ToggleAccordion"
+                                         OnToggleSet="ToggleSetComplete"
+                                         OnWeightChanged="HandleWeightStepperChanged"
+                                         OnRepsChanged="HandleRepsStepperChanged" />
                 }
             }
 
@@ -232,9 +104,7 @@ else
             </MudButton>
         </MudStack>
     </MudStack>
-
 }
-
 
 @code {
     [Parameter]
@@ -244,7 +114,6 @@ else
     public bool ForceNew { get; set; }
 
     private const int DefaultReps = 10;
-    private const int UrgentRestThresholdSeconds = 3;
     private const int RestTickIntervalMs = 1000;
     private const int RestCompleteVibrationMs = 500;
     private const int WorkoutCompleteVibrationMs = 800;
@@ -253,7 +122,6 @@ else
     private int _lastRestDurationSeconds;
     private Guid? _loadedPlanId;
     private bool _loadedForceNew;
-    private IJSObjectReference? _audioModule;
     private bool _isCompleting;
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
@@ -261,13 +129,13 @@ else
     private Snackbar? _undoSnackbar;
     private double? _bodyweightKg;
 
-    private sealed class SetInputsDictionary : Dictionary<System.ValueTuple<int, int>, (double? Weight, int? Reps)> { }
+    private sealed class SetInputsDictionary : Dictionary<(int, int), (double? Weight, int? Reps)> { }
 
-    private SetInputsDictionary _setInputs = new();
-    private int _activeExerciseIndex = 0;
-    private Dictionary<int, int> _activeSetIndices = new();
+    private readonly SetInputsDictionary _setInputs = new();
+    private int _activeExerciseIndex;
+    private readonly Dictionary<int, int> _activeSetIndices = new();
 
-    private record ExerciseProgress(string ExerciseName, int ExerciseIndex, int CompletedSets, int TotalSets);
+    private sealed record ExerciseProgress(ExercisePlan Exercise, int ExerciseIndex, int CompletedSets, int TotalSets);
 
     private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
     private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
@@ -279,10 +147,7 @@ else
         _dotNetRef = DotNetObjectReference.Create(this);
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
 
-        await InvokeAudioAsync(async () =>
-        {
-            _audioModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/workoutTimer.js");
-        });
+        await TimerInterop.InitializeAsync();
 
         await EnsureWorkoutStartedAsync();
     }
@@ -382,7 +247,7 @@ else
 
                 if (completedSets.Any())
                 {
-                    var lastCompletedSet = completedSets.Last();
+                    var lastCompletedSet = completedSets[^1];
                     var lastWeight = lastCompletedSet.WeightKg ?? 0;
                     var lastReps = lastCompletedSet.Reps ?? 0;
 
@@ -432,19 +297,16 @@ else
             if (completed)
             {
                 if (hasAnySets)
-                    list.Add(new ExerciseProgress(ex.Name, ei, completedSets, ex.SetCount));
+                    list.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
             }
             else
             {
                 if (!isFullyCompleted)
-                    list.Add(new ExerciseProgress(ex.Name, ei, completedSets, ex.SetCount));
+                    list.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
             }
         }
         return list;
     }
-
-    private static double GetProgressValue(int completed, int total) =>
-        total == 0 ? 0 : (completed * 100.0) / total;
 
     private async Task ConfirmLeaveWorkoutInProgress()
     {
@@ -462,7 +324,7 @@ else
     {
         if (_disposed) return;
 
-        await StopJsTimerAsync();
+        await TimerInterop.StopTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         SessionService.EndWorkout();
         Navigation.NavigateTo(AppRoutes.Home);
@@ -496,7 +358,7 @@ else
     {
         if (_disposed) return;
 
-        await StopJsTimerAsync();
+        await TimerInterop.StopTimerAsync();
         RestNotifications.CancelAllRestNotifications();
 
         if (_historySessionId != null)
@@ -521,22 +383,25 @@ else
         _activeExerciseIndex = _activeExerciseIndex == exerciseIndex ? -1 : exerciseIndex;
     }
 
-    private void HandleWeightStepperChanged(int exIdx, int setIdx, double? val)
+    private void HandleWeightStepperChanged((int ExerciseIndex, int SetIndex, double? Weight) input)
     {
+        var (exIdx, setIdx, weight) = input;
         var key = (exIdx, setIdx);
         var current = _setInputs.GetValueOrDefault(key, (null, null));
-        _setInputs[key] = (val, current.Reps);
+        _setInputs[key] = (weight, current.Reps);
     }
 
-    private void HandleRepsStepperChanged(int exIdx, int setIdx, double? val)
+    private void HandleRepsStepperChanged((int ExerciseIndex, int SetIndex, int? Reps) input)
     {
+        var (exIdx, setIdx, reps) = input;
         var key = (exIdx, setIdx);
         var current = _setInputs.GetValueOrDefault(key, (null, null));
-        _setInputs[key] = (current.Weight, val.HasValue ? (int)Math.Round(val.Value) : null);
+        _setInputs[key] = (current.Weight, reps);
     }
 
-    private async Task ToggleSetComplete(int exerciseIndex, int setIndex)
+    private async Task ToggleSetComplete((int ExerciseIndex, int SetIndex) set)
     {
+        var (exerciseIndex, setIndex) = set;
         if (_isCompleting) return;
         if (_disposed) return;
 
@@ -558,7 +423,7 @@ else
                     await HistoryRepository.DeleteSetLogAsync(_historySessionId, exerciseIndex, setIndex);
                 }
 
-                await StopJsTimerAsync();
+                await TimerInterop.StopTimerAsync();
                 RestNotifications.CancelAllRestNotifications();
                 _isRestComplete = false;
                 SessionService.SkipRest();
@@ -583,7 +448,7 @@ else
             await SafeStateHasChangedAsync();
             try
             {
-                await UnlockAudioContextAsync();
+                await TimerInterop.UnlockAudioAsync();
 
                 var inputKey = (exerciseIndex, setIndex);
                 var inputs = _setInputs.GetValueOrDefault(inputKey, (null, null));
@@ -635,7 +500,7 @@ else
                 }
 
                 _isRestComplete = false;
-                await StopJsTimerAsync();
+                await TimerInterop.StopTimerAsync();
                 RestNotifications.CancelAllRestNotifications();
                 _lastRestDurationSeconds = exercise.RestIntervalSeconds;
                 SessionService.StartRest(exercise.RestIntervalSeconds);
@@ -688,7 +553,7 @@ else
         if (!SessionService.TryUndoLastSet(out var removed)) return;
 
         HideUndoToast();
-        await StopJsTimerAsync();
+        await TimerInterop.StopTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
@@ -714,7 +579,7 @@ else
     {
         if (_disposed) return;
 
-        await CallJsVoidAsync("pauseRestTimer");
+        await TimerInterop.PauseTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         SessionService.PauseRest();
         await SafeStateHasChangedAsync();
@@ -728,7 +593,7 @@ else
         if (expired)
         {
             _isRestComplete = true;
-            await StopJsTimerAsync();
+            await TimerInterop.StopTimerAsync();
             await SafeStateHasChangedAsync();
             await PlayRestCompleteAlertsAsync();
         }
@@ -768,7 +633,7 @@ else
     {
         if (_disposed) return;
 
-        await StopJsTimerAsync();
+        await TimerInterop.StopTimerAsync();
         RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
@@ -795,7 +660,7 @@ else
 
         try
         {
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(RestCompleteVibrationMs));
+            VibrationService.Vibrate(TimeSpan.FromMilliseconds(RestCompleteVibrationMs));
         }
         catch
         {
@@ -804,21 +669,13 @@ else
 
         try
         {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("playRestCompleteSound");
+            await TimerInterop.PlayRestCompleteSoundAsync();
         }
         catch
         {
             // Silently fail if audio not supported
         }
     }
-
-    private async Task UnlockAudioContextAsync() =>
-        await InvokeAudioAsync(async () =>
-        {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("unlockAudioContext");
-        });
 
     private async Task ScheduleRestNotificationIfRestingAsync()
     {
@@ -840,7 +697,7 @@ else
 
             try
             {
-                await StopJsTimerAsync();
+                await TimerInterop.StopTimerAsync();
                 _isRestComplete = true;
                 await SafeStateHasChangedAsync();
                 await PlayRestCompleteAlertsAsync();
@@ -857,10 +714,8 @@ else
     {
         try
         {
-            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(WorkoutCompleteVibrationMs));
-
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("playWorkoutCompleteSound");
+            VibrationService.Vibrate(TimeSpan.FromMilliseconds(WorkoutCompleteVibrationMs));
+            await TimerInterop.PlayWorkoutCompleteSoundAsync();
         }
         catch
         {
@@ -872,7 +727,7 @@ else
     {
         if (_disposed) return;
 
-        await StopJsTimerAsync();
+        await TimerInterop.StopTimerAsync();
         RestNotifications.CancelAllRestNotifications();
 
         try
@@ -918,74 +773,22 @@ else
 
     private async Task StartJsTimerAsync(int? durationSeconds = null)
     {
-        if (_audioModule == null || _dotNetRef == null) return;
+        if (_dotNetRef == null) return;
 
         var totalMs = (durationSeconds ?? SessionService.ActiveRestDurationSeconds) * RestTickIntervalMs;
-        await InvokeAudioAsync(() => _audioModule.InvokeVoidAsync("startRestTimer", _dotNetRef, RestTickIntervalMs, totalMs).AsTask());
+        await TimerInterop.StartTimerAsync(_dotNetRef, RestTickIntervalMs, totalMs);
     }
-
-    private async Task StopJsTimerAsync() =>
-        await InvokeAudioAsync(async () =>
-        {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("stopRestTimer");
-        });
 
     private async Task ResumeJsTimerAsync(int durationSeconds)
     {
-        if (durationSeconds <= 0) return;
-        if (_audioModule == null || _dotNetRef == null) return;
+        if (durationSeconds <= 0 || _dotNetRef == null) return;
 
-        await InvokeAudioAsync(() => _audioModule.InvokeVoidAsync("resumeRestTimer", _dotNetRef, RestTickIntervalMs, durationSeconds * RestTickIntervalMs).AsTask());
-    }
-
-    private async Task CallJsVoidAsync(string method) =>
-        await InvokeAudioAsync(async () =>
-        {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync(method);
-        });
-
-    /// <summary>Invokes a JS call on the workout timer module, swallowing teardown-related exceptions.</summary>
-    private async Task InvokeAudioAsync(Func<Task> action)
-    {
-        if (_disposed) return;
-
-        try
-        {
-            await action();
-        }
-        catch (JSDisconnectedException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
-    }
-
-    private string FormatSetDisplay(ExerciseLogType logType, double? weight, int reps)
-    {
-        return logType switch
-        {
-            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, reps),
-            ExerciseLogType.Duration => $"{reps}s",
-            _ => $"{(weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "0")} kg × {reps} reps"
-        };
-    }
-
-    private string? GetBodyweightStepperDisplayText(double? value)
-    {
-        if (value == null || value.Value == 0)
-            return "BW";
-        if (value.Value > 0)
-            return $"+{ExerciseWeightFormatter.FormatKg(value.Value)}";
-        return $"-{ExerciseWeightFormatter.FormatKg(Math.Abs(value.Value))}";
+        await TimerInterop.ResumeTimerAsync(_dotNetRef, RestTickIntervalMs, durationSeconds * RestTickIntervalMs);
     }
 
     public async ValueTask DisposeAsync()
     {
-        await InvokeAudioAsync(async () =>
-        {
-            if (_audioModule != null)
-                await _audioModule.InvokeVoidAsync("stopRestTimer");
-        });
+        await TimerInterop.DisposeAsync();
 
         _disposed = true;
         HideUndoToast();
@@ -993,15 +796,6 @@ else
         RestNotifications.CancelAllRestNotifications();
         SessionService.CancelRest();
         _dotNetRef?.Dispose();
-        if (_audioModule != null)
-        {
-            try
-            {
-                await _audioModule.DisposeAsync();
-            }
-            catch (JSDisconnectedException) { }
-            catch (ObjectDisposedException) { }
-        }
     }
 
     private async Task SafeStateHasChangedAsync()
@@ -1012,8 +806,13 @@ else
         {
             await InvokeAsync(StateHasChanged);
         }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
+        catch (ObjectDisposedException)
+        {
+            // Component disposed during teardown
+        }
+        catch (InvalidOperationException)
+        {
+            // No render handle available (e.g. prerendering)
+        }
     }
-
 }

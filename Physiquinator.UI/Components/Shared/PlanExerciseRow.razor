@@ -1,4 +1,5 @@
-@using Physiquinator.Models
+@using Physiquinator.Core.Formatting
+@using Physiquinator.Core.Models
 
 <div class="plan-exercise-row mud-paper mud-elevation-1" @key="Exercise.Id">
     <div class="plan-exercise-row__main">
@@ -30,7 +31,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public ExercisePlan Exercise { get; set; } = null!;
+    public ExercisePlan Exercise { get; set; }
 
     [Parameter]
     public int Index { get; set; }
@@ -57,7 +58,7 @@
             parts.Add($"{exercise.DefaultReps} reps");
 
         if (exercise.DefaultWeightKg.HasValue)
-            parts.Add($"{exercise.DefaultWeightKg:0.#} kg");
+            parts.Add($"{ExerciseWeightFormatter.FormatKg(exercise.DefaultWeightKg.Value)} kg");
 
         return string.Join(" · ", parts);
     }

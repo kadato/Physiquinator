@@ -164,8 +164,15 @@ else
 
         _sets = sets;
         _planGuid = _session?.TryGetPlanId();
-        _logTypesByExercise = _snapshot?.Exercises
-            .ToDictionary(e => e.Name, e => e.LogType, StringComparer.OrdinalIgnoreCase) ?? new();
+        _logTypesByExercise = new(StringComparer.OrdinalIgnoreCase);
+        if (_snapshot != null)
+        {
+            foreach (ExercisePlan exercise in _snapshot.Exercises)
+            {
+                // First occurrence wins; malformed snapshots may repeat a name with different casing.
+                _logTypesByExercise.TryAdd(exercise.Name, exercise.LogType);
+            }
+        }
         _distinctExerciseNames = sets
             .Select(s => s.ExerciseName)
             .Where(n => !string.IsNullOrWhiteSpace(n))

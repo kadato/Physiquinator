@@ -42,6 +42,7 @@
 
         <!-- CS1591: XML doc comments are not required for an application project -->
         <NoWarn>$(NoWarn);CS1591;XA0141</NoWarn>
+        <DefaultItemExcludes>$(DefaultItemExcludes);Physiquinator.Core\**;Physiquinator.UI\**;Physiquinator.Tests\**;Physiquinator.Web\**;artifacts\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->
@@ -120,9 +121,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AndroidResource Remove="docs\screenshots\**" />
-      <Compile Remove="docs\screenshots\**" />
-      <Content Remove="docs\screenshots\**" />
       <Compile Remove="Physiquinator.Core\**" />
       <Content Remove="Physiquinator.Core\**" />
       <None Remove="Physiquinator.Core\**" />
@@ -130,9 +128,15 @@
       <Compile Remove="Physiquinator.Tests\**" />
       <Content Remove="Physiquinator.Tests\**" />
       <None Remove="Physiquinator.Tests\**" />
-      <EmbeddedResource Remove="docs\screenshots\**" />
-      <MauiXaml Remove="docs\screenshots\**" />
-      <None Remove="docs\screenshots\**" />
+      <EmbeddedResource Remove="Physiquinator.Tests\**" />
+      <Compile Remove="Physiquinator.UI\**" />
+      <Content Remove="Physiquinator.UI\**" />
+      <None Remove="Physiquinator.UI\**" />
+      <EmbeddedResource Remove="Physiquinator.UI\**" />
+      <Compile Remove="Physiquinator.Web\**" />
+      <Content Remove="Physiquinator.Web\**" />
+      <None Remove="Physiquinator.Web\**" />
+      <EmbeddedResource Remove="Physiquinator.Web\**" />
       <Compile Remove="artifacts\**" />
       <Content Remove="artifacts\**" />
       <None Remove="artifacts\**" />
@@ -143,6 +147,7 @@
 
     <ItemGroup>
         <ProjectReference Include="Physiquinator.Core\Physiquinator.Core.csproj" />
+        <ProjectReference Include="Physiquinator.UI\Physiquinator.UI.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -152,31 +157,6 @@
         <PackageReference Include="MudBlazor" />
         <PackageReference Include="Plugin.LocalNotification" />
     </ItemGroup>
-
-    <ItemGroup>
-      <None Include=".github\workflows\ci.yml" />
-      <None Include=".github\workflows\release.yml" />
-      <None Include="Physiquinator.Tests\Physiquinator.Tests.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include=".vscode\" />
-      <Folder Include="scripts\" />
-    </ItemGroup>
-
-    <!-- Debug skips scoped CSS bundling on Windows; copy bundle when present (Release fallback) -->
-    <Target Name="CopyScopedCssBundleToWwwRoot" AfterTargets="Build">
-        <PropertyGroup>
-            <_ScopedCssBundle>$(IntermediateOutputPath)scopedcss\bundle\$(AssemblyName).styles.css</_ScopedCssBundle>
-            <_ScopedCssBundleRelease>$(MSBuildProjectDirectory)\obj\Release\net11.0-windows10.0.19041.0\win-x64\scopedcss\bundle\$(AssemblyName).styles.css</_ScopedCssBundleRelease>
-            <_ScopedCssSource>$(_ScopedCssBundle)</_ScopedCssSource>
-            <_ScopedCssSource Condition="!Exists('$(_ScopedCssBundle)') and Exists('$(_ScopedCssBundleRelease)')">$(_ScopedCssBundleRelease)</_ScopedCssSource>
-        </PropertyGroup>
-        <Copy SourceFiles="$(_ScopedCssSource)"
-              DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\$(AssemblyName).styles.css"
-              Condition="Exists('$(_ScopedCssSource)')"
-              SkipUnchangedFiles="false" />
-    </Target>
 
     <!-- Workaround for MAUI WinUI 3 packaging bug where generated splash screen assets are not copied to the AppX package layout -->
     <Target Name="CopyMauiSplashScreensToAppX" AfterTargets="Build">

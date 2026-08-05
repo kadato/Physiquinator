@@ -104,26 +104,41 @@
             ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
             : "rest-timer-panel rest-timer-panel--active";
 
-    private string DigitsClass =>
-        IsRestPaused
-            ? "rest-timer-digits--paused"
-            : RestSecondsRemaining <= UrgentRestThresholdSeconds
-                ? "rest-timer-digits--urgent"
-                : "";
+    private string DigitsClass
+    {
+        get
+        {
+            if (IsRestPaused)
+                return "rest-timer-digits--paused";
+            if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
+                return "rest-timer-digits--urgent";
+            return "";
+        }
+    }
 
-    private string EdgeFillClass =>
-        IsRestPaused
-            ? "rest-timer-edge-fill--paused"
-            : RestSecondsRemaining <= UrgentRestThresholdSeconds
-                ? "rest-timer-edge-fill--urgent"
-                : "";
+    private string EdgeFillClass
+    {
+        get
+        {
+            if (IsRestPaused)
+                return "rest-timer-edge-fill--paused";
+            if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
+                return "rest-timer-edge-fill--urgent";
+            return "";
+        }
+    }
 
-    private string DisplayAriaLabel =>
-        IsRestComplete
-            ? "Rest complete"
-            : IsRestPaused
-                ? $"Rest paused, {FormatTime(RestSecondsRemaining)} remaining"
-                : $"Rest, {FormatTime(RestSecondsRemaining)} remaining";
+    private string DisplayAriaLabel
+    {
+        get
+        {
+            if (IsRestComplete)
+                return "Rest complete";
+            if (IsRestPaused)
+                return $"Rest paused, {FormatTime(RestSecondsRemaining)} remaining";
+            return $"Rest, {FormatTime(RestSecondsRemaining)} remaining";
+        }
+    }
 
     private static string FormatTime(int totalSeconds)
     {

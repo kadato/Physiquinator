@@ -1,7 +1,7 @@
 using MudBlazor;
-using Physiquinator.Components.Shared;
+using Physiquinator.UI.Components.Shared;
 
-namespace Physiquinator.Services;
+namespace Physiquinator.UI.Services;
 
 public static class ConfirmDialogService
 {

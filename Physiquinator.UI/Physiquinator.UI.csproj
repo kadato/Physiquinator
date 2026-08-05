@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <RootNamespace>Physiquinator.UI</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- S8970: null-forgiving on [Inject]/[CascadingParameter] members is required for Blazor DI;
+         the Razor generator emits the class without constructor assignment. -->
+    <NoWarn>$(NoWarn);S8970</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="MudBlazor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Physiquinator.Core\Physiquinator.Core.csproj" />
+  </ItemGroup>
+
+</Project>

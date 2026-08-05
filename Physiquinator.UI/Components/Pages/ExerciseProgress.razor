@@ -172,9 +172,16 @@ else
             ? chronological.Select(r => r.TotalVolumeKg).ToArray()
             : chronological.Select(r => (double)r.TotalReps).ToArray();
         _hasChartData = values.Any(v => v > 0);
+
+        string seriesName = _logType switch
+        {
+            ExerciseLogType.Duration => "Total Duration",
+            _ when isVolumePlot => "Progression",
+            _ => "Total Reps"
+        };
         _chartSeries = [ new ChartSeries<double>
         {
-            Name = _logType == ExerciseLogType.Duration ? "Total Duration" : (isVolumePlot ? "Progression" : "Total Reps"),
+            Name = seriesName,
             Data = values
         } ];
 
@@ -208,7 +215,7 @@ else
     }
 
     private static string FormatYAxisTick(double value) =>
-        value.ToString("0", CultureInfo.CurrentCulture);
+        value.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
 
     private static string[] BuildSparseChartLabels(IReadOnlyList<DateTime> datesUtc, int maxLabels)
     {

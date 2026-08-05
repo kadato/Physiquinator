@@ -1,6 +1,6 @@
 @page "/"
-@using Physiquinator.Formatting
-@using Physiquinator.Services
+@using Physiquinator.Core.Formatting
+@using Physiquinator.Core.Services
 @implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
@@ -12,7 +12,8 @@
 @inject IDemoSeedPreferences DemoSeedPreferences
 @inject IJSRuntime JS
 @inject WorkoutStatsService StatsService
-@inject FileTransferService FileTransfer
+@inject IFileTransferService FileTransfer
+@inject TimeProvider TimeProvider
 
 <PageTitle>Home</PageTitle>
 
@@ -246,7 +247,7 @@
         {
             var json = await PlanService.ExportPlanToJsonAsync(planId);
             await FileTransfer.ExportJsonAsync(
-                FileTransfer.JsonFileName(FileTransfer.SafeFileStem(planName)),
+                FileTransferNames.JsonFileName(FileTransferNames.SafeFileStem(planName), TimeProvider.GetLocalNow()),
                 json);
             Snackbar.Add($"'{planName}' exported.", Severity.Success);
         }

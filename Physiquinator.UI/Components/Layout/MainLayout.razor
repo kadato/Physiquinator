@@ -1,7 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @using Microsoft.Extensions.Logging
-@using Physiquinator.Services
+@using Physiquinator.Core.Services
 @inject ThemeService ThemeService
 @inject AppInitializationService AppInit
 @inject NavigationManager Navigation
@@ -120,20 +120,14 @@
 
     protected override void OnInitialized()
     {
-        ThemeService.ThemeChanged += OnThemeChanged;
-        AppInit.ProgressChanged += OnInitProgressChanged;
+        ThemeService.ThemeChanged += OnAppStateChanged;
+        AppInit.ProgressChanged += OnAppStateChanged;
         Navigation.LocationChanged += OnLocationChanged;
         SyncThemeFromService();
         UpdateNavigationState();
     }
 
-    private void OnInitProgressChanged()
-    {
-        SyncThemeFromService();
-        _ = InvokeAsync(StateHasChanged);
-    }
-
-    private void OnThemeChanged()
+    private void OnAppStateChanged()
     {
         SyncThemeFromService();
         _ = InvokeAsync(StateHasChanged);
@@ -151,26 +145,21 @@
     {
         var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
         _showBottomNav = ShouldShowBottomNav(path);
-        _useFixedDockPadding = !_showBottomNav && !path.StartsWith(WorkoutRoutePrefix, StringComparison.Ordinal);
+        _useFixedDockPadding = !_showBottomNav && !path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal);
     }
 
     private static bool ShouldShowBottomNav(string path)
     {
-        if (path.StartsWith(WorkoutRoutePrefix, StringComparison.Ordinal)) return false;
-        if (path == PlanRoute || path.StartsWith(PlanRoutePrefix, StringComparison.Ordinal)) return false;
-        if (path.StartsWith(HistoryRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal)) return false;
         return true;
     }
 
-    private const string WorkoutRoutePrefix = "workout/";
-    private const string PlanRoute = "plan";
-    private const string PlanRoutePrefix = "plan/";
-    private const string HistoryRoutePrefix = "history/";
-
     public void Dispose()
     {
-        ThemeService.ThemeChanged -= OnThemeChanged;
-        AppInit.ProgressChanged -= OnInitProgressChanged;
+        ThemeService.ThemeChanged -= OnAppStateChanged;
+        AppInit.ProgressChanged -= OnAppStateChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }

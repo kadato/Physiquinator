@@ -1,3 +1,5 @@
+@inject NavigationManager Navigation
+
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
     @if (ShowBack)
     {
@@ -24,9 +26,6 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-
-    [Inject]
-    private NavigationManager Navigation { get; set; } = null!;
 
     private async Task OnBackClick()
     {

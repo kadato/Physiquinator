@@ -66,7 +66,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 #if ANDROID
     private async Task InstallAndroidAsync(string downloadUrl, IProgress<double>? progress, CancellationToken cancellationToken)
     {
-        string apkPath = Path.Combine(FileSystem.CacheDirectory, GitHubReleaseAssets.AndroidApk);
+        var apkPath = Path.Combine(FileSystem.CacheDirectory, GitHubReleaseAssets.AndroidApk);
         await DownloadAsync(downloadUrl, apkPath, progress, cancellationToken);
         LaunchApkInstaller(apkPath);
     }
@@ -75,9 +75,9 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 #if WINDOWS
     private async Task InstallWindowsAsync(string downloadUrl, IProgress<double>? progress, CancellationToken cancellationToken)
     {
-        string updateRoot = Path.Combine(Path.GetTempPath(), "PhysiquinatorUpdate");
+        var updateRoot = Path.Combine(Path.GetTempPath(), "PhysiquinatorUpdate");
         Directory.CreateDirectory(updateRoot);
-        string zipPath = Path.Combine(updateRoot, GitHubReleaseAssets.WindowsZip);
+        var zipPath = Path.Combine(updateRoot, GitHubReleaseAssets.WindowsZip);
         await DownloadAsync(downloadUrl, zipPath, progress, cancellationToken);
         LaunchWindowsUpdater(zipPath, updateRoot);
     }
@@ -88,7 +88,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
         using HttpResponseMessage response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        long? totalBytes = response.Content.Headers.ContentLength;
+        var totalBytes = response.Content.Headers.ContentLength;
         await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var target = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
 
@@ -126,10 +126,10 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 #if WINDOWS
     private static void LaunchWindowsUpdater(string zipPath, string updateRoot)
     {
-        string exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-        string appExe = Path.Combine(exeDir, "Physiquinator.exe");
+        var exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+        var appExe = Path.Combine(exeDir, "Physiquinator.exe");
 
-        string staging = Path.Combine(updateRoot, "staging");
+        var staging = Path.Combine(updateRoot, "staging");
         if (Directory.Exists(staging))
         {
             Directory.Delete(staging, recursive: true);
@@ -139,7 +139,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
         ZipFile.ExtractToDirectory(zipPath, staging);
         EnsureWritable(exeDir, zipPath);
 
-        string updaterPath = Path.Combine(updateRoot, "update.cmd");
+        var updaterPath = Path.Combine(updateRoot, "update.cmd");
         File.WriteAllText(updaterPath, BuildUpdaterScript(exeDir, appExe), System.Text.Encoding.ASCII);
 
         Process.Start(new ProcessStartInfo
@@ -176,7 +176,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 
     private static void EnsureWritable(string exeDir, string zipPath)
     {
-        string probe = Path.Combine(exeDir, ".physiquinator-write-probe");
+        var probe = Path.Combine(exeDir, ".physiquinator-write-probe");
         try
         {
             File.WriteAllText(probe, string.Empty);

@@ -608,17 +608,11 @@ public sealed class RestOverlayService : Service
         if (session == null)
             return;
 
-        if (session.IsResting)
-        {
-            session.ResetRest();
-        }
-        else
-        {
-            // Between sets: start a fresh rest with original duration
-            int baseRest = GetExerciseRestSeconds(session);
-            if (baseRest > 0)
-                session.StartRest(baseRest);
-        }
+        // Always restart the countdown with the exercise's default rest
+        // interval, even when the current rest was started or changed by +Ns.
+        int baseRest = GetExerciseRestSeconds(session);
+        if (baseRest > 0)
+            session.StartRest(baseRest);
     }
 
     private static int GetExerciseRestSeconds(WorkoutSessionService session)

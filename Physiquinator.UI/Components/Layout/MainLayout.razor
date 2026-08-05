@@ -12,47 +12,46 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
-    @if (AppInit.IsReady)
-    {
+@if (AppInit.IsReady)
+{
+    <div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
         <main class="app-main-scroll">
             <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
                 @Body
             </MudContainer>
         </main>
-    }
 
-    @if (AppInit.ShowSetupOverlay)
-    {
-        <div class="app-startup-overlay" aria-busy="true" aria-live="polite">
-            <LoadingCenter Label="@(AppInit.SetupStatusMessage ?? "Setting up…")" />
-        </div>
-    }
-
-    @if (_showBottomNav)
-    {
-        <nav class="app-tab-bar" aria-label="Main navigation">
-            <div class="app-tab-bar__inner app-bottom-dock">
-                <NavLink href="@AppRoutes.Home" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
-                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
-                    <span class="app-tab__label">Home</span>
-                </NavLink>
-                <NavLink href="@AppRoutes.History" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                    <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Medium" />
-                    <span class="app-tab__label">History</span>
-                </NavLink>
-                <NavLink href="@AppRoutes.PlanEditor" class="app-tab app-tab--create" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Medium" />
-                    <span class="app-tab__label">New plan</span>
-                </NavLink>
-                <NavLink href="@AppRoutes.Settings" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" />
-                    <span class="app-tab__label">Settings</span>
-                </NavLink>
-            </div>
-        </nav>
-    }
-</div>
+        @if (_showBottomNav)
+        {
+            <nav class="app-tab-bar" aria-label="Main navigation">
+                <div class="app-tab-bar__inner app-bottom-dock">
+                    <NavLink href="@AppRoutes.Home" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
+                        <span class="app-tab__label">Home</span>
+                    </NavLink>
+                    <NavLink href="@AppRoutes.History" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Medium" />
+                        <span class="app-tab__label">History</span>
+                    </NavLink>
+                    <NavLink href="@AppRoutes.PlanEditor" class="app-tab app-tab--create" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Medium" />
+                        <span class="app-tab__label">New plan</span>
+                    </NavLink>
+                    <NavLink href="@AppRoutes.Settings" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" />
+                        <span class="app-tab__label">Settings</span>
+                    </NavLink>
+                </div>
+            </nav>
+        }
+    </div>
+}
+else
+{
+    <SplashScreen StatusMessage="@AppInit.SetupStatusMessage"
+                  ErrorMessage="@_initError"
+                  RetryRequested="RetryInitializationAsync" />
+}
 
 @code {
     private readonly MudTheme _theme = new()
@@ -99,6 +98,7 @@
     private bool _isDark = true;
     private bool _showBottomNav = true;
     private bool _useFixedDockPadding;
+    private string? _initError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,6 +110,23 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "App initialization failed");
+            _initError = "Something went wrong while loading your data. Please try again.";
+        }
+    }
+
+    private async Task RetryInitializationAsync()
+    {
+        _initError = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await AppInit.ReinitializeAsync();
+            SyncThemeFromService();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "App initialization failed on retry");
+            _initError = "Something went wrong while loading your data. Please try again.";
         }
     }
 

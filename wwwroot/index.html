@@ -39,6 +39,26 @@
         .app-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; overflow: hidden; }
         .app-main-scroll { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
         .app-tab-bar { flex-shrink: 0; }
+        /* Startup splash fallback — full styling in app-overrides.css */
+        .app-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            padding: 2rem;
+            box-sizing: border-box;
+            text-align: center;
+            background-color: #0B0C10;
+            color: #F3F4F6;
+        }
+        html[data-theme="light"] .app-splash {
+            background-color: #F8F9FA;
+            color: #111827;
+        }
     </style>
     <link rel="icon" type="image/png" href="_content/Physiquinator.UI/favicon.png" />
 </head>
@@ -47,7 +67,20 @@
 
     <div class="status-bar-safe-area"></div>
 
-    <div id="app">Loading...</div>
+    <div id="app">
+        <div class="app-splash" role="status" aria-live="polite" aria-busy="true">
+            <div class="app-splash__logo" aria-hidden="true">
+                <svg viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#ffffff" transform="translate(60,60) scale(10.5)">
+                        <circle cx="16" cy="6" r="4" />
+                        <path d="M16,11 L2,16 L12,29 L20,29 L30,16 Z" />
+                    </g>
+                </svg>
+            </div>
+            <div class="app-splash__title">Physiquinator</div>
+            <div class="app-splash__spinner" aria-hidden="true"></div>
+        </div>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

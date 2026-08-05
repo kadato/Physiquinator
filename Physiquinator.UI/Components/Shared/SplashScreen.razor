@@ -1,0 +1,38 @@
+<div class="app-splash" role="status" aria-live="polite" aria-busy="@(ErrorMessage is null ? "true" : "false")">
+    <div class="app-splash__logo" aria-hidden="true">
+        <svg viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
+            <g fill="#ffffff" transform="translate(60,60) scale(10.5)">
+                <circle cx="16" cy="6" r="4" />
+                <path d="M16,11 L2,16 L12,29 L20,29 L30,16 Z" />
+            </g>
+        </svg>
+    </div>
+    <h1 class="app-splash__title">Physiquinator</h1>
+
+    @if (ErrorMessage is null)
+    {
+        <div class="app-splash__spinner" aria-hidden="true"></div>
+        @if (!string.IsNullOrEmpty(StatusMessage))
+        {
+            <p class="app-splash__status">@StatusMessage</p>
+        }
+    }
+    else
+    {
+        <p class="app-splash__status app-splash__status--error">@ErrorMessage</p>
+        <button type="button" class="app-splash__retry" @onclick="OnRetryAsync">Try again</button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? StatusMessage { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public EventCallback RetryRequested { get; set; }
+
+    private Task OnRetryAsync() => RetryRequested.InvokeAsync();
+}

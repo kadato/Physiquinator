@@ -79,7 +79,9 @@
         <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
 
         <!-- .NET 11 preview SDK workarounds (dotnet/android#11025): R8 9.1.31 crashes on R2R
-             inputs and on pre-desugared androidx 1.17 classes -->
+             inputs and on pre-desugared androidx 1.17 classes. Keep an eye on the linked issue:
+             once it is fixed upstream, re-enable AndroidEnableProfiledAot, RunAOTCompilation
+             and PublishReadyToRun for release cold-start/JIT-warmup gains. -->
         <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
         <AndroidEnableDesugar Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</AndroidEnableDesugar>
 

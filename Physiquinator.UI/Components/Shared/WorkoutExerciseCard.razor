@@ -52,10 +52,11 @@
                             <span class="set-number-label">Set @(setIndex + 1)</span>
                             <span class="set-values">@FormatSetDisplay(Exercise.LogType, finalWeight, finalReps)</span>
                             <button type="button"
-                                    class="log-check-btn log-check-btn--completed"
+                                    class="set-unlog-btn"
+                                    aria-label="@($"Unlog set {setIndex + 1}")"
                                     @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, setIndex)))"
                                     disabled="@IsCompleting">
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Small" />
                             </button>
                         </div>
                     }

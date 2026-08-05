@@ -1,10 +1,10 @@
 @* Accordion card for one exercise in the active workout. Shows set logging steppers for
-   upcoming exercises and summary rows with checkmarks for completed ones. *@
+   upcoming exercises and a static summary row for completed ones. *@
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Models
 
 <MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
-    <div class="exercise-accordion-header" @onclick="@(() => OnToggle.InvokeAsync(ExerciseIndex))">
+    <div class="@HeaderClass" @onclick="@OnHeaderClick">
         <div class="header-left">
             @if (IsCompleted)
             {
@@ -29,42 +29,17 @@
         </div>
         <div class="header-right">
             <span class="@PillClass">@CompletedSetsCount/@Exercise.SetCount</span>
-            <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
+            @if (!IsCompleted)
+            {
+                <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
+            }
         </div>
     </div>
 
-    @if (IsExpanded)
+    @if (IsExpanded && !IsCompleted)
     {
         <MudCardContent Class="pt-0">
-            @if (IsCompleted)
-            {
-                <MudProgressLinear Color="Color.Success" Value="100" Class="mb-3" />
-
-                <div class="set-logging-rows">
-                    @for (var si = 0; si < Exercise.SetCount; si++)
-                    {
-                        var setIndex = si;
-                        var inputs = GetInputs(ExerciseIndex, setIndex);
-                        var finalWeight = inputs.Weight ?? Exercise.DefaultWeightKg ?? 0.0;
-                        var finalReps = inputs.Reps ?? Exercise.DefaultReps ?? DefaultReps;
-
-                        <div class="set-summary-row">
-                            <span class="set-number-label">Set @(setIndex + 1)</span>
-                            <span class="set-values">@FormatSetDisplay(Exercise.LogType, finalWeight, finalReps)</span>
-                            <button type="button"
-                                    class="set-unlog-btn"
-                                    aria-label="@($"Unlog set {setIndex + 1}")"
-                                    @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, setIndex)))"
-                                    disabled="@IsCompleting">
-                                <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Small" />
-                            </button>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(CompletedSetsCount, Exercise.SetCount)" Class="mb-3" />
+            <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(CompletedSetsCount, Exercise.SetCount)" Class="mb-3" />
 
                 <div class="set-logging-rows">
                     @{
@@ -108,7 +83,6 @@
                         </button>
                     </div>
                 </div>
-            }
         </MudCardContent>
     }
 </MudCard>
@@ -170,6 +144,13 @@
 
     private string ExpandedClass => IsExpanded ? "exercise-accordion-card--expanded" : "";
 
+    private string HeaderClass => IsCompleted
+        ? "exercise-accordion-header exercise-accordion-header--static"
+        : "exercise-accordion-header";
+
+    private Task OnHeaderClick() =>
+        IsCompleted ? Task.CompletedTask : OnToggle.InvokeAsync(ExerciseIndex);
+
     private string PillClass =>
         IsCompleted
             ? "set-progress-pill set-progress-pill--completed"
@@ -182,14 +163,6 @@
 
     private static double GetProgressValue(int completed, int total) =>
         total == 0 ? 0 : (completed * 100.0) / total;
-
-    private string FormatSetDisplay(ExerciseLogType logType, double? weight, int reps) =>
-        logType switch
-        {
-            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(weight, BodyweightKg, reps),
-            ExerciseLogType.Duration => $"{reps}s",
-            _ => $"{(weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "0")} kg × {reps} reps"
-        };
 
     private static string? GetBodyweightStepperDisplayText(double? value)
     {

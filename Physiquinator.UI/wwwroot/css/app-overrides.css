@@ -1927,6 +1927,10 @@ button.heatmap-cell:disabled {
     user-select: none;
 }
 
+.exercise-accordion-header--static {
+    cursor: default;
+}
+
 .exercise-accordion-header .header-left,
 .exercise-accordion-header .header-right {
     display: flex;
@@ -1977,21 +1981,6 @@ button.heatmap-cell:disabled {
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 0.5rem;
-}
-
-.set-logging-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 12px;
-    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 3%, transparent);
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.set-row--completed {
-    background-color: color-mix(in srgb, var(--mud-palette-success) 8%, transparent);
 }
 
 .set-active-panel {
@@ -2136,34 +2125,6 @@ button.heatmap-cell:disabled {
     margin: 0 0.25rem;
 }
 
-/* Completed set row: unlog action (red signals the log entry is removed) */
-.set-unlog-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 30%, transparent);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--mud-palette-error) 7%, transparent);
-    color: var(--mud-palette-error);
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: background-color 120ms ease, border-color 120ms ease;
-}
-
-.set-unlog-btn:active {
-    background: color-mix(in srgb, var(--mud-palette-error) 15%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-error) 50%, transparent);
-}
-
 .completed-icon {
     display: inline-flex;
     align-items: center;
@@ -2260,40 +2221,6 @@ button.heatmap-cell:disabled {
     }
 }
 
-/* Active/Inactive/Completed set tracking rows */
-.set-number-label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--mud-palette-text-secondary);
-    min-width: 3.5rem;
-    text-align: left;
-    user-select: none;
-}
-
-.set-row--active {
-    background-color: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent);
-    border: 1px dashed color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
-}
-
-/* Completed Set Summary Row */
-.set-summary-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    background-color: color-mix(in srgb, var(--mud-palette-success) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-success) 15%, transparent);
-}
-
-.set-values {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--mud-palette-text-primary);
-    flex-grow: 1;
-    text-align: center;
-    user-select: none;
-}
 /* Settings: profile rows, round icon buttons, and ghost action buttons */
 .profile-row {
     background-color: var(--mud-palette-background-grey);
@@ -2347,8 +2274,7 @@ a,
 .heatmap-cell,
 .set-metric-stepper__value,
 .set-metric-stepper__btn,
-.log-set-btn,
-.set-unlog-btn {
+.log-set-btn {
     touch-action: manipulation;
 }
 
@@ -2359,9 +2285,6 @@ a,
 .set-metric-stepper__value,
 .set-metric-stepper__btn,
 .log-set-btn,
-.set-unlog-btn,
-.set-values,
-.set-number-label,
 .rest-timer-digits,
 .home-stat,
 .history-stat {
@@ -2382,7 +2305,6 @@ a,
 /* Stable numerals for stats, set values and the rest timer */
 .home-stat__value,
 .history-stat__value,
-.set-values,
 .rest-timer-digits {
     font-variant-numeric: tabular-nums;
 }

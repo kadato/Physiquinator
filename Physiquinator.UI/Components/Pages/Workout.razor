@@ -7,7 +7,6 @@
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
 @inject IVibrationService VibrationService
 @inject WorkoutTimerInterop TimerInterop
@@ -288,7 +287,6 @@ else
 
         _activeExerciseIndex = firstUncompletedExIdx == -1 ? -1 : firstUncompletedExIdx;
     }
-
     private List<ExerciseProgress> GetExerciseProgress(bool completed)
     {
         var plan = SessionService.CurrentPlan;
@@ -426,119 +424,83 @@ else
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
         var exercise = plan.Exercises[exerciseIndex];
 
-        bool isCompleted = SessionService.IsSetCompleted(exerciseIndex, setIndex);
-
-        if (isCompleted)
+        _isCompleting = true;
+        await SafeStateHasChangedAsync();
+        try
         {
-            _isCompleting = true;
-            await SafeStateHasChangedAsync();
-            try
-            {
-                SessionService.TryRemoveSet(exerciseIndex, setIndex);
-                if (_historySessionId != null)
-                {
-                    await HistoryRepository.DeleteSetLogAsync(_historySessionId, exerciseIndex, setIndex);
-                }
+            await TimerInterop.UnlockAudioAsync();
 
-                await TimerInterop.StopTimerAsync();
+            var inputKey = (exerciseIndex, setIndex);
+            var inputs = _setInputs.GetValueOrDefault(inputKey, (null, null));
+
+            var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
+            var finalReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
+
+            var willBeLastSetOfWorkout = SessionService.WouldCompleteWorkout(exerciseIndex, setIndex);
+
+            if (willBeLastSetOfWorkout && SessionService.IsResting)
+            {
                 RestNotifications.CancelAllRestNotifications();
-                _isRestComplete = false;
                 SessionService.SkipRest();
-
-                _activeSetIndices[exerciseIndex] = setIndex; // Make uncompleted set active
-
-                Snackbar.Add("Set unlogged.", Severity.Info);
             }
-            catch (Exception ex)
+
+            _isRestComplete = false;
+            SessionService.CompleteSet(exerciseIndex, setIndex);
+
+            // Auto active set update
+            var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(exerciseIndex);
+            _activeSetIndices[exerciseIndex] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
+
+            if (_historySessionId != null)
             {
-                Logger.LogError(ex, "Error unlogging set");
+                var loggedWeight = exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight;
+                await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight);
             }
-            finally
+
+            _setInputs[inputKey] = (finalWeight, finalReps);
+
+            // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
+            for (int s = 0; s < exercise.SetCount; s++)
             {
-                _isCompleting = false;
+                if (!SessionService.IsSetCompleted(exerciseIndex, s))
+                {
+                    _setInputs[(exerciseIndex, s)] = (finalWeight, finalReps);
+                }
+            }
+
+            ShowUndoToast();
+
+            if (willBeLastSetOfWorkout)
+            {
+                _activeExerciseIndex = -1;
+                RestNotifications.CancelAllRestNotifications();
                 await SafeStateHasChangedAsync();
+                await OnWorkoutComplete();
+                return;
+            }
+
+            _isRestComplete = false;
+            await TimerInterop.StopTimerAsync();
+            RestNotifications.CancelAllRestNotifications();
+            _lastRestDurationSeconds = exercise.RestIntervalSeconds;
+            SessionService.StartRest(exercise.RestIntervalSeconds);
+            await StartJsTimerAsync();
+            await ScheduleRestNotificationIfRestingAsync();
+
+            // Auto accordion transition
+            if (SessionService.IsExerciseDone(exerciseIndex))
+            {
+                _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
             }
         }
-        else
+        catch (Exception ex)
         {
-            _isCompleting = true;
+            Logger.LogError(ex, "Error logging set");
+        }
+        finally
+        {
+            _isCompleting = false;
             await SafeStateHasChangedAsync();
-            try
-            {
-                await TimerInterop.UnlockAudioAsync();
-
-                var inputKey = (exerciseIndex, setIndex);
-                var inputs = _setInputs.GetValueOrDefault(inputKey, (null, null));
-
-                var finalWeight = inputs.Weight ?? exercise.DefaultWeightKg ?? 0.0;
-                var finalReps = inputs.Reps ?? exercise.DefaultReps ?? DefaultReps;
-
-                var willBeLastSetOfWorkout = SessionService.WouldCompleteWorkout(exerciseIndex, setIndex);
-
-                if (willBeLastSetOfWorkout && SessionService.IsResting)
-                {
-                    RestNotifications.CancelAllRestNotifications();
-                    SessionService.SkipRest();
-                }
-
-                _isRestComplete = false;
-                SessionService.CompleteSet(exerciseIndex, setIndex);
-
-                // Auto active set update
-                var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(exerciseIndex);
-                _activeSetIndices[exerciseIndex] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
-
-                if (_historySessionId != null)
-                {
-                    var loggedWeight = exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight;
-                    await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight);
-                }
-
-                _setInputs[inputKey] = (finalWeight, finalReps);
-
-                // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
-                for (int s = 0; s < exercise.SetCount; s++)
-                {
-                    if (!SessionService.IsSetCompleted(exerciseIndex, s))
-                    {
-                        _setInputs[(exerciseIndex, s)] = (finalWeight, finalReps);
-                    }
-                }
-
-                ShowUndoToast();
-
-                if (willBeLastSetOfWorkout)
-                {
-                    _activeExerciseIndex = -1;
-                    RestNotifications.CancelAllRestNotifications();
-                    await SafeStateHasChangedAsync();
-                    await OnWorkoutComplete();
-                    return;
-                }
-
-                _isRestComplete = false;
-                await TimerInterop.StopTimerAsync();
-                RestNotifications.CancelAllRestNotifications();
-                _lastRestDurationSeconds = exercise.RestIntervalSeconds;
-                SessionService.StartRest(exercise.RestIntervalSeconds);
-                await StartJsTimerAsync();
-                await ScheduleRestNotificationIfRestingAsync();
-
-                // Auto accordion transition
-                if (SessionService.IsExerciseDone(exerciseIndex))
-                {
-                    _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error logging set");
-            }
-            finally
-            {
-                _isCompleting = false;
-                await SafeStateHasChangedAsync();
-            }
         }
     }
 

@@ -148,8 +148,10 @@ else
 
     private sealed record ExerciseProgress(ExercisePlan Exercise, int ExerciseIndex, int CompletedSets, int TotalSets);
 
-    private List<ExerciseProgress> DoneExercises => GetExerciseProgress(completed: true);
-    private List<ExerciseProgress> UpcomingExercises => GetExerciseProgress(completed: false);
+    private List<ExerciseProgress> _doneExercises = [];
+    private List<ExerciseProgress> _upcomingExercises = [];
+    private IReadOnlyList<ExerciseProgress> DoneExercises => _doneExercises;
+    private IReadOnlyList<ExerciseProgress> UpcomingExercises => _upcomingExercises;
 
     protected override async Task OnInitializedAsync()
     {
@@ -201,6 +203,7 @@ else
                 SessionService.ResumeWorkout(workoutPlan, completions);
                 _historySessionId = open.Id;
                 await InitializeWorkoutStateAsync(workoutPlan);
+                RefreshExerciseProgress();
                 await RestorePendingRestAsync(pendingRest);
                 return;
             }
@@ -216,6 +219,7 @@ else
         var snapshot = WorkoutPlanService.SerializePlanToJson(plan);
         _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
         await InitializeWorkoutStateAsync(plan);
+        RefreshExerciseProgress();
         await RestorePendingRestAsync(pendingRest);
     }
 
@@ -241,10 +245,13 @@ else
         _activeSetIndices.Clear();
         int firstUncompletedExIdx = -1;
 
+        IReadOnlyDictionary<string, LastSetMetrics> latestMetrics =
+            await HistoryRepository.GetLatestSetMetricsByExerciseAsync(plan.Id);
+
         for (int e = 0; e < plan.Exercises.Count; e++)
         {
             var exercise = plan.Exercises[e];
-            var lastMetrics = await HistoryRepository.GetLatestSetMetricsForExerciseAsync(plan.Id, exercise.Name);
+            LastSetMetrics? lastMetrics = latestMetrics.TryGetValue(exercise.Name, out var lm) ? lm : null;
             var initialReps = lastMetrics?.Reps ?? exercise.DefaultReps ?? DefaultReps;
             var initialWeight = lastMetrics?.WeightKg ?? exercise.DefaultWeightKg ?? 0;
 
@@ -306,13 +313,22 @@ else
 
         _activeExerciseIndex = firstUncompletedExIdx == -1 ? -1 : firstUncompletedExIdx;
     }
-    private List<ExerciseProgress> GetExerciseProgress(bool completed)
+    /// <summary>
+    /// Recomputes the done/upcoming exercise split once per render. Uses the
+    /// session's O(1) lookup instead of rebuilding a HashSet from the list.
+    /// </summary>
+    private void RefreshExerciseProgress()
     {
         var plan = SessionService.CurrentPlan;
-        if (plan == null) return [];
+        if (plan == null)
+        {
+            _doneExercises = [];
+            _upcomingExercises = [];
+            return;
+        }
 
-        var completedSetsSet = SessionService.CompletedSets.ToHashSet();
-        var list = new List<ExerciseProgress>();
+        var done = new List<ExerciseProgress>(plan.Exercises.Count);
+        var upcoming = new List<ExerciseProgress>(plan.Exercises.Count);
 
         for (var ei = 0; ei < plan.Exercises.Count; ei++)
         {
@@ -321,25 +337,19 @@ else
 
             for (var si = 0; si < ex.SetCount; si++)
             {
-                if (completedSetsSet.Contains(new SetCompletion(ei, si)))
+                if (SessionService.IsSetCompleted(ei, si))
                     completedSets++;
             }
 
-            var isFullyCompleted = completedSets == ex.SetCount;
-            var hasAnySets = completedSets > 0;
+            if (completedSets > 0)
+                done.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
 
-            if (completed)
-            {
-                if (hasAnySets)
-                    list.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
-            }
-            else
-            {
-                if (!isFullyCompleted)
-                    list.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
-            }
+            if (completedSets < ex.SetCount)
+                upcoming.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
         }
-        return list;
+
+        _doneExercises = done;
+        _upcomingExercises = upcoming;
     }
 
     private async Task ConfirmLeaveWorkoutInProgress()
@@ -787,6 +797,8 @@ else
     private async Task SafeStateHasChangedAsync()
     {
         if (_disposed) return;
+
+        RefreshExerciseProgress();
 
         try
         {

@@ -25,6 +25,9 @@
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <!-- Preload the Outfit font subsets so first text paint is not blocked -->
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Do not add ?query to href — MAUI static web assets match exact routes only -->
     <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.styles.css" />

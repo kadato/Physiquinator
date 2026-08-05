@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Physiquinator.Core.Services;
+using System.Text.Json;
 
 namespace Physiquinator.Services;
 

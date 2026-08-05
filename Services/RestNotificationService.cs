@@ -1,7 +1,7 @@
+using Physiquinator.Core.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
-using Physiquinator.Core.Services;
 
 namespace Physiquinator.Services;
 
@@ -145,7 +145,7 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             return;
 
-        string description = state.RestEndsAtUtc is { } end
+        var description = state.RestEndsAtUtc is { } end
             ? $"Rest ends at {TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(end, DateTimeKind.Utc), TimeZoneInfo.Local):HH:mm}"
             : state.NextExerciseName is { } next
                 ? $"Next: {next} {state.NextSetIndex}/{state.NextSetTotal}"

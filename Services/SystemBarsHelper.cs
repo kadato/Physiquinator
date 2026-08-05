@@ -1,11 +1,8 @@
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
 #if ANDROID
 using Android.OS;
-using Microsoft.Maui.Platform;
-using AndroidX.Core.View;
 using Android.Views;
+using AndroidX.Core.View;
+using Microsoft.Maui.Platform;
 #endif
 
 namespace Physiquinator.Services;
@@ -40,7 +37,7 @@ public static class SystemBarsHelper
     internal static bool IsDarkBackground(Color c)
     {
         // sRGB luminance — matches ThemeService light/dark backgrounds.
-        var lum = 0.2126 * c.Red + 0.7152 * c.Green + 0.0722 * c.Blue;
+        var lum = (0.2126 * c.Red) + (0.7152 * c.Green) + (0.0722 * c.Blue);
         return lum < 0.45;
     }
 
@@ -54,8 +51,8 @@ public static class SystemBarsHelper
 
     private static void ApplyAndroid(Color pageBackground, bool isDark, int retriesRemaining)
     {
-        var activity = Platform.CurrentActivity;
-        var window = activity?.Window;
+        Android.App.Activity? activity = Platform.CurrentActivity;
+        Android.Views.Window? window = activity?.Window;
         if (window == null)
         {
             return;
@@ -67,7 +64,7 @@ public static class SystemBarsHelper
         // Allow layout to extend into the cutout (notch / camera hole) area
         if (OperatingSystem.IsAndroidVersionAtLeast(28))
         {
-            var attribs = window.Attributes;
+            WindowManagerLayoutParams? attribs = window.Attributes;
             if (attribs != null)
             {
                 attribs.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.ShortEdges;
@@ -84,7 +81,7 @@ public static class SystemBarsHelper
         {
             // Window.InsetsController is implemented via DecorView.getWindowInsetsController() and throws
             // if the decor view is not attached yet (e.g. MainPage.OnAppearing / theme sync during startup).
-            var decorView = window.DecorView;
+            Android.Views.View decorView = window.DecorView;
             if (decorView == null)
             {
                 if (retriesRemaining <= 0)
@@ -96,7 +93,7 @@ public static class SystemBarsHelper
                 return;
             }
 
-            var controller = decorView.WindowInsetsController;
+            IWindowInsetsController? controller = decorView.WindowInsetsController;
             if (controller == null)
             {
                 return;
@@ -117,13 +114,13 @@ public static class SystemBarsHelper
         }
         else
         {
-            var decorView = window.DecorView;
+            Android.Views.View decorView = window.DecorView;
             if (decorView == null)
             {
                 return;
             }
 
-            var flags = decorView.SystemUiFlags;
+            SystemUiFlags flags = decorView.SystemUiFlags;
             flags |= Android.Views.SystemUiFlags.LayoutStable;
 
             if (isDark)

@@ -41,7 +41,7 @@
                                        Size="Size.Small"
                                        OnClick="@(() => SwitchProfileAsync(profile.Id))"
                                        title="Switch Profile"
-                                       Class="icon-btn-round" />
+                                       Class="icon-btn-square" />
                     }
 
                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -50,7 +50,7 @@
                                    Size="Size.Small"
                                    OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
                                    title="Rename Profile"
-                                   Class="icon-btn-round" />
+                                   Class="icon-btn-square" />
 
                     @if (profile.Id != UserProfileService.DemoProfileId)
                     {
@@ -60,7 +60,7 @@
                                        Size="Size.Small"
                                        OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
                                        title="Delete Profile"
-                                       Class="icon-btn-round" />
+                                       Class="icon-btn-square" />
                     }
                 </MudStack>
             </MudStack>

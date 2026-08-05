@@ -30,7 +30,10 @@
                                       Placeholder="e.g. Push day"
                                       Required="true"
                                       RequiredError="Plan name is required"
-                                      Immediate="true" />
+                                      Immediate="true"
+                                      autocapitalize="words"
+                                      autocomplete="off"
+                                      enterkeyhint="done" />
                         <MudGrid Spacing="2" Class="plan-details-card__grid">
                             <MudItem xs="6">
                                 <SetMetricStepper Label="Default sets"
@@ -87,6 +90,9 @@
                                   Placeholder="Add exercise…"
                                   Class="plan-add-exercise__input"
                                   Immediate="true"
+                                  autocapitalize="words"
+                                  autocomplete="off"
+                                  enterkeyhint="done"
                                   OnKeyDown="AddExerciseKeydown" />
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"

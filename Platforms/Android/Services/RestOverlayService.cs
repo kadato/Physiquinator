@@ -194,7 +194,7 @@ public sealed class RestOverlayService : Service
         _overlayView = null;
     }
 
-    private Typeface OutfitFont() => _outfitFont ?? Typeface.Default;
+    private Typeface OutfitFont() => _outfitFont ?? Typeface.Default!;
 
     private void ShowOverlay()
     {
@@ -758,7 +758,7 @@ public sealed class RestOverlayService : Service
         button.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
     }
 
-    /// <summary>Formats timer like the in-app rest timer: MM:SS when >= 60s, just SS when < 60s.</summary>
+    /// <summary>Formats the timer like the in-app rest timer: MM:SS at or above 60 seconds, plain seconds below 60 seconds.</summary>
     private static string FormatTimer(int totalSeconds)
     {
         if (totalSeconds >= 60)

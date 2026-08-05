@@ -20,204 +20,276 @@
 <MudStack Spacing="3">
     <PageHeader Title="Settings" ShowBack="false" />
 
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.Palette" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Appearance</MudText>
-        </div>
-        <MudSelect T="string"
-                   Variant="Variant.Filled"
-                   Label="Light or dark mode"
-                   Value="_preference"
-                   ValueChanged="OnThemePreferenceChanged">
-            <MudSelectItem Value="@ThemePreference.System">Match system</MudSelectItem>
-            <MudSelectItem Value="@ThemePreference.Light">Light (always)</MudSelectItem>
-            <MudSelectItem Value="@ThemePreference.Dark">Dark (always)</MudSelectItem>
-        </MudSelect>
-        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-            Active mode: <strong>@_effectiveThemeLabel</strong>
-        </MudText>
-    </MudPaper>
-
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.Timer" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Rest timer</MudText>
-        </div>
-        <MudSwitch T="bool"
-                   Label="Notify when rest ends"
-                   Value="_restAlertsEnabled"
-                   ValueChanged="OnRestAlertsEnabledChanged" />
-        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-            When off, rest-end notifications, sound, and vibration are disabled during workouts. The on-screen rest timer still runs.
-        </MudText>
-        <MudStack Spacing="0" Class="mt-4">
-            <SetMetricStepper Label="Add rest time (s)"
-                              @bind-Value="_addTimeSecondsValue"
-                              Step="5"
-                              Min="5"
-                              Max="300"
-                              IsInteger="true"
-                              Format="0"
-                              InputMode="numeric" />
-            <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                The + button on the rest timer adds this many seconds.
-            </MudText>
-        </MudStack>
-    </MudPaper>
-
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.MonitorWeight" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Bodyweight</MudText>
-        </div>
-        <MudNumericField T="double?"
-                         Label="Bodyweight (kg)"
-                         Variant="Variant.Filled"
-                         Value="_bodyweight"
-                         ValueChanged="OnBodyweightChanged"
-                         Min="0"
-                         Max="500"
-                         Format="0.##"
-                         Clearable="true" />
-        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-            Provide your bodyweight to calculate absolute weight and total volume for bodyweight exercises (optional).
-        </MudText>
-    </MudPaper>
-
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.Backup" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Plans backup</MudText>
-        </div>
-        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-            Export all plans as JSON, or import a file you exported earlier.
-        </MudText>
-        <div class="settings-btn-group">
-            <MudButton Variant="Variant.Outlined"
-                       Disabled="@(_planCount == 0)"
-                       OnClick="ExportAllPlans"
-                       StartIcon="@Icons.Material.Filled.Upload">
-                Export all plans
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
-                Import plans
-            </MudButton>
-        </div>
-        @if (_planCount == 0)
-        {
-            <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Create a plan first to enable export.</MudText>
-        }
-    </MudPaper>
-
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.History" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">History backup</MudText>
-        </div>
-        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-            Export or import workout history JSON. Import merges by session and set id.
-        </MudText>
-        <div class="settings-btn-group">
-            <MudButton Variant="Variant.Outlined"
-                       Disabled="@(_historySessionCount == 0)"
-                       OnClick="ExportHistory"
-                       StartIcon="@Icons.Material.Filled.Upload">
-                Export history
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
-                Import history
-            </MudButton>
-        </div>
-        @if (_historySessionCount == 0)
-        {
-            <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Finish at least one workout to enable export.</MudText>
-        }
-    </MudPaper>
-
-    <UserProfilesPanel />
-
-    <MudPaper Class="pa-4 settings-card" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Updates</MudText>
-        </div>
-        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-            Installed version: <strong>@_currentVersion</strong>. New releases are published on GitHub and can be installed from here.
-        </MudText>
-        <div class="settings-btn-group">
-            <MudButton Variant="Variant.Outlined"
-                       Disabled="@(_checkingForUpdates || _downloading)"
-                       OnClick="CheckForUpdatesAsync"
-                       StartIcon="@Icons.Material.Filled.SystemUpdate">
-                Check for updates
-            </MudButton>
-            @if (_updateAvailable && !string.IsNullOrEmpty(_downloadUrl))
-            {
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Disabled="@(_checkingForUpdates || _downloading)"
-                           OnClick="DownloadAndInstallAsync"
-                           StartIcon="@Icons.Material.Filled.Download">
-                    Download and install
-                </MudButton>
-            }
-        </div>
-        @if (_checkingForUpdates)
-        {
-            <MudProgressLinear Indeterminate="true" Class="mt-3" Color="Color.Primary" />
-        }
-        @if (_downloading)
-        {
-            <MudProgressLinear Value="(int)(_downloadProgress * 100)" Class="mt-3" Color="Color.Primary" />
-            <MudText Typo="Typo.caption" Class="mt-1 mud-text-secondary">
-                Downloading update… @Math.Round(_downloadProgress * 100)%
-            </MudText>
-        }
-        @if (_latestRelease != null)
-        {
-            <div class="mt-3">
-                <MudText Typo="Typo.body2">
-                    Latest release: <strong>@_latestRelease.Tag</strong>
-                    @if (_latestRelease.PublishedAt is { } published)
-                    {
-                        <span class="mud-text-secondary">(@published.ToLocalTime():d)</span>
-                    }
-                </MudText>
-                @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))
-                {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        A newer version is available, but in-app updates are not supported on this platform.
+    <MudText Typo="Typo.caption" Class="settings-group-label">General</MudText>
+    <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Appearance</span>
+                        <span class="settings-panel__subtitle">Light or dark mode</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudSelect T="string"
+                               Variant="Variant.Filled"
+                               Label="Light or dark mode"
+                               Value="_preference"
+                               ValueChanged="OnThemePreferenceChanged">
+                        <MudSelectItem Value="@ThemePreference.System">Match system</MudSelectItem>
+                        <MudSelectItem Value="@ThemePreference.Light">Light (always)</MudSelectItem>
+                        <MudSelectItem Value="@ThemePreference.Dark">Dark (always)</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                        Active mode: <strong>@_effectiveThemeLabel</strong>
                     </MudText>
-                }
-                else if (_updateAvailable)
-                {
-                    <MudText Typo="Typo.body2" Color="Color.Primary">A newer version is available.</MudText>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body2" Color="Color.Success">You are on the latest version.</MudText>
-                }
-            </div>
-        }
-    </MudPaper>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
 
-    <MudPaper Class="pa-4 settings-card settings-card--danger" Elevation="0">
-        <div class="settings-card__header">
-            <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Color="Color.Error" Class="settings-card__title">Remove all data</MudText>
-        </div>
-        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-            Permanently deletes every plan and workout log on this device. Export backups first if needed.
-        </MudText>
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Error"
-                   OnClick="RemoveAllDataAsync"
-                   StartIcon="@Icons.Material.Filled.DeleteForever"
-                   Class="btn-premium-ghost">
-            Remove all data…
-        </MudButton>
-    </MudPaper>
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Rest timer</span>
+                        <span class="settings-panel__subtitle">Notifications and rest time</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudSwitch T="bool"
+                               Label="Notify when rest ends"
+                               Value="_restAlertsEnabled"
+                               ValueChanged="OnRestAlertsEnabledChanged" />
+                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                        When off, rest-end notifications, sound, and vibration are disabled during workouts. The on-screen rest timer still runs.
+                    </MudText>
+                    <MudStack Spacing="0" Class="mt-4">
+                        <SetMetricStepper Label="Add rest time (s)"
+                                          @bind-Value="_addTimeSecondsValue"
+                                          Step="5"
+                                          Min="5"
+                                          Max="300"
+                                          IsInteger="true"
+                                          Format="0"
+                                          InputMode="numeric" />
+                        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                            The + button on the rest timer adds this many seconds.
+                        </MudText>
+                    </MudStack>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.MonitorWeight" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Bodyweight</span>
+                        <span class="settings-panel__subtitle">For bodyweight exercise math</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudNumericField T="double?"
+                                     Label="Bodyweight (kg)"
+                                     Variant="Variant.Filled"
+                                     Value="_bodyweight"
+                                     ValueChanged="OnBodyweightChanged"
+                                     Min="0"
+                                     Max="500"
+                                     Format="0.##"
+                                     Clearable="true" />
+                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                        Provide your bodyweight to calculate absolute weight and total volume for bodyweight exercises (optional).
+                    </MudText>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">User profiles</span>
+                        <span class="settings-panel__subtitle">Create, switch, and manage profiles</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <UserProfilesPanel />
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <MudText Typo="Typo.caption" Class="settings-group-label">Data</MudText>
+    <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Backup</span>
+                        <span class="settings-panel__subtitle">Export or import plans and history</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        Export all plans as JSON, or import a file you exported earlier.
+                    </MudText>
+                    <div class="settings-btn-group">
+                        <MudButton Variant="Variant.Outlined"
+                                   Disabled="@(_planCount == 0)"
+                                   OnClick="ExportAllPlans"
+                                   StartIcon="@Icons.Material.Filled.Upload">
+                            Export all plans
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
+                            Import plans
+                        </MudButton>
+                    </div>
+                    @if (_planCount == 0)
+                    {
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Create a plan first to enable export.</MudText>
+                    }
+
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
+                        Export or import workout history JSON. Import merges by session and set id.
+                    </MudText>
+                    <div class="settings-btn-group">
+                        <MudButton Variant="Variant.Outlined"
+                                   Disabled="@(_historySessionCount == 0)"
+                                   OnClick="ExportHistory"
+                                   StartIcon="@Icons.Material.Filled.Upload">
+                            Export history
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
+                            Import history
+                        </MudButton>
+                    </div>
+                    @if (_historySessionCount == 0)
+                    {
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">Finish at least one workout to enable export.</MudText>
+                    }
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <MudText Typo="Typo.caption" Class="settings-group-label">About</MudText>
+    <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
+        <MudExpansionPanel Class="settings-panel" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Updates</span>
+                        <span class="settings-panel__subtitle">Version @_currentVersion</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        New releases are published on GitHub and can be installed from here.
+                    </MudText>
+                    <div class="settings-btn-group">
+                        <MudButton Variant="Variant.Outlined"
+                                   Disabled="@(_checkingForUpdates || _downloading)"
+                                   OnClick="CheckForUpdatesAsync"
+                                   StartIcon="@Icons.Material.Filled.SystemUpdate">
+                            Check for updates
+                        </MudButton>
+                        @if (_updateAvailable && !string.IsNullOrEmpty(_downloadUrl))
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Disabled="@(_checkingForUpdates || _downloading)"
+                                       OnClick="DownloadAndInstallAsync"
+                                       StartIcon="@Icons.Material.Filled.Download">
+                                Download and install
+                            </MudButton>
+                        }
+                    </div>
+                    @if (_checkingForUpdates)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="mt-3" Color="Color.Primary" />
+                    }
+                    @if (_downloading)
+                    {
+                        <MudProgressLinear Value="(int)(_downloadProgress * 100)" Class="mt-3" Color="Color.Primary" />
+                        <MudText Typo="Typo.caption" Class="mt-1 mud-text-secondary">
+                            Downloading update… @Math.Round(_downloadProgress * 100)%
+                        </MudText>
+                    }
+                    @if (_latestRelease != null)
+                    {
+                        <div class="mt-3">
+                            <MudText Typo="Typo.body2">
+                                Latest release: <strong>@_latestRelease.Tag</strong>
+                                @if (_latestRelease.PublishedAt is { } published)
+                                {
+                                    <span class="mud-text-secondary">(@published.ToLocalTime():d)</span>
+                                }
+                            </MudText>
+                            @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                    A newer version is available, but in-app updates are not supported on this platform.
+                                </MudText>
+                            }
+                            else if (_updateAvailable)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Primary">A newer version is available.</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Success">You are on the latest version.</MudText>
+                            }
+                        </div>
+                    }
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel settings-panel--danger" Elevation="0">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Remove all data</span>
+                        <span class="settings-panel__subtitle">Permanently deletes everything on this device</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        Permanently deletes every plan and workout log on this device. Export backups first if needed.
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               OnClick="RemoveAllDataAsync"
+                               StartIcon="@Icons.Material.Filled.DeleteForever"
+                               Class="btn-premium-ghost">
+                        Remove all data…
+                    </MudButton>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
 </MudStack>
 
 @code {
@@ -254,14 +326,39 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ThemeService.ThemeChanged += HandleThemeChanged;
-        RestAlertSettings.Changed += HandleRestAlertsChanged;
+        ThemeService.ThemeChanged += HandleSettingsChanged;
+        RestAlertSettings.Changed += HandleSettingsChanged;
         SyncFromService();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
         _activeProfile = UserProfileService.GetActiveProfile();
         _bodyweight = _activeProfile.BodyweightKg;
         _currentVersion = AppUpdateService.CurrentVersion.ToString();
+    }
+
+    private void SyncFromService()
+    {
+        _preference = ThemeService.Preference;
+        _effectiveTheme = ThemeService.EffectiveTheme;
+        _restAlertsEnabled = RestAlertSettings.Enabled;
+        _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
+    }
+
+    private void HandleSettingsChanged()
+    {
+        SyncFromService();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnRestAlertsEnabledChanged(bool enabled)
+    {
+        RestAlertSettings.SetEnabled(enabled);
+        _restAlertsEnabled = enabled;
+    }
+
+    private async Task OnThemePreferenceChanged(string preference)
+    {
+        await ThemeService.SetPreferenceAsync(preference);
     }
 
     private void OnBodyweightChanged(double? value)
@@ -283,37 +380,6 @@
     private async Task RefreshHistoryCountAsync()
     {
         _historySessionCount = await HistoryService.GetSessionCountAsync();
-    }
-
-    private void HandleThemeChanged()
-    {
-        SyncFromService();
-        _ = InvokeAsync(StateHasChanged);
-    }
-
-    private void SyncFromService()
-    {
-        _preference = ThemeService.Preference;
-        _effectiveTheme = ThemeService.EffectiveTheme;
-        _restAlertsEnabled = RestAlertSettings.Enabled;
-        _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
-    }
-
-    private void HandleRestAlertsChanged()
-    {
-        _restAlertsEnabled = RestAlertSettings.Enabled;
-        _ = InvokeAsync(StateHasChanged);
-    }
-
-    private void OnRestAlertsEnabledChanged(bool enabled)
-    {
-        RestAlertSettings.SetEnabled(enabled);
-        _restAlertsEnabled = enabled;
-    }
-
-    private async Task OnThemePreferenceChanged(string preference)
-    {
-        await ThemeService.SetPreferenceAsync(preference);
     }
 
     private async Task ExportAllPlans()
@@ -491,7 +557,7 @@
 
     public void Dispose()
     {
-        ThemeService.ThemeChanged -= HandleThemeChanged;
-        RestAlertSettings.Changed -= HandleRestAlertsChanged;
+        ThemeService.ThemeChanged -= HandleSettingsChanged;
+        RestAlertSettings.Changed -= HandleSettingsChanged;
     }
 }

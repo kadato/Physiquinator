@@ -121,9 +121,10 @@ async function run() {
     async function selectTheme(themeName) {
         console.log(`Setting theme preference to: ${themeName}...`);
         
-        // Go to settings page
+        // Go to settings and expand the Appearance panel
         await blazorNavigate(page, '/settings');
-        await page.waitForSelector('.settings-card', { timeout: 10000 });
+        await page.locator('.settings-panel:has-text("Appearance") .mud-expand-panel-header').click();
+        await page.waitForSelector('.mud-select', { timeout: 10000 });
         await delay(500);
 
         // Click on the MudSelect input for Theme

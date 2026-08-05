@@ -10,5 +10,6 @@ public static class PreferenceKeys
     public const string DemoHistorySeedCompleted = "Physiquinator.DemoHistorySeedCompleted";
 
     public const string RestAlertsEnabled = "rest_alerts_enabled";
+    public const string RestAddTimeSeconds = "rest_add_time_seconds";
     public const string ThemePreference = "physiquinator-theme-preference";
 }

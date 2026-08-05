@@ -105,4 +105,22 @@ public class ServiceContainerTests
         Assert.True(settings.Enabled);
         Assert.NotNull(notifications);
     }
+
+    [Fact]
+    public void AddTimeSeconds_defaults_to_30_and_clamps_to_range()
+    {
+        using ServiceProvider provider = BuildContainer();
+        RestAlertSettingsService settings = provider.GetRequiredService<RestAlertSettingsService>();
+
+        Assert.Equal(30, settings.AddTimeSeconds);
+
+        settings.SetAddTimeSeconds(120);
+        Assert.Equal(120, settings.AddTimeSeconds);
+
+        settings.SetAddTimeSeconds(2);
+        Assert.Equal(5, settings.AddTimeSeconds);
+
+        settings.SetAddTimeSeconds(9999);
+        Assert.Equal(300, settings.AddTimeSeconds);
+    }
 }

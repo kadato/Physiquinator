@@ -38,4 +38,37 @@ public sealed class RestAlertSettingsService(
 
         Changed?.Invoke();
     }
+
+    private const int DefaultAddTimeSeconds = 30;
+    private const int MinAddTimeSeconds = 5;
+    private const int MaxAddTimeSeconds = 300;
+
+    private string AddTimePreferenceKey
+    {
+        get
+        {
+            UserProfile activeProfile = userProfileService.GetActiveProfile();
+            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestAddTimeSeconds : $"{PreferenceKeys.RestAddTimeSeconds}_{activeProfile.Id}";
+        }
+    }
+
+    /// <summary>Seconds added by the + button on the rest timer (clamped to 5-300).</summary>
+    public int AddTimeSeconds
+    {
+        get
+        {
+            var raw = preferences.Get(AddTimePreferenceKey, DefaultAddTimeSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            return int.TryParse(raw, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+                ? Math.Clamp(parsed, MinAddTimeSeconds, MaxAddTimeSeconds)
+                : DefaultAddTimeSeconds;
+        }
+    }
+
+    public void SetAddTimeSeconds(int seconds)
+    {
+        preferences.Set(
+            AddTimePreferenceKey,
+            Math.Clamp(seconds, MinAddTimeSeconds, MaxAddTimeSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Changed?.Invoke();
+    }
 }

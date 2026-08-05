@@ -88,6 +88,16 @@ public sealed class AppDatabase
         if (await db.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'") == 0)
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0");
+
+        // sqlite-net only creates indexed-column indexes on a freshly created
+        // table, so pre-existing installs get their indexes here instead.
+        // Aggregate queries (progress chart, heatmap, latest-metrics) rely on them.
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_SessionId ON WorkoutSetLogs(SessionId)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_ExerciseName ON WorkoutSetLogs(ExerciseName)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_CompletedAtUtc ON WorkoutSetLogs(CompletedAtUtc)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_WorkoutPlanId ON WorkoutSessionLogs(WorkoutPlanId)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_StartedAtUtc ON WorkoutSessionLogs(StartedAtUtc)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_EndedAtUtc ON WorkoutSessionLogs(EndedAtUtc)");
     }
 
     public async Task EnsureInitializedAsync()

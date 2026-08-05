@@ -582,6 +582,7 @@ else
         SessionService.SkipRest();
 
         _activeSetIndices[removed.ExerciseIndex] = removed.SetIndex;
+        _activeExerciseIndex = removed.ExerciseIndex; // Re-expand the card for re-logging
 
         if (_historySessionId != null)
         {

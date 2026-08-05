@@ -1,6 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+    <application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
+        <!-- Exact rest-end alarm (fires even in Doze and after process death) -->
+        <receiver android:name="physiquinator.RestEndAlarmReceiver" android:exported="false" />
+        <!-- Quick-action buttons on the ongoing rest notification -->
+        <receiver android:name="physiquinator.RestTimerActionReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="physiquinator.action.REST_TIMER" />
+            </intent-filter>
+        </receiver>
+        <!-- Floating rest-timer bubble (foreground service) -->
+        <service
+            android:name="physiquinator.RestOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows a draggable rest-timer overlay with pause/add/skip actions while a workout rest countdown is running" />
+        </service>
+    </application>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -8,4 +26,11 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Rest timers are a core use case for exact alarms (auto-granted) -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Floating rest-timer overlay -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 </manifest>

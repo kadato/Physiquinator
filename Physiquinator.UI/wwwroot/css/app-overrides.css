@@ -1175,10 +1175,6 @@ button.heatmap-cell:disabled {
     transform: translateX(-2ch);
 }
 
-.rest-timer-digits--paused {
-    opacity: 0.45;
-}
-
 .rest-timer-digits--imminent {
     color: var(--mud-palette-warning);
 }
@@ -1290,10 +1286,6 @@ button.heatmap-cell:disabled {
     transform: scaleX(0);
     transform-origin: left;
     will-change: transform;
-}
-
-.rest-timer-edge-fill--paused {
-    opacity: 0.5;
 }
 
 .rest-timer-edge-fill--imminent {

@@ -1,4 +1,4 @@
-@* Rest countdown panel with pause / resume / reset / skip controls. *@
+@* Rest countdown panel with add / reset / skip controls. *@
 @inject WorkoutSessionService SessionService
 
 <MudPaper Class="@PanelClass" Elevation="2">
@@ -37,22 +37,6 @@
             }
             else
             {
-                @if (IsRestPaused)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                                   Color="Color.Success"
-                                   aria-label="Resume rest"
-                                   OnClick="OnResume"
-                                   Size="Size.Large" />
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Pause"
-                                   Color="Color.Info"
-                                   aria-label="Pause rest"
-                                   OnClick="OnPause"
-                                   Size="Size.Large" />
-                }
                 <button type="button"
                         class="rest-timer-add-btn"
                         aria-label="@($"Add {AddRestSeconds} seconds of rest")"
@@ -83,17 +67,8 @@
     /// <summary>Live seconds remaining, read from the session service on each render so the panel can re-render on its own timer ticks without the parent page re-rendering.</summary>
     private int RestSecondsRemaining => SessionService.RestSecondsRemaining;
 
-    /// <summary>Live pause state, read from the session service (see <see cref="RestSecondsRemaining"/>).</summary>
-    private bool IsRestPaused => SessionService.IsRestPaused;
-
     [Parameter, EditorRequired]
     public bool IsRestComplete { get; set; }
-
-    [Parameter]
-    public EventCallback OnPause { get; set; }
-
-    [Parameter]
-    public EventCallback OnResume { get; set; }
 
     [Parameter]
     public EventCallback OnReset { get; set; }
@@ -127,8 +102,6 @@
     {
         get
         {
-            if (IsRestPaused)
-                return "rest-timer-digits--paused";
             if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
                 return "rest-timer-digits--urgent";
             if (RestSecondsRemaining <= ImminentRestThresholdSeconds)
@@ -141,8 +114,6 @@
     {
         get
         {
-            if (IsRestPaused)
-                return "rest-timer-edge-fill--paused";
             if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
                 return "rest-timer-edge-fill--urgent";
             if (RestSecondsRemaining <= ImminentRestThresholdSeconds)
@@ -157,8 +128,6 @@
         {
             if (IsRestComplete)
                 return "Rest complete";
-            if (IsRestPaused)
-                return $"Rest paused, {FormatTime(RestSecondsRemaining)} remaining";
             return $"Rest, {FormatTime(RestSecondsRemaining)} remaining";
         }
     }

@@ -14,8 +14,6 @@ public sealed class WorkoutSessionService(TimeProvider time)
     private DateTime? _restEndsAtUtc;
     private int _activeRestDurationSeconds;
     private bool _isResting;
-    private bool _userPaused;
-    private int? _pausedRemainingSeconds;
 
     private readonly List<SetCompletion> _completedSets = [];
     private readonly HashSet<SetCompletion> _completedSetLookup = [];
@@ -26,15 +24,13 @@ public sealed class WorkoutSessionService(TimeProvider time)
     public IReadOnlyList<SetCompletion> CompletedSets => _completedSets;
 
     /// <summary>UTC instant when the current rest period ends, if running on wall clock.</summary>
-    public DateTime? RestEndsAtUtc => _isResting && !_userPaused ? _restEndsAtUtc : null;
+    public DateTime? RestEndsAtUtc => _isResting ? _restEndsAtUtc : null;
 
     public int RestSecondsRemaining
     {
         get
         {
             if (!_isResting) return 0;
-            if (_userPaused && _pausedRemainingSeconds.HasValue)
-                return Math.Max(0, _pausedRemainingSeconds.Value);
             if (_restEndsAtUtc.HasValue)
                 return Math.Max(0, (int)Math.Ceiling((_restEndsAtUtc.Value - UtcNow).TotalSeconds));
             return 0;
@@ -42,7 +38,6 @@ public sealed class WorkoutSessionService(TimeProvider time)
     }
 
     public bool IsResting => _isResting;
-    public bool IsRestPaused => _isResting && _userPaused;
 
     /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
     public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
@@ -53,11 +48,6 @@ public sealed class WorkoutSessionService(TimeProvider time)
         get
         {
             if (!_isResting || _activeRestDurationSeconds <= 0) return 0;
-            if (_userPaused && _pausedRemainingSeconds.HasValue)
-            {
-                var elapsed = _activeRestDurationSeconds - Math.Max(0, _pausedRemainingSeconds.Value);
-                return Math.Clamp(elapsed / (double)_activeRestDurationSeconds, 0, 1);
-            }
             if (_restEndsAtUtc.HasValue)
             {
                 var remaining = (_restEndsAtUtc.Value - UtcNow).TotalSeconds;
@@ -71,13 +61,28 @@ public sealed class WorkoutSessionService(TimeProvider time)
     /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
     public event EventHandler? RestCompletedWhileBackground;
 
+    /// <summary>
+    /// Fired after every rest state change (start, reset, add, skip, cancel,
+    /// restore, expiry) so platform surfaces such as the ongoing
+    /// notification, floating overlay and exact alarm can stay in sync.
+    /// </summary>
+    public event EventHandler? RestStateChanged;
+
+    /// <summary>
+    /// Fired after a workout is started, resumed or ended so the floating
+    /// overlay and ongoing notification follow the whole workout lifecycle,
+    /// not just the rest countdown.
+    /// </summary>
+    public event EventHandler? WorkoutStateChanged;
+
     private DateTime UtcNow => _time.GetUtcNow().UtcDateTime;
 
     public void StartWorkout(WorkoutPlan plan)
     {
         CurrentPlan = plan;
         ClearCompletedSets();
-        StopRest();
+        ResetRestSilently();
+        WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>Restores in-memory workout state from persisted set logs.</summary>
@@ -87,7 +92,8 @@ public sealed class WorkoutSessionService(TimeProvider time)
         ClearCompletedSets();
         _completedSets.AddRange(completedSets);
         _completedSetLookup.UnionWith(_completedSets);
-        StopRest();
+        ResetRestSilently();
+        WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void EndWorkout()
@@ -95,6 +101,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
         CurrentPlan = null;
         ClearCompletedSets();
         StopRest();
+        WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public bool IsSetCompleted(int exerciseIndex, int setIndex) =>
@@ -194,8 +201,6 @@ public sealed class WorkoutSessionService(TimeProvider time)
         if (CurrentPlan == null) return;
 
         _activeRestDurationSeconds = Math.Max(0, restIntervalSeconds);
-        _userPaused = false;
-        _pausedRemainingSeconds = null;
 
         if (_activeRestDurationSeconds == 0)
         {
@@ -205,6 +210,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
 
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -213,7 +219,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
     /// </summary>
     public bool TickRest()
     {
-        if (!_isResting || _userPaused || !_restEndsAtUtc.HasValue) return false;
+        if (!_isResting || !_restEndsAtUtc.HasValue) return false;
 
         if (UtcNow >= _restEndsAtUtc.Value)
         {
@@ -221,34 +227,6 @@ public sealed class WorkoutSessionService(TimeProvider time)
             return true;
         }
 
-        return false;
-    }
-
-    public void PauseRest()
-    {
-        if (!_isResting || _userPaused) return;
-
-        _pausedRemainingSeconds = RestSecondsRemaining;
-        _userPaused = true;
-        _restEndsAtUtc = null;
-    }
-
-    /// <summary>User tapped Resume after pausing rest.</summary>
-    public bool ResumeRest()
-    {
-        if (!_isResting || !_userPaused) return false;
-
-        var remaining = _pausedRemainingSeconds ?? 0;
-        _userPaused = false;
-        _pausedRemainingSeconds = null;
-
-        if (remaining <= 0)
-        {
-            StopRest();
-            return true;
-        }
-
-        _restEndsAtUtc = UtcNow.AddSeconds(remaining);
         return false;
     }
 
@@ -264,7 +242,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
     /// <summary>Used by tests and <see cref="NotifyAppActivated"/>.</summary>
     public bool TryCompleteRestIfExpired()
     {
-        if (!_isResting || _userPaused || !_restEndsAtUtc.HasValue) return false;
+        if (!_isResting || !_restEndsAtUtc.HasValue) return false;
         if (UtcNow < _restEndsAtUtc.Value) return false;
 
         StopRest();
@@ -275,28 +253,24 @@ public sealed class WorkoutSessionService(TimeProvider time)
     {
         if (_activeRestDurationSeconds <= 0) return;
 
-        _userPaused = false;
-        _pausedRemainingSeconds = null;
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
-    /// Extends the current rest countdown by the given seconds, whether it is
-    /// running or paused. No-op when not resting.
+    /// Extends the current rest countdown by the given seconds. No-op when
+    /// not resting.
     /// </summary>
     public void AddRestSeconds(int seconds)
     {
         if (!_isResting || seconds <= 0) return;
 
-        if (_userPaused && _pausedRemainingSeconds.HasValue)
-        {
-            _pausedRemainingSeconds += seconds;
-            return;
-        }
-
         if (_restEndsAtUtc.HasValue)
+        {
             _restEndsAtUtc = _restEndsAtUtc.Value.AddSeconds(seconds);
+            RestStateChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void SkipRest() => StopRest();
@@ -304,18 +278,43 @@ public sealed class WorkoutSessionService(TimeProvider time)
     /// <summary>Stop the rest timer without firing any completion callback.</summary>
     public void CancelRest() => StopRest();
 
+    /// <summary>
+    /// Restores a running rest countdown from a persisted snapshot (process
+    /// restart). Returns false when the snapshot is no longer usable.
+    /// </summary>
+    public bool RestoreRestState(DateTime restEndsAtUtc, int activeRestDurationSeconds)
+    {
+        if (restEndsAtUtc <= UtcNow || activeRestDurationSeconds <= 0)
+            return false;
+
+        _activeRestDurationSeconds = activeRestDurationSeconds;
+        _restEndsAtUtc = restEndsAtUtc;
+        _isResting = true;
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
     private void ClearCompletedSets()
     {
         _completedSets.Clear();
         _completedSetLookup.Clear();
     }
 
-    private void StopRest()
+    /// <summary>
+    /// Resets rest state without firing <see cref="RestStateChanged"/>. Used by
+    /// workout load (StartWorkout/ResumeWorkout) so a rest countdown that
+    /// survived process death is not torn down before the page restores it.
+    /// </summary>
+    private void ResetRestSilently()
     {
         _isResting = false;
-        _userPaused = false;
-        _pausedRemainingSeconds = null;
         _restEndsAtUtc = null;
         _activeRestDurationSeconds = 0;
+    }
+
+    private void StopRest()
+    {
+        ResetRestSilently();
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

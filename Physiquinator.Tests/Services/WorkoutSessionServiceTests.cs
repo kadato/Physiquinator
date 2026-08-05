@@ -47,30 +47,6 @@ public class WorkoutSessionServiceTests
     }
 
     [Fact]
-    public void PauseRest_freezes_remaining_resume_restores_wall_clock()
-    {
-        var clock = new ManualTimeProvider();
-        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-        var svc = new WorkoutSessionService(clock);
-        svc.StartWorkout(SamplePlan());
-        svc.StartRest(60);
-
-        clock.Advance(TimeSpan.FromSeconds(20));
-        Assert.Equal(40, svc.RestSecondsRemaining);
-
-        svc.PauseRest();
-        clock.Advance(TimeSpan.FromMinutes(5));
-        Assert.Equal(40, svc.RestSecondsRemaining);
-
-        Assert.False(svc.ResumeRest());
-        Assert.True(svc.RestEndsAtUtc.HasValue);
-        Assert.Equal(40, svc.RestSecondsRemaining);
-
-        clock.Advance(TimeSpan.FromSeconds(40));
-        Assert.True(svc.TickRest());
-    }
-
-    [Fact]
     public void TryCompleteRestIfExpired_true_after_background_elapsed()
     {
         var clock = new ManualTimeProvider();
@@ -114,26 +90,6 @@ public class WorkoutSessionServiceTests
 
         clock.Advance(TimeSpan.FromSeconds(70));
         Assert.True(svc.TickRest());
-    }
-
-    [Fact]
-    public void AddRestSeconds_extends_paused_rest_without_resuming()
-    {
-        var clock = new ManualTimeProvider();
-        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-        var svc = new WorkoutSessionService(clock);
-        svc.StartWorkout(SamplePlan());
-        svc.StartRest(60);
-        clock.Advance(TimeSpan.FromSeconds(20));
-        svc.PauseRest();
-        Assert.Equal(40, svc.RestSecondsRemaining);
-
-        svc.AddRestSeconds(30);
-        Assert.Equal(70, svc.RestSecondsRemaining);
-        Assert.True(svc.IsRestPaused);
-
-        clock.Advance(TimeSpan.FromMinutes(10));
-        Assert.Equal(70, svc.RestSecondsRemaining);
     }
 
     [Fact]
@@ -305,5 +261,104 @@ public class WorkoutSessionServiceTests
         Assert.Equal(-1, svc.GetFirstUncompletedSetIndex(0));
         Assert.True(svc.IsExerciseDone(0));
         Assert.Equal(-1, svc.GetFirstUncompletedExerciseIndex());
+    }
+
+    [Fact]
+    public void RestoreRestState_restores_wall_clock_countdown()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+
+        Assert.True(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(50), 90));
+        Assert.True(svc.IsResting);
+        Assert.Equal(50, svc.RestSecondsRemaining);
+        Assert.Equal(90, svc.ActiveRestDurationSeconds);
+
+        clock.Advance(TimeSpan.FromSeconds(50));
+        Assert.True(svc.TickRest());
+    }
+
+    [Fact]
+    public void RestoreRestState_rejects_expired_or_empty_snapshot()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+
+        Assert.False(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(-1), 90));
+        Assert.False(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(10), 0));
+        Assert.False(svc.IsResting);
+    }
+
+    [Fact]
+    public void RestStateChanged_fires_on_every_rest_mutation_but_not_workout_load()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+
+        var fired = 0;
+        svc.RestStateChanged += (_, _) => fired++;
+
+        svc.StartRest(60);
+        Assert.Equal(1, fired);
+
+        svc.AddRestSeconds(30);
+        Assert.Equal(2, fired);
+
+        svc.ResetRest();
+        Assert.Equal(3, fired);
+
+        svc.SkipRest();
+        Assert.Equal(4, fired);
+
+        // Workout load must not tear down a persisted rest countdown.
+        svc.StartWorkout(SamplePlan());
+        Assert.Equal(4, fired);
+
+        svc.ResumeWorkout(SamplePlan(), []);
+        Assert.Equal(4, fired);
+
+        svc.EndWorkout();
+        Assert.Equal(5, fired);
+    }
+
+    [Fact]
+    public void WorkoutStateChanged_fires_on_workout_load_and_end()
+    {
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+
+        var fired = 0;
+        svc.WorkoutStateChanged += (_, _) => fired++;
+
+        svc.StartWorkout(SamplePlan());
+        Assert.Equal(1, fired);
+
+        svc.ResumeWorkout(SamplePlan(), []);
+        Assert.Equal(2, fired);
+
+        svc.EndWorkout();
+        Assert.Equal(3, fired);
+    }
+
+    [Fact]
+    public void RestoreRestState_fires_RestStateChanged()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+
+        var fired = 0;
+        svc.RestStateChanged += (_, _) => fired++;
+
+        Assert.True(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(30), 60));
+        Assert.Equal(1, fired);
+
+        Assert.False(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(-1), 60));
+        Assert.Equal(1, fired);
     }
 }

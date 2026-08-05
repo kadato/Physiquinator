@@ -1,0 +1,957 @@
+using Android.App;
+using Android.Content;
+using Android.Content.PM;
+using Android.Graphics;
+using Android.Graphics.Drawables;
+using Android.OS;
+using Android.Provider;
+using Android.Runtime;
+using Android.Util;
+using Android.Views;
+using Android.Widget;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.ApplicationModel;
+using Physiquinator.Core.Models;
+using Physiquinator.Core.Services;
+using AndroidButton = Android.Widget.ImageButton;
+using AndroidColor = Android.Graphics.Color;
+using AndroidView = Android.Views.View;
+using AndroidTextView = Android.Widget.TextView;
+using AndroidLinearLayout = Android.Widget.LinearLayout;
+using AndroidTextButton = Android.Widget.Button;
+
+namespace Physiquinator.Platforms.Android.Services;
+
+/// <summary>
+/// Foreground service that hosts the floating workout bubble: a wide draggable
+/// overlay showing the live rest countdown (or the upcoming set between
+/// rests) with themed actions - add time, reset, skip - plus a close
+/// button. Tapping the bubble body opens the app. The state is
+/// read from <see cref="WorkoutSessionService"/> on a 500 ms ticker, so it
+/// stays accurate regardless of WebView suspension. The overlay view is only
+/// shown while the app is backgrounded; the foreground service notification
+/// stays up for the whole workout. Declared in AndroidManifest.xml
+/// (foregroundServiceType specialUse); <see cref="RegisterAttribute"/> pins
+/// the Java class name so the manifest entry resolves.
+/// </summary>
+[Register("physiquinator.RestOverlayService")]
+public sealed class RestOverlayService : Service
+{
+    public const string ExtraEndUtcTicks = "endUtcTicks";
+    public const string ExtraRemainingSeconds = "remainingSeconds";
+    public const string ExtraTitle = "title";
+    public const string ExtraNextExerciseName = "nextExerciseName";
+    public const string ExtraNextExerciseIndex = "nextExerciseIndex";
+    public const string ExtraNextSetIndex = "nextSetIndex";
+    public const string ExtraNextSetTotal = "nextSetTotal";
+
+    private const long TickerIntervalMs = 500;
+
+    private IWindowManager? _windowManager;
+    private AndroidView? _overlayView;
+    private AndroidTextView? _headerText;
+    private AndroidTextView? _timerText;
+    private AndroidTextView? _setInfoText;
+    private AndroidTextView? _weightValue;
+    private AndroidTextView? _repsValue;
+    private AndroidView? _stepperRow;
+    private AndroidTextButton? _logSetButton;
+    private AndroidTextButton? _addTimeButton;
+    private AndroidButton? _resetButton;
+    private AndroidButton? _skipButton;
+    private AndroidButton? _closeButton;
+    private WindowManagerLayoutParams? _layoutParams;
+    private Handler? _handler;
+    private System.Action? _tickAction;
+    private bool _tickerRunning;
+    private bool _dismissed;
+    private bool _wasForeground = true;
+    private bool _stopping;
+
+    // Current weight/reps being edited in the overlay
+    private double _currentWeightKg;
+    private int _currentReps;
+    private int _trackedExerciseIndex = -1;
+    private ExerciseLogType _currentLogType = ExerciseLogType.WeightAndReps;
+
+    // Theme color palettes matching MainLayout.razor MudBlazor definitions
+    private static readonly AndroidColor DarkBackground = AndroidColor.ParseColor("#0B0C10");
+    private static readonly AndroidColor DarkSurface = AndroidColor.ParseColor("#151821");
+    private static readonly AndroidColor DarkTextPrimary = AndroidColor.ParseColor("#F3F4F6");
+    private static readonly AndroidColor DarkTextSecondary = AndroidColor.ParseColor("#9CA3AF");
+    private static readonly AndroidColor DarkPrimary = AndroidColor.ParseColor("#10B981");
+    private static readonly AndroidColor DarkWarning = AndroidColor.ParseColor("#F59E0B");
+    private static readonly AndroidColor DarkError = AndroidColor.ParseColor("#EF4444");
+
+    private static readonly AndroidColor LightBackground = AndroidColor.ParseColor("#F8F9FA");
+    private static readonly AndroidColor LightSurface = AndroidColor.ParseColor("#FFFFFF");
+    private static readonly AndroidColor LightTextPrimary = AndroidColor.ParseColor("#111827");
+    private static readonly AndroidColor LightTextSecondary = AndroidColor.ParseColor("#6B7280");
+    private static readonly AndroidColor LightPrimary = AndroidColor.ParseColor("#0F766E");
+    private static readonly AndroidColor LightWarning = AndroidColor.ParseColor("#F59E0B");
+    private static readonly AndroidColor LightError = AndroidColor.ParseColor("#EF4444");
+
+    private Typeface? _outfitFont;
+
+    public override void OnCreate()
+    {
+        base.OnCreate();
+
+        try { _outfitFont = Typeface.CreateFromAsset(Assets, "fonts/outfit-latin.woff2"); }
+        catch { _outfitFont = Typeface.Default; }
+
+        _handler = new Handler(Looper.MainLooper!);
+        System.Action tick = null!;
+        tick = () =>
+        {
+            UpdateTicker();
+            _handler?.PostDelayed(tick, TickerIntervalMs);
+        };
+        _tickAction = tick;
+    }
+
+    public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
+    {
+        WorkoutTimerState state = intent != null ? ReadState(intent) : ReadSessionState();
+
+        var notification = AndroidRestNotificationService.BuildWorkoutNotification(this, state, ResolveSettings()?.AddTimeSeconds ?? 30);
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.UpsideDownCake)
+            StartForeground(AndroidRestNotificationService.OngoingRestNotificationId, notification, ForegroundService.TypeSpecialUse);
+        else
+            StartForeground(AndroidRestNotificationService.OngoingRestNotificationId, notification);
+
+        UpdateOverlayVisibility();
+
+        // The ticker is the only thing that re-evaluates overlay visibility
+        // (e.g. when the app backgrounds without a state change), so it must
+        // run for the whole workout, not only once the overlay is shown.
+        if (!_tickerRunning)
+        {
+            _tickerRunning = true;
+            _handler?.Post(_tickAction!);
+        }
+
+        return StartCommandResult.NotSticky;
+    }
+
+    public override void OnDestroy()
+    {
+        _stopping = true;
+        if (_handler != null)
+        {
+            _handler.RemoveCallbacks(_tickAction!);
+            _handler = null;
+        }
+
+        RemoveOverlayView();
+
+        base.OnDestroy();
+    }
+
+    public override IBinder? OnBind(Intent? intent) => null;
+
+    /// <summary>Shows the overlay only while the app is in the background and not dismissed by the user.</summary>
+    private void UpdateOverlayVisibility()
+    {
+        if (_stopping)
+            return;
+
+        bool foreground = MainActivity.IsInForeground;
+        if (foreground)
+        {
+            // Reopening the app re-arms the bubble for the next backgrounding.
+            if (!_wasForeground)
+                _dismissed = false;
+
+            _wasForeground = true;
+            RemoveOverlayView();
+        }
+        else
+        {
+            _wasForeground = false;
+            if (_dismissed || _overlayView != null)
+                return;
+
+            if (Settings.CanDrawOverlays(this))
+                ShowOverlay();
+        }
+    }
+
+    private void RemoveOverlayView()
+    {
+        if (_overlayView == null)
+            return;
+
+        try
+        {
+            _windowManager?.RemoveView(_overlayView);
+        }
+        catch (Exception)
+        {
+            // View may already be detached
+        }
+
+        _overlayView = null;
+    }
+
+    private Typeface OutfitFont() => _outfitFont ?? Typeface.Default;
+
+    private void ShowOverlay()
+    {
+        if (_overlayView != null)
+            return;
+
+        try
+        {
+            _windowManager = GetSystemService(Context.WindowService)?.JavaCast<IWindowManager>();
+            var colors = GetThemeColors();
+            int addSeconds = ResolveSettings()?.AddTimeSeconds ?? 30;
+
+            var root = new AndroidLinearLayout(this);
+            root.Orientation = Orientation.Vertical;
+            var bg = new GradientDrawable();
+            bg.SetColor(AndroidColor.Argb(0xE6, colors.Background.R, colors.Background.G, colors.Background.B));
+            bg.SetCornerRadius(Dp(16));
+            root.Background = bg;
+            root.SetPadding(Dp(14), Dp(10), Dp(14), Dp(10));
+
+            // Row 1: exercise name left, timer right, close overlaid top-right
+            var headerFrame = new FrameLayout(this);
+
+            var headerRow = new AndroidLinearLayout(this);
+            headerRow.Orientation = Orientation.Horizontal;
+            headerRow.SetGravity(GravityFlags.CenterVertical);
+            headerRow.SetPadding(0, 0, Dp(44), 0);
+
+            _headerText = new AndroidTextView(this) { Text = string.Empty, Gravity = GravityFlags.Start | GravityFlags.CenterVertical };
+            _headerText.SetMaxLines(1);
+            _headerText.SetTextColor(colors.TextPrimary);
+            _headerText.SetTextSize(ComplexUnitType.Sp, 15);
+            _headerText.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+
+            _timerText = new AndroidTextView(this) { Text = "00:00", Gravity = GravityFlags.End | GravityFlags.CenterVertical };
+            _timerText.SetTextColor(colors.TextPrimary);
+            _timerText.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+            _timerText.SetTextSize(ComplexUnitType.Sp, 22);
+            _timerText.SetMinWidth(Dp(56));
+
+            _setInfoText = new AndroidTextView(this) { Text = string.Empty, Gravity = GravityFlags.End | GravityFlags.CenterVertical };
+            _setInfoText.SetTextColor(colors.TextSecondary);
+            _setInfoText.SetTextSize(ComplexUnitType.Sp, 12);
+            _setInfoText.SetTypeface(OutfitFont(), TypefaceStyle.Normal);
+            _setInfoText.SetMinWidth(Dp(28));
+
+            headerRow.AddView(_headerText, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 1f));
+            headerRow.AddView(_timerText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+            headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+
+            _closeButton = CreateCloseButton(colors);
+
+            var headerRowParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MatchParent,
+                FrameLayout.LayoutParams.WrapContent);
+            var closeParams = new FrameLayout.LayoutParams(
+                Dp(36), Dp(36))
+            {
+                Gravity = GravityFlags.End | GravityFlags.CenterVertical,
+                RightMargin = Dp(2)
+            };
+
+            headerFrame.AddView(headerRow, headerRowParams);
+            headerFrame.AddView(_closeButton, closeParams);
+
+            // Row 2: weight and reps steppers (hidden by default)
+            _stepperRow = CreateStepperRow(colors);
+
+            // Row 3: log set button (full width, primary)
+            _logSetButton = CreateLogSetButton(colors);
+
+            // Row 4: +Ns, Reset, Skip (centered)
+            var actionRow = new AndroidLinearLayout(this);
+            actionRow.Orientation = Orientation.Horizontal;
+            actionRow.SetGravity(GravityFlags.Center);
+
+            _addTimeButton = CreateAddTimeButton(addSeconds, colors);
+            _resetButton = CreateIconButton(Resource.Drawable.ic_timer_reset, OnResetClicked, colors);
+            _skipButton = CreateIconButton(Resource.Drawable.ic_timer_skip, OnSkipClicked, colors);
+
+            AddActionBtn(actionRow, _addTimeButton);
+            AddActionBtn(actionRow, _resetButton);
+            AddActionBtn(actionRow, _skipButton);
+
+            root.AddView(headerFrame);
+            root.AddView(_stepperRow);
+            var logSetParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, Dp(40));
+            logSetParams.BottomMargin = Dp(8);
+            root.AddView(_logSetButton, logSetParams);
+            root.AddView(actionRow);
+
+            root.SetOnTouchListener(new OverlayDragListener(this));
+
+            int width = Math.Min(ScreenWidth - Dp(24), Dp(380));
+            _layoutParams = new WindowManagerLayoutParams(
+                width,
+                WindowManagerLayoutParams.WrapContent,
+                WindowManagerTypes.ApplicationOverlay,
+                WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen,
+                Format.Translucent)
+            {
+                Gravity = GravityFlags.Top | GravityFlags.Start,
+                X = Math.Max(0, (ScreenWidth - width) / 2),
+                Y = StatusBarHeight + Dp(8)
+            };
+
+            _windowManager?.AddView(root, _layoutParams);
+            _overlayView = root;
+
+            UpdateTicker();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestOverlayService overlay failed: {ex}");
+            StopSelf();
+        }
+    }
+
+    private AndroidView CreateStepperRow(
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+    {
+        var row = new AndroidLinearLayout(this);
+        row.Orientation = Orientation.Horizontal;
+        row.SetGravity(GravityFlags.Center);
+        row.Visibility = ViewStates.Gone;
+
+        // Weight stepper: [-] value kg
+        var weightMinus = CreateStepperBtn("-", colors, OnWeightMinus);
+        _weightValue = new AndroidTextView(this) { Text = "0", Gravity = GravityFlags.Center };
+        _weightValue.SetTextColor(colors.TextPrimary);
+        _weightValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        _weightValue.SetTextSize(ComplexUnitType.Sp, 15);
+        _weightValue.SetMinWidth(Dp(44));
+        var weightPlus = CreateStepperBtn("+", colors, OnWeightPlus);
+        var weightLabel = new AndroidTextView(this) { Text = "kg", Gravity = GravityFlags.CenterVertical };
+        weightLabel.SetTextColor(colors.TextSecondary);
+        weightLabel.SetTextSize(ComplexUnitType.Sp, 11);
+
+        var weightGroup = new AndroidLinearLayout(this) { Orientation = Orientation.Horizontal };
+        weightGroup.SetGravity(GravityFlags.CenterVertical);
+        AddStepperElement(weightGroup, weightMinus);
+        weightGroup.AddView(_weightValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        AddStepperElement(weightGroup, weightPlus);
+        AddStepperElement(weightGroup, weightLabel);
+
+        // Reps stepper: [-] value reps
+        var repsMinus = CreateStepperBtn("-", colors, OnRepsMinus);
+        _repsValue = new AndroidTextView(this) { Text = "10", Gravity = GravityFlags.Center };
+        _repsValue.SetTextColor(colors.TextPrimary);
+        _repsValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        _repsValue.SetTextSize(ComplexUnitType.Sp, 15);
+        _repsValue.SetMinWidth(Dp(36));
+        var repsPlus = CreateStepperBtn("+", colors, OnRepsPlus);
+        var repsLabel = new AndroidTextView(this) { Text = "reps", Gravity = GravityFlags.CenterVertical };
+        repsLabel.SetTextColor(colors.TextSecondary);
+        repsLabel.SetTextSize(ComplexUnitType.Sp, 11);
+
+        var repsGroup = new AndroidLinearLayout(this) { Orientation = Orientation.Horizontal };
+        repsGroup.SetGravity(GravityFlags.CenterVertical);
+        AddStepperElement(repsGroup, repsMinus);
+        repsGroup.AddView(_repsValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        AddStepperElement(repsGroup, repsPlus);
+        AddStepperElement(repsGroup, repsLabel);
+
+        var spacer = new AndroidView(this) { LayoutParameters = new LinearLayout.LayoutParams(0, 1, 1f) };
+
+        row.AddView(weightGroup, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        row.AddView(spacer);
+        row.AddView(repsGroup, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+
+        return row;
+    }
+
+    /// <summary>Creates a stepper button matching the style of other overlay action buttons.</summary>
+    private AndroidButton CreateStepperBtn(string text,
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors,
+        Action onClick)
+    {
+        var btn = new AndroidButton(this);
+        btn.SetImageResource(text == "+" ? Resource.Drawable.ic_timer_add : Resource.Drawable.ic_timer_minus);
+        btn.SetScaleType(ImageView.ScaleType.FitCenter);
+        btn.SetAdjustViewBounds(true);
+        btn.SetPadding(Dp(6), Dp(6), Dp(6), Dp(6));
+        btn.SetColorFilter(colors.TextPrimary);
+
+        var bg = new GradientDrawable();
+        bg.SetColor(AndroidColor.Argb(0x14, 0xFF, 0xFF, 0xFF));
+        bg.SetCornerRadius(Dp(10));
+        btn.Background = bg;
+
+        btn.Click += (s, e) =>
+        {
+            try { onClick(); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"RestOverlayService stepper failed: {ex}"); }
+        };
+        return btn;
+    }
+
+    private static void AddStepperElement(AndroidLinearLayout row, AndroidView view)
+    {
+        row.AddView(view, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+    }
+
+    private void OnWeightMinus() { _currentWeightKg = Math.Max(0, _currentWeightKg - 2.5); UpdateStepperDisplay(); }
+    private void OnWeightPlus() { _currentWeightKg += 2.5; UpdateStepperDisplay(); }
+    private void OnRepsMinus() { _currentReps = Math.Max(1, _currentReps - 1); UpdateStepperDisplay(); }
+    private void OnRepsPlus() { _currentReps++; UpdateStepperDisplay(); }
+
+    private void UpdateStepperDisplay()
+    {
+        if (_weightValue != null)
+            _weightValue.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
+        if (_repsValue != null)
+            _repsValue.Text = $"{_currentReps}";
+    }
+
+    private static void AddActionBtn(AndroidLinearLayout row, AndroidView button)
+    {
+        var lp = new LinearLayout.LayoutParams(DpStatic(row, 40), DpStatic(row, 40))
+        {
+            LeftMargin = DpStatic(row, 4),
+            RightMargin = DpStatic(row, 4)
+        };
+        row.AddView(button, lp);
+    }
+
+    private static int DpStatic(AndroidLinearLayout row, int value) =>
+        (int)(value * row.Context!.Resources!.DisplayMetrics!.Density);
+
+    /// <summary>Dedicated close button with subtle styling.</summary>
+    private AndroidButton CreateCloseButton(
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+    {
+        var button = new AndroidButton(this);
+        button.SetImageResource(Resource.Drawable.ic_timer_close);
+        button.SetScaleType(ImageView.ScaleType.FitCenter);
+        button.SetAdjustViewBounds(true);
+        button.SetPadding(Dp(6), Dp(6), Dp(6), Dp(6));
+        button.SetColorFilter(colors.TextSecondary);
+
+        var bg = new GradientDrawable();
+        bg.SetColor(AndroidColor.Argb(0x0A, 0xFF, 0xFF, 0xFF));
+        bg.SetCornerRadius(Dp(18));
+        button.Background = bg;
+
+        button.Click += (s, e) =>
+        {
+            try { OnCloseClicked(s, e); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"RestOverlayService close failed: {ex}"); }
+        };
+        return button;
+    }
+
+    private AndroidButton CreateIconButton(int iconRes, Action<object?, EventArgs> click,
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+    {
+        var button = new AndroidButton(this);
+        button.SetImageResource(iconRes);
+        button.SetScaleType(ImageView.ScaleType.FitCenter);
+        button.SetAdjustViewBounds(true);
+        button.SetPadding(Dp(8), Dp(8), Dp(8), Dp(8));
+        button.SetColorFilter(colors.TextSecondary);
+
+        var bg = new GradientDrawable();
+        bg.SetColor(AndroidColor.Argb(0x14, 0xFF, 0xFF, 0xFF));
+        bg.SetCornerRadius(Dp(10));
+        button.Background = bg;
+
+        button.Click += (s, e) =>
+        {
+            try { click(s, e); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"RestOverlayService action failed: {ex}"); }
+        };
+        return button;
+    }
+
+    private AndroidTextButton CreateLogSetButton(
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+    {
+        var button = new AndroidTextButton(this);
+        button.Text = "Log set";
+        button.SetTextColor(colors.Primary);
+        button.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        button.SetTextSize(ComplexUnitType.Sp, 13);
+        button.SetAllCaps(false);
+        button.Gravity = GravityFlags.Center;
+        button.SetPadding(Dp(8), Dp(4), Dp(8), Dp(4));
+
+        var bg = new GradientDrawable();
+        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
+        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
+        bg.SetCornerRadius(Dp(10));
+        button.Background = bg;
+
+        button.Click += (s, e) =>
+        {
+            try { OnLogSetClicked(s, e); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"RestOverlayService log set failed: {ex}"); }
+        };
+        return button;
+    }
+
+    private AndroidTextButton CreateAddTimeButton(int seconds,
+        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+    {
+        var label = seconds < 60 ? $"+{seconds}s" : $"+{seconds / 60}:{seconds % 60:D2}";
+
+        var button = new AndroidTextButton(this);
+        button.Text = label;
+        button.SetTextColor(colors.Primary);
+        button.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        button.SetTextSize(ComplexUnitType.Sp, 12);
+        button.SetAllCaps(false);
+        button.SetSingleLine(true);
+        button.SetMaxLines(1);
+        button.SetMinWidth(Dp(56));
+        button.SetPadding(Dp(10), Dp(6), Dp(10), Dp(6));
+
+        var bg = new GradientDrawable();
+        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
+        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
+        bg.SetCornerRadius(Dp(10));
+        button.Background = bg;
+
+        button.Click += (s, e) =>
+        {
+            try { OnAddClicked(s, e); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"RestOverlayService add time failed: {ex}"); }
+        };
+        return button;
+    }
+
+    private void OnCloseClicked(object? sender, EventArgs e)
+    {
+        // Dismiss the bubble; it comes back after the app is reopened.
+        _dismissed = true;
+        RemoveOverlayView();
+    }
+
+    private void OnAddClicked(object? sender, EventArgs e)
+    {
+        var session = ResolveSession();
+        if (session == null)
+            return;
+
+        int addSeconds = ResolveSettings()?.AddTimeSeconds ?? 30;
+
+        if (session.IsResting)
+        {
+            session.AddRestSeconds(addSeconds);
+        }
+        else
+        {
+            // Between sets: start a fresh rest of exactly the add-time amount
+            if (addSeconds > 0)
+                session.StartRest(addSeconds);
+        }
+    }
+
+    private void OnLogSetClicked(object? sender, EventArgs e)
+    {
+        var quickAction = ResolveQuickAction();
+        if (quickAction == null)
+            return;
+
+        double? weight = _currentLogType != ExerciseLogType.Duration ? _currentWeightKg : null;
+        int? reps = _currentLogType != ExerciseLogType.Duration ? _currentReps : null;
+        _ = LogSetAsync(quickAction, weight, reps);
+    }
+
+    private static async Task LogSetAsync(WorkoutQuickActionService quickAction, double? weightKg, int? reps)
+    {
+        try
+        {
+            var result = weightKg != null || reps != null
+                ? await quickAction.LogNextSetAsync(weightKg, reps)
+                : await quickAction.LogNextSetAsync();
+
+            if (result.Status == QuickActionResult.NothingToLog)
+                return;
+
+            var services = IPlatformApplication.Current?.Services;
+            var notifications = services?.GetService(typeof(INotificationService)) as INotificationService;
+            if (notifications != null && result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
+                await notifications.ShowSetLoggedNotificationAsync(result.ExerciseName, result.LoggedSetIndex.Value, result.SetTotal.Value);
+
+            if (result.Status == QuickActionResult.WorkoutCompleted)
+            {
+                IVibrationService? vibration = services?.GetService(typeof(IVibrationService)) as IVibrationService;
+                vibration?.Vibrate(TimeSpan.FromMilliseconds(800));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestOverlayService log set failed: {ex}");
+        }
+    }
+
+    private void OnSkipClicked(object? sender, EventArgs e)
+    {
+        var session = ResolveSession();
+        if (session == null)
+            return;
+
+        session.SkipRest();
+    }
+
+    private void OnResetClicked(object? sender, EventArgs e)
+    {
+        var session = ResolveSession();
+        if (session == null)
+            return;
+
+        if (session.IsResting)
+        {
+            session.ResetRest();
+        }
+        else
+        {
+            // Between sets: start a fresh rest with original duration
+            int baseRest = GetExerciseRestSeconds(session);
+            if (baseRest > 0)
+                session.StartRest(baseRest);
+        }
+    }
+
+    private static int GetExerciseRestSeconds(WorkoutSessionService session)
+    {
+        var plan = session.CurrentPlan;
+        if (plan == null) return 0;
+        int idx = session.GetFirstUncompletedExerciseIndex();
+        if (idx < 0 || idx >= plan.Exercises.Count) return 0;
+        return plan.Exercises[idx].RestIntervalSeconds;
+    }
+
+    /// <summary>Opens the app when the bubble body is tapped (allowed: the app holds the overlay permission).</summary>
+    private void OpenApp()
+    {
+        try
+        {
+            Intent? launch = PackageManager!.GetLaunchIntentForPackage(PackageName!);
+            if (launch == null)
+                return;
+
+            launch.AddFlags(ActivityFlags.SingleTop);
+            StartActivity(launch);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestOverlayService open app failed: {ex}");
+        }
+    }
+
+    private void UpdateTicker()
+    {
+        if (_stopping)
+            return;
+
+        var session = ResolveSession();
+        if (session == null || session.CurrentPlan == null)
+        {
+            StopSelf();
+            return;
+        }
+
+        UpdateOverlayVisibility();
+        if (_overlayView == null)
+            return;
+
+        var plan = session.CurrentPlan;
+        int exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        string? nextExerciseName = null;
+        int? nextSetIndex = null;
+        int? nextSetTotal = null;
+        ExerciseLogType logType = ExerciseLogType.WeightAndReps;
+        double defaultWeight = 0;
+        int defaultReps = 10;
+
+        if (exerciseIndex >= 0 && exerciseIndex < plan.Exercises.Count)
+        {
+            var exercise = plan.Exercises[exerciseIndex];
+            nextExerciseName = exercise.Name;
+            nextSetTotal = exercise.SetCount;
+            logType = exercise.LogType;
+            defaultWeight = exercise.DefaultWeightKg ?? 0;
+            defaultReps = exercise.DefaultReps ?? 10;
+            int setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
+            nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
+
+            // Reset weight/reps when exercise changes
+            if (exerciseIndex != _trackedExerciseIndex)
+            {
+                _trackedExerciseIndex = exerciseIndex;
+                _currentWeightKg = defaultWeight;
+                _currentReps = defaultReps;
+                _currentLogType = logType;
+                UpdateStepperDisplay();
+            }
+        }
+
+        bool restActive = session.IsResting;
+        var colors = GetThemeColors();
+
+        // Header: exercise name left, timer right
+        if (restActive)
+        {
+            int remaining = session.RestSecondsRemaining;
+
+            _headerText!.Text = nextExerciseName ?? string.Empty;
+            _timerText!.Text = FormatTimer(remaining);
+            SetVisible(_timerText, true);
+
+            if (remaining <= 5)
+                _timerText.SetTextColor(colors.Error);
+            else if (remaining <= 10)
+                _timerText.SetTextColor(colors.Warning);
+            else
+                _timerText.SetTextColor(colors.TextPrimary);
+
+            _setInfoText!.Text = string.Empty;
+
+            // During rest: no steppers/log set, show action buttons
+            SetVisible(_stepperRow, false);
+            SetVisible(_logSetButton, false);
+            SetVisible(_addTimeButton, true);
+            SetVisible(_resetButton, true);
+            SetVisible(_skipButton, true);
+        }
+        else
+        {
+            // Hide timer when not resting
+            SetVisible(_timerText, false);
+
+            if (nextExerciseName != null)
+            {
+                _headerText!.Text = nextExerciseName;
+                _setInfoText!.Text = nextSetIndex != null && nextSetTotal != null
+                    ? $"{nextSetIndex}/{nextSetTotal}"
+                    : string.Empty;
+
+                // Between sets: show steppers, log set, and +Ns/Reset
+                bool showSteppers = logType != ExerciseLogType.Duration;
+                SetVisible(_stepperRow, showSteppers);
+                SetVisible(_logSetButton, true);
+                SetVisible(_addTimeButton, true);
+                SetVisible(_resetButton, true);
+                SetVisible(_skipButton, false);
+            }
+            else
+            {
+                _headerText!.Text = "Workout complete";
+                _setInfoText!.Text = string.Empty;
+                SetVisible(_stepperRow, false);
+                SetVisible(_logSetButton, false);
+                SetVisible(_addTimeButton, false);
+                SetVisible(_resetButton, false);
+                SetVisible(_skipButton, false);
+            }
+        }
+    }
+
+    private static void SetVisible(AndroidView? button, bool visible)
+    {
+        if (button == null)
+            return;
+
+        button.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
+    }
+
+    /// <summary>Formats timer like the in-app rest timer: MM:SS when >= 60s, just SS when < 60s.</summary>
+    private static string FormatTimer(int totalSeconds)
+    {
+        if (totalSeconds >= 60)
+        {
+            int m = totalSeconds / 60;
+            int s = totalSeconds % 60;
+            return $"{m}:{s:D2}";
+        }
+        return $"{totalSeconds}";
+    }
+
+    private static WorkoutSessionService? ResolveSession() =>
+        IPlatformApplication.Current?.Services.GetService(typeof(WorkoutSessionService)) as WorkoutSessionService;
+
+    private static WorkoutQuickActionService? ResolveQuickAction() =>
+        IPlatformApplication.Current?.Services.GetService(typeof(WorkoutQuickActionService)) as WorkoutQuickActionService;
+
+    private static RestAlertSettingsService? ResolveSettings() =>
+        IPlatformApplication.Current?.Services.GetService(typeof(RestAlertSettingsService)) as RestAlertSettingsService;
+
+    private WorkoutTimerState ReadState(Intent intent)
+    {
+        long endTicks = intent.GetLongExtra(ExtraEndUtcTicks, 0);
+        int remaining = intent.GetIntExtra(ExtraRemainingSeconds, 0);
+        string title = intent.GetStringExtra(ExtraTitle) ?? "Physiquinator";
+        string nextExercise = intent.GetStringExtra(ExtraNextExerciseName) ?? string.Empty;
+        int nextExerciseIndex = intent.GetIntExtra(ExtraNextExerciseIndex, -1);
+        int nextSetIndex = intent.GetIntExtra(ExtraNextSetIndex, -1);
+        int nextSetTotal = intent.GetIntExtra(ExtraNextSetTotal, -1);
+
+        return new WorkoutTimerState(
+            title,
+            endTicks > 0 ? new DateTime(endTicks, DateTimeKind.Utc) : null,
+            remaining,
+            string.IsNullOrEmpty(nextExercise) ? null : nextExercise,
+            nextExerciseIndex >= 0 ? nextExerciseIndex : null,
+            nextSetIndex >= 0 ? nextSetIndex : null,
+            nextSetTotal >= 0 ? nextSetTotal : null);
+    }
+
+    private WorkoutTimerState ReadSessionState()
+    {
+        var session = ResolveSession();
+        if (session == null || session.CurrentPlan == null)
+            return new WorkoutTimerState(null, null, 0, null, null, null, null);
+
+        var plan = session.CurrentPlan;
+        int exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        string? nextExercise = null;
+        int? nextSetIndex = null;
+        int? nextSetTotal = null;
+        if (exerciseIndex >= 0 && exerciseIndex < plan.Exercises.Count)
+        {
+            var exercise = plan.Exercises[exerciseIndex];
+            nextExercise = exercise.Name;
+            nextSetTotal = exercise.SetCount;
+            int setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
+            nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
+        }
+
+        return new WorkoutTimerState(
+            plan.Name,
+            session.RestEndsAtUtc,
+            session.RestSecondsRemaining,
+            nextExercise,
+            exerciseIndex >= 0 ? exerciseIndex : null,
+            nextSetIndex,
+            nextSetTotal);
+    }
+
+    internal int Dp(int value) => (int)(value * Resources!.DisplayMetrics!.Density);
+
+    private int StatusBarHeight
+    {
+        get
+        {
+            int id = Resources!.GetIdentifier("status_bar_height", "dimen", "android");
+            return id > 0 ? Resources!.GetDimensionPixelSize(id) : 0;
+        }
+    }
+
+    private int ScreenWidth
+    {
+        get
+        {
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.R && _windowManager != null)
+                return _windowManager.CurrentWindowMetrics.Bounds.Width();
+
+#pragma warning disable CS0618
+            using var metrics = Resources!.DisplayMetrics!;
+            return metrics.WidthPixels;
+#pragma warning restore CS0618
+        }
+    }
+
+    /// <summary>
+    /// Resolves the effective theme by reading the user's preference from
+    /// <see cref="IAppPreferences"/> and falling back to the OS theme when
+    /// set to "system". Returns <c>true</c> if dark mode is active.
+    /// </summary>
+    private bool IsDarkTheme()
+    {
+        try
+        {
+            var preferences = IPlatformApplication.Current?.Services.GetService(typeof(IAppPreferences)) as IAppPreferences;
+            if (preferences == null)
+                return true; // dark is the safe default
+
+            var profileService = IPlatformApplication.Current?.Services.GetService(typeof(UserProfileService)) as UserProfileService;
+            string profileSuffix = profileService != null
+                ? $"_{profileService.GetActiveProfile().Id}"
+                : string.Empty;
+
+            string key = $"{PreferenceKeys.ThemePreference}{profileSuffix}";
+            string preference = preferences.Get(key, string.Empty);
+
+            // Fall back to the unsuffixed key (written by JS localStorage fallback)
+            if (string.IsNullOrEmpty(preference))
+                preference = preferences.Get(PreferenceKeys.ThemePreference, string.Empty);
+
+            if (preference == ThemePreference.Light)
+                return false;
+            if (preference == ThemePreference.Dark)
+                return true;
+
+            // "system" or unknown: check OS theme
+            return Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Light ? false : true;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) GetThemeColors()
+    {
+        if (IsDarkTheme())
+            return (DarkBackground, DarkSurface, DarkTextPrimary, DarkTextSecondary, DarkPrimary, DarkWarning, DarkError);
+        return (LightBackground, LightSurface, LightTextPrimary, LightTextSecondary, LightPrimary, LightWarning, LightError);
+    }
+
+    private sealed class OverlayDragListener(RestOverlayService service) : Java.Lang.Object, AndroidView.IOnTouchListener
+    {
+        private float _downRawX;
+        private float _downRawY;
+        private int _downLpX;
+        private int _downLpY;
+        private bool _moved;
+
+        public bool OnTouch(AndroidView? v, MotionEvent? e)
+        {
+            if (v == null || e == null || service._layoutParams == null || service._windowManager == null)
+                return false;
+
+            switch (e.Action)
+            {
+                case MotionEventActions.Down:
+                    _downRawX = e.RawX;
+                    _downRawY = e.RawY;
+                    _downLpX = service._layoutParams.X;
+                    _downLpY = service._layoutParams.Y;
+                    _moved = false;
+                    return true;
+
+                case MotionEventActions.Move:
+                    var dx = e.RawX - _downRawX;
+                    var dy = e.RawY - _downRawY;
+                    if (!_moved && Math.Abs(dx) < 10 && Math.Abs(dy) < 10)
+                        return true;
+
+                    _moved = true;
+                    var lp = service._layoutParams;
+                    lp.X = _downLpX + (int)dx;
+                    lp.Y = _downLpY + (int)dy;
+                    service._windowManager.UpdateViewLayout(v, lp);
+                    return true;
+
+                case MotionEventActions.Up:
+                case MotionEventActions.Cancel:
+                    // A tap (no drag) on the bubble body opens the app.
+                    if (!_moved && e.Action == MotionEventActions.Up)
+                        service.OpenApp();
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+    }
+}

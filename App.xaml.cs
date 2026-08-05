@@ -6,10 +6,11 @@ public partial class App : Application
 {
 	private readonly WorkoutSessionService _sessionService;
 
-	public App(WorkoutSessionService sessionService)
+	public App(WorkoutSessionService sessionService, RestTimerCoordinator restTimer)
 	{
 		InitializeComponent();
 		_sessionService = sessionService;
+		restTimer.EnsureInitialState();
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)

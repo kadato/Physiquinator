@@ -6,8 +6,8 @@ using Physiquinator.Core.Services;
 namespace Physiquinator.Services;
 
 /// <summary>
-/// Schedules and shows native rest alerts (Android/iOS). WebView Web Audio is unreliable on mobile;
-/// local notifications provide sound when the app is backgrounded and a fallback when foregrounded.
+/// Schedules and shows the single rest-end alert (sound when the app is
+/// backgrounded). No other notifications fire during a workout.
 /// </summary>
 public sealed class RestNotificationService(RestAlertSettingsService settings, TimeProvider time) : Physiquinator.Core.Services.INotificationService
 {
@@ -16,6 +16,8 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
 
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
+    public const int OngoingRestNotificationId = 9101;
+    public const int SetLoggedNotificationId = 9102;
 
     public const string AndroidChannelId = "physiquinator_rest";
 
@@ -51,49 +53,6 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         }
     }
 
-    public async Task ScheduleRestEndAsync(DateTime notifyUtc, string title, string description)
-    {
-        if (!_settings.Enabled)
-            return;
-
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
-            return;
-
-        CancelAllRestNotifications();
-
-        if (notifyUtc <= _time.GetUtcNow().UtcDateTime.AddSeconds(1))
-            return;
-
-        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(notifyUtc, DateTimeKind.Utc), TimeZoneInfo.Local);
-
-        try
-        {
-            var request = new NotificationRequest
-            {
-                NotificationId = ScheduledRestNotificationId,
-                Title = title,
-                Description = description,
-                CategoryType = NotificationCategoryType.Status,
-                Android = new AndroidOptions
-                {
-                    ChannelId = AndroidChannelId,
-                    Priority = AndroidPriority.High,
-                    VibrationPattern = [0, 400, 200, 400]
-                },
-                Schedule = new NotificationRequestSchedule
-                {
-                    NotifyTime = localTime
-                }
-            };
-
-            await LocalNotificationCenter.Current.Show(request);
-        }
-        catch
-        {
-            // Scheduling can fail on unsupported hosts
-        }
-    }
-
     public async Task ShowRestCompleteNowAsync(string description)
     {
         if (!_settings.Enabled)
@@ -126,5 +85,155 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         {
             // Ignore
         }
+    }
+
+    public Task ScheduleRestEndAlarmAsync(DateTime restEndsAtUtc, string title, string description)
+    {
+        if (!_settings.Enabled)
+            return Task.CompletedTask;
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            return Task.CompletedTask;
+
+        CancelAllRestNotifications();
+
+        if (restEndsAtUtc <= _time.GetUtcNow().UtcDateTime.AddSeconds(1))
+            return Task.CompletedTask;
+
+        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(restEndsAtUtc, DateTimeKind.Utc), TimeZoneInfo.Local);
+
+        try
+        {
+            var request = new NotificationRequest
+            {
+                NotificationId = ScheduledRestNotificationId,
+                Title = title,
+                Description = description,
+                CategoryType = NotificationCategoryType.Status,
+                Android = new AndroidOptions
+                {
+                    ChannelId = AndroidChannelId,
+                    Priority = AndroidPriority.High,
+                    VibrationPattern = [0, 400, 200, 400]
+                },
+                Schedule = new NotificationRequestSchedule
+                {
+                    NotifyTime = localTime
+                }
+            };
+
+            return LocalNotificationCenter.Current.Show(request);
+        }
+        catch
+        {
+            // Scheduling can fail on unsupported hosts
+            return Task.CompletedTask;
+        }
+    }
+
+    public Task CancelRestEndAlarmAsync()
+    {
+        CancelAllRestNotifications();
+        return Task.CompletedTask;
+    }
+
+    public async Task ShowWorkoutTimerUiAsync(Physiquinator.Core.Models.WorkoutTimerState state)
+    {
+        if (!_settings.Enabled)
+            return;
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            return;
+
+        string description = state.RestEndsAtUtc is { } end
+            ? $"Rest ends at {TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(end, DateTimeKind.Utc), TimeZoneInfo.Local):HH:mm}"
+            : state.NextExerciseName is { } next
+                ? $"Next: {next} {state.NextSetIndex}/{state.NextSetTotal}"
+                : "Workout complete";
+
+        try
+        {
+            LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId);
+
+            var request = new NotificationRequest
+            {
+                NotificationId = OngoingRestNotificationId,
+                Title = state.PlanName ?? "Workout",
+                Description = description,
+                CategoryType = NotificationCategoryType.Status,
+                Android = new AndroidOptions
+                {
+                    ChannelId = AndroidChannelId,
+                    Priority = AndroidPriority.High
+                }
+            };
+
+            await LocalNotificationCenter.Current.Show(request);
+        }
+        catch
+        {
+            // Ignore
+        }
+    }
+
+    public Task HideWorkoutTimerUiAsync()
+    {
+        try
+        {
+            LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId);
+        }
+        catch
+        {
+            // Ignore
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public async Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets)
+    {
+        if (!_settings.Enabled)
+            return;
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            return;
+
+        try
+        {
+            LocalNotificationCenter.Current.Cancel(SetLoggedNotificationId);
+
+            var request = new NotificationRequest
+            {
+                NotificationId = SetLoggedNotificationId,
+                Title = "Set logged",
+                Description = $"{exerciseName} {setIndex}/{totalSets}",
+                CategoryType = NotificationCategoryType.Status,
+                Android = new AndroidOptions
+                {
+                    ChannelId = AndroidChannelId,
+                    Priority = AndroidPriority.Low
+                }
+            };
+
+            await LocalNotificationCenter.Current.Show(request);
+        }
+        catch
+        {
+            // Ignore
+        }
+    }
+
+    public Task CancelSetLoggedNotificationAsync()
+    {
+        try
+        {
+            LocalNotificationCenter.Current.Cancel(SetLoggedNotificationId);
+        }
+        catch
+        {
+            // Ignore
+        }
+
+        return Task.CompletedTask;
     }
 }

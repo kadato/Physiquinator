@@ -5,6 +5,9 @@ using Physiquinator.Core.Services;
 using Physiquinator.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
+#if ANDROID
+using Physiquinator.Platforms.Android.Services;
+#endif
 
 namespace Physiquinator;
 
@@ -51,7 +54,11 @@ public static class MauiProgram
             new AppPreferences(),
             new DatabasePathProvider());
 
+#if ANDROID
+        builder.Services.AddSingleton<Physiquinator.Core.Services.INotificationService, AndroidRestNotificationService>();
+#else
         builder.Services.AddSingleton<Physiquinator.Core.Services.INotificationService, RestNotificationService>();
+#endif
         builder.Services.AddSingleton<IVibrationService, MauiVibrationService>();
         builder.Services.AddSingleton<IFileTransferService, FileTransferService>();
 

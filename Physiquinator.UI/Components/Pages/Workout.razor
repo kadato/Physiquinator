@@ -4,11 +4,11 @@
 @inject WorkoutSessionService SessionService
 @inject RestAlertSettingsService RestAlertSettings
 @inject INotificationService RestNotifications
+@inject RestTimerCoordinator RestTimer
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject UserProfileService UserProfileService
-@inject IVibrationService VibrationService
 @inject WorkoutTimerInterop TimerInterop
 @inject ILogger<Workout> Logger
 @implements IAsyncDisposable
@@ -30,8 +30,6 @@ else
             <RestTimerPanel @ref="_restPanel"
                             IsRestComplete="_isRestComplete"
                             AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
-                            OnPause="PauseRest"
-                            OnResume="ResumeRest"
                             OnReset="ResetRest"
                             OnSkip="SkipRest"
                             OnAddTime="AddRestTime" />
@@ -59,7 +57,6 @@ else
             @if (DoneExercises.Any())
             {
                 <div class="workout-completed-divider-title mt-4 mb-2">
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Class="mr-1 completed-icon" Size="Size.Small" />
                     <MudText Typo="Typo.overline" Color="Color.Success" Class="font-weight-bold">Completed</MudText>
                 </div>
 
@@ -128,8 +125,6 @@ else
 
     private const int DefaultReps = 10;
     private const int RestTickIntervalMs = 1000;
-    private const int RestCompleteVibrationMs = 500;
-    private const int WorkoutCompleteVibrationMs = 800;
     private const int UndoToastDurationMs = 4000;
 
     private bool _isRestComplete;
@@ -159,6 +154,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         SessionService.RestCompletedWhileBackground += OnSessionRestCompletedWhileBackground;
+        SessionService.RestStateChanged += OnSessionRestStateChanged;
 
         _dotNetRef = DotNetObjectReference.Create(this);
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
@@ -189,6 +185,11 @@ else
         if (RestAlertSettings.Enabled)
             await RestNotifications.EnsurePermissionAsync();
 
+        // Capture before loading the workout: loading stops the rest timer and
+        // would otherwise consume the persisted snapshot of a rest that
+        // survived process death.
+        string? pendingRest = RestTimer.CapturePendingSnapshot();
+
         if (!ForceNew)
         {
             var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
@@ -200,6 +201,7 @@ else
                 SessionService.ResumeWorkout(workoutPlan, completions);
                 _historySessionId = open.Id;
                 await InitializeWorkoutStateAsync(workoutPlan);
+                await RestorePendingRestAsync(pendingRest);
                 return;
             }
         }
@@ -214,6 +216,23 @@ else
         var snapshot = WorkoutPlanService.SerializePlanToJson(plan);
         _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
         await InitializeWorkoutStateAsync(plan);
+        await RestorePendingRestAsync(pendingRest);
+    }
+
+    /// <summary>
+    /// Restores a rest countdown that survived process death (persisted by the
+    /// coordinator) and restarts the JS ticker so the page keeps counting.
+    /// </summary>
+    private async Task RestorePendingRestAsync(string? pendingRest)
+    {
+        if (!RestTimer.RestoreRestIfPending(pendingRest))
+            return;
+
+        var remaining = SessionService.RestSecondsRemaining;
+        if (remaining > 0)
+            await StartJsTimerAsync(remaining);
+
+        await SafeStateHasChangedAsync();
     }
 
     private async Task InitializeWorkoutStateAsync(WorkoutPlan plan)
@@ -340,7 +359,6 @@ else
         if (_disposed) return;
 
         await TimerInterop.StopTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
         SessionService.EndWorkout();
         Navigation.NavigateTo(AppRoutes.Home);
     }
@@ -381,7 +399,6 @@ else
         if (_disposed) return;
 
         await TimerInterop.StopTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
 
         if (_historySessionId != null)
         {
@@ -447,7 +464,6 @@ else
 
             if (willBeLastSetOfWorkout && SessionService.IsResting)
             {
-                RestNotifications.CancelAllRestNotifications();
                 SessionService.SkipRest();
             }
 
@@ -480,19 +496,15 @@ else
             if (willBeLastSetOfWorkout)
             {
                 _activeExerciseIndex = -1;
-                RestNotifications.CancelAllRestNotifications();
                 await SafeStateHasChangedAsync();
-                await OnWorkoutComplete();
                 return;
             }
 
             _isRestComplete = false;
             await TimerInterop.StopTimerAsync();
-            RestNotifications.CancelAllRestNotifications();
             _lastRestDurationSeconds = exercise.RestIntervalSeconds;
             SessionService.StartRest(exercise.RestIntervalSeconds);
             await StartJsTimerAsync();
-            await ScheduleRestNotificationIfRestingAsync();
 
             // Auto accordion transition
             if (SessionService.IsExerciseDone(exerciseIndex))
@@ -546,7 +558,6 @@ else
 
         HideUndoToast();
         await TimerInterop.StopTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
 
@@ -568,43 +579,11 @@ else
         await SafeStateHasChangedAsync();
     }
 
-    private async Task PauseRest()
-    {
-        if (_disposed) return;
-
-        await TimerInterop.PauseTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
-        SessionService.PauseRest();
-        await SafeStateHasChangedAsync();
-    }
-
-    private async Task ResumeRest()
-    {
-        if (_disposed) return;
-
-        var expired = SessionService.ResumeRest();
-        if (expired)
-        {
-            _isRestComplete = true;
-            await TimerInterop.StopTimerAsync();
-            await SafeStateHasChangedAsync();
-            await PlayRestCompleteAlertsAsync();
-        }
-        else
-        {
-            var remaining = SessionService.RestSecondsRemaining;
-            await ResumeJsTimerAsync(remaining);
-            await ScheduleRestNotificationIfRestingAsync();
-            await SafeStateHasChangedAsync();
-        }
-    }
-
     private async Task ResetRest()
     {
         if (_disposed) return;
 
         _isRestComplete = false;
-        RestNotifications.CancelAllRestNotifications();
 
         if (SessionService.IsResting)
             SessionService.ResetRest();
@@ -616,7 +595,6 @@ else
         if (SessionService.IsResting)
         {
             await StartJsTimerAsync();
-            await ScheduleRestNotificationIfRestingAsync();
         }
 
         await SafeStateHasChangedAsync();
@@ -627,7 +605,6 @@ else
         if (_disposed) return;
 
         await TimerInterop.StopTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
         _isRestComplete = false;
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
@@ -646,26 +623,17 @@ else
             _lastRestDurationSeconds = seconds;
             SessionService.StartRest(seconds);
             await StartJsTimerAsync();
-            await ScheduleRestNotificationIfRestingAsync();
             await SafeStateHasChangedAsync();
             return;
         }
 
         SessionService.AddRestSeconds(seconds);
-        RestNotifications.CancelAllRestNotifications();
-
-        if (SessionService.IsRestPaused)
-        {
-            await SafeStateHasChangedAsync();
-            return;
-        }
 
         await TimerInterop.StopTimerAsync();
         var remaining = SessionService.RestSecondsRemaining;
         if (remaining > 0)
         {
-            await ResumeJsTimerAsync(remaining);
-            await ScheduleRestNotificationIfRestingAsync();
+            await StartJsTimerAsync(remaining);
         }
         await SafeStateHasChangedAsync();
     }
@@ -675,28 +643,9 @@ else
         if (!RestAlertSettings.Enabled)
             return;
 
-        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
-        var description = $"{planName}: start your next set when you are ready.";
-
-        try
-        {
-            RestNotifications.CancelAllRestNotifications();
-            await RestNotifications.ShowRestCompleteNowAsync(description);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Rest notification error");
-        }
-
-        try
-        {
-            VibrationService.Vibrate(TimeSpan.FromMilliseconds(RestCompleteVibrationMs));
-        }
-        catch
-        {
-            // Silently fail if vibration not supported
-        }
-
+        // The only alert during a workout: a single deep knock when the rest
+        // time is done. No notification or vibration here - those are handled
+        // natively when the app is backgrounded.
         try
         {
             await TimerInterop.PlayRestCompleteSoundAsync();
@@ -707,16 +656,37 @@ else
         }
     }
 
-    private async Task ScheduleRestNotificationIfRestingAsync()
+    private void OnSessionRestStateChanged(object? sender, EventArgs e)
     {
-        if (!RestAlertSettings.Enabled)
-            return;
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed) return;
 
-        var ends = SessionService.RestEndsAtUtc;
-        if (ends == null) return;
+            try
+            {
+                if (!SessionService.IsResting)
+                {
+                    await TimerInterop.StopTimerAsync();
+                    _restPanel?.Refresh();
+                    await SafeStateHasChangedAsync();
+                    return;
+                }
 
-        var title = SessionService.CurrentPlan?.Name ?? "Physiquinator";
-        await RestNotifications.ScheduleRestEndAsync(ends.Value, title, "Rest finished — time for your next set.");
+                if (!_isRestComplete)
+                {
+                    var remaining = SessionService.RestSecondsRemaining;
+                    if (remaining > 0)
+                        await StartJsTimerAsync(remaining);
+                }
+
+                _restPanel?.Refresh();
+                await SafeStateHasChangedAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Rest state sync error");
+            }
+        });
     }
 
     private void OnSessionRestCompletedWhileBackground(object? sender, EventArgs e)
@@ -740,25 +710,11 @@ else
         });
     }
 
-    private async Task OnWorkoutComplete()
-    {
-        try
-        {
-            VibrationService.Vibrate(TimeSpan.FromMilliseconds(WorkoutCompleteVibrationMs));
-            await TimerInterop.PlayWorkoutCompleteSoundAsync();
-        }
-        catch
-        {
-            // Silently fail if vibration or audio not supported
-        }
-    }
-
     private async Task EndWorkout()
     {
         if (_disposed) return;
 
         await TimerInterop.StopTimerAsync();
-        RestNotifications.CancelAllRestNotifications();
 
         try
         {
@@ -816,13 +772,6 @@ else
         await TimerInterop.StartTimerAsync(_dotNetRef, RestTickIntervalMs, totalMs);
     }
 
-    private async Task ResumeJsTimerAsync(int durationSeconds)
-    {
-        if (durationSeconds <= 0 || _dotNetRef == null) return;
-
-        await TimerInterop.ResumeTimerAsync(_dotNetRef, RestTickIntervalMs, durationSeconds * RestTickIntervalMs);
-    }
-
     public async ValueTask DisposeAsync()
     {
         await TimerInterop.DisposeAsync();
@@ -830,7 +779,7 @@ else
         _disposed = true;
         HideUndoToast();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
-        RestNotifications.CancelAllRestNotifications();
+        SessionService.RestStateChanged -= OnSessionRestStateChanged;
         SessionService.CancelRest();
         _dotNetRef?.Dispose();
     }

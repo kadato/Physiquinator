@@ -50,9 +50,19 @@ public class ServiceContainerTests
         {
         }
 
-        public Task ScheduleRestEndAsync(DateTime notifyUtc, string title, string description) => Task.CompletedTask;
-
         public Task ShowRestCompleteNowAsync(string description) => Task.CompletedTask;
+
+        public Task ShowWorkoutTimerUiAsync(Physiquinator.Core.Models.WorkoutTimerState state) => Task.CompletedTask;
+
+        public Task HideWorkoutTimerUiAsync() => Task.CompletedTask;
+
+        public Task ScheduleRestEndAlarmAsync(DateTime restEndsAtUtc, string title, string description) => Task.CompletedTask;
+
+        public Task CancelRestEndAlarmAsync() => Task.CompletedTask;
+
+        public Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets) => Task.CompletedTask;
+
+        public Task CancelSetLoggedNotificationAsync() => Task.CompletedTask;
     }
 
     private static ServiceProvider BuildContainer()

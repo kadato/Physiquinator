@@ -31,21 +31,11 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
     public Task StopTimerAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("stopRestTimer"));
 
-    public Task PauseTimerAsync() =>
-        InvokeModuleAsync(module => module.InvokeVoidAsync("pauseRestTimer"));
-
-    public Task ResumeTimerAsync<T>(DotNetObjectReference<T> dotNetRef, int tickIntervalMs, int remainingMs)
-        where T : class =>
-        InvokeModuleAsync(module => module.InvokeVoidAsync("resumeRestTimer", dotNetRef, tickIntervalMs, remainingMs));
-
     public Task UnlockAudioAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("unlockAudioContext"));
 
     public Task PlayRestCompleteSoundAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("playRestCompleteSound"));
-
-    public Task PlayWorkoutCompleteSoundAsync() =>
-        InvokeModuleAsync(module => module.InvokeVoidAsync("playWorkoutCompleteSound"));
 
     public async ValueTask DisposeAsync()
     {

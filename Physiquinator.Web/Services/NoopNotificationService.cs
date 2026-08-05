@@ -1,3 +1,4 @@
+using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
 
 namespace Physiquinator.Web.Services;
@@ -11,7 +12,17 @@ public sealed class NoopNotificationService : INotificationService
     {
     }
 
-    public Task ScheduleRestEndAsync(DateTime notifyUtc, string title, string description) => Task.CompletedTask;
-
     public Task ShowRestCompleteNowAsync(string description) => Task.CompletedTask;
+
+    public Task ShowWorkoutTimerUiAsync(WorkoutTimerState state) => Task.CompletedTask;
+
+    public Task HideWorkoutTimerUiAsync() => Task.CompletedTask;
+
+    public Task ScheduleRestEndAlarmAsync(DateTime restEndsAtUtc, string title, string description) => Task.CompletedTask;
+
+    public Task CancelRestEndAlarmAsync() => Task.CompletedTask;
+
+    public Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets) => Task.CompletedTask;
+
+    public Task CancelSetLoggedNotificationAsync() => Task.CompletedTask;
 }

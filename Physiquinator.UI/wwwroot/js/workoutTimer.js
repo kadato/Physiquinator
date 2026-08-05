@@ -25,7 +25,7 @@ function startProgressRaf() {
 
         const fill = document.querySelector('.rest-timer-edge-fill');
         if (fill) {
-            fill.style.width = `${progress * 100}%`;
+            fill.style.transform = `scaleX(${progress})`;
         }
 
         if (progress < 1) {

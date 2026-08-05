@@ -568,7 +568,17 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
 .mud-collapse-container,
 .mud-expand-panel,
 .mud-overlay {
-    transition: all 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+    /* Enumerate the properties MudBlazor actually animates; a blanket "all"
+       transition would also animate layout-triggering properties like width,
+       margin and padding on every frame. max-height is kept for collapse. */
+    transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                filter 120ms cubic-bezier(0.16, 1, 0.3, 1),
+                max-height 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
     animation-duration: 120ms !important;
 }
 /* Filled inputs: no underline; match card surfaces */
@@ -1086,6 +1096,8 @@ button.heatmap-cell:disabled {
     font-size: clamp(5.5rem, 24vw, 8rem);
     line-height: 0.95;
     color: var(--mud-palette-text-primary);
+    /* Paint-only: urgency color stages blend instead of snapping. */
+    transition: color 0.3s ease;
 }
 
 .rest-timer-unit {
@@ -1096,13 +1108,15 @@ button.heatmap-cell:disabled {
     text-indent: 0.08em;
     overflow: hidden;
     white-space: nowrap;
-    transition: max-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                opacity 0.4s ease, 
-                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                margin 0.6s ease;
+    /* Composited only: digit collapse animates transform/opacity, never
+       layout properties like max-width or margin. */
+    transition: opacity 0.35s ease,
+                transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .rest-timer-unit--minutes {
+    /* max-width caps (not transitions): the box shrinks to fit the digit
+       content, keeping the original tight inter-digit spacing. */
     max-width: 2.5ch;
 }
 
@@ -1116,47 +1130,61 @@ button.heatmap-cell:disabled {
     text-align: center;
     max-width: 0.8ch;
     opacity: 1;
+    letter-spacing: 0.08em;
+    text-indent: 0.08em;
     overflow: hidden;
     white-space: nowrap;
-    transition: max-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                opacity 0.4s ease, 
-                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                margin 0.6s ease;
+    transition: opacity 0.35s ease,
+                transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.rest-timer-digits--seconds-only .rest-timer-unit--minutes {
-    max-width: 0;
-    opacity: 0;
-    transform: scale(0.7) translateX(-20px);
-    pointer-events: none;
-    letter-spacing: 0;
-    text-indent: 0;
-}
-
+/* Below 60 s the minutes column and separator collapse in place (scaleX,
+   right origin) while the seconds digits slide left to stay centered. */
+.rest-timer-digits--seconds-only .rest-timer-unit--minutes,
 .rest-timer-digits--seconds-only .rest-timer-separator {
-    max-width: 0;
     opacity: 0;
-    transform: scale(0.7) translateX(-10px);
+    transform: scaleX(0);
+    transform-origin: right;
     pointer-events: none;
-    letter-spacing: 0;
-    text-indent: 0;
 }
 
+.rest-timer-digits--seconds-only .rest-timer-unit--seconds-tens,
+.rest-timer-digits--seconds-only .rest-timer-unit--seconds-units {
+    transform: translateX(-1.45ch);
+}
+
+/* Single digit: separator and tens column collapse; minutes slide right and
+   the units digit slides left symmetrically so the row stays centered. */
+.rest-timer-digits--single-digit .rest-timer-unit--minutes {
+    transform: translateX(0.85ch);
+}
+
+.rest-timer-digits--single-digit .rest-timer-separator,
 .rest-timer-digits--single-digit .rest-timer-unit--seconds-tens {
-    max-width: 0;
     opacity: 0;
-    transform: scale(0.7) translateX(-15px);
+    transform: scaleX(0);
+    transform-origin: right;
     pointer-events: none;
-    letter-spacing: 0;
-    text-indent: 0;
+}
+
+.rest-timer-digits--single-digit .rest-timer-unit--seconds-units {
+    transform: translateX(-0.85ch);
+}
+
+.rest-timer-digits--seconds-only.rest-timer-digits--single-digit .rest-timer-unit--seconds-units {
+    transform: translateX(-2ch);
 }
 
 .rest-timer-digits--paused {
     opacity: 0.45;
 }
 
-.rest-timer-digits--urgent {
+.rest-timer-digits--imminent {
     color: var(--mud-palette-warning);
+}
+
+.rest-timer-digits--urgent {
+    color: var(--mud-palette-error);
 }
 
 .rest-timer-controls {
@@ -1253,14 +1281,23 @@ button.heatmap-cell:disabled {
 }
 
 .rest-timer-edge-fill {
-    width: 0%;
+    width: 100%;
     height: 100%;
     background: linear-gradient(90deg, var(--mud-palette-secondary) 0%, var(--mud-palette-primary) 100%);
     border-radius: 6px;
+    /* Progress is applied per-frame from JS as scaleX (composited); width is
+       fixed at 100% so no layout is triggered while the countdown runs. */
+    transform: scaleX(0);
+    transform-origin: left;
+    will-change: transform;
 }
 
 .rest-timer-edge-fill--paused {
     opacity: 0.5;
+}
+
+.rest-timer-edge-fill--imminent {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-warning) 55%, #fff) 0%, var(--mud-palette-warning) 100%);
 }
 
 .rest-timer-edge-fill--urgent {
@@ -2561,3 +2598,6 @@ a,
 .mud-input-outlined-border {
     border-radius: 12px;
 }
+/* ==========================================================================
+   
+/* =========================================================

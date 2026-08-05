@@ -27,9 +27,8 @@ else
     <MudStack Spacing="3">
         @if (SessionService.IsResting || _isRestComplete)
         {
-            <RestTimerPanel IsRestComplete="_isRestComplete"
-                            IsRestPaused="@SessionService.IsRestPaused"
-                            RestSecondsRemaining="@SessionService.RestSecondsRemaining"
+            <RestTimerPanel @ref="_restPanel"
+                            IsRestComplete="_isRestComplete"
                             AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
                             OnPause="PauseRest"
                             OnResume="ResumeRest"
@@ -140,6 +139,7 @@ else
     private bool _isCompleting;
     private bool _disposed;
     private DotNetObjectReference<Workout>? _dotNetRef;
+    private RestTimerPanel? _restPanel;
     private string? _historySessionId;
     private double? _bodyweightKg;
     private bool _undoVisible;
@@ -347,6 +347,13 @@ else
 
     private async Task EndWorkoutClick()
     {
+        // Everything completed: nothing is lost by ending, so skip the dialog.
+        if (SessionService.GetFirstUncompletedExerciseIndex() == -1)
+        {
+            await EndWorkout();
+            return;
+        }
+
         var confirmed = await DialogService.ConfirmAsync(
             "End workout?",
             "Save this session and return home?",
@@ -628,7 +635,21 @@ else
 
     private async Task AddRestTime(int seconds)
     {
-        if (_disposed || !SessionService.IsResting) return;
+        if (_disposed || seconds <= 0) return;
+
+        if (!SessionService.IsResting)
+        {
+            // Rest already finished: +add restarts a fresh short countdown.
+            if (!_isRestComplete) return;
+
+            _isRestComplete = false;
+            _lastRestDurationSeconds = seconds;
+            SessionService.StartRest(seconds);
+            await StartJsTimerAsync();
+            await ScheduleRestNotificationIfRestingAsync();
+            await SafeStateHasChangedAsync();
+            return;
+        }
 
         SessionService.AddRestSeconds(seconds);
         RestNotifications.CancelAllRestNotifications();
@@ -767,9 +788,16 @@ else
         {
             // TickRest clears IsResting; without this flag first, the timer block unmounts for one frame.
             _isRestComplete = true;
+            await SafeStateHasChangedAsync();
         }
-
-        await SafeStateHasChangedAsync();
+        else if (_restPanel != null)
+        {
+            // Rest ticks only touch the countdown panel; re-rendering the whole
+            // page (exercise cards, progress bars) once per second is wasted work.
+            // JS-interop calls already arrive on the renderer thread, so no
+            // InvokeAsync marshaling is needed here.
+            _restPanel.Refresh();
+        }
 
         if (done)
         {

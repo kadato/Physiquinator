@@ -1,4 +1,5 @@
 @* Rest countdown panel with pause / resume / reset / skip controls. *@
+@inject WorkoutSessionService SessionService
 
 <MudPaper Class="@PanelClass" Elevation="2">
     <div class="rest-timer-active">
@@ -29,13 +30,10 @@
                                OnClick="OnReset"
                                Size="Size.Large" />
                 <div class="rest-timer-controls__slot" aria-hidden="true"></div>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           OnClick="OnSkip"
-                           aria-label="Continue to next set"
-                           Size="Size.Large">
-                    Continue
-                </MudButton>
+                <button type="button"
+                        class="rest-timer-add-btn"
+                        aria-label="@($"Add {AddRestSeconds} seconds of rest")"
+                        @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
             }
             else
             {
@@ -79,16 +77,17 @@
 </MudPaper>
 
 @code {
-    private const int UrgentRestThresholdSeconds = 3;
+    private const int ImminentRestThresholdSeconds = 10;
+    private const int UrgentRestThresholdSeconds = 5;
+
+    /// <summary>Live seconds remaining, read from the session service on each render so the panel can re-render on its own timer ticks without the parent page re-rendering.</summary>
+    private int RestSecondsRemaining => SessionService.RestSecondsRemaining;
+
+    /// <summary>Live pause state, read from the session service (see <see cref="RestSecondsRemaining"/>).</summary>
+    private bool IsRestPaused => SessionService.IsRestPaused;
 
     [Parameter, EditorRequired]
     public bool IsRestComplete { get; set; }
-
-    [Parameter, EditorRequired]
-    public bool IsRestPaused { get; set; }
-
-    [Parameter, EditorRequired]
-    public int RestSecondsRemaining { get; set; }
 
     [Parameter]
     public EventCallback OnPause { get; set; }
@@ -110,6 +109,15 @@
     [Parameter]
     public int AddRestSeconds { get; set; } = 30;
 
+    /// <summary>
+    /// Re-renders the panel in place so the rest countdown can update each
+    /// second without re-rendering the parent page and its exercise cards.
+    /// </summary>
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
     private string PanelClass =>
         IsRestComplete
             ? "rest-timer-panel rest-timer-panel--active rest-timer-panel--complete"
@@ -123,6 +131,8 @@
                 return "rest-timer-digits--paused";
             if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
                 return "rest-timer-digits--urgent";
+            if (RestSecondsRemaining <= ImminentRestThresholdSeconds)
+                return "rest-timer-digits--imminent";
             return "";
         }
     }
@@ -135,6 +145,8 @@
                 return "rest-timer-edge-fill--paused";
             if (RestSecondsRemaining <= UrgentRestThresholdSeconds)
                 return "rest-timer-edge-fill--urgent";
+            if (RestSecondsRemaining <= ImminentRestThresholdSeconds)
+                return "rest-timer-edge-fill--imminent";
             return "";
         }
     }

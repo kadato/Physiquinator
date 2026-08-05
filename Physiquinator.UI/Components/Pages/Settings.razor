@@ -41,7 +41,7 @@
     <MudPaper Class="pa-4 settings-card" Elevation="0">
         <div class="settings-card__header">
             <MudIcon Icon="@Icons.Material.Outlined.Timer" Class="settings-card__icon" />
-            <MudText Typo="Typo.h6" Class="settings-card__title">Rest timer alerts</MudText>
+            <MudText Typo="Typo.h6" Class="settings-card__title">Rest timer</MudText>
         </div>
         <MudSwitch T="bool"
                    Label="Notify when rest ends"
@@ -50,6 +50,19 @@
         <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
             When off, rest-end notifications, sound, and vibration are disabled during workouts. The on-screen rest timer still runs.
         </MudText>
+        <MudStack Spacing="0" Class="mt-4">
+            <SetMetricStepper Label="Add rest time (s)"
+                              @bind-Value="_addTimeSecondsValue"
+                              Step="5"
+                              Min="5"
+                              Max="300"
+                              IsInteger="true"
+                              Format="0"
+                              InputMode="numeric" />
+            <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                The + button on the rest timer adds this many seconds.
+            </MudText>
+        </MudStack>
     </MudPaper>
 
     <MudPaper Class="pa-4 settings-card" Elevation="0">
@@ -149,8 +162,21 @@
     private int _historySessionCount;
     private UserProfile _activeProfile = new();
     private double? _bodyweight;
+    private int _addTimeSeconds = 30;
 
     private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
+
+    private double? _addTimeSecondsValue
+    {
+        get => _addTimeSeconds;
+        set
+        {
+            var next = (int)Math.Round(value ?? RestAlertSettings.AddTimeSeconds);
+            next = Math.Clamp(next, 5, 300);
+            _addTimeSeconds = next;
+            RestAlertSettings.SetAddTimeSeconds(next);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,6 +221,7 @@
         _preference = ThemeService.Preference;
         _effectiveTheme = ThemeService.EffectiveTheme;
         _restAlertsEnabled = RestAlertSettings.Enabled;
+        _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
     }
 
     private void HandleRestAlertsChanged()

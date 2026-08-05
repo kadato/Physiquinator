@@ -17,6 +17,10 @@
                    min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                    step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                    placeholder="@PlaceholderText"
+                   autocapitalize="off"
+                   autocomplete="off"
+                   spellcheck="false"
+                   enterkeyhint="done"
                    @bind="EditText"
                    @bind:event="oninput"
                    @onblur="CommitEdit"
@@ -69,6 +73,10 @@ else
                        min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                        step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                        placeholder="@PlaceholderText"
+                       autocapitalize="off"
+                       autocomplete="off"
+                       spellcheck="false"
+                       enterkeyhint="done"
                        @bind="EditText"
                        @bind:event="oninput"
                        @onblur="CommitEdit"
@@ -117,6 +125,9 @@ else
 
     [Parameter]
     public double Min { get; set; }
+
+    [Parameter]
+    public double? Max { get; set; }
 
     [Parameter]
     public bool IsInteger { get; set; }
@@ -221,6 +232,8 @@ else
         var next = current + (direction * Step);
         if (next < Min)
             next = Min;
+        if (Max.HasValue && next > Max.Value)
+            next = Max.Value;
 
         next = NormalizeValue(next);
         await SetValueAsync(next);
@@ -261,6 +274,8 @@ else
 
         if (parsed < Min)
             parsed = Min;
+        if (Max.HasValue && parsed > Max.Value)
+            parsed = Max.Value;
 
         await SetValueAsync(NormalizeValue(parsed));
     }

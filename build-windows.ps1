@@ -85,9 +85,9 @@ Write-Host "  Executable: Physiquinator.exe (${exeSizeMB} MB)" -ForegroundColor 
 Write-Host "  Total size: ${totalSizeMB} MB" -ForegroundColor White
 
 Write-Host "`nRuntime Requirements:" -ForegroundColor Yellow
-Write-Host "  - .NET 10 Desktop Runtime (x64)" -ForegroundColor White
+Write-Host "  - .NET 11 Desktop Runtime (x64)" -ForegroundColor White
 Write-Host "  - WindowsAppSDK: ✅ Bundled" -ForegroundColor Green
-Write-Host "  Download Runtime: https://dotnet.microsoft.com/download/dotnet/10.0" -ForegroundColor Gray
+Write-Host "  Download Runtime: https://dotnet.microsoft.com/download/dotnet/11.0" -ForegroundColor Gray
 
 # Create ZIP if requested
 if ($CreateZip) {

@@ -136,6 +136,52 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetLatestSetMetricsByExerciseAsync_ReturnsLatestPerExercise()
+    {
+        var planId = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(planId, "Day1", null);
+        await _sut.LogSetAsync(s1, 0, "Squat", 0, reps: 10, weightKg: 60);
+        await _sut.LogSetAsync(s1, 1, "Bench", 0, reps: 8, weightKg: 50);
+        await _sut.EndSessionAsync(s1);
+
+        var s2 = await _sut.BeginSessionAsync(planId, "Day2", null);
+        await _sut.LogSetAsync(s2, 0, "Squat", 0, reps: 12, weightKg: 62.5);
+
+        IReadOnlyDictionary<string, LastSetMetrics> map = await _sut.GetLatestSetMetricsByExerciseAsync(planId);
+
+        Assert.Equal(2, map.Count);
+        Assert.Equal(12, map["Squat"].Reps);
+        Assert.Equal(62.5, map["Squat"].WeightKg);
+        Assert.Equal(8, map["Bench"].Reps);
+        Assert.Equal(50, map["Bench"].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetLatestSetMetricsByExerciseAsync_ScopesByPlanId()
+    {
+        var p1 = Guid.NewGuid();
+        var p2 = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(p1, "A", null);
+        await _sut.LogSetAsync(s1, 0, "Lift", 0, reps: 5, weightKg: 40);
+        var s2 = await _sut.BeginSessionAsync(p2, "B", null);
+        await _sut.LogSetAsync(s2, 0, "Lift", 0, reps: 1, weightKg: 1);
+
+        IReadOnlyDictionary<string, LastSetMetrics> map = await _sut.GetLatestSetMetricsByExerciseAsync(p1);
+
+        Assert.Single(map);
+        Assert.Equal(5, map["Lift"].Reps);
+        Assert.Equal(40, map["Lift"].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetLatestSetMetricsByExerciseAsync_ReturnsEmpty_WhenNoLogs()
+    {
+        IReadOnlyDictionary<string, LastSetMetrics> map = await _sut.GetLatestSetMetricsByExerciseAsync(Guid.NewGuid());
+
+        Assert.Empty(map);
+    }
+
+    [Fact]
     public void TryParsePlanSnapshot_ReturnsNull_ForInvalidJson()
     {
         Assert.Null(WorkoutHistoryRepository.TryParsePlanSnapshot("{not json"));
@@ -155,6 +201,36 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         Assert.Equal("Push", parsed.Name);
         Assert.Single(parsed.Exercises);
         Assert.Equal(10, parsed.Exercises[0].DefaultReps);
+    }
+
+    [Fact]
+    public async Task CreateBackupSnapshotAsync_IncludesSessionsWithoutSets()
+    {
+        var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "Empty", null);
+
+        WorkoutHistoryBackup backup = await _sut.CreateBackupSnapshotAsync();
+
+        Assert.Single(backup.Sessions);
+        Assert.Equal(sessionId, backup.Sessions[0].Session.Id);
+        Assert.Empty(backup.Sessions[0].Sets);
+    }
+
+    [Fact]
+    public async Task CreateBackupSnapshotAsync_OrdersSessionsNewestFirst_SetsChronological()
+    {
+        var planId = Guid.NewGuid();
+        var baseTime = new DateTime(2026, 4, 1, 12, 0, 0, DateTimeKind.Utc);
+        var olderId = await InsertSessionAtUtcAsync(planId, "Old", baseTime);
+        await _sut.LogSetAsync(olderId, 0, "A", 0);
+        var newerId = await InsertSessionAtUtcAsync(planId, "New", baseTime.AddHours(1));
+
+        WorkoutHistoryBackup backup = await _sut.CreateBackupSnapshotAsync();
+
+        Assert.Equal(2, backup.Sessions.Count);
+        Assert.Equal(newerId, backup.Sessions[0].Session.Id);
+        Assert.Equal(olderId, backup.Sessions[1].Session.Id);
+        Assert.Empty(backup.Sessions[0].Sets);
+        Assert.Single(backup.Sessions[1].Sets);
     }
 
     [Fact]

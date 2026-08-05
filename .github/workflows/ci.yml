@@ -34,7 +34,9 @@ jobs:
       run: dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
 
     - name: Format check (Core + Tests)
-      run: dotnet format Physiquinator.Core/Physiquinator.Core.csproj Physiquinator.Tests/Physiquinator.Tests.csproj --verify-no-changes --severity warn
+      run: |
+        dotnet format Physiquinator.Core/Physiquinator.Core.csproj --verify-no-changes --severity warn
+        dotnet format Physiquinator.Tests/Physiquinator.Tests.csproj --verify-no-changes --severity warn
 
     - name: Publish test results
       uses: dorny/test-reporter@v1

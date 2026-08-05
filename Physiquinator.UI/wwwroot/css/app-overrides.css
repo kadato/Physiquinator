@@ -2707,53 +2707,26 @@ a,
     padding: 2rem;
     box-sizing: border-box;
     text-align: center;
-    background-color: #0B0C10;
-    color: #F3F4F6;
+    background-color: #10B981;
+    color: #FFFFFF;
     font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html[data-theme="light"] .app-splash {
-    background-color: #F8F9FA;
-    color: #111827;
+    background-color: #0F766E;
+    color: #FFFFFF;
 }
 
 .app-splash__logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 5.5rem;
-    height: 5.5rem;
-    border-radius: 1.375rem;
-    background: #512BD4;
-    color: #FFFFFF;
-    box-shadow: 0 10px 32px color-mix(in srgb, #512BD4 40%, transparent);
 }
 
+/* Matches the native splash icon size (108dp on Android 12+) so the handoff is seamless */
 .app-splash__logo svg {
-    width: 3rem;
-    height: 3rem;
-}
-
-.app-splash__title {
-    margin: 0;
-    font-size: 1.625rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-}
-
-.app-splash__spinner {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    border: 3px solid color-mix(in srgb, currentColor 18%, transparent);
-    border-top-color: currentColor;
-    animation: app-splash-spin 0.9s linear infinite;
-}
-
-@keyframes app-splash-spin {
-    to {
-        transform: rotate(360deg);
-    }
+    width: 11.9rem;
+    height: 11.9rem;
 }
 
 .app-splash__status {
@@ -2772,8 +2745,8 @@ html[data-theme="light"] .app-splash {
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 12px;
-    background-color: #0F766E;
-    color: #FFFFFF;
+    background-color: #FFFFFF;
+    color: #0F766E;
     font: inherit;
     font-size: 0.9375rem;
     font-weight: 700;
@@ -2784,15 +2757,10 @@ html[data-theme="light"] .app-splash {
 }
 
 html[data-theme="dark"] .app-splash__retry {
-    background-color: #10B981;
+    background-color: #FFFFFF;
+    color: #10B981;
 }
 
 .app-splash__retry:active {
     transform: scale(0.97);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .app-splash__spinner {
-        animation: none;
-    }
 }

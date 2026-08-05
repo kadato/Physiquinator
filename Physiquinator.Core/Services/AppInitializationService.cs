@@ -15,8 +15,6 @@ public sealed class AppInitializationService(
 
     public bool ShowSetupOverlay { get; private set; }
 
-    public string? SetupStatusMessage { get; private set; }
-
     public event Action? InitializationCompleted;
 
     public event Action? ProgressChanged;
@@ -43,7 +41,6 @@ public sealed class AppInitializationService(
                 if (didSeedPlans)
                 {
                     ShowSetupOverlay = true;
-                    SetupStatusMessage = "Building workout history\u2026";
                     NotifyProgress();
                 }
 
@@ -55,7 +52,6 @@ public sealed class AppInitializationService(
                     preferences.Set(PreferenceKeys.ShowFirstTimeSeedModal, true);
 
                     ShowSetupOverlay = false;
-                    SetupStatusMessage = null;
                     NotifyProgress();
                 }
             }

@@ -47,7 +47,14 @@ jobs:
       run: dotnet restore Physiquinator.slnx
 
     - name: Build
-      run: dotnet build Physiquinator.slnx --configuration Release --no-restore
+      # The MAUI app targets (android/ios/maccatalyst) cannot build on Linux,
+      # and SonarAnalyzer is only wired into the non-MAUI projects
+      # (see Directory.Build.props), so analysis covers those projects.
+      run: |
+        dotnet build Physiquinator.Core/Physiquinator.Core.csproj --configuration Release --no-restore
+        dotnet build Physiquinator.UI/Physiquinator.UI.csproj --configuration Release --no-restore
+        dotnet build Physiquinator.Web/Physiquinator.Web.csproj --configuration Release --no-restore
+        dotnet build Physiquinator.Tests/Physiquinator.Tests.csproj --configuration Release --no-restore
 
     - name: Test
       run: |

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Services;
 
 namespace Physiquinator.Web.Services;

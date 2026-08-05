@@ -3,7 +3,7 @@ using Physiquinator.Core.Services;
 using Physiquinator.Web.Components;
 using Physiquinator.Web.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -33,7 +33,7 @@ builder.Services.AddSingleton<IAppUpdateService>(sp => new AppUpdateService(
     sp.GetRequiredService<IAppUpdateInstaller>(),
     typeof(GitHubReleaseClient).Assembly.GetName().Version ?? new Version(1, 0, 0)));
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {

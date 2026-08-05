@@ -32,8 +32,8 @@ public static class ConfirmDialogService
             FullWidth = true,
         };
 
-        var dialog = await dialogService.ShowAsync<ConfirmDialog>(title, parameters, options);
-        var result = await dialog.Result;
+        IDialogReference dialog = await dialogService.ShowAsync<ConfirmDialog>(title, parameters, options);
+        DialogResult? result = await dialog.Result;
         return result is { Canceled: false };
     }
 }

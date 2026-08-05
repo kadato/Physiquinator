@@ -281,6 +281,24 @@ public sealed class WorkoutSessionService(TimeProvider time)
         _isResting = true;
     }
 
+    /// <summary>
+    /// Extends the current rest countdown by the given seconds, whether it is
+    /// running or paused. No-op when not resting.
+    /// </summary>
+    public void AddRestSeconds(int seconds)
+    {
+        if (!_isResting || seconds <= 0) return;
+
+        if (_userPaused && _pausedRemainingSeconds.HasValue)
+        {
+            _pausedRemainingSeconds += seconds;
+            return;
+        }
+
+        if (_restEndsAtUtc.HasValue)
+            _restEndsAtUtc = _restEndsAtUtc.Value.AddSeconds(seconds);
+    }
+
     public void SkipRest() => StopRest();
 
     /// <summary>Stop the rest timer without firing any completion callback.</summary>

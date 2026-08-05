@@ -99,6 +99,55 @@ public class WorkoutSessionServiceTests
     }
 
     [Fact]
+    public void AddRestSeconds_extends_running_rest()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        svc.StartRest(60);
+        clock.Advance(TimeSpan.FromSeconds(20));
+        Assert.Equal(40, svc.RestSecondsRemaining);
+
+        svc.AddRestSeconds(30);
+        Assert.Equal(70, svc.RestSecondsRemaining);
+
+        clock.Advance(TimeSpan.FromSeconds(70));
+        Assert.True(svc.TickRest());
+    }
+
+    [Fact]
+    public void AddRestSeconds_extends_paused_rest_without_resuming()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        svc.StartRest(60);
+        clock.Advance(TimeSpan.FromSeconds(20));
+        svc.PauseRest();
+        Assert.Equal(40, svc.RestSecondsRemaining);
+
+        svc.AddRestSeconds(30);
+        Assert.Equal(70, svc.RestSecondsRemaining);
+        Assert.True(svc.IsRestPaused);
+
+        clock.Advance(TimeSpan.FromMinutes(10));
+        Assert.Equal(70, svc.RestSecondsRemaining);
+    }
+
+    [Fact]
+    public void AddRestSeconds_is_noop_when_not_resting()
+    {
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        svc.AddRestSeconds(30);
+        Assert.False(svc.IsResting);
+        Assert.Equal(0, svc.RestSecondsRemaining);
+    }
+
+    [Fact]
     public void CompleteSet_ignores_invalid_indices()
     {
         var clock = new ManualTimeProvider();

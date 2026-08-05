@@ -55,6 +55,14 @@ public static class MauiProgram
         builder.Services.AddSingleton<IVibrationService, MauiVibrationService>();
         builder.Services.AddSingleton<IFileTransferService, FileTransferService>();
 
+        builder.Services.AddSingleton(_ => new HttpClient());
+        builder.Services.AddSingleton<IGitHubReleaseClient, GitHubReleaseClient>();
+        builder.Services.AddSingleton<IAppUpdateInstaller, MauiAppUpdateInstaller>();
+        builder.Services.AddSingleton<IAppUpdateService>(sp => new AppUpdateService(
+            sp.GetRequiredService<IGitHubReleaseClient>(),
+            sp.GetRequiredService<IAppUpdateInstaller>(),
+            AppInfo.Current.Version));
+
 #if WINDOWS
         if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
         {

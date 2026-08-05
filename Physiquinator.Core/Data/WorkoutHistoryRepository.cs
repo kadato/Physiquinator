@@ -1,4 +1,5 @@
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Data;
@@ -39,9 +40,33 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public int SetCount { get; set; }
         public double TotalVolumeKg { get; set; }
     }
+
+    private sealed class LatestMetricsByExerciseRow
+    {
+        public string ExerciseName { get; set; } = "";
+        public int? Reps { get; set; }
+        public double? WeightKg { get; set; }
+    }
+
+    private sealed class BackupJoinRow
+    {
+        public string SessionId { get; set; } = "";
+        public string SessionWorkoutPlanId { get; set; } = "";
+        public string SessionPlanName { get; set; } = "";
+        public DateTime SessionStartedAtUtc { get; set; }
+        public DateTime? SessionEndedAtUtc { get; set; }
+        public string? SessionPlanSnapshotJson { get; set; }
+        public string? SetId { get; set; }
+        public string? SetSessionId { get; set; }
+        public int SetExerciseIndex { get; set; }
+        public string? SetExerciseName { get; set; }
+        public int SetSetIndex { get; set; }
+        public DateTime SetCompletedAtUtc { get; set; }
+        public int? SetReps { get; set; }
+        public double? SetWeightKg { get; set; }
+    }
 #pragma warning restore S1144
 #pragma warning restore S3459
-    private static readonly JsonSerializerOptions s_jsonReadOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly AppDatabase _db = db;
     private readonly TimeProvider _time = time;
@@ -250,28 +275,61 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     public async Task<WorkoutHistoryBackup> CreateBackupSnapshotAsync()
     {
         await _db.EnsureInitializedAsync();
-        IReadOnlyList<WorkoutSessionLogEntity> sessions = await GetAllSessionsAsync();
 
-        List<WorkoutSetLogEntity> allSets = await _db.Database.Table<WorkoutSetLogEntity>().ToListAsync();
-        var setsBySession = allSets
-            .GroupBy(s => s.SessionId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderBy(s => s.CompletedAtUtc)
-                      .ThenBy(s => s.ExerciseIndex)
-                      .ThenBy(s => s.SetIndex)
-                      .ToList()
-            );
+        List<BackupJoinRow> rows = await _db.Database.QueryAsync<BackupJoinRow>(
+            @"SELECT sess.Id AS SessionId,
+                     sess.WorkoutPlanId AS SessionWorkoutPlanId,
+                     sess.PlanName AS SessionPlanName,
+                     sess.StartedAtUtc AS SessionStartedAtUtc,
+                     sess.EndedAtUtc AS SessionEndedAtUtc,
+                     sess.PlanSnapshotJson AS SessionPlanSnapshotJson,
+                     s.Id AS SetId,
+                     s.SessionId AS SetSessionId,
+                     s.ExerciseIndex AS SetExerciseIndex,
+                     s.ExerciseName AS SetExerciseName,
+                     s.SetIndex AS SetSetIndex,
+                     s.CompletedAtUtc AS SetCompletedAtUtc,
+                     s.Reps AS SetReps,
+                     s.WeightKg AS SetWeightKg
+              FROM WorkoutSessionLogs sess
+              LEFT JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+              ORDER BY sess.StartedAtUtc DESC, s.CompletedAtUtc, s.ExerciseIndex, s.SetIndex");
 
-        var entries = new List<WorkoutHistoryBackupEntry>(sessions.Count);
-        foreach (WorkoutSessionLogEntity session in sessions)
+        var entries = new List<WorkoutHistoryBackupEntry>();
+        WorkoutSessionLogEntity? currentSession = null;
+        List<WorkoutSetLogEntity>? currentSets = null;
+
+        foreach (BackupJoinRow row in rows)
         {
-            setsBySession.TryGetValue(session.Id, out List<WorkoutSetLogEntity>? sets);
-            entries.Add(new WorkoutHistoryBackupEntry
+            if (row.SessionId != currentSession?.Id)
             {
-                Session = session,
-                Sets = sets ?? []
-            });
+                currentSets = [];
+                currentSession = new WorkoutSessionLogEntity
+                {
+                    Id = row.SessionId,
+                    WorkoutPlanId = row.SessionWorkoutPlanId,
+                    PlanName = row.SessionPlanName,
+                    StartedAtUtc = row.SessionStartedAtUtc,
+                    EndedAtUtc = row.SessionEndedAtUtc,
+                    PlanSnapshotJson = row.SessionPlanSnapshotJson
+                };
+                entries.Add(new WorkoutHistoryBackupEntry { Session = currentSession, Sets = currentSets });
+            }
+
+            if (row.SetId != null)
+            {
+                currentSets!.Add(new WorkoutSetLogEntity
+                {
+                    Id = row.SetId,
+                    SessionId = row.SetSessionId ?? "",
+                    ExerciseIndex = row.SetExerciseIndex,
+                    ExerciseName = row.SetExerciseName ?? "",
+                    SetIndex = row.SetSetIndex,
+                    CompletedAtUtc = row.SetCompletedAtUtc,
+                    Reps = row.SetReps,
+                    WeightKg = row.SetWeightKg
+                });
+            }
         }
 
         return new WorkoutHistoryBackup { FormatVersion = 1, Sessions = entries };
@@ -335,6 +393,32 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             .ThenBy(s => s.ExerciseIndex)
             .ThenBy(s => s.SetIndex)
             .ToListAsync();
+    }
+
+    public async Task<IReadOnlyDictionary<string, LastSetMetrics>> GetLatestSetMetricsByExerciseAsync(Guid workoutPlanId)
+    {
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        List<LatestMetricsByExerciseRow> rows = await _db.Database.QueryAsync<LatestMetricsByExerciseRow>(
+            @"SELECT ExerciseName, Reps, WeightKg
+              FROM (
+                  SELECT s.ExerciseName AS ExerciseName,
+                         s.Reps AS Reps,
+                         s.WeightKg AS WeightKg,
+                         ROW_NUMBER() OVER (PARTITION BY s.ExerciseName
+                                            ORDER BY s.CompletedAtUtc DESC, s.ExerciseIndex DESC, s.SetIndex DESC) AS rn
+                  FROM WorkoutSetLogs s
+                  INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
+                  WHERE sess.WorkoutPlanId = ?
+              ) ranked
+              WHERE rn = 1",
+            planIdStr);
+
+        var map = new Dictionary<string, LastSetMetrics>(rows.Count);
+        foreach (LatestMetricsByExerciseRow row in rows)
+            map[row.ExerciseName] = new LastSetMetrics(row.Reps, row.WeightKg);
+        return map;
     }
 
     /// <summary>
@@ -408,7 +492,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         if (string.IsNullOrWhiteSpace(json)) return null;
         try
         {
-            return JsonSerializer.Deserialize<WorkoutPlan>(json, s_jsonReadOptions);
+            return JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutPlan);
         }
         catch
         {

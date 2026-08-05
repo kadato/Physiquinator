@@ -1,12 +1,9 @@
 using Android.App;
 using Android.Content;
+using Android.Graphics.Drawables;
 using Android.OS;
-using Android.Provider;
-using Microsoft.Maui.ApplicationModel;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
-using Physiquinator;
-using Physiquinator.Platforms.Android.Services;
 
 namespace Physiquinator.Platforms.Android.Services;
 
@@ -84,12 +81,12 @@ public sealed class AndroidRestNotificationService(
     {
         EnsureChannels();
 
-        var builder = BuildBaseNotification(_context, OngoingChannelId, "Set logged", $"{exerciseName} {setIndex}/{totalSets}", publicVisibility: true)
+        Notification.Builder? builder = BuildBaseNotification(_context, OngoingChannelId, "Set logged", $"{exerciseName} {setIndex}/{totalSets}", publicVisibility: true)
             .SetAutoCancel(true)
             .SetContentIntent(BuildOpenAppIntent(_context))
-            .AddAction(0, "Undo", BuildActionIntent(_context, RestTimerActionReceiver.ActionUndoSet, 9406));
+            .AddAction(BuildUndoAction(_context));
 
-        var nm = GetNotificationManager();
+        NotificationManager? nm = GetNotificationManager();
         nm?.Cancel(SetLoggedNotificationId);
         nm?.Notify(SetLoggedNotificationId, builder!.Build()!);
 
@@ -130,11 +127,11 @@ public sealed class AndroidRestNotificationService(
 
         EnsureChannels();
 
-        var builder = BuildBaseNotification(_context, RestEndChannelId, "Rest complete", description, publicVisibility: true)
+        Notification.Builder builder = BuildBaseNotification(_context, RestEndChannelId, "Rest complete", description, publicVisibility: true)
             .SetAutoCancel(true)
             .SetContentIntent(BuildOpenAppIntent(_context));
 
-        var nm = GetNotificationManager();
+        NotificationManager? nm = GetNotificationManager();
         nm?.Cancel(ImmediateRestCompleteNotificationId);
         nm?.Notify(ImmediateRestCompleteNotificationId, builder.Build());
         return Task.CompletedTask;
@@ -145,7 +142,7 @@ public sealed class AndroidRestNotificationService(
         if (restEndsAtUtc <= _time.GetUtcNow().UtcDateTime)
             return;
 
-        var alarmManager = GetAlarmManager();
+        AlarmManager? alarmManager = GetAlarmManager();
         if (alarmManager == null)
             return;
 
@@ -165,7 +162,7 @@ public sealed class AndroidRestNotificationService(
 
     private PendingIntent BuildRestEndAlarmIntent()
     {
-        var intent = new Intent(_context, typeof(RestEndAlarmReceiver)).SetPackage(_context.PackageName!);
+        Intent intent = new Intent(_context, typeof(RestEndAlarmReceiver)).SetPackage(_context.PackageName!);
         return PendingIntent.GetBroadcast(_context, RestEndAlarmRequestCode, intent,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable)!;
     }
@@ -184,7 +181,7 @@ public sealed class AndroidRestNotificationService(
 
     private static PendingIntent BuildActionIntent(Context context, string action, int requestCode)
     {
-        var intent = new Intent(context, typeof(RestTimerActionReceiver))
+        Intent intent = new Intent(context, typeof(RestTimerActionReceiver))
             .SetAction(RestTimerActionReceiver.RestTimerAction)
             .SetPackage(context.PackageName!)
             .PutExtra(ExtraAction, action);
@@ -193,10 +190,34 @@ public sealed class AndroidRestNotificationService(
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable)!;
     }
 
+    private static Notification.Action BuildUndoAction(Context context)
+    {
+        PendingIntent intent = BuildActionIntent(context, RestTimerActionReceiver.ActionUndoSet, 9406);
+        return new Notification.Action.Builder(Icon.CreateWithResource(context, Resource.Drawable.ic_rest_timer), "Undo", intent).Build();
+    }
+
+    private static Notification.Action BuildAddTimeAction(Context context, int addTimeSeconds) =>
+        new Notification.Action.Builder(
+            Icon.CreateWithResource(context, Resource.Drawable.ic_rest_timer),
+            $"+{FormatAddLabel(addTimeSeconds)}",
+            BuildActionIntent(context, RestTimerActionReceiver.ActionAddRest, 9403)).Build();
+
+    private static Notification.Action BuildSkipRestAction(Context context) =>
+        new Notification.Action.Builder(
+            Icon.CreateWithResource(context, Resource.Drawable.ic_rest_timer),
+            "Skip",
+            BuildActionIntent(context, RestTimerActionReceiver.ActionSkipRest, 9404)).Build();
+
+    private static Notification.Action BuildLogSetAction(Context context) =>
+        new Notification.Action.Builder(
+            Icon.CreateWithResource(context, Resource.Drawable.ic_rest_timer),
+            "Log set",
+            BuildActionIntent(context, RestTimerActionReceiver.ActionLogSet, 9405)).Build();
+
 #pragma warning disable CA1422 // Pre-API-26 fallback is intentional (minSdk 24); guarded by SDK checks
     internal static Notification BuildWorkoutNotification(Context context, WorkoutTimerState state, int addTimeSeconds)
     {
-        bool resting = state.RestEndsAtUtc != null;
+        var resting = state.RestEndsAtUtc != null;
 
         string text;
         if (resting)
@@ -212,19 +233,19 @@ public sealed class AndroidRestNotificationService(
             text = "Workout complete";
         }
 
-        var builder = BuildBaseNotification(context, OngoingChannelId, state.PlanName ?? "Workout", text, publicVisibility: true)
+        Notification.Builder builder = BuildBaseNotification(context, OngoingChannelId, state.PlanName ?? "Workout", text, publicVisibility: true)
             .SetOngoing(true)
             .SetAutoCancel(false)
             .SetContentIntent(BuildOpenAppIntent(context));
 
         if (resting)
         {
-            builder.AddAction(0, $"+{FormatAddLabel(addTimeSeconds)}", BuildActionIntent(context, RestTimerActionReceiver.ActionAddRest, 9403));
-            builder.AddAction(0, "Skip", BuildActionIntent(context, RestTimerActionReceiver.ActionSkipRest, 9404));
+            builder.AddAction(BuildAddTimeAction(context, addTimeSeconds));
+            builder.AddAction(BuildSkipRestAction(context));
         }
         else if (state.NextExerciseName != null)
         {
-            builder.AddAction(0, "Log set", BuildActionIntent(context, RestTimerActionReceiver.ActionLogSet, 9405));
+            builder.AddAction(BuildLogSetAction(context));
         }
 
         return builder.Build();
@@ -232,7 +253,7 @@ public sealed class AndroidRestNotificationService(
 
     private static Notification.Builder BuildBaseNotification(Context context, string channelId, string title, string text, bool publicVisibility)
     {
-        var builder = Build.VERSION.SdkInt >= BuildVersionCodes.O
+        Notification.Builder builder = Build.VERSION.SdkInt >= BuildVersionCodes.O
             ? new Notification.Builder(context, channelId)
             : new Notification.Builder(context);
 
@@ -253,7 +274,7 @@ public sealed class AndroidRestNotificationService(
         if (Build.VERSION.SdkInt < BuildVersionCodes.O)
             return;
 
-        var nm = GetNotificationManager();
+        NotificationManager? nm = GetNotificationManager();
         if (nm == null)
             return;
 
@@ -272,7 +293,7 @@ public sealed class AndroidRestNotificationService(
 
     private void StartOverlayService(WorkoutTimerState state)
     {
-        var intent = new Intent(_context, typeof(RestOverlayService))
+        Intent intent = new Intent(_context, typeof(RestOverlayService))
             .SetPackage(_context.PackageName)
             .PutExtra(RestOverlayService.ExtraEndUtcTicks, state.RestEndsAtUtc?.Ticks ?? 0)
             .PutExtra(RestOverlayService.ExtraRemainingSeconds, state.RestRemainingSeconds)

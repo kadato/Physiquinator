@@ -44,7 +44,6 @@ jobs:
           -c Release `
           -p:AndroidPackageFormat=apk `
           -p:AndroidKeyStore=false `
-          -p:NoWarn=XA0141 `
           -o ./artifacts/android
 
     - name: Upload Android APK

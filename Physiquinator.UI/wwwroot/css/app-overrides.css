@@ -2130,6 +2130,8 @@ button.heatmap-cell:disabled {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
     filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.4));
 }
 

@@ -33,7 +33,7 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     {
         var session = new WorkoutSessionService(TimeProvider.System);
         session.StartWorkout(plan);
-        string sessionId = await _history.BeginSessionAsync(plan.Id, plan.Name);
+        var sessionId = await _history.BeginSessionAsync(plan.Id, plan.Name);
         return (session, new WorkoutQuickActionService(session, _history), sessionId);
     }
 
@@ -51,9 +51,9 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_logs_first_set_with_exercise_defaults_and_starts_rest()
     {
-        var (session, actions, sessionId) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService? session, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(SamplePlan());
 
-        var result = await actions.LogNextSetAsync();
+        QuickActionResult result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.Logged, result.Status);
         Assert.Equal("Bench press", result.ExerciseName);
@@ -64,8 +64,8 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
         Assert.True(session.IsResting);
         Assert.Equal(90, session.ActiveRestDurationSeconds);
 
-        var logged = await _history.GetSetsForSessionAsync(sessionId);
-        var set = Assert.Single(logged);
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
+        WorkoutSetLogEntity set = Assert.Single(logged);
         Assert.Equal(0, set.ExerciseIndex);
         Assert.Equal("Bench press", set.ExerciseName);
         Assert.Equal(8, set.Reps);
@@ -75,14 +75,14 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_uses_explicit_metrics_when_provided()
     {
-        var (session, actions, sessionId) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(SamplePlan());
 
-        var result = await actions.LogNextSetAsync(72.5, 6);
+        QuickActionResult result = await actions.LogNextSetAsync(72.5, 6);
 
         Assert.Equal(QuickActionStatus.Logged, result.Status);
 
-        var logged = await _history.GetSetsForSessionAsync(sessionId);
-        var set = Assert.Single(logged);
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
+        WorkoutSetLogEntity set = Assert.Single(logged);
         Assert.Equal(6, set.Reps);
         Assert.Equal(72.5, set.WeightKg);
     }
@@ -90,11 +90,11 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_advances_exercise_and_reports_one_based_set_index()
     {
-        var (session, actions, _) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var _) = await BuildAsync(SamplePlan());
 
         await actions.LogNextSetAsync();
         await actions.LogNextSetAsync();
-        var result = await actions.LogNextSetAsync();
+        QuickActionResult result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.Logged, result.Status);
         Assert.Equal("Bench press", result.ExerciseName);
@@ -105,12 +105,12 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_moves_to_next_exercise_when_current_is_done()
     {
-        var (session, actions, _) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var _) = await BuildAsync(SamplePlan());
 
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
             await actions.LogNextSetAsync();
 
-        var result = await actions.LogNextSetAsync();
+        QuickActionResult result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.Logged, result.Status);
         Assert.Equal("Dips", result.ExerciseName);
@@ -121,10 +121,10 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_returns_WorkoutCompleted_and_skips_rest_on_last_set()
     {
-        var (session, actions, _) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService? session, WorkoutQuickActionService? actions, var _) = await BuildAsync(SamplePlan());
 
         QuickActionResult result = new(QuickActionStatus.Logged);
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
             result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.WorkoutCompleted, result.Status);
@@ -136,12 +136,12 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task LogNextSetAsync_returns_NothingToLog_when_workout_is_done()
     {
-        var (session, actions, _) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var _) = await BuildAsync(SamplePlan());
 
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
             await actions.LogNextSetAsync();
 
-        var result = await actions.LogNextSetAsync();
+        QuickActionResult result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.NothingToLog, result.Status);
         Assert.Null(result.ExerciseName);
@@ -159,14 +159,14 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
                 new ExercisePlan { Name = "Plank", SetCount = 2, Order = 0, RestIntervalSeconds = 45, LogType = ExerciseLogType.Duration, DefaultReps = 3 }
             ]
         };
-        var (_, actions, sessionId) = await BuildAsync(plan);
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(plan);
 
-        var result = await actions.LogNextSetAsync();
+        QuickActionResult result = await actions.LogNextSetAsync();
 
         Assert.Equal(QuickActionStatus.Logged, result.Status);
 
-        var logged = await _history.GetSetsForSessionAsync(sessionId);
-        var set = Assert.Single(logged);
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
+        WorkoutSetLogEntity set = Assert.Single(logged);
         Assert.Null(set.WeightKg);
         Assert.Equal(3, set.Reps);
     }
@@ -174,7 +174,7 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task UndoLastSetAsync_removes_set_and_history_row_and_stops_rest()
     {
-        var (session, actions, sessionId) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService? session, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(SamplePlan());
         await actions.LogNextSetAsync();
         Assert.True(session.IsResting);
 
@@ -188,7 +188,7 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     [Fact]
     public async Task UndoLastSetAsync_is_noop_without_sets()
     {
-        var (session, actions, _) = await BuildAsync(SamplePlan());
+        (WorkoutSessionService? session, WorkoutQuickActionService? actions, var _) = await BuildAsync(SamplePlan());
 
         await actions.UndoLastSetAsync();
 

@@ -1,0 +1,67 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Rendering
+@using Physiquinator.Core
+@using Physiquinator.UI
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Physiquinator</title>
+    <base href="/" />
+    <script>
+        (function () {
+            var key = "physiquinator-theme-preference";
+            var preference = localStorage.getItem(key) || "system";
+            var isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            var theme = preference === "system" ? (isDark ? "dark" : "light") : preference;
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <style>
+        html[data-theme="dark"] body {
+            background-color: #0B0C10 !important;
+            color: #F3F4F6;
+        }
+        html[data-theme="light"] body {
+            background-color: #F8F9FA !important;
+            color: #111827;
+        }
+    </style>
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.styles.css" />
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; box-sizing: border-box; }
+        body { display: flex; flex-direction: column; }
+        #app { display: flex; flex-direction: column; width: 100%; flex: 1 1 0%; min-height: 0; overflow: hidden; }
+        .app-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; overflow: hidden; }
+        .app-main-scroll { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
+        .app-tab-bar { flex-shrink: 0; }
+    </style>
+    <link rel="icon" type="image/png" href="_content/Physiquinator.UI/favicon.png" />
+</head>
+
+<body>
+
+    <div id="app">
+        <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_content/Physiquinator.UI/js/sortable.min.js"></script>
+    <script src="_content/Physiquinator.UI/js/theme.js"></script>
+    <script src="_content/Physiquinator.UI/js/stepperDrag.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+
+</body>
+</html>

@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Physiquinator.Core/Physiquinator.Core.csproj" />
+  <Project Path="Physiquinator.UI/Physiquinator.UI.csproj" />
   <Project Path="Physiquinator.csproj" />
   <Project Path="Physiquinator.Tests/Physiquinator.Tests.csproj" />
+  <Project Path="Physiquinator.Web/Physiquinator.Web.csproj" />
 </Solution>

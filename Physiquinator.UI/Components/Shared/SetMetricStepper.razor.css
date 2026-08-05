@@ -82,6 +82,14 @@
     font-size: 1.5rem;
     font-weight: 700;
     text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.set-metric-stepper__input::-webkit-outer-spin-button,
+.set-metric-stepper__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .set-metric-stepper__input:focus {

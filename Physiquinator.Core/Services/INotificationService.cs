@@ -7,6 +7,19 @@ public interface INotificationService
 {
     Task EnsurePermissionAsync();
 
+    /// <summary>
+    /// True when the platform can show the floating rest-timer overlay. On
+    /// Android this is the "Display over other apps" permission, which the
+    /// user must grant from system settings.
+    /// </summary>
+    bool HasOverlayPermission();
+
+    /// <summary>
+    /// Opens the platform screen where the user can grant the floating
+    /// overlay permission (no-op on platforms without an overlay).
+    /// </summary>
+    Task RequestOverlayPermissionAsync();
+
     void CancelAllRestNotifications();
 
     Task ShowRestCompleteNowAsync(string description);

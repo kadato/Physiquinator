@@ -40,6 +40,13 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         }
     }
 
+    // The floating rest-timer bubble is Android-only; Android registers
+    // AndroidRestNotificationService, so this implementation always reports
+    // the overlay as available (nothing to grant elsewhere).
+    public bool HasOverlayPermission() => true;
+
+    public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
+
     public void CancelAllRestNotifications()
     {
         try

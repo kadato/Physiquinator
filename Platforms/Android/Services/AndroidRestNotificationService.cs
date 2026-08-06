@@ -2,6 +2,8 @@ using Android.App;
 using Android.Content;
 using Android.Graphics.Drawables;
 using Android.OS;
+using Android.Provider;
+using Microsoft.Maui.ApplicationModel;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
 
@@ -51,6 +53,35 @@ public sealed class AndroidRestNotificationService(
             return Task.CompletedTask;
 
         activity.RequestPermissions([global::Android.Manifest.Permission.PostNotifications], 1001);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// The floating rest-timer bubble requires "Display over other apps"
+    /// (SYSTEM_ALERT_WINDOW). It can never be requested with a runtime
+    /// dialog; the user must toggle it from the system settings screen.
+    /// </summary>
+    public bool HasOverlayPermission() => Settings.CanDrawOverlays(_context);
+
+    public Task RequestOverlayPermissionAsync()
+    {
+        if (HasOverlayPermission())
+            return Task.CompletedTask;
+
+        Intent intent = new Intent(Settings.ActionManageOverlayPermission,
+            global::Android.Net.Uri.Parse("package:" + _context.PackageName));
+
+        Activity? activity = Platform.CurrentActivity;
+        if (activity != null)
+        {
+            activity.StartActivity(intent);
+        }
+        else
+        {
+            intent.AddFlags(ActivityFlags.NewTask);
+            _context.StartActivity(intent);
+        }
+
         return Task.CompletedTask;
     }
 

@@ -46,6 +46,10 @@ public class ServiceContainerTests
 
         public Task EnsurePermissionAsync() => Task.CompletedTask;
 
+        public bool HasOverlayPermission() => true;
+
+        public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
+
         public void CancelAllRestNotifications()
         {
         }

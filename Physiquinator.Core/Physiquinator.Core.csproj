@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
-    <RootNamespace>Physiquinator.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

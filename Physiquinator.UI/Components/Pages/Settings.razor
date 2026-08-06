@@ -1,11 +1,14 @@
 @page "/settings"
 @using Physiquinator.Core.Services
 @using Physiquinator.Core.Models
+@using Physiquinator.Core.Data
+@using Physiquinator.UI.Components.Shared
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
 @inject INotificationService RestNotifications
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryService HistoryService
+@inject WorkoutHistoryRepository HistoryRepo
 @inject AppDataResetService AppDataReset
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
@@ -482,13 +485,18 @@
         await ThemeService.SetPreferenceAsync(preference);
     }
 
-    private void OnBodyweightChanged(double? value)
+    private async Task OnBodyweightChanged(double? value)
     {
         _bodyweight = value;
         if (_activeProfile != null)
         {
             UserProfileService.UpdateBodyweight(_activeProfile.Id, value);
             _activeProfile.BodyweightKg = value;
+            if (value is { } kg)
+            {
+                var today = DateOnly.FromDateTime(TimeProvider.GetLocalNow().Date);
+                await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
+            }
         }
     }
 

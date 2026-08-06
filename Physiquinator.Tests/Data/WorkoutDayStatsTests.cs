@@ -97,4 +97,120 @@ public class WorkoutDayStatsTests
         WorkoutDaySummary s = WorkoutDayStats.Compute(map, new DateOnly(2026, 5, 5), new DateOnly(2026, 5, 15));
         Assert.Equal(2, s.LongestStreakWorkoutDays);
     }
+
+    private static readonly IReadOnlySet<DayOfWeek> MonWedFri = new HashSet<DayOfWeek>
+    {
+        DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday
+    };
+
+    [Fact]
+    public void Compute_CurrentStreak_WithSchedule_CountsCompletedScheduledDays()
+    {
+        var end = new DateOnly(2026, 5, 22); // Friday
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1, // Wed
+            [new DateOnly(2026, 5, 22)] = 1  // Fri
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), MonWedFri);
+        Assert.Equal(3, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_CurrentStreak_WithSchedule_RestDaysDoNotBreakStreak()
+    {
+        var end = new DateOnly(2026, 5, 21); // Thursday, rest day between Wed and Fri
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1  // Wed
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), MonWedFri);
+        Assert.Equal(2, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_CurrentStreak_WithSchedule_MissedScheduledDayBreaksStreak()
+    {
+        var end = new DateOnly(2026, 5, 23); // Saturday, Fri was scheduled but missed
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1  // Wed
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), MonWedFri);
+        Assert.Equal(0, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_CurrentStreak_WithSchedule_TodayScheduledAndNotDone_HoldsStreak()
+    {
+        var end = new DateOnly(2026, 5, 22); // Friday, scheduled but not yet completed
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1  // Wed
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), MonWedFri);
+        Assert.Equal(2, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_CurrentStreak_WithSchedule_SingleCompletedScheduledDay()
+    {
+        var end = new DateOnly(2026, 5, 21); // Thursday, after Wed
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 20)] = 1 // Wed only
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), MonWedFri);
+        Assert.Equal(1, s.CurrentStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_LongestStreak_WithSchedule_CountsScheduledDaysOnly()
+    {
+        var start = new DateOnly(2026, 5, 18);
+        var end = new DateOnly(2026, 5, 27); // Wed
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1, // Wed
+            [new DateOnly(2026, 5, 22)] = 1, // Fri
+            [new DateOnly(2026, 5, 23)] = 1, // Sat (unscheduled, ignored)
+            [new DateOnly(2026, 5, 25)] = 1  // Mon, consecutive with Fri (Sat/Sun not scheduled)
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, start, MonWedFri);
+        Assert.Equal(4, s.LongestStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_LongestStreak_WithSchedule_MissedScheduledDayBreaksRun()
+    {
+        var start = new DateOnly(2026, 5, 18);
+        var end = new DateOnly(2026, 5, 27); // Wed
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // Mon
+            [new DateOnly(2026, 5, 20)] = 1, // Wed
+            // Fri 22 missed
+            [new DateOnly(2026, 5, 25)] = 1  // Mon
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, start, MonWedFri);
+        Assert.Equal(2, s.LongestStreakWorkoutDays);
+    }
+
+    [Fact]
+    public void Compute_EmptySchedule_KeepsLegacyCalendarBehavior()
+    {
+        var end = new DateOnly(2026, 5, 19); // Tuesday
+        var map = new Dictionary<DateOnly, int>
+        {
+            [new DateOnly(2026, 5, 18)] = 1, // worked out yesterday
+            [new DateOnly(2026, 5, 17)] = 1
+        };
+        WorkoutDaySummary s = WorkoutDayStats.Compute(map, end, new DateOnly(2026, 1, 1), new HashSet<DayOfWeek>());
+        Assert.Equal(2, s.CurrentStreakWorkoutDays);
+    }
 }

@@ -57,7 +57,6 @@ public sealed class RestOverlayService : Service
     private AndroidTextButton? _addTimeButton;
     private AndroidButton? _resetButton;
     private AndroidButton? _skipButton;
-    private AndroidButton? _closeButton;
     private WindowManagerLayoutParams? _layoutParams;
     private Handler? _handler;
     private System.Action? _tickAction;
@@ -144,7 +143,7 @@ public sealed class RestOverlayService : Service
     public override void OnDestroy()
     {
         _stopping = true;
-        if (_handler != null)
+        if (_handler is not null)
         {
             _handler.RemoveCallbacks(_tickAction!);
             _handler = null;
@@ -257,8 +256,8 @@ public sealed class RestOverlayService : Service
             headerRow.AddView(_timerText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
             headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
 
-            _closeButton = CreateCloseButton(colors);
-            _closeButton.ContentDescription = "Close overlay";
+            var closeButton = CreateCloseButton(colors);
+            closeButton.ContentDescription = "Close overlay";
 
             var headerRowParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MatchParent,
@@ -271,7 +270,7 @@ public sealed class RestOverlayService : Service
             };
 
             headerFrame.AddView(headerRow, headerRowParams);
-            headerFrame.AddView(_closeButton, closeParams);
+            headerFrame.AddView(closeButton, closeParams);
 
             // Row 2: weight and reps steppers (hidden by default)
             _stepperRow = CreateStepperRow(colors);
@@ -337,7 +336,7 @@ public sealed class RestOverlayService : Service
         }
     }
 
-    private AndroidView CreateStepperRow(
+    private AndroidLinearLayout CreateStepperRow(
         (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
     {
         var row = new AndroidLinearLayout(this)
@@ -442,9 +441,9 @@ public sealed class RestOverlayService : Service
 
     private void UpdateStepperDisplay()
     {
-        if (_weightValue != null)
+        if (_weightValue is not null)
             _weightValue.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
-        if (_repsValue != null)
+        if (_repsValue is not null)
             _repsValue.Text = $"{_currentReps}";
     }
 
@@ -578,7 +577,7 @@ public sealed class RestOverlayService : Service
         RemoveOverlayView();
     }
 
-    private void OnAddClicked(object? sender, EventArgs e)
+    private static void OnAddClicked(object? sender, EventArgs e)
     {
         WorkoutSessionService? session = ResolveSession();
         if (session == null)
@@ -621,8 +620,8 @@ public sealed class RestOverlayService : Service
                 return;
 
             IServiceProvider? services = IPlatformApplication.Current?.Services;
-            var notifications = services?.GetService(typeof(INotificationService)) as INotificationService;
-            if (notifications != null && result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
+            if (services?.GetService(typeof(INotificationService)) is INotificationService notifications &&
+                result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
                 await notifications.ShowSetLoggedNotificationAsync(result.ExerciseName, result.LoggedSetIndex.Value, result.SetTotal.Value);
 
             if (result.Status == QuickActionResult.WorkoutCompleted)
@@ -637,7 +636,7 @@ public sealed class RestOverlayService : Service
         }
     }
 
-    private void OnSkipClicked(object? sender, EventArgs e)
+    private static void OnSkipClicked(object? sender, EventArgs e)
     {
         WorkoutSessionService? session = ResolveSession();
         if (session == null)
@@ -646,7 +645,7 @@ public sealed class RestOverlayService : Service
         session.SkipRest();
     }
 
-    private void OnResetClicked(object? sender, EventArgs e)
+    private static void OnResetClicked(object? sender, EventArgs e)
     {
         WorkoutSessionService? session = ResolveSession();
         if (session == null)
@@ -708,8 +707,6 @@ public sealed class RestOverlayService : Service
         int? nextSetIndex = null;
         int? nextSetTotal = null;
         ExerciseLogType logType = ExerciseLogType.WeightAndReps;
-        double defaultWeight = 0;
-        var defaultReps = 10;
 
         if (exerciseIndex >= 0 && exerciseIndex < plan.Exercises.Count)
         {
@@ -717,8 +714,8 @@ public sealed class RestOverlayService : Service
             nextExerciseName = exercise.Name;
             nextSetTotal = exercise.SetCount;
             logType = exercise.LogType;
-            defaultWeight = exercise.DefaultWeightKg ?? 0;
-            defaultReps = exercise.DefaultReps ?? 10;
+            double defaultWeight = exercise.DefaultWeightKg ?? 0;
+            var defaultReps = exercise.DefaultReps ?? 10;
             var setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
 
@@ -733,11 +730,20 @@ public sealed class RestOverlayService : Service
             }
         }
 
-        var restActive = session.IsResting;
+        UpdateOverlayUi(session, nextExerciseName, nextSetIndex, nextSetTotal, logType);
+    }
+
+    /// <summary>Renders the rest timer or between-sets state into the overlay views.</summary>
+    private void UpdateOverlayUi(
+        WorkoutSessionService session,
+        string? nextExerciseName,
+        int? nextSetIndex,
+        int? nextSetTotal,
+        ExerciseLogType logType)
+    {
         (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors = GetThemeColors();
 
-        // Header: exercise name left, timer right
-        if (restActive)
+        if (session.IsResting)
         {
             var remaining = session.RestSecondsRemaining;
 
@@ -769,7 +775,7 @@ public sealed class RestOverlayService : Service
             if (nextExerciseName != null)
             {
                 _headerText!.Text = nextExerciseName;
-                _setInfoText!.Text = nextSetIndex != null && nextSetTotal != null
+                _setInfoText!.Text = nextSetIndex != null
                     ? $"{nextSetIndex}/{nextSetTotal}"
                     : string.Empty;
 
@@ -823,7 +829,7 @@ public sealed class RestOverlayService : Service
     private static RestAlertSettingsService? ResolveSettings() =>
         IPlatformApplication.Current?.Services.GetService(typeof(RestAlertSettingsService)) as RestAlertSettingsService;
 
-    private WorkoutTimerState ReadState(Intent intent)
+    private static WorkoutTimerState ReadState(Intent intent)
     {
         var endTicks = intent.GetLongExtra(ExtraEndUtcTicks, 0);
         var remaining = intent.GetIntExtra(ExtraRemainingSeconds, 0);
@@ -843,7 +849,7 @@ public sealed class RestOverlayService : Service
             nextSetTotal >= 0 ? nextSetTotal : null);
     }
 
-    private WorkoutTimerState ReadSessionState()
+    private static WorkoutTimerState ReadSessionState()
     {
         WorkoutSessionService? session = ResolveSession();
         if (session == null || session.CurrentPlan == null)
@@ -891,10 +897,8 @@ public sealed class RestOverlayService : Service
             if (Build.VERSION.SdkInt >= BuildVersionCodes.R && _windowManager != null)
                 return _windowManager.CurrentWindowMetrics.Bounds.Width();
 
-#pragma warning disable CS0618
             using DisplayMetrics metrics = Resources!.DisplayMetrics!;
             return metrics.WidthPixels;
-#pragma warning restore CS0618
         }
     }
 
@@ -903,16 +907,14 @@ public sealed class RestOverlayService : Service
     /// <see cref="IAppPreferences"/> and falling back to the OS theme when
     /// set to "system". Returns <c>true</c> if dark mode is active.
     /// </summary>
-    private bool IsDarkTheme()
+    private static bool IsDarkTheme()
     {
         try
         {
-            var preferences = IPlatformApplication.Current?.Services.GetService(typeof(IAppPreferences)) as IAppPreferences;
-            if (preferences == null)
+            if (IPlatformApplication.Current?.Services.GetService(typeof(IAppPreferences)) is not IAppPreferences preferences)
                 return true; // dark is the safe default
 
-            var profileService = IPlatformApplication.Current?.Services.GetService(typeof(UserProfileService)) as UserProfileService;
-            var profileSuffix = profileService != null
+            var profileSuffix = IPlatformApplication.Current?.Services.GetService(typeof(UserProfileService)) is UserProfileService profileService
                 ? $"_{profileService.GetActiveProfile().Id}"
                 : string.Empty;
 
@@ -986,10 +988,10 @@ public sealed class RestOverlayService : Service
                     {
                         // Snap floating bubble towards the nearest screen edge (left or right)
                         WindowManagerLayoutParams lpSnap = service._layoutParams;
-                        int screenWidth = service.ScreenWidth;
-                        int bubbleWidth = lpSnap.Width;
-                        int currentCenterX = lpSnap.X + (bubbleWidth / 2);
-                        int margin = service.Dp(12);
+                        var screenWidth = service.ScreenWidth;
+                        var bubbleWidth = lpSnap.Width;
+                        var currentCenterX = lpSnap.X + (bubbleWidth / 2);
+                        var margin = service.Dp(12);
 
                         if (currentCenterX < screenWidth / 2)
                         {

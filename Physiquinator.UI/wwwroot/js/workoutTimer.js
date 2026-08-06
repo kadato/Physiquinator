@@ -7,9 +7,18 @@ let restTotalMs = 0;
 let chainGeneration = 0;
 
 export function startRestTimer(dotNetRef, intervalMs, totalMs) {
-    stopRestTimer();
-    if (!totalMs || totalMs <= 0) return;
+    if (!totalMs || totalMs <= 0) {
+        stopRestTimer();
+        return;
+    }
 
+    if (restTimerActive && restTimerId !== null) {
+        // If timer is already actively ticking, update total duration without cancelling active tick schedule
+        restTotalMs = totalMs;
+        return;
+    }
+
+    stopRestTimer();
     restTimerActive = true;
     chainGeneration++;
     restStartTime = performance.now();
@@ -35,6 +44,35 @@ function startProgressRaf() {
         }
     }
     rafId = requestAnimationFrame(update);
+}
+
+let undoKeyHandler = null;
+
+export function registerUndoKeyHandler(dotNetRef) {
+    unregisterUndoKeyHandler();
+    undoKeyHandler = async (e) => {
+        const isModifierHeld = e.ctrlKey || e.metaKey;
+        if (!isModifierHeld || e.shiftKey || e.altKey) return;
+        if ((e.key || '').toLowerCase() !== 'z') return;
+
+        const target = e.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable))
+            return;
+
+        e.preventDefault();
+        try {
+            await dotNetRef.invokeMethodAsync('OnUndoKeyDown');
+        } catch {
+            // transient interop failure (e.g. WebView teardown); ignore
+        }
+    };
+    window.addEventListener('keydown', undoKeyHandler, true);
+}
+
+export function unregisterUndoKeyHandler() {
+    if (!undoKeyHandler) return;
+    window.removeEventListener('keydown', undoKeyHandler, true);
+    undoKeyHandler = null;
 }
 
 export function stopRestTimer() {

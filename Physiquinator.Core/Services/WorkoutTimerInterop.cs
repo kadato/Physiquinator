@@ -37,12 +37,17 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
     public Task PlayRestCompleteSoundAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("playRestCompleteSound"));
 
+    public Task RegisterUndoKeyHandlerAsync<T>(DotNetObjectReference<T> dotNetRef)
+        where T : class =>
+        InvokeModuleAsync(module => module.InvokeVoidAsync("registerUndoKeyHandler", dotNetRef));
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
             return;
 
         _disposed = true;
+        await InvokeModuleAsync(module => module.InvokeVoidAsync("unregisterUndoKeyHandler"));
         await InvokeModuleAsync(module => module.InvokeVoidAsync("stopRestTimer"));
         if (_module != null)
         {

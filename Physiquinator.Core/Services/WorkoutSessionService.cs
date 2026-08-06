@@ -7,9 +7,10 @@ namespace Physiquinator.Core.Services;
 /// (<see cref="RestEndsAtUtc"/>) while ticking is still driven by the UI/JS bridge
 /// (<see cref="TickRest"/>) to avoid background threads in the WebView.
 /// </summary>
-public sealed class WorkoutSessionService(TimeProvider time)
+public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 {
     private readonly TimeProvider _time = time;
+    private System.Threading.Timer? _internalTimer;
 
     private DateTime? _restEndsAtUtc;
     private int _activeRestDurationSeconds;
@@ -210,6 +211,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
 
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
+        StartInternalTimer();
         RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -255,6 +257,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
 
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
+        StartInternalTimer();
         RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -290,6 +293,7 @@ public sealed class WorkoutSessionService(TimeProvider time)
         _activeRestDurationSeconds = activeRestDurationSeconds;
         _restEndsAtUtc = restEndsAtUtc;
         _isResting = true;
+        StartInternalTimer();
         RestStateChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -310,11 +314,46 @@ public sealed class WorkoutSessionService(TimeProvider time)
         _isResting = false;
         _restEndsAtUtc = null;
         _activeRestDurationSeconds = 0;
+        StopInternalTimer();
     }
 
     private void StopRest()
     {
         ResetRestSilently();
         RestStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void StartInternalTimer()
+    {
+        _internalTimer ??= new System.Threading.Timer(OnInternalTimerTick, null, 500, 500);
+    }
+
+    private void StopInternalTimer()
+    {
+        _internalTimer?.Dispose();
+        _internalTimer = null;
+    }
+
+    private void OnInternalTimerTick(object? state)
+    {
+        if (!_isResting || !_restEndsAtUtc.HasValue)
+        {
+            StopInternalTimer();
+            return;
+        }
+
+        if (UtcNow >= _restEndsAtUtc.Value)
+        {
+            StopRest();
+            RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Dispose()
+    {
+        StopInternalTimer();
     }
 }

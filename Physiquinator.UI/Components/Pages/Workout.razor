@@ -14,7 +14,7 @@
 @inject ILogger<Workout> Logger
 @implements IAsyncDisposable
 
-<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="ConfirmLeaveWorkoutInProgress" />
+<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="NavigateHome" />
 
 @if (SessionService.CurrentPlan == null)
 {
@@ -181,6 +181,7 @@ else
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
 
         await TimerInterop.InitializeAsync();
+        await TimerInterop.RegisterUndoKeyHandlerAsync(_dotNetRef);
 
         await EnsureWorkoutStartedAsync();
     }
@@ -236,6 +237,33 @@ else
 
         if (!ForceNew)
         {
+            if (SessionService.CurrentPlan?.Id == PlanId)
+            {
+                var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+                _historySessionId = openSession?.Id;
+                await InitializeWorkoutStateAsync(SessionService.CurrentPlan);
+                RefreshExerciseProgress();
+
+                if (SessionService.IsResting)
+                {
+                    var remaining = SessionService.RestSecondsRemaining;
+                    if (remaining > 0)
+                    {
+                        _isRestComplete = false;
+                        await StartJsTimerAsync(remaining);
+                    }
+                    else
+                    {
+                        _isRestComplete = true;
+                    }
+                }
+                else
+                {
+                    await RestorePendingRestAsync(pendingRest);
+                }
+                return;
+            }
+
             var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
             if (open != null)
             {
@@ -394,24 +422,8 @@ else
         _upcomingExercises = upcoming;
     }
 
-    private async Task ConfirmLeaveWorkoutInProgress()
+    private void NavigateHome()
     {
-        var confirmed = await DialogService.ConfirmAsync(
-            "Leave workout?",
-            "Your progress is saved. You can continue this workout from home.",
-            confirmText: "Leave",
-            cancelText: "Stay",
-            confirmColor: Color.Primary);
-        if (confirmed)
-            await LeaveWorkoutInProgress();
-    }
-
-    private async Task LeaveWorkoutInProgress()
-    {
-        if (_disposed) return;
-
-        await TimerInterop.StopTimerAsync();
-        SessionService.EndWorkout();
         Navigation.NavigateTo(AppRoutes.Home);
     }
 
@@ -658,11 +670,17 @@ else
         });
     }
 
+    /// <summary>
+    /// Invoked from JS when the user presses Ctrl+Z (or Cmd+Z) to undo the
+    /// last logged set, including while the undo toast is hidden.
+    /// </summary>
+    [JSInvokable]
+    public Task OnUndoKeyDown() => UndoLastSetCoreAsync();
+
     private async Task UndoLastSetCoreAsync()
     {
         if (_disposed || _isCompleting) return;
         if (!SessionService.TryUndoLastSet(out var removed)) return;
-
         HideUndoToast();
         await TimerInterop.StopTimerAsync();
         _isRestComplete = false;
@@ -858,16 +876,14 @@ else
             {
                 // TickRest clears IsResting; without this flag first, the timer block unmounts for one frame.
                 _isRestComplete = true;
-                await SafeStateHasChangedAsync();
             }
-            else if (_restPanel != null)
+
+            if (_restPanel != null)
             {
-                // Rest ticks only touch the countdown panel; re-rendering the whole
-                // page (exercise cards, progress bars) once per second is wasted work.
-                // JS-interop calls already arrive on the renderer thread, so no
-                // InvokeAsync marshaling is needed here.
                 _restPanel.Refresh();
             }
+
+            await SafeStateHasChangedAsync();
 
             if (done)
             {
@@ -902,7 +918,6 @@ else
         HideUndoToast();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         SessionService.RestStateChanged -= OnSessionRestStateChanged;
-        SessionService.CancelRest();
         _dotNetRef?.Dispose();
     }
 

@@ -10,6 +10,7 @@
 @inject IDialogService DialogService
 @inject UserProfileService UserProfileService
 @inject WorkoutTimerInterop TimerInterop
+@inject ISnackbar Snackbar
 @inject ILogger<Workout> Logger
 @implements IAsyncDisposable
 
@@ -542,6 +543,8 @@ else
                 }
             }
 
+            await TryShowPersonalRecordToastAsync(plan, exercise, finalWeight, finalReps);
+
             ShowUndoToast();
 
             if (willBeLastSetOfWorkout)
@@ -584,6 +587,59 @@ else
             TimeSpan.FromMilliseconds(UndoToastDurationMs),
             Timeout.InfiniteTimeSpan);
     }
+
+    /// <summary>
+    /// Shows a "New PR" toast when the just-logged set beats the best previous
+    /// performance for the exercise on this plan. The current session is
+    /// excluded so its own earlier sets are not mistaken for the old record.
+    /// </summary>
+    private async Task TryShowPersonalRecordToastAsync(WorkoutPlan plan, ExercisePlan exercise, double weightKg, int reps)
+    {
+        try
+        {
+            IReadOnlyList<ExerciseSetLogRow> rows = await HistoryRepository.GetExerciseSetLogRowsAsync(plan.Id, exercise.Name);
+            var prior = rows.Where(r => r.SessionId != _historySessionId);
+            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg);
+
+            var setVolumeKg = PersonalRecordCalculator.ComputeVolume(reps, weightKg, exercise.LogType, _bodyweightKg);
+            string? message = null;
+            if (exercise.LogType == ExerciseLogType.Duration)
+            {
+                if (TryBeat(records, ExerciseRecordKind.LongestDuration, reps))
+                    message = $"New PR — {exercise.Name}: {reps}s set";
+            }
+            else if (TryBeat(records, ExerciseRecordKind.BestWeight, weightKg))
+            {
+                message = $"New PR — {exercise.Name}: {FormatPersonalWeight(exercise.LogType, weightKg)}";
+            }
+            else if (TryBeat(records, ExerciseRecordKind.MostReps, reps))
+            {
+                message = $"New PR — {exercise.Name}: {reps} reps";
+            }
+            else if (TryBeat(records, ExerciseRecordKind.BestVolume, setVolumeKg))
+            {
+                message = $"New PR — {exercise.Name}: {ExerciseWeightFormatter.FormatKg(setVolumeKg)} kg set volume";
+            }
+
+            if (message != null)
+                Snackbar.Add(message, Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Personal record check failed");
+        }
+    }
+
+    private static bool TryBeat(PersonalRecords records, ExerciseRecordKind kind, double value)
+    {
+        PersonalRecordEntry? current = records.Entries.FirstOrDefault(e => e.Kind == kind);
+        return current == null || value > current.Value;
+    }
+
+    private string FormatPersonalWeight(ExerciseLogType logType, double weightKg) =>
+        logType == ExerciseLogType.BodyweightReps
+            ? ExerciseWeightFormatter.FormatBodyweightOffset(weightKg, _bodyweightKg)
+            : $"{ExerciseWeightFormatter.FormatKg(weightKg)} kg";
 
     private void HideUndoToast()
     {

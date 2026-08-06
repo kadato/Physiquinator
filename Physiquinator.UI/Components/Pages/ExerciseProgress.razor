@@ -5,8 +5,20 @@
 @inject WorkoutPlanService PlanService
 @inject NavigationManager Navigation
 @inject UserProfileService UserProfileService
+@inject IDialogService DialogService
 
-<PageHeader Title="@_decodedExerciseName" OnBack="GoHistory" />
+<PageHeader Title="@_decodedExerciseName" OnBack="GoHistory">
+    @if (_ready && _rows.Any())
+    {
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   Class="premium-btn"
+                   StartIcon="@Icons.Material.Filled.EmojiEvents"
+                   OnClick="ShowPersonalRecordsAsync">
+            PRs
+        </MudButton>
+    }
+</PageHeader>
 
 @if (!_ready)
 {
@@ -130,6 +142,30 @@ else
 
     private void GoSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
+
+    private async Task ShowPersonalRecordsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_decodedExerciseName)) return;
+
+        IReadOnlyList<ExerciseSetLogRow> rows =
+            await HistoryRepo.GetExerciseSetLogRowsAsync(PlanId, _decodedExerciseName);
+        PersonalRecords records = PersonalRecordCalculator.Compute(rows, _logType, _bodyweightKg);
+
+        var parameters = new DialogParameters<PersonalRecordsDialog>
+        {
+            { x => x.ExerciseName, _decodedExerciseName },
+            { x => x.Records, records },
+            { x => x.LogType, _logType },
+            { x => x.BodyweightKg, _bodyweightKg },
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        await DialogService.ShowAsync<PersonalRecordsDialog>("Personal records", parameters, options);
+    }
 
     protected override async Task OnParametersSetAsync()
     {

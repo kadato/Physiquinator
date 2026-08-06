@@ -1,0 +1,36 @@
+.pr-dialog-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.pr-dialog-row:hover {
+    background: rgba(127, 127, 127, 0.08);
+}
+
+.pr-dialog-row + .pr-dialog-row {
+    border-top: 1px solid rgba(127, 127, 127, 0.14);
+}
+
+.pr-dialog-row__icon {
+    color: var(--mud-palette-warning, #F59E0B);
+    flex-shrink: 0;
+}
+
+.pr-dialog-row__main {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.pr-dialog-row__value {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.pr-dialog-row__chevron {
+    color: var(--mud-palette-text-secondary, #6B7280);
+    flex-shrink: 0;
+}

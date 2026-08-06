@@ -1,0 +1,95 @@
+@inject NavigationManager Navigation
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            All-time bests for @ExerciseName on this plan.
+        </MudText>
+
+        @if (!Records.Entries.Any())
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                No records yet — log sets for this exercise to start building them.
+            </MudText>
+        }
+        else
+        {
+            @foreach (var entry in Records.Entries)
+            {
+                var record = entry;
+                <div class="pr-dialog-row" @onclick="() => OpenSession(record)">
+                    <MudIcon Icon="@GetIcon(record.Kind)" Class="pr-dialog-row__icon" />
+                    <div class="pr-dialog-row__main">
+                        <MudText Typo="Typo.body2">@GetLabel(record.Kind)</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @UiDateFormats.LocalDateCompact(record.CompletedAtUtc)
+                        </MudText>
+                    </div>
+                    <MudText Typo="Typo.subtitle2" Class="pr-dialog-row__value">@FormatValue(record)</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="pr-dialog-row__chevron" />
+                </div>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public string ExerciseName { get; set; } = "";
+
+    [Parameter]
+    public PersonalRecords Records { get; set; } = new(Array.Empty<PersonalRecordEntry>());
+
+    [Parameter]
+    public ExerciseLogType LogType { get; set; } = ExerciseLogType.WeightAndReps;
+
+    [Parameter]
+    public double? BodyweightKg { get; set; }
+
+    private void Close() => MudDialog.Close();
+
+    private void OpenSession(PersonalRecordEntry entry)
+    {
+        MudDialog.Close();
+        Navigation.NavigateTo(AppRoutes.HistorySession(entry.SessionId));
+    }
+
+    private static string GetLabel(ExerciseRecordKind kind) => kind switch
+    {
+        ExerciseRecordKind.BestWeight => "Best weight",
+        ExerciseRecordKind.MostReps => "Most reps in a set",
+        ExerciseRecordKind.BestVolume => "Best set volume",
+        ExerciseRecordKind.LongestDuration => "Longest set",
+        _ => ""
+    };
+
+    private static string GetIcon(ExerciseRecordKind kind) => kind switch
+    {
+        ExerciseRecordKind.BestWeight => Icons.Material.Filled.EmojiEvents,
+        ExerciseRecordKind.MostReps => Icons.Material.Filled.Repeat,
+        ExerciseRecordKind.BestVolume => Icons.Material.Filled.RocketLaunch,
+        ExerciseRecordKind.LongestDuration => Icons.Material.Filled.Timer,
+        _ => Icons.Material.Filled.EmojiEvents
+    };
+
+    private string FormatValue(PersonalRecordEntry entry) => entry.Kind switch
+    {
+        ExerciseRecordKind.BestWeight when LogType == ExerciseLogType.BodyweightReps =>
+            ExerciseWeightFormatter.FormatBodyweightOffset(entry.Value, BodyweightKg),
+        ExerciseRecordKind.BestWeight =>
+            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} kg",
+        ExerciseRecordKind.MostReps =>
+            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} reps",
+        ExerciseRecordKind.BestVolume =>
+            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} kg",
+        ExerciseRecordKind.LongestDuration =>
+            $"{ExerciseWeightFormatter.FormatKg(entry.Value)}s",
+        _ => ExerciseWeightFormatter.FormatKg(entry.Value)
+    };
+}

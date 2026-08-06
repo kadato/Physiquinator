@@ -4,12 +4,14 @@ let restTimerId = null;
 let rafId = null;
 let restStartTime = 0;
 let restTotalMs = 0;
+let chainGeneration = 0;
 
 export function startRestTimer(dotNetRef, intervalMs, totalMs) {
     stopRestTimer();
     if (!totalMs || totalMs <= 0) return;
 
     restTimerActive = true;
+    chainGeneration++;
     restStartTime = performance.now();
     restTotalMs = totalMs;
 
@@ -48,16 +50,22 @@ export function stopRestTimer() {
 }
 
 function scheduleTick(dotNetRef, intervalMs) {
+    const generation = chainGeneration;
     restTimerId = setTimeout(async () => {
-        if (!restTimerActive) return;
+        if (!restTimerActive || generation !== chainGeneration) return;
         try {
             const done = await dotNetRef.invokeMethodAsync('OnTimerTick');
-            if (restTimerActive && !done)
+            if (!restTimerActive || generation !== chainGeneration) return;
+            if (!done)
                 scheduleTick(dotNetRef, intervalMs);
             else
                 restTimerActive = false;
         } catch {
-            restTimerActive = false;
+            // A transient interop failure (e.g. the WebView was suspended
+            // while the app was backgrounded under the overlay) must not kill
+            // the countdown permanently. Retry the next tick instead.
+            if (restTimerActive && generation === chainGeneration)
+                scheduleTick(dotNetRef, intervalMs);
         }
     }, intervalMs);
 }

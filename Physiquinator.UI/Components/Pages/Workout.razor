@@ -779,12 +779,17 @@ else
                     return;
                 }
 
-                if (!_isRestComplete)
-                {
-                    var remaining = SessionService.RestSecondsRemaining;
-                    if (remaining > 0)
-                        await StartJsTimerAsync(remaining);
-                }
+                // A rest can be started or extended by a platform surface
+                // (floating overlay +Ns, notification action, exact-alarm
+                // restore) while the page believes the previous rest is
+                // complete. Clear the stale completion flag and always
+                // (re)start the JS ticker, or the countdown stays frozen
+                // on the checkmark while the session keeps running.
+                _isRestComplete = false;
+
+                var remaining = SessionService.RestSecondsRemaining;
+                if (remaining > 0)
+                    await StartJsTimerAsync(remaining);
 
                 _restPanel?.Refresh();
                 await SafeStateHasChangedAsync();
@@ -846,29 +851,39 @@ else
     {
         if (_disposed) return true;
 
-        var done = SessionService.TickRest();
-        if (done)
+        try
         {
-            // TickRest clears IsResting; without this flag first, the timer block unmounts for one frame.
-            _isRestComplete = true;
-            await SafeStateHasChangedAsync();
-        }
-        else if (_restPanel != null)
-        {
-            // Rest ticks only touch the countdown panel; re-rendering the whole
-            // page (exercise cards, progress bars) once per second is wasted work.
-            // JS-interop calls already arrive on the renderer thread, so no
-            // InvokeAsync marshaling is needed here.
-            _restPanel.Refresh();
-        }
+            var done = SessionService.TickRest();
+            if (done)
+            {
+                // TickRest clears IsResting; without this flag first, the timer block unmounts for one frame.
+                _isRestComplete = true;
+                await SafeStateHasChangedAsync();
+            }
+            else if (_restPanel != null)
+            {
+                // Rest ticks only touch the countdown panel; re-rendering the whole
+                // page (exercise cards, progress bars) once per second is wasted work.
+                // JS-interop calls already arrive on the renderer thread, so no
+                // InvokeAsync marshaling is needed here.
+                _restPanel.Refresh();
+            }
 
-        if (done)
-        {
-            await PlayRestCompleteAlertsAsync();
-            return true;
-        }
+            if (done)
+            {
+                await PlayRestCompleteAlertsAsync();
+                return true;
+            }
 
-        return false;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // Keep the tick chain alive; a single failed tick must not freeze
+            // the countdown for the rest of the period.
+            Logger.LogError(ex, "Rest tick failed");
+            return false;
+        }
     }
 
     private async Task StartJsTimerAsync(int? durationSeconds = null)

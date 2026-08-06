@@ -102,7 +102,16 @@ public sealed class RestOverlayService : Service
         System.Action tick = null!;
         tick = () =>
         {
-            UpdateTicker();
+            try
+            {
+                UpdateTicker();
+            }
+            catch (Exception ex)
+            {
+                // A single bad tick must not kill the reschedule, or the
+                // bubble countdown freezes for the rest of the workout.
+                System.Diagnostics.Debug.WriteLine($"RestOverlayService ticker failed: {ex}");
+            }
             _handler?.PostDelayed(tick, TickerIntervalMs);
         };
         _tickAction = tick;

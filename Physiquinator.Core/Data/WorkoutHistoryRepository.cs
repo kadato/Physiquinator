@@ -49,6 +49,14 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public double? WeightKg { get; set; }
     }
 
+    private sealed class SetLogRow
+    {
+        public string SessionId { get; set; } = "";
+        public DateTime CompletedAtUtc { get; set; }
+        public int? Reps { get; set; }
+        public double? WeightKg { get; set; }
+    }
+
     private sealed class BackupJoinRow
     {
         public string SessionId { get; set; } = "";
@@ -508,6 +516,36 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         LastSetMetricsRow? row = rows.FirstOrDefault();
         if (row == null) return null;
         return new LastSetMetrics(row.Reps, row.WeightKg);
+    }
+
+    /// <summary>
+    /// All set rows logged for one exercise under a plan, oldest first, for
+    /// personal-record computation. Same exercise name in different plans is
+    /// treated as a separate exercise (matching the progress table).
+    /// </summary>
+    public async Task<IReadOnlyList<ExerciseSetLogRow>> GetExerciseSetLogRowsAsync(
+        Guid workoutPlanId,
+        string exerciseName,
+        int maxSets = 5000)
+    {
+        if (string.IsNullOrWhiteSpace(exerciseName)) return [];
+        maxSets = Math.Clamp(maxSets, 1, 20000);
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        List<SetLogRow> rows = await _db.Database.QueryAsync<SetLogRow>(
+            @"SELECT s.SessionId AS SessionId,
+                     s.CompletedAtUtc AS CompletedAtUtc,
+                     s.Reps AS Reps,
+                     s.WeightKg AS WeightKg
+              FROM WorkoutSetLogs s
+              INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
+              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+              ORDER BY s.CompletedAtUtc, s.ExerciseIndex, s.SetIndex
+              LIMIT ?",
+            planIdStr, exerciseName, maxSets);
+
+        return [.. rows.Select(r => new ExerciseSetLogRow(r.SessionId, r.CompletedAtUtc, r.Reps, r.WeightKg))];
     }
 
     /// <summary>Removes the most recently logged set row for the session (same order as append-only completion).</summary>

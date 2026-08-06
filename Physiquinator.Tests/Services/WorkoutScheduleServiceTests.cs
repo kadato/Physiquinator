@@ -1,5 +1,7 @@
 using Physiquinator.Core.Data;
+using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
+using Physiquinator.Tests.TestDoubles;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;
@@ -93,7 +95,7 @@ public class WorkoutScheduleServiceTests
 
             // A new profile reads and writes its own key.
             profiles.CreateProfile("Alice");
-            var alice = profiles.GetProfiles().First(p => p.Name == "Alice");
+            UserProfile alice = profiles.GetProfiles().First(p => p.Name == "Alice");
             await profiles.SwitchProfileAsync(alice.Id);
 
             Assert.Empty(schedule.Days);
@@ -122,29 +124,4 @@ public class WorkoutScheduleServiceTests
     }
 
     private sealed record Fixture(WorkoutScheduleService Schedule);
-
-    private sealed class InMemoryPreferences : IAppPreferences
-    {
-        private readonly Dictionary<string, string> _values = [];
-
-        public string Get(string key, string defaultValue) =>
-            _values.TryGetValue(key, out var value) ? value : defaultValue;
-
-        public bool Get(string key, bool defaultValue)
-        {
-            if (!_values.TryGetValue(key, out var value))
-                return defaultValue;
-
-            return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
-        }
-
-        public void Set(string key, string value) => _values[key] = value;
-
-        public void Set(string key, bool value) => _values[key] = value.ToString();
-    }
-
-    private sealed class TempDbPathProvider(string path) : IDatabasePathProvider
-    {
-        public string GetDatabasePath(Guid profileId) => path;
-    }
 }

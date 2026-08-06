@@ -1,5 +1,6 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
+using Physiquinator.Tests.TestDoubles;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;
@@ -123,42 +124,5 @@ public class AppInitializationServiceTests : IAsyncLifetime
             InitializeCallCount++;
             return Task.CompletedTask;
         }
-    }
-
-    private sealed class MemoryDemoSeedPreferences : IDemoSeedPreferences
-    {
-        private readonly Dictionary<string, bool> _values = [];
-
-        public bool Get(string key, bool defaultValue) =>
-            _values.TryGetValue(key, out var v) ? v : defaultValue;
-
-        public void Set(string key, bool value) => _values[key] = value;
-
-        public bool IsDefaultProfile { get; set; } = true;
-    }
-
-    private sealed class InMemoryPreferences : IAppPreferences
-    {
-        private readonly Dictionary<string, string> _values = [];
-
-        public string Get(string key, string defaultValue) =>
-            _values.TryGetValue(key, out var value) ? value : defaultValue;
-
-        public bool Get(string key, bool defaultValue)
-        {
-            if (!_values.TryGetValue(key, out var value))
-                return defaultValue;
-
-            return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
-        }
-
-        public void Set(string key, string value) => _values[key] = value;
-
-        public void Set(string key, bool value) => _values[key] = value.ToString();
-    }
-
-    private sealed class TempDbPathProvider(string path) : IDatabasePathProvider
-    {
-        public string GetDatabasePath(Guid profileId) => path;
     }
 }

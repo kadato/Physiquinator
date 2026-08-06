@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
+using Physiquinator.Tests.TestDoubles;
 using Xunit;
 
 namespace Physiquinator.Tests.Services;
@@ -69,26 +70,6 @@ public class RestTimerCoordinatorTests
         public Task CancelSetLoggedNotificationAsync() => Task.CompletedTask;
     }
 
-    private sealed class InMemoryPreferences : IAppPreferences
-    {
-        private readonly Dictionary<string, string> _values = [];
-
-        public string Get(string key, string defaultValue) =>
-            _values.TryGetValue(key, out var value) ? value : defaultValue;
-
-        public bool Get(string key, bool defaultValue)
-        {
-            if (!_values.TryGetValue(key, out var value))
-                return defaultValue;
-
-            return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
-        }
-
-        public void Set(string key, string value) => _values[key] = value;
-
-        public void Set(string key, bool value) => _values[key] = value.ToString();
-    }
-
     private sealed record Fixture(
         ManualTimeProvider Clock,
         WorkoutSessionService Session,
@@ -130,11 +111,6 @@ public class RestTimerCoordinatorTests
             preferences,
             new TempDbPathProvider(dbPath),
             TimeProvider.System);
-    }
-
-    private sealed class TempDbPathProvider(string path) : IDatabasePathProvider
-    {
-        public string GetDatabasePath(Guid profileId) => path;
     }
 
     private static WorkoutPlan SamplePlan() => new()

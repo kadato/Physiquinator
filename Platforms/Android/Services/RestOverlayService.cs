@@ -219,10 +219,11 @@ public sealed class RestOverlayService : Service
                 Orientation = Orientation.Vertical
             };
             var bg = new GradientDrawable();
-            bg.SetColor(AndroidColor.Argb(0xE6, colors.Background.R, colors.Background.G, colors.Background.B));
-            bg.SetCornerRadius(Dp(16));
+            bg.SetColor(AndroidColor.Argb(0xF2, colors.Background.R, colors.Background.G, colors.Background.B));
+            bg.SetCornerRadius(Dp(20));
+            bg.SetStroke(Dp(2), AndroidColor.Argb(0x40, colors.Primary.R, colors.Primary.G, colors.Primary.B));
             root.Background = bg;
-            root.SetPadding(Dp(14), Dp(10), Dp(14), Dp(10));
+            root.SetPadding(Dp(16), Dp(12), Dp(16), Dp(12));
 
             // Row 1: exercise name left, timer right, close overlaid top-right
             var headerFrame = new FrameLayout(this);
@@ -257,12 +258,13 @@ public sealed class RestOverlayService : Service
             headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
 
             _closeButton = CreateCloseButton(colors);
+            _closeButton.ContentDescription = "Close overlay";
 
             var headerRowParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MatchParent,
                 FrameLayout.LayoutParams.WrapContent);
             var closeParams = new FrameLayout.LayoutParams(
-                Dp(36), Dp(36))
+                Dp(44), Dp(44))
             {
                 Gravity = GravityFlags.End | GravityFlags.CenterVertical,
                 RightMargin = Dp(2)
@@ -282,9 +284,16 @@ public sealed class RestOverlayService : Service
             actionRow.SetGravity(GravityFlags.Center);
 
             _addTimeButton = CreateAddTimeButton(addSeconds, colors);
+            _addTimeButton.ContentDescription = $"Add {addSeconds} seconds to rest";
+
             _resetButton = CreateIconButton(Resource.Drawable.ic_timer_reset, OnResetClicked, colors);
+            _resetButton.ContentDescription = "Reset rest timer";
+
             _skipButton = CreateIconButton(Resource.Drawable.ic_timer_skip, OnSkipClicked, colors);
+            _skipButton.ContentDescription = "Skip rest timer";
+
             _logSetButton = CreateLogSetButton(colors);
+            _logSetButton.ContentDescription = "Log completed set";
 
             AddActionBtn(actionRow, _addTimeButton);
             AddActionBtn(actionRow, _resetButton);
@@ -973,9 +982,30 @@ public sealed class RestOverlayService : Service
 
                 case MotionEventActions.Up:
                 case MotionEventActions.Cancel:
-                    // A tap (no drag) on the bubble body opens the app.
-                    if (!_moved && e.Action == MotionEventActions.Up)
+                    if (_moved && e.Action == MotionEventActions.Up)
+                    {
+                        // Snap floating bubble towards the nearest screen edge (left or right)
+                        WindowManagerLayoutParams lpSnap = service._layoutParams;
+                        int screenWidth = service.ScreenWidth;
+                        int bubbleWidth = lpSnap.Width;
+                        int currentCenterX = lpSnap.X + (bubbleWidth / 2);
+                        int margin = service.Dp(12);
+
+                        if (currentCenterX < screenWidth / 2)
+                        {
+                            lpSnap.X = margin;
+                        }
+                        else
+                        {
+                            lpSnap.X = Math.Max(margin, screenWidth - bubbleWidth - margin);
+                        }
+                        service._windowManager.UpdateViewLayout(v, lpSnap);
+                    }
+                    else if (!_moved && e.Action == MotionEventActions.Up)
+                    {
+                        // A tap (no drag) on the bubble body opens the app.
                         service.OpenApp();
+                    }
                     return true;
 
                 default:

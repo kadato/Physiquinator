@@ -16,4 +16,12 @@ public static class PreferenceKeys
     public const string ThemePreference = "physiquinator-theme-preference";
     public const string WorkoutScheduleDays = "physiquinator-workout-schedule-days";
     public const string AutoUpdateCheckEnabled = "auto_update_check_enabled";
+
+    public const string AiEnabled = "physiquinator_ai_enabled";
+    public const string AiProvider = "physiquinator_ai_provider";
+    public const string AiBaseUrl = "physiquinator_ai_base_url";
+    public const string AiApiKey = "physiquinator_ai_api_key";
+    public const string AiModelName = "physiquinator_ai_model_name";
+    public const string AiSystemPrompt = "physiquinator_ai_system_prompt";
 }
+

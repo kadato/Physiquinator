@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Physiquinator.Core.Data;
+using Physiquinator.Core.Services.Ai;
+using Physiquinator.Core.Services.Ai.Tools;
 
 namespace Physiquinator.Core.Services;
+
 
 /// <summary>
 /// Registers the shared Physiquinator services used by both the MAUI and Blazor Web hosts.
@@ -45,6 +48,27 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<AppInitializationService>();
         services.AddScoped<WorkoutTimerInterop>();
         services.AddSingleton<UserProfileService>();
+
+        // AI Services & Tools (Registered as Scoped to safely consume scoped dependencies like ThemeService)
+        services.AddScoped(sp => new OpenAiCompatibleClient(sp.GetService<HttpClient>() ?? new HttpClient()));
+
+        services.AddScoped<IAiTool, GetWorkoutPlansTool>();
+        services.AddScoped<IAiTool, CreateWorkoutPlanTool>();
+        services.AddScoped<IAiTool, UpdateWorkoutPlanTool>();
+        services.AddScoped<IAiTool, DeleteWorkoutPlanTool>();
+        services.AddScoped<IAiTool, GetBodyweightHistoryTool>();
+        services.AddScoped<IAiTool, LogBodyweightTool>();
+        services.AddScoped<IAiTool, DeleteBodyweightTool>();
+        services.AddScoped<IAiTool, GetWorkoutHistoryStatsTool>();
+        services.AddScoped<IAiTool, GetExerciseProgressionTool>();
+        services.AddScoped<IAiTool, GetAppSettingsTool>();
+        services.AddScoped<IAiTool, ChangeAppThemeTool>();
+        services.AddScoped<IAiTool, UpdateRestTimerSettingsTool>();
+        services.AddScoped<IAiTool, UpdateWorkoutScheduleTool>();
+        services.AddScoped<IAiTool, GenerateDeloadPlanWorkflowTool>();
+        services.AddScoped<IAiTool, CalculateProgressiveOverloadWorkflowTool>();
+        services.AddScoped<AiToolRegistry>();
+        services.AddScoped<AiAssistantService>();
 
         return services;
     }

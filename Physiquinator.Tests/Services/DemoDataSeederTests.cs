@@ -160,7 +160,17 @@ public class DemoDataSeederTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SeedDemoExtras_SeedsChangingBodyweightsScheduleAndProfileBodyweight()
+    public async Task SeedDemoData_SetsWorkoutScheduleDays()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+
+        Assert.Equal(
+            [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
+            _scheduleService.Days.OrderBy(d => d).ToArray());
+    }
+
+    [Fact]
+    public async Task SeedDemoExtras_SeedsChangingBodyweightsAndProfileBodyweight()
     {
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
@@ -172,10 +182,6 @@ public class DemoDataSeederTests : IAsyncLifetime
         Assert.All(rows, r => Assert.True(r.BodyweightKg > 0));
         Assert.True(rows[0].BodyweightKg < rows[^1].BodyweightKg, "Bodyweight should trend downward across the demo year.");
         Assert.True(rows[0].BodyweightKg > 80, "Latest bodyweight should stay within a believable range.");
-
-        Assert.Equal(
-            [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
-            _scheduleService.Days.OrderBy(d => d).ToArray());
 
         Assert.NotNull(_profileService.GetActiveProfile().BodyweightKg);
         Assert.Equal(rows[0].BodyweightKg, _profileService.GetActiveProfile().BodyweightKg!.Value, precision: 1);
@@ -216,7 +222,6 @@ public class DemoDataSeederTests : IAsyncLifetime
         await _historyRepo.UpsertBodyweightLogAsync(DateOnly.FromDateTime(DateTime.Today), 82.0);
 
         Assert.False(await _sut.SeedDemoExtrasIfNeededAsync());
-        Assert.False(_scheduleService.IsSet);
         Assert.Null(_profileService.GetActiveProfile().BodyweightKg);
     }
 

@@ -74,6 +74,8 @@ public sealed class DemoDataSeeder(
             await _planService.SavePlanAsync(demoPlans[i]);
         }
 
+        SetDemoScheduleIfUnset();
+
         _preferences.Set(InitialDemoSeedCompletedKey, true);
         return true;
     }
@@ -125,9 +127,9 @@ public sealed class DemoDataSeeder(
     }
 
     /// <summary>
-    /// Seeds demo extras once: a changing bodyweight series, the saved weekly workout
-    /// schedule, and the profile's current bodyweight. Gated by its own preference key
-    /// so existing users with history get the extras on the next launch.
+    /// Seeds demo extras once: a changing bodyweight series and the profile's
+    /// current bodyweight. Gated by its own preference key so existing users
+    /// with history get the extras on the next launch.
     /// </summary>
     public async Task<bool> SeedDemoExtrasIfNeededAsync()
     {
@@ -151,7 +153,6 @@ public sealed class DemoDataSeeder(
                 conn.InsertOrReplace(entries[i]);
         });
 
-        SetDemoScheduleIfUnset();
         SetProfileBodyweight(entries[^1].BodyweightKg);
 
         _preferences.Set(DemoExtrasSeedCompletedKey, true);

@@ -1,6 +1,5 @@
 @page "/history"
 @using System.Globalization
-@using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject WorkoutStatsService StatsService
@@ -71,32 +70,23 @@
         <MudPaper Class="pa-3 bodyweight-panel" Elevation="1">
             <div class="bodyweight-panel__header">
                 <MudText Typo="Typo.h6">Bodyweight</MudText>
-                @if (_latestBodyweight is { } latest)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
-                        @ExerciseWeightFormatter.FormatKg(latest.BodyweightKg) kg · @UiDateFormats.DateOnlyCompact(latest.DateOnly)
-                    </MudChip>
-                }
+                <span class="bodyweight-panel__right">
+                    @if (_latestBodyweight is { } latest)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                            @ExerciseWeightFormatter.FormatKg(latest.BodyweightKg) kg · @UiDateFormats.DateOnlyCompact(latest.DateOnly)
+                        </MudChip>
+                    }
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Class="bodyweight-panel__details-btn"
+                               StartIcon="@Icons.Material.Filled.ShowChart"
+                               OnClick="OpenBodyweightProgress">
+                        View details
+                    </MudButton>
+                </span>
             </div>
-
-            @if (_bodyweightSeries.Count >= 2)
-            {
-                <div class="bodyweight-chart">
-                    <MudChart T="double"
-                              ChartType="ChartType.Line"
-                              ChartSeries="@_bodyweightSeries"
-                              ChartLabels="@_bodyweightLabels"
-                              ChartOptions="@_bodyweightChartOptions"
-                              Width="100%"
-                              Height="240px" />
-                </div>
-            }
-            else
-            {
-                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
-                    Log your weight each day to see the trend here.
-                </MudText>
-            }
 
             <div class="bodyweight-log-row">
                 <SetMetricStepper Value="@_bodyweightInput"
@@ -117,25 +107,6 @@
                     Log
                 </button>
             </div>
-
-            @if (_bodyweightEntries.Count > 0)
-            {
-                <div class="bodyweight-entries">
-                    @foreach (var e in _bodyweightEntries)
-                    {
-                        <div class="bodyweight-entry">
-                            <span class="bodyweight-entry__date">@UiDateFormats.DateOnlyCompact(e.DateOnly)</span>
-                            <span class="bodyweight-entry__value">@ExerciseWeightFormatter.FormatKg(e.BodyweightKg) kg</span>
-                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
-                                           Size="Size.Small"
-                                           Color="Color.Error"
-                                           Class="bodyweight-entry__delete"
-                                           aria-label="Delete entry"
-                                           OnClick="@(() => DeleteBodyweightAsync(e))" />
-                        </div>
-                    }
-                </div>
-            }
         </MudPaper>
 
         @if (_selectedDay != null)
@@ -214,7 +185,6 @@
 
 @code {
     private const int HeatmapWeeks = 53;
-    private const int BodyweightEntryLimit = 90;
 
     private sealed record BodyweightEntry(DateOnly DateOnly, double BodyweightKg);
 
@@ -228,20 +198,18 @@
     private DateOnly? _selectedDay;
     private string _searchText = "";
 
-    private List<BodyweightEntry> _bodyweightEntries = [];
     private BodyweightEntry? _latestBodyweight;
     private double? _bodyweightInput;
     private double? _bodyweightDefault;
-    private string[] _bodyweightLabels = Array.Empty<string>();
-    private sealed class BodyweightSeriesList : List<ChartSeries<double>> { }
-    private BodyweightSeriesList _bodyweightSeries = [];
-    private LineChartOptions _bodyweightChartOptions = new();
 
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
 
     private void ContinueWorkout(Guid planId) =>
         Navigation.NavigateTo(AppRoutes.Workout(planId));
+
+    private void OpenBodyweightProgress() =>
+        Navigation.NavigateTo(AppRoutes.Bodyweight);
 
     protected override async Task OnInitializedAsync()
     {
@@ -250,58 +218,32 @@
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);
-        var bodyweightTask = HistoryRepo.GetBodyweightLogsAsync(BodyweightEntryLimit);
+        var bodyweightTask = HistoryRepo.GetBodyweightLogsAsync(1);
         await Task.WhenAll(sessionsTask, statsTask, bodyweightTask);
 
         _sessions = await sessionsTask;
         (_summary, _activityByDay) = await statsTask;
-        MapBodyweightEntries(await bodyweightTask);
+        MapLatestBodyweight(await bodyweightTask);
         _bodyweightInput = _latestBodyweight?.BodyweightKg
             ?? UserProfileService.GetActiveProfile()?.BodyweightKg;
         _bodyweightDefault = _bodyweightInput;
         await UpdateSessionsListAsync();
     }
 
-    private void MapBodyweightEntries(IReadOnlyList<BodyweightLogEntity> rows)
+    private void MapLatestBodyweight(IReadOnlyList<BodyweightLogEntity> rows)
     {
-        _bodyweightEntries = [.. rows
+        _latestBodyweight = rows
             .Where(r => DateOnly.TryParseExact(
                 r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
             .Select(r => new BodyweightEntry(
                 DateOnly.ParseExact(r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                r.BodyweightKg))];
-        _latestBodyweight = _bodyweightEntries.FirstOrDefault();
-        BuildBodyweightChart();
+                r.BodyweightKg))
+            .FirstOrDefault();
     }
 
     private async Task RefreshBodyweightAsync()
     {
-        MapBodyweightEntries(await HistoryRepo.GetBodyweightLogsAsync(BodyweightEntryLimit));
-    }
-
-    private void BuildBodyweightChart()
-    {
-        var chronological = _bodyweightEntries.AsEnumerable().Reverse().ToList();
-        _bodyweightLabels = chronological
-            .Select(e => UiDateFormats.DateOnlyCompact(e.DateOnly))
-            .ToArray();
-        _bodyweightSeries = [ new ChartSeries<double>
-        {
-            Name = "Bodyweight",
-            Data = chronological.Select(e => e.BodyweightKg).ToArray()
-        } ];
-
-        var values = chronological.Select(e => e.BodyweightKg).ToList();
-        var maxValue = values.Count > 0 ? values.Max() : 0;
-        _bodyweightChartOptions = new LineChartOptions
-        {
-            YAxisRequireZeroPoint = false,
-            ShowDataMarkers = true,
-            MaxNumYAxisTicks = 5,
-            YAxisToStringFunc = value => value.ToString("0.#", CultureInfo.InvariantCulture),
-            YAxisSuggestedMax = maxValue > 0 ? ChartAxisScale.SuggestYAxisMax(maxValue) : null,
-            XAxisLabelRotation = chronological.Count > 6 ? -35 : 0
-        };
+        MapLatestBodyweight(await HistoryRepo.GetBodyweightLogsAsync(1));
     }
 
     private bool CanLogBodyweight => _bodyweightInput is { } weight && weight > 0;
@@ -325,13 +267,6 @@
         _bodyweightDefault = kg;
         await RefreshBodyweightAsync();
         Snackbar.Add("Bodyweight logged.", Severity.Success);
-    }
-
-    private async Task DeleteBodyweightAsync(BodyweightEntry entry)
-    {
-        await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
-        await RefreshBodyweightAsync();
-        Snackbar.Add("Entry removed.", Severity.Info);
     }
 
     private async Task UpdateSessionsListAsync()

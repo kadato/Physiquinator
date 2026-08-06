@@ -1,19 +1,16 @@
 @page "/settings"
 @using Physiquinator.Core.Services
 @using Physiquinator.Core.Models
-@using Physiquinator.Core.Data
 @using Physiquinator.UI.Components.Shared
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
 @inject INotificationService RestNotifications
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryService HistoryService
-@inject WorkoutHistoryRepository HistoryRepo
 @inject AppDataResetService AppDataReset
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject UserProfileService UserProfileService
 @inject WorkoutScheduleService WorkoutSchedule
 @inject IFileTransferService FileTransfer
 @inject IAppUpdateService AppUpdateService
@@ -110,34 +107,6 @@
                             </MudButton>
                         }
                     </MudStack>
-                </div>
-            </ChildContent>
-        </MudExpansionPanel>
-
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.MonitorWeight" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Bodyweight</span>
-                        <span class="settings-panel__subtitle">For bodyweight exercise math</span>
-                    </span>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <div class="settings-panel__content">
-                    <MudNumericField T="double?"
-                                     Label="Bodyweight (kg)"
-                                     Variant="Variant.Filled"
-                                     Value="_bodyweight"
-                                     ValueChanged="OnBodyweightChanged"
-                                     Min="0"
-                                     Max="500"
-                                     Format="0.##"
-                                     Clearable="true" />
-                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                        Provide your bodyweight to calculate absolute weight and total volume for bodyweight exercises (optional).
-                    </MudText>
                 </div>
             </ChildContent>
         </MudExpansionPanel>
@@ -364,8 +333,6 @@
     private bool _overlayPermissionGranted = true;
     private int _planCount;
     private int _historySessionCount;
-    private UserProfile _activeProfile = new();
-    private double? _bodyweight;
     private int _addTimeSeconds = 30;
 
     private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
@@ -417,8 +384,6 @@
         _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
-        _activeProfile = UserProfileService.GetActiveProfile();
-        _bodyweight = _activeProfile.BodyweightKg;
         _currentVersion = AppUpdateService.CurrentVersion.ToString();
         _autoCheckEnabled = AppUpdateSettings.AutoCheckEnabled;
     }
@@ -481,21 +446,6 @@
     private async Task OnThemePreferenceChanged(string preference)
     {
         await ThemeService.SetPreferenceAsync(preference);
-    }
-
-    private async Task OnBodyweightChanged(double? value)
-    {
-        _bodyweight = value;
-        if (_activeProfile != null)
-        {
-            UserProfileService.UpdateBodyweight(_activeProfile.Id, value);
-            _activeProfile.BodyweightKg = value;
-            if (value is { } kg)
-            {
-                var today = DateOnly.FromDateTime(TimeProvider.GetLocalNow().Date);
-                await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
-            }
-        }
     }
 
     private async Task RefreshPlanCountAsync()

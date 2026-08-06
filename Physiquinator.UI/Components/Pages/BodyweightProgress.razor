@@ -1,0 +1,308 @@
+@page "/history/bodyweight"
+@using System.Globalization
+@using MudBlazor.Charts
+@inject WorkoutHistoryRepository HistoryRepo
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageHeader Title="Bodyweight" OnBack="GoHistory" />
+
+@if (!_ready)
+{
+    <LoadingCenter />
+}
+else if (_allEntries.Count == 0)
+{
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            No bodyweight logged yet. Use the quick log on the history page to record your weight.
+        </MudText>
+    </MudStack>
+}
+else
+{
+    <MudStack Spacing="3">
+        <div class="bodyweight-range-row">
+            <MudSelect T="BodyweightTimeRange"
+                       Label="Time range"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Margin="Margin.Dense"
+                       AnchorOrigin="Origin.BottomRight"
+                       Class="bodyweight-range-row__select"
+                       Value="_range"
+                       ValueChanged="OnRangeChanged">
+                @foreach (var range in Enum.GetValues<BodyweightTimeRange>())
+                {
+                    <MudSelectItem Value="@range">@RangeLabel(range)</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+
+        @if (_entries.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                No entries logged in the selected time range.
+            </MudText>
+        }
+        else
+        {
+            <div class="history-stats">
+                <MudPaper Class="history-stat" Elevation="0">
+                    <span class="history-stat__value">@FormatKg(_entries[0].BodyweightKg)</span>
+                    <span class="history-stat__label">Latest</span>
+                </MudPaper>
+                <MudPaper Class="history-stat" Elevation="0">
+                    <span class="history-stat__value">@TrendLabel</span>
+                    <span class="history-stat__label">Change</span>
+                </MudPaper>
+                <MudPaper Class="history-stat" Elevation="0">
+                    <span class="history-stat__value">@_entries.Count</span>
+                    <span class="history-stat__label">Entries</span>
+                </MudPaper>
+            </div>
+
+            <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-1">Trend</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
+                    Logged weight over time.
+                </MudText>
+                @if (_hasChartData)
+                {
+                    <div class="bodyweight-chart">
+                        <MudChart T="double"
+                                  ChartType="ChartType.Line"
+                                  ChartSeries="@_chartSeries"
+                                  ChartLabels="@_chartLabels"
+                                  ChartOptions="@_chartOptions"
+                                  Width="100%"
+                                  Height="@_chartHeightPx" />
+                    </div>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        Log your weight each day to see the trend here.
+                    </MudText>
+                }
+            </MudPaper>
+
+            <MudPaper Class="premium-table bodyweight-table" Elevation="0">
+                <MudTable Items="_entries" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
+                    <HeaderContent>
+                        <MudTh>Date</MudTh>
+                        <MudTh>Weight</MudTh>
+                        <MudTh Class="bodyweight-table__action" />
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@UiDateFormats.DateOnlyCompact(context.DateOnly)</MudTd>
+                        <MudTd>@FormatKg(context.BodyweightKg) kg</MudTd>
+                        <MudTd Class="bodyweight-table__action">
+                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           Class="bodyweight-table__delete"
+                                           aria-label="Delete entry"
+                                           OnClick="@(() => DeleteEntryAsync(context))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        }
+    </MudStack>
+}
+
+@code {
+    private enum BodyweightTimeRange
+    {
+        OneMonth,
+        ThreeMonths,
+        SixMonths,
+        OneYear,
+        AllTime
+    }
+
+    private const int EntryLimit = 1000;
+    private const int MaxChartAxisLabels = 6;
+    private const int MaxYAxisTicks = 5;
+
+    /// <summary>Show per-entry dots only for sparse series; dense series render as a clean line.</summary>
+    private const int MaxChartMarkerEntries = 60;
+
+    private sealed record BodyweightEntry(DateOnly DateOnly, double BodyweightKg);
+
+    private bool _ready;
+    private IReadOnlyList<BodyweightEntry> _allEntries = Array.Empty<BodyweightEntry>();
+    private IReadOnlyList<BodyweightEntry> _entries = Array.Empty<BodyweightEntry>();
+    private BodyweightTimeRange _range = BodyweightTimeRange.AllTime;
+    private string[] _chartLabels = Array.Empty<string>();
+    private sealed class ChartSeriesList : List<ChartSeries<double>> { }
+    private ChartSeriesList _chartSeries = [];
+    private LineChartOptions _chartOptions = new();
+    private string _chartHeightPx = "280px";
+    private bool _hasChartData;
+
+    private string TrendLabel
+    {
+        get
+        {
+            if (_entries.Count < 2) return "—";
+            var diff = _entries[0].BodyweightKg - _entries[^1].BodyweightKg;
+            var sign = diff >= 0 ? "+" : "-";
+            return $"{sign}{FormatKg(Math.Abs(diff))} kg";
+        }
+    }
+
+    private static string FormatKg(double kg) => ExerciseWeightFormatter.FormatKg(kg);
+
+    private void GoHistory() => Navigation.NavigateTo(AppRoutes.History);
+
+    private void OnRangeChanged(BodyweightTimeRange range)
+    {
+        _range = range;
+        ApplyRangeAndRebuild();
+    }
+
+    private static int RangeDays(BodyweightTimeRange range) => range switch
+    {
+        BodyweightTimeRange.OneMonth => 30,
+        BodyweightTimeRange.ThreeMonths => 90,
+        BodyweightTimeRange.SixMonths => 180,
+        BodyweightTimeRange.OneYear => 365,
+        _ => int.MaxValue
+    };
+
+    private static string RangeLabel(BodyweightTimeRange range) => range switch
+    {
+        BodyweightTimeRange.OneMonth => "Last month",
+        BodyweightTimeRange.ThreeMonths => "Last 3 months",
+        BodyweightTimeRange.SixMonths => "Last 6 months",
+        BodyweightTimeRange.OneYear => "Last year",
+        _ => "All time"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allEntries = await LoadEntriesAsync();
+        ApplyRangeAndRebuild();
+        _ready = true;
+    }
+
+    private async Task<IReadOnlyList<BodyweightEntry>> LoadEntriesAsync()
+    {
+        var rows = await HistoryRepo.GetBodyweightLogsAsync(EntryLimit);
+        return [.. rows
+            .Where(r => DateOnly.TryParseExact(
+                r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            .Select(r => new BodyweightEntry(
+                DateOnly.ParseExact(r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                r.BodyweightKg))];
+    }
+
+    private void ApplyRangeAndRebuild()
+    {
+        _entries = ApplyRange(_allEntries);
+        BuildChartData();
+    }
+
+    private IReadOnlyList<BodyweightEntry> ApplyRange(IReadOnlyList<BodyweightEntry> entries)
+    {
+        if (_range == BodyweightTimeRange.AllTime)
+            return entries;
+
+        var cutoff = DateOnly.FromDateTime(DateTime.Today).AddDays(-RangeDays(_range));
+        return entries.Where(e => e.DateOnly >= cutoff).ToArray();
+    }
+
+    private void BuildChartData()
+    {
+        _hasChartData = _entries.Count >= 2;
+        if (!_hasChartData)
+        {
+            _chartLabels = Array.Empty<string>();
+            _chartSeries = [];
+            return;
+        }
+
+        var chronological = _entries.AsEnumerable().Reverse().ToList();
+        _chartLabels = BuildSparseChartLabels(
+            chronological.Select(e => e.DateOnly).ToList(),
+            MaxChartAxisLabels);
+        var values = chronological.Select(e => e.BodyweightKg).ToArray();
+        _chartSeries = [ new ChartSeries<double>
+        {
+            Name = "Bodyweight",
+            Data = values
+        } ];
+
+        var maxValue = values.DefaultIfEmpty(0).Max();
+        var rotateXLabels = chronological.Count > 4;
+        _chartHeightPx = rotateXLabels ? "300px" : "280px";
+        _chartOptions = new LineChartOptions
+        {
+            YAxisRequireZeroPoint = false,
+            ShowDataMarkers = chronological.Count <= MaxChartMarkerEntries,
+            MaxNumYAxisTicks = MaxYAxisTicks + 1,
+            YAxisTicks = SuggestYAxisUnits(values.Min(), maxValue, MaxYAxisTicks),
+            YAxisToStringFunc = value => value.ToString("0.#", CultureInfo.InvariantCulture),
+            XAxisLabelRotation = rotateXLabels ? -35 : 0
+        };
+    }
+
+    /// <summary>
+    /// Smallest "nice" integer grid step that keeps the number of Y-axis lines at or
+    /// below <paramref name="maxLines"/>. MudBlazor's default 20-unit grid wastes most
+    /// of the vertical space for bodyweight values, so the step is derived from the
+    /// data range to keep the axis hugging the plotted values.
+    /// </summary>
+    private static int SuggestYAxisUnits(double minValue, double maxValue, int maxLines)
+    {
+        var range = maxValue - minValue;
+        if (range <= 0)
+            return 1;
+
+        int[] niceUnits = [1, 2, 5, 10, 20, 50, 100];
+        foreach (var unit in niceUnits)
+        {
+            if (range / unit <= maxLines)
+                return unit;
+        }
+
+        return niceUnits[^1];
+    }
+
+    private static string[] BuildSparseChartLabels(IReadOnlyList<DateOnly> dates, int maxLabels)
+    {
+        var count = dates.Count;
+        if (count == 0)
+            return Array.Empty<string>();
+
+        maxLabels = Math.Clamp(maxLabels, 2, 12);
+        var labels = new string[count];
+
+        if (count <= maxLabels)
+        {
+            for (var i = 0; i < count; i++)
+                labels[i] = UiDateFormats.DateOnlyCompact(dates[i]);
+            return labels;
+        }
+
+        for (var tick = 0; tick < maxLabels; tick++)
+        {
+            var index = tick == maxLabels - 1
+                ? count - 1
+                : (int)Math.Round(tick * (count - 1) / (double)(maxLabels - 1));
+            labels[index] = UiDateFormats.DateOnlyCompact(dates[index]);
+        }
+
+        return labels;
+    }
+
+    private async Task DeleteEntryAsync(BodyweightEntry entry)
+    {
+        await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
+        _allEntries = await LoadEntriesAsync();
+        ApplyRangeAndRebuild();
+        Snackbar.Add("Entry removed.", Severity.Info);
+    }
+}

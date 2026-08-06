@@ -11,6 +11,9 @@ public interface IAppUpdateService
     /// <summary>Version of the installed app.</summary>
     Version CurrentVersion { get; }
 
+    /// <summary>True when in-app updates are supported on the current platform.</summary>
+    bool IsSupported { get; }
+
     /// <summary>Queries GitHub for the latest release and resolves the download for this platform.</summary>
     Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default);
 

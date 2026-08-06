@@ -8,6 +8,8 @@ public sealed class NoopAppUpdateService : IAppUpdateService
     public Version CurrentVersion { get; } =
         typeof(NoopAppUpdateService).Assembly.GetName().Version ?? new Version(1, 0, 0);
 
+    public bool IsSupported => false;
+
     public Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
         => Task.FromResult(new UpdateCheckResult(null, false, null));
 

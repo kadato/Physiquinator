@@ -233,70 +233,73 @@
 
     <MudText Typo="Typo.caption" Class="settings-group-label">About</MudText>
     <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Updates</span>
-                        <span class="settings-panel__subtitle">Version @_currentVersion</span>
-                    </span>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <div class="settings-panel__content">
-                    <MudSwitch T="bool"
-                               Label="Check for updates automatically"
-                               Value="_autoCheckEnabled"
-                               ValueChanged="OnAutoCheckEnabledChanged" />
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available.
-                        Turn it off to never be notified about updates.
-                    </MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        New releases are published on GitHub and can be installed from here.
-                    </MudText>
-                    <div class="settings-btn-group">
-                        <MudButton Variant="Variant.Outlined"
-                                   Disabled="@_checkingForUpdates"
-                                   OnClick="CheckForUpdatesAsync"
-                                   StartIcon="@Icons.Material.Filled.SystemUpdate">
-                            Check for updates
-                        </MudButton>
+        @if (AppUpdateService.IsSupported)
+        {
+            <MudExpansionPanel Class="settings-panel">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Updates</span>
+                            <span class="settings-panel__subtitle">Version @_currentVersion</span>
+                        </span>
                     </div>
-                    @if (_checkingForUpdates)
-                    {
-                        <MudProgressLinear Indeterminate="true" Class="mt-3" Color="Color.Primary" />
-                    }
-                    @if (_latestRelease != null)
-                    {
-                        <div class="mt-3">
-                            <MudText Typo="Typo.body2">
-                                Latest release: <strong>@_latestRelease.Tag</strong>
-                                @if (_latestRelease.PublishedAt is { } published)
-                                {
-                                    <span class="mud-text-secondary">(@published.ToLocalTime():d)</span>
-                                }
-                            </MudText>
-                            @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))
-                            {
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                    A newer version is available, but in-app updates are not supported on this platform.
-                                </MudText>
-                            }
-                            else if (_updateAvailable)
-                            {
-                                <MudText Typo="Typo.body2" Color="Color.Primary">A newer version is available.</MudText>
-                            }
-                            else
-                            {
-                                <MudText Typo="Typo.body2" Color="Color.Success">You are on the latest version.</MudText>
-                            }
+                </TitleContent>
+                <ChildContent>
+                    <div class="settings-panel__content">
+                        <MudSwitch T="bool"
+                                   Label="Check for updates automatically"
+                                   Value="_autoCheckEnabled"
+                                   ValueChanged="OnAutoCheckEnabledChanged" />
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                            When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available.
+                            Turn it off to never be notified about updates.
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                            New releases are published on GitHub and can be installed from here.
+                        </MudText>
+                        <div class="settings-btn-group">
+                            <MudButton Variant="Variant.Outlined"
+                                       Disabled="@_checkingForUpdates"
+                                       OnClick="CheckForUpdatesAsync"
+                                       StartIcon="@Icons.Material.Filled.SystemUpdate">
+                                Check for updates
+                            </MudButton>
                         </div>
-                    }
-                </div>
-            </ChildContent>
-        </MudExpansionPanel>
+                        @if (_checkingForUpdates)
+                        {
+                            <MudProgressLinear Indeterminate="true" Class="mt-3" Color="Color.Primary" />
+                        }
+                        @if (_latestRelease != null)
+                        {
+                            <div class="mt-3">
+                                <MudText Typo="Typo.body2">
+                                    Latest release: <strong>@_latestRelease.Tag</strong>
+                                    @if (_latestRelease.PublishedAt is { } published)
+                                    {
+                                        <span class="mud-text-secondary">(@published.ToLocalTime():d)</span>
+                                    }
+                                </MudText>
+                                @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))
+                                {
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                        A newer version is available, but in-app updates are not supported on this platform.
+                                    </MudText>
+                                }
+                                else if (_updateAvailable)
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Primary">A newer version is available.</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Success">You are on the latest version.</MudText>
+                                }
+                            </div>
+                        }
+                    </div>
+                </ChildContent>
+            </MudExpansionPanel>
+        }
 
         <MudExpansionPanel Class="settings-panel settings-panel--danger">
             <TitleContent>

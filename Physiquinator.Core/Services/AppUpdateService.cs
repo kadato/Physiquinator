@@ -19,6 +19,9 @@ public sealed class AppUpdateService : IAppUpdateService
     public Version CurrentVersion { get; }
 
     /// <inheritdoc />
+    public bool IsSupported => _installer.IsSupported;
+
+    /// <inheritdoc />
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
         GitHubRelease? release = await _client.GetLatestReleaseAsync(cancellationToken);

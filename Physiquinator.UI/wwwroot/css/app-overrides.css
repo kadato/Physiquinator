@@ -591,14 +591,17 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     border-radius: 12px;
 }
 
-.mud-input input[type="number"]::-webkit-inner-spin-button,
-.mud-input input[type="number"]::-webkit-outer-spin-button {
+/* Hide number input spin buttons everywhere (global — scoped CSS bundle is not shipped in MAUI) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
+    appearance: none;
     margin: 0;
 }
 
-.mud-input input[type="number"] {
+input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .status-bar-safe-area {

@@ -1,7 +1,10 @@
+@using Markdig
+@using Markdig.Syntax
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Core.Models
 @using Physiquinator.Core.Services
 @inject IAppUpdateService AppUpdateService
+@inject AppUpdateSettingsService AppUpdateSettings
 @inject ISnackbar Snackbar
 @inject ILogger<UpdateDialog> Logger
 
@@ -25,7 +28,7 @@
             {
                 <div class="update-dialog__notes">
                     <MudText Typo="Typo.overline" Class="mud-text-secondary">What's new</MudText>
-                    <div class="update-dialog__notes-body">@Release.Notes</div>
+                    <div class="update-dialog__notes-body markdown-body">@((MarkupString)RenderedNotes)</div>
                 </div>
             }
 
@@ -76,6 +79,13 @@
 
     private bool _downloading;
     private double _downloadProgress;
+
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .DisableHtml()
+        .Build();
+
+    private string RenderedNotes => Markdown.ToHtml(Release.Notes ?? string.Empty, MarkdownPipeline);
 
     private bool Downloadable => !string.IsNullOrEmpty(DownloadUrl);
 

@@ -99,21 +99,23 @@
             }
 
             <div class="bodyweight-log-row">
-                <MudNumericField T="double?"
-                                 Class="bodyweight-log-row__input"
-                                 Label="Today's weight (kg)"
-                                 Variant="Variant.Outlined"
-                                 Min="0"
-                                 Max="500"
-                                 Format="0.##"
-                                 @bind-Value="_bodyweightInput" />
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.MonitorWeight"
-                           Disabled="_bodyweightInput is not { } or <= 0"
-                           OnClick="LogBodyweightAsync">
+                <SetMetricStepper Value="@_bodyweightInput"
+                                  ValueChanged="OnBodyweightInputChanged"
+                                  Step="0.5"
+                                  Min="1"
+                                  Max="500"
+                                  IsInteger="false"
+                                  Format="0.##"
+                                  Compact="true"
+                                  Unit="kg"
+                                  Placeholder="@_bodyweightDefault" />
+                <button type="button"
+                        class="bodyweight-log-row__log-btn"
+                        @onclick="LogBodyweightAsync"
+                        disabled="@(!CanLogBodyweight)">
+                    <MudIcon Icon="@Icons.Material.Filled.MonitorWeight" Size="Size.Small" />
                     Log
-                </MudButton>
+                </button>
             </div>
 
             @if (_bodyweightEntries.Count > 0)
@@ -229,6 +231,7 @@
     private List<BodyweightEntry> _bodyweightEntries = [];
     private BodyweightEntry? _latestBodyweight;
     private double? _bodyweightInput;
+    private double? _bodyweightDefault;
     private string[] _bodyweightLabels = Array.Empty<string>();
     private sealed class BodyweightSeriesList : List<ChartSeries<double>> { }
     private BodyweightSeriesList _bodyweightSeries = [];
@@ -253,6 +256,9 @@
         _sessions = await sessionsTask;
         (_summary, _activityByDay) = await statsTask;
         MapBodyweightEntries(await bodyweightTask);
+        _bodyweightInput = _latestBodyweight?.BodyweightKg
+            ?? UserProfileService.GetActiveProfile()?.BodyweightKg;
+        _bodyweightDefault = _bodyweightInput;
         await UpdateSessionsListAsync();
     }
 
@@ -298,10 +304,15 @@
         };
     }
 
+    private bool CanLogBodyweight => _bodyweightInput is { } weight && weight > 0;
+
+    private void OnBodyweightInputChanged(double? value) => _bodyweightInput = value;
+
     private async Task LogBodyweightAsync()
     {
-        if (_bodyweightInput is not { } kg || kg <= 0) return;
+        if (!CanLogBodyweight) return;
 
+        var kg = _bodyweightInput!.Value;
         var today = DateOnly.FromDateTime(DateTime.Today);
         await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
 
@@ -311,7 +322,7 @@
             UserProfileService.UpdateBodyweight(profile.Id, kg);
         }
 
-        _bodyweightInput = null;
+        _bodyweightDefault = kg;
         await RefreshBodyweightAsync();
         Snackbar.Add("Bodyweight logged.", Severity.Success);
     }

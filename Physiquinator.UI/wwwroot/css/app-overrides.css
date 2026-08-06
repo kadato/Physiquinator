@@ -1679,13 +1679,87 @@ button.heatmap-cell:disabled {
 
 .bodyweight-log-row {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 0.75rem;
 }
 
-.bodyweight-log-row__input {
-    flex: 1;
+.bodyweight-log-row .set-metric-stepper__row {
+    height: 3.5rem;
     min-width: 0;
+}
+
+.bodyweight-log-row .set-metric-stepper__btn--compact {
+    display: grid;
+    place-items: center;
+    flex: 0 0 3.5rem;
+    width: 3.5rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 12px;
+    border: none;
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 22%, var(--mud-palette-surface));
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s, transform 0.1s;
+}
+
+.bodyweight-log-row .set-metric-stepper__btn--compact:active {
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 40%, var(--mud-palette-surface));
+    transform: scale(0.93);
+}
+
+.bodyweight-log-row .set-metric-stepper__value--compact,
+.bodyweight-log-row .set-metric-stepper__input--compact {
+    min-height: 3.5rem;
+    border-radius: 12px;
+}
+
+.bodyweight-log-row .set-metric-stepper__value-unit {
+    font-size: 0.875rem;
+    font-weight: 600;
+    opacity: 0.6;
+    margin-left: 0.35rem;
+}
+
+.bodyweight-log-row__log-btn {
+    flex: 0 0 auto;
+    min-width: 6.25rem;
+    height: 3.5rem;
+    padding: 0 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border: none;
+    border-radius: 12px;
+    background-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.bodyweight-log-row__log-btn:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+}
+
+.bodyweight-log-row__log-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .bodyweight-entries {

@@ -51,6 +51,7 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
+        <MudButton OnClick="NeverNotify" Disabled="_downloading">Don't ask again</MudButton>
         <MudButton OnClick="Close" Disabled="_downloading">Later</MudButton>
         @if (Downloadable)
         {
@@ -125,4 +126,10 @@
     }
 
     private void Close() => MudDialog.Close(DialogResult.Ok(false));
+
+    private void NeverNotify()
+    {
+        AppUpdateSettings.SetAutoCheckEnabled(false);
+        MudDialog.Close(DialogResult.Ok(false));
+    }
 }

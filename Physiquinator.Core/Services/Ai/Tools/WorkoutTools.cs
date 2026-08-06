@@ -17,7 +17,7 @@ public sealed class GetWorkoutPlansTool(WorkoutPlanService planService) : IAiToo
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
-        var plans = await planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
         var result = plans.Select(p => new
         {
             p.Id,
@@ -79,7 +79,7 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
         var planName = root.GetProperty(NameProperty).GetString() ?? "New Workout Plan";
 
@@ -97,13 +97,13 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
     private static List<ExercisePlan> ParseExercisesJson(JsonElement root)
     {
         var exercises = new List<ExercisePlan>();
-        if (!root.TryGetProperty("exercises", out var exArray) || exArray.ValueKind != JsonValueKind.Array)
+        if (!root.TryGetProperty("exercises", out JsonElement exArray) || exArray.ValueKind != JsonValueKind.Array)
         {
             return exercises;
         }
 
         var order = 0;
-        foreach (var exElem in exArray.EnumerateArray())
+        foreach (JsonElement exElem in exArray.EnumerateArray())
         {
             exercises.Add(WorkoutPlanToolHelper.ParseExerciseItem(exElem, order++));
         }
@@ -154,25 +154,25 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty(PlanIdProperty, out var planIdProp) || !Guid.TryParse(planIdProp.GetString(), out var planId))
+        if (!root.TryGetProperty(PlanIdProperty, out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid or missing planId" });
         }
 
-        var plan = await planService.GetPlanAsync(planId);
+        WorkoutPlan? plan = await planService.GetPlanAsync(planId);
         if (plan == null)
         {
             return JsonSerializer.Serialize(new { success = false, error = $"Plan with ID {planId} not found" });
         }
 
-        if (root.TryGetProperty(NameProperty, out var nameProp) && !string.IsNullOrWhiteSpace(nameProp.GetString()))
+        if (root.TryGetProperty(NameProperty, out JsonElement nameProp) && !string.IsNullOrWhiteSpace(nameProp.GetString()))
         {
             plan.Name = nameProp.GetString()!;
         }
 
-        if (root.TryGetProperty("exercises", out var exArray) && exArray.ValueKind == JsonValueKind.Array)
+        if (root.TryGetProperty("exercises", out JsonElement exArray) && exArray.ValueKind == JsonValueKind.Array)
         {
             plan.Exercises = ParseUpdatedExercises(exArray);
         }
@@ -186,7 +186,7 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
         var updatedExercises = new List<ExercisePlan>();
         var order = 0;
 
-        foreach (var exElem in exArray.EnumerateArray())
+        foreach (JsonElement exElem in exArray.EnumerateArray())
         {
             updatedExercises.Add(WorkoutPlanToolHelper.ParseExerciseItem(exElem, order++));
         }
@@ -216,9 +216,9 @@ public sealed class DeleteWorkoutPlanTool(WorkoutPlanService planService) : IAiT
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty(PlanIdProperty, out var planIdProp) || !Guid.TryParse(planIdProp.GetString(), out var planId))
+        if (!root.TryGetProperty(PlanIdProperty, out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid planId" });
         }
@@ -233,11 +233,11 @@ internal static class WorkoutPlanToolHelper
     public static ExercisePlan ParseExerciseItem(JsonElement exElem, int order)
     {
         var exName = exElem.GetProperty("name").GetString() ?? "Exercise";
-        var exId = exElem.TryGetProperty("id", out var idProp) && Guid.TryParse(idProp.GetString(), out var g) ? g : Guid.NewGuid();
-        var targetSets = exElem.TryGetProperty("targetSets", out var ts) && ts.TryGetInt32(out var tsVal) ? tsVal : 4;
-        var targetReps = exElem.TryGetProperty("targetReps", out var tr) && tr.TryGetInt32(out var trVal) ? trVal : 10;
-        var targetWeight = exElem.TryGetProperty("targetWeightKg", out var tw) && tw.TryGetDouble(out var twVal) ? twVal : (double?)null;
-        var restSeconds = exElem.TryGetProperty("restTimerSeconds", out var rt) && rt.TryGetInt32(out var rtVal) ? rtVal : 60;
+        Guid exId = exElem.TryGetProperty("id", out JsonElement idProp) && Guid.TryParse(idProp.GetString(), out Guid g) ? g : Guid.NewGuid();
+        var targetSets = exElem.TryGetProperty("targetSets", out JsonElement ts) && ts.TryGetInt32(out var tsVal) ? tsVal : 4;
+        var targetReps = exElem.TryGetProperty("targetReps", out JsonElement tr) && tr.TryGetInt32(out var trVal) ? trVal : 10;
+        var targetWeight = exElem.TryGetProperty("targetWeightKg", out JsonElement tw) && tw.TryGetDouble(out var twVal) ? twVal : (double?)null;
+        var restSeconds = exElem.TryGetProperty("restTimerSeconds", out JsonElement rt) && rt.TryGetInt32(out var rtVal) ? rtVal : 60;
 
         return new ExercisePlan
         {

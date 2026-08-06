@@ -23,7 +23,7 @@ public sealed class AiAssistantService(
     public AiProviderSettings GetSettings()
     {
         var providerStr = preferences.Get(PreferenceKeys.AiProvider, AiProviderType.OpenAI.ToString());
-        Enum.TryParse<AiProviderType>(providerStr, true, out var provider);
+        Enum.TryParse<AiProviderType>(providerStr, true, out AiProviderType provider);
 
         return new AiProviderSettings
         {
@@ -49,7 +49,7 @@ public sealed class AiAssistantService(
 
     public Task<List<string>> FetchAvailableModelsAsync()
     {
-        var settings = GetSettings();
+        AiProviderSettings settings = GetSettings();
         return client.GetAvailableModelsAsync(settings);
     }
 
@@ -65,9 +65,9 @@ public sealed class AiAssistantService(
         if (string.IsNullOrWhiteSpace(userPrompt)) return;
 
         AddUserMessage(userPrompt);
-        var assistantMessage = AddInitialAssistantMessage();
+        AiChatMessage assistantMessage = AddInitialAssistantMessage();
 
-        var settings = GetSettings();
+        AiProviderSettings settings = GetSettings();
         if (!IsConfigured(settings))
         {
             SetNotConfiguredError(assistantMessage);
@@ -123,11 +123,11 @@ public sealed class AiAssistantService(
         AiChatMessage currentAssistantMessage)
     {
         const int maxToolLoops = 5;
-        var assistantMsg = currentAssistantMessage;
+        AiChatMessage assistantMsg = currentAssistantMessage;
 
         for (var loop = 0; loop < maxToolLoops; loop++)
         {
-            var (executedToolCalls, errorMessage) = await ConsumeResponseStreamAsync(settings, toolsSchema, assistantMsg);
+            (List<AiToolCallInfo>? executedToolCalls, var errorMessage) = await ConsumeResponseStreamAsync(settings, toolsSchema, assistantMsg);
 
             if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -174,7 +174,7 @@ public sealed class AiAssistantService(
         var reasoningBuilder = new StringBuilder();
         string? errorMessage = null;
 
-        await foreach (var chunk in client.StreamChatCompletionAsync(settings, _apiHistory, toolsSchema))
+        await foreach (StreamingChatChunk chunk in client.StreamChatCompletionAsync(settings, _apiHistory, toolsSchema))
         {
 
             if (chunk.IsError)
@@ -236,8 +236,8 @@ public sealed class AiAssistantService(
 
         for (var i = 0; i < chunk.ToolCalls.Count; i++)
         {
-            var tc = chunk.ToolCalls[i];
-            if (!accumulator.TryGetValue(i, out var acc))
+            AiToolCallInfo tc = chunk.ToolCalls[i];
+            if (!accumulator.TryGetValue(i, out (string Id, string Name, StringBuilder Args) acc))
             {
                 acc = (tc.Id, tc.Name, new StringBuilder());
             }
@@ -282,7 +282,7 @@ public sealed class AiAssistantService(
             Timestamp = DateTime.Now
         });
 
-        foreach (var toolCall in toolCalls)
+        foreach (AiToolCallInfo toolCall in toolCalls)
         {
             var toolResultJson = await toolRegistry.ExecuteToolAsync(toolCall.Name, toolCall.ArgumentsJson);
             _apiHistory.Add(new AiChatMessage
@@ -300,7 +300,7 @@ public sealed class AiAssistantService(
 
     private List<AiChatMessage> BuildApiMessageHistory(AiProviderSettings settings)
     {
-        var activeProfile = userProfileService.GetActiveProfile();
+        UserProfile activeProfile = userProfileService.GetActiveProfile();
         var activeBw = activeProfile.BodyweightKg?.ToString("F1", CultureInfo.InvariantCulture) ?? "not logged";
 
         var systemPrompt = $"""
@@ -339,7 +339,7 @@ public sealed class AiAssistantService(
             fresh.AddRange(_apiHistory.Where(m => m.Role != AiMessageRole.System));
 
             // Append the latest user message that was just added to _messages
-            var latestUser = _messages.LastOrDefault(m => m.Role == AiMessageRole.User);
+            AiChatMessage? latestUser = _messages.LastOrDefault(m => m.Role == AiMessageRole.User);
             if (latestUser != null)
             {
                 fresh.Add(new AiChatMessage

@@ -26,7 +26,7 @@ public sealed class AiToolRegistry(IEnumerable<IAiTool> tools)
 
     public async Task<string> ExecuteToolAsync(string name, string argumentsJson)
     {
-        if (_toolsByName.TryGetValue(name, out var tool))
+        if (_toolsByName.TryGetValue(name, out IAiTool? tool))
         {
             try
             {

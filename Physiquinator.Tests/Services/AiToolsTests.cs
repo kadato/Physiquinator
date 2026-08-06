@@ -1,9 +1,7 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
-using Physiquinator.Core.Services.Ai;
 using Physiquinator.Core.Services.Ai.Tools;
-using Physiquinator.Tests.TestDoubles;
 using System.Text.Json;
 using Xunit;
 
@@ -15,7 +13,7 @@ public class AiToolsTests
     {
         var dbPath = Path.Combine(Path.GetTempPath(), $"physiquinator_ai_test_{Guid.NewGuid():N}.db");
         var db = new AppDatabase(dbPath);
-        var time = TimeProvider.System;
+        TimeProvider time = TimeProvider.System;
         var planRepo = new WorkoutPlanRepository(db);
         var historyRepo = new WorkoutHistoryRepository(db, time);
         var planService = new WorkoutPlanService(planRepo);
@@ -48,7 +46,7 @@ public class AiToolsTests
     [Fact]
     public async Task CreateWorkoutPlanTool_CreatesPlanInDatabase()
     {
-        var (_, _, _, planService, _) = CreateTestContext();
+        (AppDatabase _, WorkoutPlanRepository _, WorkoutHistoryRepository _, WorkoutPlanService? planService, UserProfileService _) = CreateTestContext();
         var tool = new CreateWorkoutPlanTool(planService);
 
         var args = JsonSerializer.Serialize(new
@@ -63,7 +61,7 @@ public class AiToolsTests
         var responseJson = await tool.ExecuteAsync(args);
         Assert.Contains("success", responseJson);
 
-        var plans = await planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
         Assert.Single(plans);
         Assert.Equal("Push Hypertrophy", plans[0].Name);
         Assert.Single(plans[0].Exercises);
@@ -73,7 +71,7 @@ public class AiToolsTests
     [Fact]
     public async Task LogBodyweightTool_SavesBodyweightToHistoryAndProfile()
     {
-        var (_, _, historyRepo, _, profileService) = CreateTestContext();
+        (AppDatabase _, WorkoutPlanRepository _, WorkoutHistoryRepository? historyRepo, WorkoutPlanService _, UserProfileService? profileService) = CreateTestContext();
         var tool = new LogBodyweightTool(historyRepo, profileService);
 
         var args = JsonSerializer.Serialize(new
@@ -85,10 +83,10 @@ public class AiToolsTests
         var responseJson = await tool.ExecuteAsync(args);
         Assert.Contains("success", responseJson);
 
-        var activeProfile = profileService.GetActiveProfile();
+        UserProfile activeProfile = profileService.GetActiveProfile();
         Assert.Equal(84.5, activeProfile.BodyweightKg);
 
-        var logs = await historyRepo.GetBodyweightLogsAsync(10);
+        IReadOnlyList<BodyweightLogEntity> logs = await historyRepo.GetBodyweightLogsAsync(10);
         Assert.Single(logs);
         Assert.Equal(84.5, logs[0].BodyweightKg);
     }
@@ -96,7 +94,7 @@ public class AiToolsTests
     [Fact]
     public async Task GenerateDeloadPlanWorkflowTool_CreatesDeloadPlan()
     {
-        var (_, _, _, planService, _) = CreateTestContext();
+        (AppDatabase _, WorkoutPlanRepository _, WorkoutHistoryRepository _, WorkoutPlanService? planService, UserProfileService _) = CreateTestContext();
         var basePlan = new WorkoutPlan
         {
             Id = Guid.NewGuid(),
@@ -115,10 +113,10 @@ public class AiToolsTests
         var responseJson = await tool.ExecuteAsync(args);
         Assert.Contains("success", responseJson);
 
-        var plans = await planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
         Assert.Equal(2, plans.Count);
 
-        var deloadPlan = plans.FirstOrDefault(p => p.Name.Contains("Deload"));
+        WorkoutPlan? deloadPlan = plans.FirstOrDefault(p => p.Name.Contains("Deload"));
         Assert.NotNull(deloadPlan);
         Assert.Equal(2, deloadPlan.Exercises[0].SetCount); // 50% volume of 4 sets
         Assert.Equal(108.0, deloadPlan.Exercises[0].DefaultWeightKg); // 90% of 120kg

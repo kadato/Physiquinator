@@ -1,5 +1,5 @@
 using Physiquinator.Core.Data;
-using Physiquinator.Core.Services;
+using Physiquinator.Core.Models;
 using System.Globalization;
 using System.Text.Json;
 
@@ -28,7 +28,7 @@ public sealed class GetBodyweightHistoryTool(WorkoutHistoryRepository repository
             try
             {
                 using var doc = JsonDocument.Parse(argumentsJson);
-                if (doc.RootElement.TryGetProperty("limit", out var limProp) && limProp.TryGetInt32(out var lVal))
+                if (doc.RootElement.TryGetProperty("limit", out JsonElement limProp) && limProp.TryGetInt32(out var lVal))
                 {
                     limit = lVal;
                 }
@@ -36,8 +36,8 @@ public sealed class GetBodyweightHistoryTool(WorkoutHistoryRepository repository
             catch { /* fallback to default */ }
         }
 
-        var activeProfile = profileService.GetActiveProfile();
-        var logs = await repository.GetBodyweightLogsAsync(limit);
+        UserProfile activeProfile = profileService.GetActiveProfile();
+        IReadOnlyList<BodyweightLogEntity> logs = await repository.GetBodyweightLogsAsync(limit);
 
         var result = new
         {
@@ -74,24 +74,24 @@ public sealed class LogBodyweightTool(WorkoutHistoryRepository repository, UserP
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("bodyweightKg", out var bwProp) || !bwProp.TryGetDouble(out var bwKg))
+        if (!root.TryGetProperty("bodyweightKg", out JsonElement bwProp) || !bwProp.TryGetDouble(out var bwKg))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid bodyweightKg value" });
         }
 
         var date = DateOnly.FromDateTime(DateTime.Today);
-        if (root.TryGetProperty("date", out var dateProp) &&
+        if (root.TryGetProperty("date", out JsonElement dateProp) &&
             !string.IsNullOrWhiteSpace(dateProp.GetString()) &&
-            DateOnly.TryParseExact(dateProp.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            DateOnly.TryParseExact(dateProp.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsedDate))
         {
             date = parsedDate;
         }
 
         await repository.UpsertBodyweightLogAsync(date, bwKg);
 
-        var activeProfile = profileService.GetActiveProfile();
+        UserProfile activeProfile = profileService.GetActiveProfile();
         profileService.UpdateBodyweight(activeProfile.Id, bwKg);
 
         return JsonSerializer.Serialize(new
@@ -120,10 +120,10 @@ public sealed class DeleteBodyweightTool(WorkoutHistoryRepository repository) : 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("date", out var dateProp) || string.IsNullOrWhiteSpace(dateProp.GetString()) ||
-            !DateOnly.TryParseExact(dateProp.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        if (!root.TryGetProperty("date", out JsonElement dateProp) || string.IsNullOrWhiteSpace(dateProp.GetString()) ||
+            !DateOnly.TryParseExact(dateProp.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid or missing date (expected yyyy-MM-dd)" });
         }

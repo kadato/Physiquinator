@@ -1,4 +1,3 @@
-using Physiquinator.Core.Services;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services.Ai.Tools;
@@ -53,9 +52,9 @@ public sealed class ChangeAppThemeTool(ThemeService themeService) : IAiTool
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("theme", out var themeProp) || string.IsNullOrWhiteSpace(themeProp.GetString()))
+        if (!root.TryGetProperty("theme", out JsonElement themeProp) || string.IsNullOrWhiteSpace(themeProp.GetString()))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Missing theme parameter" });
         }
@@ -99,14 +98,14 @@ public sealed class UpdateRestTimerSettingsTool(RestAlertSettingsService restSet
     public Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (root.TryGetProperty("enabled", out var enabledProp))
+        if (root.TryGetProperty("enabled", out JsonElement enabledProp))
         {
             restSettings.SetEnabled(enabledProp.GetBoolean());
         }
 
-        if (root.TryGetProperty("addTimeSeconds", out var secondsProp) && secondsProp.TryGetInt32(out var secVal))
+        if (root.TryGetProperty("addTimeSeconds", out JsonElement secondsProp) && secondsProp.TryGetInt32(out var secVal))
         {
             restSettings.SetAddTimeSeconds(secVal);
         }
@@ -142,17 +141,17 @@ public sealed class UpdateWorkoutScheduleTool(WorkoutScheduleService scheduleSer
     public Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("days", out var daysProp) || daysProp.ValueKind != JsonValueKind.Array)
+        if (!root.TryGetProperty("days", out JsonElement daysProp) || daysProp.ValueKind != JsonValueKind.Array)
         {
             return Task.FromResult(JsonSerializer.Serialize(new { success = false, error = "Invalid days array" }));
         }
 
         var parsedDays = new List<DayOfWeek>();
-        foreach (var dayElem in daysProp.EnumerateArray())
+        foreach (JsonElement dayElem in daysProp.EnumerateArray())
         {
-            if (Enum.TryParse<DayOfWeek>(dayElem.GetString(), true, out var day))
+            if (Enum.TryParse<DayOfWeek>(dayElem.GetString(), true, out DayOfWeek day))
             {
                 parsedDays.Add(day);
             }

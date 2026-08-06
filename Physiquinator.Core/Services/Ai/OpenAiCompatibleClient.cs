@@ -28,6 +28,8 @@ public sealed class StreamingChatChunk
 
 public sealed class OpenAiCompatibleClient(HttpClient httpClient)
 {
+    private const string ReasoningContentProperty = "reasoning_content";
+
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -43,7 +45,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
             AddAuthenticationHeader(request, settings);
             AddProviderHeaders(request, settings);
 
-            var httpResponse = await httpClient.SendAsync(request);
+            HttpResponseMessage httpResponse = await httpClient.SendAsync(request);
             if (!httpResponse.IsSuccessStatusCode) return [];
 
             var json = await httpResponse.Content.ReadAsStringAsync();
@@ -58,15 +60,15 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
     private static List<string> ParseModelsJson(string json)
     {
         using var doc = JsonDocument.Parse(json);
-        if (!doc.RootElement.TryGetProperty("data", out var dataElem) || dataElem.ValueKind != JsonValueKind.Array)
+        if (!doc.RootElement.TryGetProperty("data", out JsonElement dataElem) || dataElem.ValueKind != JsonValueKind.Array)
         {
             return [];
         }
 
         var modelList = new List<string>();
-        foreach (var item in dataElem.EnumerateArray())
+        foreach (JsonElement item in dataElem.EnumerateArray())
         {
-            if (item.TryGetProperty("id", out var idP) && idP.ValueKind == JsonValueKind.String && idP.GetString() is { Length: > 0 } idStr)
+            if (item.TryGetProperty("id", out JsonElement idP) && idP.ValueKind == JsonValueKind.String && idP.GetString() is { Length: > 0 } idStr)
             {
                 modelList.Add(idStr);
             }
@@ -81,7 +83,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var endpointUrl = GetChatCompletionsUrl(settings.GetEffectiveBaseUrl());
-        using var request = BuildHttpRequest(endpointUrl, settings, messageHistory, toolsSchema, stream: true);
+        using HttpRequestMessage request = BuildHttpRequest(endpointUrl, settings, messageHistory, toolsSchema, stream: true);
 
         HttpResponseMessage? response = null;
         string? connectionError = null;
@@ -115,10 +117,10 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
                 yield break;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            await foreach (var chunk in ReadStreamChunksAsync(reader, cancellationToken))
+            await foreach (StreamingChatChunk chunk in ReadStreamChunksAsync(reader, cancellationToken))
             {
                 yield return chunk;
             }
@@ -134,7 +136,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
             if (!TryExtractDataJson(rawLine, out var dataJson)) continue;
             if (dataJson.Equals("[DONE]", StringComparison.OrdinalIgnoreCase)) break;
 
-            var chunk = TryParseStreamingChunk(dataJson);
+            StreamingChatChunk? chunk = TryParseStreamingChunk(dataJson);
             if (chunk != null)
             {
                 yield return chunk;
@@ -176,9 +178,9 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
         try
         {
             var endpointUrl = GetChatCompletionsUrl(settings.GetEffectiveBaseUrl());
-            using var request = BuildHttpRequest(endpointUrl, settings, messageHistory, toolsSchema, stream: false);
+            using HttpRequestMessage request = BuildHttpRequest(endpointUrl, settings, messageHistory, toolsSchema, stream: false);
 
-            var httpResponse = await httpClient.SendAsync(request);
+            HttpResponseMessage httpResponse = await httpClient.SendAsync(request);
             var responseString = await httpResponse.Content.ReadAsStringAsync();
 
             if (!httpResponse.IsSuccessStatusCode)
@@ -248,28 +250,28 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
     private static StreamingChatChunk? ParseStreamingChunk(string json)
     {
         using var doc = JsonDocument.Parse(json);
-        if (!doc.RootElement.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+        if (!doc.RootElement.TryGetProperty("choices", out JsonElement choices) || choices.GetArrayLength() == 0)
         {
             return null;
         }
 
-        var choice = choices[0];
-        if (!choice.TryGetProperty("delta", out var delta))
+        JsonElement choice = choices[0];
+        if (!choice.TryGetProperty("delta", out JsonElement delta))
         {
             return null;
         }
 
         var chunk = new StreamingChatChunk();
-        if (delta.TryGetProperty("content", out var contentElem) && contentElem.ValueKind == JsonValueKind.String)
+        if (delta.TryGetProperty("content", out JsonElement contentElem) && contentElem.ValueKind == JsonValueKind.String)
         {
             chunk.DeltaContent = contentElem.GetString() ?? string.Empty;
         }
 
-        if (delta.TryGetProperty("reasoning_content", out var rcElem) && rcElem.ValueKind == JsonValueKind.String)
+        if (delta.TryGetProperty(ReasoningContentProperty, out JsonElement rcElem) && rcElem.ValueKind == JsonValueKind.String)
         {
             chunk.ReasoningContent = rcElem.GetString() ?? string.Empty;
         }
-        else if (delta.TryGetProperty("thinking", out var thElem) && thElem.ValueKind == JsonValueKind.String)
+        else if (delta.TryGetProperty("thinking", out JsonElement thElem) && thElem.ValueKind == JsonValueKind.String)
         {
             chunk.ReasoningContent = thElem.GetString() ?? string.Empty;
         }
@@ -280,21 +282,21 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
 
     private static void ParseStreamingToolCalls(JsonElement delta, List<AiToolCallInfo> toolCalls)
     {
-        if (!delta.TryGetProperty("tool_calls", out var toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
+        if (!delta.TryGetProperty("tool_calls", out JsonElement toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
         {
             return;
         }
 
-        foreach (var tc in toolCallsElem.EnumerateArray())
+        foreach (JsonElement tc in toolCallsElem.EnumerateArray())
         {
-            var tcId = tc.TryGetProperty("id", out var idp) ? idp.GetString() ?? string.Empty : string.Empty;
+            var tcId = tc.TryGetProperty("id", out JsonElement idp) ? idp.GetString() ?? string.Empty : string.Empty;
             var fnName = string.Empty;
             var fnArgs = string.Empty;
 
-            if (tc.TryGetProperty("function", out var fn))
+            if (tc.TryGetProperty("function", out JsonElement fn))
             {
-                if (fn.TryGetProperty("name", out var np)) fnName = np.GetString() ?? string.Empty;
-                if (fn.TryGetProperty("arguments", out var ap)) fnArgs = ap.GetString() ?? string.Empty;
+                if (fn.TryGetProperty("name", out JsonElement np)) fnName = np.GetString() ?? string.Empty;
+                if (fn.TryGetProperty("arguments", out JsonElement ap)) fnArgs = ap.GetString() ?? string.Empty;
             }
 
             toolCalls.Add(new AiToolCallInfo { Id = tcId, Name = fnName, ArgumentsJson = fnArgs });
@@ -329,12 +331,12 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
 
             if (!string.IsNullOrEmpty(m.ReasoningContent))
             {
-                assistantDict["reasoning_content"] = m.ReasoningContent;
+                assistantDict[ReasoningContentProperty] = m.ReasoningContent;
             }
             else if (m.ToolCalls != null && m.ToolCalls.Count > 0)
             {
                 // OpenCode / DeepSeek-R1 reasoning mode requires reasoning_content on assistant messages in multi-turn tool loops
-                assistantDict["reasoning_content"] = "";
+                assistantDict[ReasoningContentProperty] = "";
             }
 
             if (m.ToolCalls != null && m.ToolCalls.Count > 0)
@@ -358,24 +360,24 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
     private static void ParseJsonResponse(string responseString, OpenAiCompatibleResponse response)
     {
         using var doc = JsonDocument.Parse(responseString);
-        if (!doc.RootElement.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+        if (!doc.RootElement.TryGetProperty("choices", out JsonElement choices) || choices.GetArrayLength() == 0)
         {
             response.IsError = true;
             response.ErrorMessage = "Received empty choice response from AI provider.";
             return;
         }
 
-        var messageElem = choices[0].GetProperty("message");
-        if (messageElem.TryGetProperty("content", out var contentElem) && contentElem.ValueKind == JsonValueKind.String)
+        JsonElement messageElem = choices[0].GetProperty("message");
+        if (messageElem.TryGetProperty("content", out JsonElement contentElem) && contentElem.ValueKind == JsonValueKind.String)
         {
             response.AssistantContent = contentElem.GetString() ?? string.Empty;
         }
 
-        if (messageElem.TryGetProperty("reasoning_content", out var rcElem) && rcElem.ValueKind == JsonValueKind.String)
+        if (messageElem.TryGetProperty(ReasoningContentProperty, out JsonElement rcElem) && rcElem.ValueKind == JsonValueKind.String)
         {
             response.ReasoningContent = rcElem.GetString() ?? string.Empty;
         }
-        else if (messageElem.TryGetProperty("thinking", out var thElem) && thElem.ValueKind == JsonValueKind.String)
+        else if (messageElem.TryGetProperty("thinking", out JsonElement thElem) && thElem.ValueKind == JsonValueKind.String)
         {
             response.ReasoningContent = thElem.GetString() ?? string.Empty;
         }
@@ -386,15 +388,15 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
 
     private static void ParseJsonResponseToolCalls(JsonElement messageElem, List<AiToolCallInfo> toolCalls)
     {
-        if (!messageElem.TryGetProperty("tool_calls", out var toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
+        if (!messageElem.TryGetProperty("tool_calls", out JsonElement toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
         {
             return;
         }
 
-        foreach (var tc in toolCallsElem.EnumerateArray())
+        foreach (JsonElement tc in toolCallsElem.EnumerateArray())
         {
-            var tcId = tc.TryGetProperty("id", out var idp) ? idp.GetString() ?? Guid.NewGuid().ToString("N") : Guid.NewGuid().ToString("N");
-            var fn = tc.GetProperty("function");
+            var tcId = tc.TryGetProperty("id", out JsonElement idp) ? idp.GetString() ?? Guid.NewGuid().ToString("N") : Guid.NewGuid().ToString("N");
+            JsonElement fn = tc.GetProperty("function");
             var fnName = fn.GetProperty("name").GetString() ?? string.Empty;
             var fnArgs = fn.GetProperty("arguments").GetString() ?? "{}";
 
@@ -412,7 +414,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
         try
         {
             using var doc = JsonDocument.Parse(responseString);
-            if (doc.RootElement.TryGetProperty("error", out var err) && err.TryGetProperty("message", out var msg))
+            if (doc.RootElement.TryGetProperty("error", out JsonElement err) && err.TryGetProperty("message", out JsonElement msg))
             {
                 return msg.GetString() ?? responseString;
             }

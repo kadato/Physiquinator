@@ -1,5 +1,5 @@
 using Physiquinator.Core.Data;
-using Physiquinator.Core.Services;
+using Physiquinator.Core.Models;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services.Ai.Tools;
@@ -27,7 +27,7 @@ public sealed class GetWorkoutHistoryStatsTool(WorkoutHistoryRepository reposito
             try
             {
                 using var doc = JsonDocument.Parse(argumentsJson);
-                if (doc.RootElement.TryGetProperty("recentLimit", out var limProp) && limProp.TryGetInt32(out var lVal))
+                if (doc.RootElement.TryGetProperty("recentLimit", out JsonElement limProp) && limProp.TryGetInt32(out var lVal))
                 {
                     limit = lVal;
                 }
@@ -36,7 +36,7 @@ public sealed class GetWorkoutHistoryStatsTool(WorkoutHistoryRepository reposito
         }
 
         var totalSessions = await repository.GetSessionCountAsync();
-        var recentSessions = await repository.GetRecentSessionsAsync(limit);
+        IReadOnlyList<WorkoutSessionLogEntity> recentSessions = await repository.GetRecentSessionsAsync(limit);
 
         var result = new
         {
@@ -73,20 +73,20 @@ public sealed class GetExerciseProgressionTool(WorkoutHistoryRepository reposito
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("exerciseName", out var exProp) || string.IsNullOrWhiteSpace(exProp.GetString()))
+        if (!root.TryGetProperty("exerciseName", out JsonElement exProp) || string.IsNullOrWhiteSpace(exProp.GetString()))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Missing exerciseName parameter" });
         }
 
         var exerciseName = exProp.GetString()!;
-        var plans = await planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
 
         var allProgress = new List<ExerciseSessionProgressEntry>();
-        foreach (var plan in plans)
+        foreach (WorkoutPlan plan in plans)
         {
-            var planProgress = await repository.GetExerciseSessionProgressAsync(plan.Id, exerciseName);
+            IReadOnlyList<ExerciseSessionProgressEntry> planProgress = await repository.GetExerciseSessionProgressAsync(plan.Id, exerciseName);
             allProgress.AddRange(planProgress);
         }
 

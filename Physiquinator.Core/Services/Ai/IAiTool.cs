@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace Physiquinator.Core.Services.Ai;
 
 public interface IAiTool

@@ -1,6 +1,5 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
-using Physiquinator.Core.Services;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services.Ai.Tools;
@@ -23,14 +22,14 @@ public sealed class GenerateDeloadPlanWorkflowTool(WorkoutPlanService planServic
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
-        var root = doc.RootElement;
+        JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty("planId", out var planIdProp) || !Guid.TryParse(planIdProp.GetString(), out var planId))
+        if (!root.TryGetProperty("planId", out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid planId" });
         }
 
-        var basePlan = await planService.GetPlanAsync(planId);
+        WorkoutPlan? basePlan = await planService.GetPlanAsync(planId);
         if (basePlan == null)
         {
             return JsonSerializer.Serialize(new { success = false, error = "Base plan not found" });
@@ -77,17 +76,17 @@ public sealed class CalculateProgressiveOverloadWorkflowTool(WorkoutHistoryRepos
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
-        var plans = await planService.GetAllPlansAsync();
+        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
         var recommendations = new List<object>();
 
-        foreach (var plan in plans)
+        foreach (WorkoutPlan plan in plans)
         {
-            foreach (var exercise in plan.Exercises)
+            foreach (ExercisePlan exercise in plan.Exercises)
             {
-                var progressList = await repository.GetExerciseSessionProgressAsync(plan.Id, exercise.Name);
+                IReadOnlyList<ExerciseSessionProgressEntry> progressList = await repository.GetExerciseSessionProgressAsync(plan.Id, exercise.Name);
                 if (progressList.Count == 0) continue;
 
-                var latestSession = progressList[0];
+                ExerciseSessionProgressEntry latestSession = progressList[0];
                 var currentBestWeight = latestSession.BestWeightKg;
                 var currentReps = latestSession.TotalReps;
 

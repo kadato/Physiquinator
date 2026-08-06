@@ -1,5 +1,6 @@
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Serialization;
+using System.Globalization;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Data;
@@ -263,6 +264,56 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         return await _db.Database.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM WorkoutSessionLogs");
     }
 
+    /// <summary>Inserts or replaces the bodyweight log for a local calendar day.</summary>
+    public async Task UpsertBodyweightLogAsync(DateOnly localDate, double bodyweightKg)
+    {
+        if (bodyweightKg <= 0)
+            throw new ArgumentOutOfRangeException(nameof(bodyweightKg), "Bodyweight must be positive.");
+
+        await _db.EnsureInitializedAsync();
+        var key = ToDateKey(localDate);
+        BodyweightLogEntity row = await _db.Database.FindAsync<BodyweightLogEntity>(key);
+        var nowUtc = _time.GetUtcNow().UtcDateTime;
+        if (row == null)
+        {
+            await _db.Database.InsertAsync(new BodyweightLogEntity
+            {
+                Date = key,
+                BodyweightKg = bodyweightKg,
+                UpdatedAtUtc = nowUtc
+            });
+        }
+        else
+        {
+            row.BodyweightKg = bodyweightKg;
+            row.UpdatedAtUtc = nowUtc;
+            await _db.Database.UpdateAsync(row);
+        }
+    }
+
+    /// <summary>Bodyweight log entries, newest day first (at most <paramref name="limit"/> entries).</summary>
+    public async Task<IReadOnlyList<BodyweightLogEntity>> GetBodyweightLogsAsync(int limit = 200)
+    {
+        await _db.EnsureInitializedAsync();
+        return await _db.Database.Table<BodyweightLogEntity>()
+            .OrderByDescending(b => b.Date)
+            .Take(Math.Clamp(limit, 1, 1000))
+            .ToListAsync();
+    }
+
+    /// <summary>Removes the bodyweight log entry for a local calendar day.</summary>
+    public async Task<bool> DeleteBodyweightLogAsync(DateOnly localDate)
+    {
+        await _db.EnsureInitializedAsync();
+        BodyweightLogEntity row = await _db.Database.FindAsync<BodyweightLogEntity>(ToDateKey(localDate));
+        if (row == null) return false;
+        await _db.Database.DeleteAsync(row);
+        return true;
+    }
+
+    private static string ToDateKey(DateOnly localDate) =>
+        localDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
     /// <summary>All sessions, newest first (same ordering as recent list, without a cap).</summary>
     public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetAllSessionsAsync()
     {
@@ -332,7 +383,12 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             }
         }
 
-        return new WorkoutHistoryBackup { FormatVersion = 1, Sessions = entries };
+        return new WorkoutHistoryBackup
+        {
+            FormatVersion = 1,
+            Sessions = entries,
+            BodyweightEntries = [.. await GetBodyweightLogsAsync(1000)]
+        };
     }
 
     /// <summary>
@@ -350,6 +406,16 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             foreach (WorkoutHistoryBackupEntry entry in backup.Sessions)
             {
                 ImportBackupEntry(conn, entry);
+            }
+
+            if (backup.BodyweightEntries != null)
+            {
+                foreach (BodyweightLogEntity? entry in backup.BodyweightEntries)
+                {
+                    if (entry is null || string.IsNullOrWhiteSpace(entry.Date))
+                        continue;
+                    conn.InsertOrReplace(entry);
+                }
             }
         });
     }

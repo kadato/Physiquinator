@@ -33,6 +33,7 @@ public sealed class AppDatabase
         await _database.CreateTableAsync<ExercisePlanEntity>();
         await _database.CreateTableAsync<WorkoutSessionLogEntity>();
         await _database.CreateTableAsync<WorkoutSetLogEntity>();
+        await _database.CreateTableAsync<BodyweightLogEntity>();
         await MigrateAsync(_database);
     }
 
@@ -111,6 +112,7 @@ public sealed class AppDatabase
     public async Task ClearAllUserDataAsync()
     {
         await EnsureInitializedAsync();
+        await _database.ExecuteAsync("DELETE FROM BodyweightLogs");
         await _database.ExecuteAsync("DELETE FROM WorkoutSetLogs");
         await _database.ExecuteAsync("DELETE FROM WorkoutSessionLogs");
         await _database.ExecuteAsync("DELETE FROM ExercisePlans");

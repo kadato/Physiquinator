@@ -25,6 +25,23 @@
 else
 {
     <MudStack Spacing="3">
+        @if (_overlayPermissionMissing)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mt-2">
+                <div class="d-flex align-center gap-2">
+                    <div class="flex-grow-1">
+                        Enable "Display over other apps" so the floating rest timer shows when you leave the app.
+                    </div>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Warning"
+                               Class="flex-shrink-0"
+                               OnClick="OpenOverlaySettingsAsync">
+                        Grant
+                    </MudButton>
+                </div>
+            </MudAlert>
+        }
+
         @if (SessionService.IsResting || _isRestComplete)
         {
             <RestTimerPanel @ref="_restPanel"
@@ -128,6 +145,7 @@ else
     private const int UndoToastDurationMs = 4000;
 
     private bool _isRestComplete;
+    private bool _overlayPermissionMissing;
     private int _lastRestDurationSeconds;
     private Guid? _loadedPlanId;
     private bool _loadedForceNew;
@@ -166,6 +184,26 @@ else
         await EnsureWorkoutStartedAsync();
     }
 
+    /// <summary>
+    /// Re-checks the overlay permission on every render so the warning
+    /// disappears after the user grants it in system settings and returns.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var missing = RestAlertSettings.Enabled && !RestNotifications.HasOverlayPermission();
+        if (missing != _overlayPermissionMissing)
+        {
+            _overlayPermissionMissing = missing;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OpenOverlaySettingsAsync()
+    {
+        await RestNotifications.RequestOverlayPermissionAsync();
+        _overlayPermissionMissing = RestAlertSettings.Enabled && !RestNotifications.HasOverlayPermission();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (_disposed) return;
@@ -185,7 +223,10 @@ else
             return;
 
         if (RestAlertSettings.Enabled)
+        {
             await RestNotifications.EnsurePermissionAsync();
+            _overlayPermissionMissing = !RestNotifications.HasOverlayPermission();
+        }
 
         // Capture before loading the workout: loading stops the rest timer and
         // would otherwise consume the persisted snapshot of a rest that

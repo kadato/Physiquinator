@@ -3,6 +3,7 @@
 @using Physiquinator.Core.Models
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
+@inject INotificationService RestNotifications
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryService HistoryService
 @inject AppDataResetService AppDataReset
@@ -81,6 +82,28 @@
                         <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
                             The + button on the rest timer adds this many seconds.
                         </MudText>
+                    </MudStack>
+                    <MudStack Spacing="0" Class="mt-4">
+                        <MudText Typo="Typo.body2" Class="font-weight-semibold">Floating timer</MudText>
+                        @if (_overlayPermissionGranted)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Success" Class="mt-1">
+                                Enabled - a draggable bubble shows the rest countdown over other apps while you train.
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                                The floating bubble needs the "Display over other apps" permission. Without it, no bubble appears when you leave the app during a rest.
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Class="mt-3 align-self-start"
+                                       StartIcon="@Icons.Material.Filled.PictureInPictureAlt"
+                                       OnClick="OpenOverlaySettingsAsync">
+                                Grant permission
+                            </MudButton>
+                        }
                     </MudStack>
                 </div>
             </ChildContent>
@@ -296,6 +319,7 @@
     private string _preference = ThemePreference.System;
     private string _effectiveTheme = ThemePreference.Dark;
     private bool _restAlertsEnabled = true;
+    private bool _overlayPermissionGranted = true;
     private int _planCount;
     private int _historySessionCount;
     private UserProfile _activeProfile = new();
@@ -329,11 +353,32 @@
         ThemeService.ThemeChanged += HandleSettingsChanged;
         RestAlertSettings.Changed += HandleSettingsChanged;
         SyncFromService();
+        _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
         _activeProfile = UserProfileService.GetActiveProfile();
         _bodyweight = _activeProfile.BodyweightKg;
         _currentVersion = AppUpdateService.CurrentVersion.ToString();
+    }
+
+    /// <summary>
+    /// Re-checks the overlay permission on every render so the status updates
+    /// after the user returns from the system settings screen.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var granted = RestNotifications.HasOverlayPermission();
+        if (granted != _overlayPermissionGranted)
+        {
+            _overlayPermissionGranted = granted;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OpenOverlaySettingsAsync()
+    {
+        await RestNotifications.RequestOverlayPermissionAsync();
+        _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
     }
 
     private void SyncFromService()

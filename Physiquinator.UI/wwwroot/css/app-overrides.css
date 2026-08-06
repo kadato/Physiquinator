@@ -53,6 +53,97 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     text-wrap: pretty;
 }
 
+/* Modern Web Guidance: View Transitions API Root Configuration */
+
+::view-transition-old(root) {
+    animation: 180ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
+}
+
+::view-transition-new(root) {
+    animation: 220ms cubic-bezier(0, 0, 0.2, 1) both fade-in;
+}
+
+@keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modern Web Guidance: Container Queries for responsive component cards */
+.home-hero,
+.home-stat,
+.plan-card,
+.workout-exercise-card,
+.activity-heatmap-card,
+.history-record-card {
+    container-type: inline-size;
+}
+
+/* Modern Web Guidance: Content-visibility for fast scrolling (INP optimization) */
+.history-record-card,
+.history-data-table tr {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 72px;
+}
+
+/* Modern Web Guidance: Form Controls & Post-Interaction Validation */
+input, select, textarea {
+    accent-color: var(--mud-palette-primary);
+}
+
+.mud-input-control input:user-invalid,
+.mud-input-control textarea:user-invalid {
+    border-color: var(--mud-palette-error, #EF4444) !important;
+    box-shadow: 0 0 0 1px var(--mud-palette-error, #EF4444) !important;
+}
+
+.mud-input-control input:user-valid:focus,
+.mud-input-control textarea:user-valid:focus {
+    border-color: var(--mud-palette-primary) !important;
+}
+
+/* Auto-expanding text fields */
+textarea.auto-size,
+.field-sizing-content {
+    field-sizing: content;
+    min-height: 2.5rem;
+}
+
+/* Top-layer & Modal Entry/Exit Animations using @starting-style */
+.mud-dialog,
+.plan-exercise-sheet,
+.confirm-dialog-card {
+    transition: opacity 200ms ease-out, transform 200ms ease-out, display 200ms allow-discrete, overlay 200ms allow-discrete;
+}
+
+@starting-style {
+    .mud-dialog[open],
+    .plan-exercise-sheet--open,
+    .confirm-dialog-card {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+}
+
+/* Reduced motion accessibility enforcement */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
 #app {
     display: flex;
     flex-direction: column;
@@ -1026,6 +1117,7 @@ button.heatmap-cell:disabled {
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
     border-radius: 16px;
     background: var(--mud-palette-surface);
+    overscroll-behavior: contain;
     transition:
         background 0.4s ease,
         border-color 0.4s ease,

@@ -1,5 +1,14 @@
 (() => {
     window.physiquinator = window.physiquinator || {};
+    /** Execute callback within View Transition if supported by browser */
+    window.physiquinator.startViewTransition = (callback) => {
+        if (typeof document.startViewTransition === "function") {
+            return document.startViewTransition(() => {
+                if (typeof callback === "function") callback();
+            });
+        }
+        if (typeof callback === "function") callback();
+    };
     /** Scroll horizontal heatmap so the most recent week is visible (mobile). */
     window.physiquinator.scrollHeatmapToEnd = (el) => {
         if (!el) return;

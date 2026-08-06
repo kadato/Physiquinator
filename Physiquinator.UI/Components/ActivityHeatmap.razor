@@ -19,12 +19,14 @@
                     var isFuture = cellDate > _endLocal;
                     var count = isFuture ? 0 : CountsByDay.GetValueOrDefault(cellDate, 0);
                     var active = count > 0;
-                    var title = GetCellTitle(cellDate, active);
+                    var isScheduled = Schedule?.Contains(cellDate.DayOfWeek) == true;
+                    var isMissed = isScheduled && !active && !isFuture;
+                    var title = GetCellTitle(cellDate, active, isMissed);
                     var isSelected = SelectedDay == cellDate;
                     var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                     <button type="button"
                             @key="cellDate"
-                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null)"
+                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null)"
                             title="@title"
                             aria-label="@title"
                             aria-pressed="@(isSelected ? "true" : "false")"
@@ -48,6 +50,13 @@
     [Parameter]
     public DateOnly? EndLocal { get; set; }
 
+    /// <summary>
+    /// Scheduled training days of the week. When set, past scheduled days without a workout
+    /// render with a missed marker.
+    /// </summary>
+    [Parameter]
+    public IReadOnlySet<DayOfWeek>? Schedule { get; set; }
+
     [Parameter]
     public DateOnly? SelectedDay { get; set; }
 
@@ -63,6 +72,7 @@
     private int _prevWeeks;
     private DateOnly? _prevEndLocal;
     private DateOnly? _prevSelectedDay;
+    private IReadOnlySet<DayOfWeek>? _prevSchedule;
 
     protected override bool ShouldRender()
     {
@@ -70,7 +80,8 @@
             !ReferenceEquals(CountsByDay, _prevCountsByDay) ||
             Weeks != _prevWeeks ||
             EndLocal != _prevEndLocal ||
-            SelectedDay != _prevSelectedDay;
+            SelectedDay != _prevSelectedDay ||
+            !ReferenceEquals(Schedule, _prevSchedule);
 
         if (shouldRender)
         {
@@ -78,6 +89,7 @@
             _prevWeeks = Weeks;
             _prevEndLocal = EndLocal;
             _prevSelectedDay = SelectedDay;
+            _prevSchedule = Schedule;
         }
 
         return shouldRender;
@@ -120,13 +132,15 @@
         _ => null
     };
 
-    private string GetCellTitle(DateOnly cellDate, bool workedOut)
+    private string GetCellTitle(DateOnly cellDate, bool workedOut, bool missed)
     {
         if (cellDate > _endLocal)
             return $"{UiDateFormats.DateOnlyCompact(cellDate)} (future)";
         var dayLabel = UiDateFormats.DateOnlyCompact(cellDate);
         var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
         var todaySuffix = isToday ? " (today)" : "";
+        if (missed)
+            return $"{dayLabel}{todaySuffix} · scheduled, missed";
         return workedOut ? $"{dayLabel}{todaySuffix} · workout" : $"{dayLabel}{todaySuffix} · off";
     }
 

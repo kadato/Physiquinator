@@ -11,6 +11,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
+@inject WorkoutScheduleService WorkoutSchedule
 @inject IFileTransferService FileTransfer
 @inject IAppUpdateService AppUpdateService
 @inject TimeProvider TimeProvider
@@ -150,6 +151,52 @@
             <ChildContent>
                 <div class="settings-panel__content">
                     <UserProfilesPanel />
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Workout schedule</span>
+                        <span class="settings-panel__subtitle">Keep your streak alive on rest days</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        Pick the days you normally train.
+                    </MudText>
+                    <div class="settings-schedule-days">
+                        @foreach (var day in ScheduleDayOrder)
+                        {
+                            var d = day;
+                            <MudChip T="string"
+                                     Text="@d.ToString()[..3]"
+                                     Variant="@(_scheduleDays.Contains(d) ? Variant.Filled : Variant.Outlined)"
+                                     Color="Color.Primary"
+                                     Class="settings-schedule-day"
+                                     OnClick="@(() => ToggleScheduleDay(d))" />
+                        }
+                    </div>
+                    @if (_scheduleDays.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-3 mud-text-secondary">
+                            No schedule yet. Without one, your streak counts every calendar day you train, so two rest days in a row end it.
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-3 mud-text-secondary">
+                            @ScheduleSummaryLabel
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                            Rest days never break your streak. A scheduled day you skip does.
+                        </MudText>
+                    }
                 </div>
             </ChildContent>
         </MudExpansionPanel>
@@ -328,6 +375,25 @@
 
     private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
 
+    private static readonly DayOfWeek[] ScheduleDayOrder =
+    [
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+        DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
+    ];
+
+    private HashSet<DayOfWeek> _scheduleDays = [];
+
+    private string ScheduleSummaryLabel
+    {
+        get
+        {
+            var days = string.Join(", ", ScheduleDayOrder.Where(_scheduleDays.Contains).Select(d => d.ToString()[..3]));
+            var next = WorkoutSchedule.NextWorkoutDay(DateOnly.FromDateTime(DateTime.Today));
+            var nextLabel = next is { } n ? $"{n.DayOfWeek} {UiDateFormats.DateOnlyCompact(n)}" : "—";
+            return $"You train {_scheduleDays.Count} day(s) per week: {days}. Next training day: {nextLabel}.";
+        }
+    }
+
     private string _currentVersion = string.Empty;
     private GitHubRelease? _latestRelease;
     private bool _updateAvailable;
@@ -352,6 +418,7 @@
     {
         ThemeService.ThemeChanged += HandleSettingsChanged;
         RestAlertSettings.Changed += HandleSettingsChanged;
+        WorkoutSchedule.Changed += HandleSettingsChanged;
         SyncFromService();
         _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
         await RefreshPlanCountAsync();
@@ -387,6 +454,15 @@
         _effectiveTheme = ThemeService.EffectiveTheme;
         _restAlertsEnabled = RestAlertSettings.Enabled;
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
+        _scheduleDays = [.. WorkoutSchedule.Days];
+    }
+
+    private void ToggleScheduleDay(DayOfWeek day)
+    {
+        if (!_scheduleDays.Add(day))
+            _scheduleDays.Remove(day);
+
+        WorkoutSchedule.SetDays(_scheduleDays);
     }
 
     private void HandleSettingsChanged()
@@ -604,5 +680,6 @@
     {
         ThemeService.ThemeChanged -= HandleSettingsChanged;
         RestAlertSettings.Changed -= HandleSettingsChanged;
+        WorkoutSchedule.Changed -= HandleSettingsChanged;
     }
 }

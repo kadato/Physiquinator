@@ -2,6 +2,7 @@
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject WorkoutStatsService StatsService
+@inject WorkoutScheduleService ScheduleService
 <MudStack Spacing="3">
     <PageHeader Title="Workout history" ShowBack="false" />
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -28,6 +29,7 @@
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HeatmapWeeks"
                              EndLocal="@_heatmapEndLocal"
+                             Schedule="@_schedule"
                              SelectedDay="_selectedDay"
                              SelectedDayChanged="OnSelectedDayChanged" />
         </MudPaper>
@@ -52,7 +54,14 @@
         </div>
 
         <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            A streak day is any calendar day with at least one logged session.
+            @if (_schedule is { Count: > 0 })
+            {
+                <text>A streak day is any scheduled training day with at least one logged session. Rest days never break it; skipped training days do.</text>
+            }
+            else
+            {
+                <text>A streak day is any calendar day with at least one logged session.</text>
+            }
         </MudText>
 
         @if (_selectedDay != null)
@@ -136,6 +145,7 @@
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
     private IReadOnlyDictionary<DateOnly, int>? _activityByDay;
+    private IReadOnlySet<DayOfWeek>? _schedule;
     private DateOnly _heatmapEndLocal;
     private WorkoutDaySummary? _summary;
     private DateOnly? _selectedDay;
@@ -150,6 +160,7 @@
     protected override async Task OnInitializedAsync()
     {
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
+        _schedule = ScheduleService.IsSet ? ScheduleService.Days : null;
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);

@@ -90,6 +90,11 @@ button.heatmap-cell:disabled {
     opacity: 0.9;
 }
 
+button.heatmap-cell.heatmap-missed {
+    border: 1.5px dashed var(--mud-palette-warning);
+    opacity: 0.9;
+}
+
 @media (max-width: 576px) {
     .activity-heatmap {
         --heatmap-cell-size: 12px;

@@ -46,7 +46,9 @@ public sealed class AppInitializationService(
 
                 var didSeedHistory = await demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
 
-                if (didSeedPlans || didSeedHistory)
+                var didSeedExtras = await demoSeeder.SeedDemoExtrasIfNeededAsync().ConfigureAwait(false);
+
+                if (didSeedPlans || didSeedHistory || didSeedExtras)
                 {
                     // Set flag to show onboarding modal explaining that demo data was seeded
                     preferences.Set(PreferenceKeys.ShowFirstTimeSeedModal, true);

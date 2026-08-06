@@ -10,6 +10,7 @@ public class AppInitializationServiceTests : IAsyncLifetime
     private WorkoutPlanRepository _planRepo = null!;
     private WorkoutPlanService _planService = null!;
     private WorkoutHistoryRepository _historyRepo = null!;
+    private InMemoryPreferences _appPreferences = null!;
     private DemoDataSeeder _seeder = null!;
     private MemoryDemoSeedPreferences _prefs = null!;
     private RecordingThemeInitialization _theme = null!;
@@ -24,7 +25,21 @@ public class AppInitializationServiceTests : IAsyncLifetime
         _planService = new WorkoutPlanService(_planRepo);
         _historyRepo = new WorkoutHistoryRepository(_db, TimeProvider.System);
         _prefs = new MemoryDemoSeedPreferences();
-        _seeder = new DemoDataSeeder(_planService, _db, _historyRepo, _prefs, TimeProvider.System);
+        _appPreferences = new InMemoryPreferences();
+        var profiles = new UserProfileService(
+            _db,
+            new WorkoutSessionService(TimeProvider.System),
+            _appPreferences,
+            new TempDbPathProvider(":memory:"),
+            TimeProvider.System);
+        _seeder = new DemoDataSeeder(
+            _planService,
+            _db,
+            _historyRepo,
+            new WorkoutScheduleService(_appPreferences, profiles),
+            profiles,
+            _prefs,
+            TimeProvider.System);
         _theme = new RecordingThemeInitialization();
     }
 
@@ -120,5 +135,30 @@ public class AppInitializationServiceTests : IAsyncLifetime
         public void Set(string key, bool value) => _values[key] = value;
 
         public bool IsDefaultProfile { get; set; } = true;
+    }
+
+    private sealed class InMemoryPreferences : IAppPreferences
+    {
+        private readonly Dictionary<string, string> _values = [];
+
+        public string Get(string key, string defaultValue) =>
+            _values.TryGetValue(key, out var value) ? value : defaultValue;
+
+        public bool Get(string key, bool defaultValue)
+        {
+            if (!_values.TryGetValue(key, out var value))
+                return defaultValue;
+
+            return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
+        }
+
+        public void Set(string key, string value) => _values[key] = value;
+
+        public void Set(string key, bool value) => _values[key] = value.ToString();
+    }
+
+    private sealed class TempDbPathProvider(string path) : IDatabasePathProvider
+    {
+        public string GetDatabasePath(Guid profileId) => path;
     }
 }

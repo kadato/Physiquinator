@@ -11,6 +11,9 @@ public class DemoDataSeederTests : IAsyncLifetime
     private WorkoutPlanRepository _planRepo = null!;
     private WorkoutPlanService _planService = null!;
     private WorkoutHistoryRepository _historyRepo = null!;
+    private InMemoryPreferences _appPreferences = null!;
+    private UserProfileService _profileService = null!;
+    private WorkoutScheduleService _scheduleService = null!;
     private DemoDataSeeder _sut = null!;
     private MemoryDemoSeedPreferences _prefs = null!;
 
@@ -23,8 +26,16 @@ public class DemoDataSeederTests : IAsyncLifetime
         _planRepo = new WorkoutPlanRepository(_db);
         _planService = new WorkoutPlanService(_planRepo);
         _historyRepo = new WorkoutHistoryRepository(_db, TimeProvider.System);
+        _appPreferences = new InMemoryPreferences();
+        _profileService = new UserProfileService(
+            _db,
+            new WorkoutSessionService(TimeProvider.System),
+            _appPreferences,
+            new TempDbPathProvider(":memory:"),
+            TimeProvider.System);
+        _scheduleService = new WorkoutScheduleService(_appPreferences, _profileService);
         _prefs = new MemoryDemoSeedPreferences();
-        _sut = new DemoDataSeeder(_planService, _db, _historyRepo, _prefs, TimeProvider.System);
+        _sut = new DemoDataSeeder(_planService, _db, _historyRepo, _scheduleService, _profileService, _prefs, TimeProvider.System);
     }
 
     public async Task DisposeAsync() => await _db.Database.CloseAsync();
@@ -147,6 +158,84 @@ public class DemoDataSeederTests : IAsyncLifetime
         Assert.Equal(0, await _historyRepo.GetSessionCountAsync());
     }
 
+    [Fact]
+    public async Task SeedDemoExtras_SeedsChangingBodyweightsScheduleAndProfileBodyweight()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+        Assert.True(await _sut.SeedDemoExtrasIfNeededAsync());
+
+        IReadOnlyList<BodyweightLogEntity> rows = await _historyRepo.GetBodyweightLogsAsync(1000);
+        Assert.InRange(rows.Count, 150, 190);
+        Assert.Equal(rows.Count, rows.Select(r => r.Date).Distinct().Count());
+        Assert.All(rows, r => Assert.True(r.BodyweightKg > 0));
+        Assert.True(rows[0].BodyweightKg < rows[^1].BodyweightKg, "Bodyweight should trend downward across the demo year.");
+        Assert.True(rows[0].BodyweightKg > 80, "Latest bodyweight should stay within a believable range.");
+
+        Assert.Equal(
+            new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday },
+            _scheduleService.Days.OrderBy(d => d).ToArray());
+
+        Assert.NotNull(_profileService.GetActiveProfile().BodyweightKg);
+        Assert.Equal(rows[0].BodyweightKg, _profileService.GetActiveProfile().BodyweightKg!.Value, precision: 1);
+    }
+
+    [Fact]
+    public async Task SeedDemoExtras_IsIdempotent_WhenRerunOnFreshDatabase()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+        await _sut.SeedDemoExtrasIfNeededAsync();
+        var c1 = await _historyRepo.GetBodyweightLogsAsync(1000);
+
+        await _sut.SeedDemoExtrasIfNeededAsync();
+        var c2 = await _historyRepo.GetBodyweightLogsAsync(1000);
+
+        Assert.Equal(c1.Count, c2.Count);
+    }
+
+    [Fact]
+    public async Task SeedDemoExtras_DoesNotClobberAnExistingSchedule()
+    {
+        _scheduleService.SetDays([DayOfWeek.Tuesday, DayOfWeek.Thursday]);
+
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+        await _sut.SeedDemoExtrasIfNeededAsync();
+
+        Assert.Equal(
+            new[] { DayOfWeek.Tuesday, DayOfWeek.Thursday },
+            _scheduleService.Days.OrderBy(d => d).ToArray());
+    }
+
+    [Fact]
+    public async Task SeedDemoExtras_SkipsWhenBodyweightsAlreadyExist()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _historyRepo.UpsertBodyweightLogAsync(DateOnly.FromDateTime(DateTime.Today), 82.0);
+
+        Assert.False(await _sut.SeedDemoExtrasIfNeededAsync());
+        Assert.False(_scheduleService.IsSet);
+        Assert.Null(_profileService.GetActiveProfile().BodyweightKg);
+    }
+
+    [Fact]
+    public async Task SeedDemoHistory_RecentSessions_KeepSettingPersonalRecords()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+
+        IReadOnlyList<ExerciseSetLogRow> benchRows = await _historyRepo.GetExerciseSetLogRowsAsync(DemoDataIds.PushPlan, "Bench Press");
+        PersonalRecords records = PersonalRecordCalculator.Compute(benchRows, ExerciseLogType.WeightAndReps);
+
+        PersonalRecordEntry? bestWeight = records.Entries.FirstOrDefault(e => e.Kind == ExerciseRecordKind.BestWeight);
+        Assert.NotNull(bestWeight);
+        Assert.True(bestWeight.Value > 80, "Demo bench should progress well past the starting weight.");
+        Assert.True(
+            (DateTime.UtcNow - bestWeight.CompletedAtUtc).TotalDays < 21,
+            $"Bench PR should fall in a recent session, was {bestWeight.CompletedAtUtc:O}");
+    }
+
     private static DateOnly GetMondayOfWeek(DateOnly date)
     {
         var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
@@ -184,5 +273,30 @@ public class DemoDataSeederTests : IAsyncLifetime
         public void Clear() => _values.Clear();
 
         public bool IsDefaultProfile => true;
+    }
+
+    private sealed class InMemoryPreferences : IAppPreferences
+    {
+        private readonly Dictionary<string, string> _values = [];
+
+        public string Get(string key, string defaultValue) =>
+            _values.TryGetValue(key, out var value) ? value : defaultValue;
+
+        public bool Get(string key, bool defaultValue)
+        {
+            if (!_values.TryGetValue(key, out var value))
+                return defaultValue;
+
+            return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
+        }
+
+        public void Set(string key, string value) => _values[key] = value;
+
+        public void Set(string key, bool value) => _values[key] = value.ToString();
+    }
+
+    private sealed class TempDbPathProvider(string path) : IDatabasePathProvider
+    {
+        public string GetDatabasePath(Guid profileId) => path;
     }
 }

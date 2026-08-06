@@ -8,6 +8,7 @@ public static class PreferenceKeys
     public const string ShowFirstTimeSeedModal = "Physiquinator.ShowFirstTimeSeedModal";
     public const string DemoDataInitialSeedCompleted = "Physiquinator.DemoDataInitialSeedCompleted";
     public const string DemoHistorySeedCompleted = "Physiquinator.DemoHistorySeedCompleted";
+    public const string DemoExtrasSeedCompleted = "Physiquinator.DemoExtrasSeedCompleted";
 
     public const string RestAlertsEnabled = "rest_alerts_enabled";
     public const string RestAddTimeSeconds = "rest_add_time_seconds";

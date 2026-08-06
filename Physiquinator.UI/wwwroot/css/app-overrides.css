@@ -1435,15 +1435,7 @@ button.heatmap-cell:disabled {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     user-select: none;
-}
-
-.set-metric-stepper__drag-hint {
-    font-size: 0.875rem;
-    opacity: 0.35;
-    user-select: none;
-    font-weight: normal;
 }
 
 

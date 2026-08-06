@@ -154,10 +154,6 @@
     transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
 }
 
-.set-metric-stepper__value--compact .set-metric-stepper__drag-hint {
-    display: none;
-}
-
 .set-metric-stepper__value-unit {
     font-size: 0.8rem;
     font-weight: 600;

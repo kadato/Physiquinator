@@ -174,7 +174,7 @@ public class DemoDataSeederTests : IAsyncLifetime
         Assert.True(rows[0].BodyweightKg > 80, "Latest bodyweight should stay within a believable range.");
 
         Assert.Equal(
-            new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday },
+            [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
             _scheduleService.Days.OrderBy(d => d).ToArray());
 
         Assert.NotNull(_profileService.GetActiveProfile().BodyweightKg);
@@ -205,7 +205,7 @@ public class DemoDataSeederTests : IAsyncLifetime
         await _sut.SeedDemoExtrasIfNeededAsync();
 
         Assert.Equal(
-            new[] { DayOfWeek.Tuesday, DayOfWeek.Thursday },
+            [DayOfWeek.Tuesday, DayOfWeek.Thursday],
             _scheduleService.Days.OrderBy(d => d).ToArray());
     }
 

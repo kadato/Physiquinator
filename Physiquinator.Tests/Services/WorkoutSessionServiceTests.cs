@@ -121,7 +121,7 @@ public class WorkoutSessionServiceTests
         var clock = new ManualTimeProvider();
         var svc = new WorkoutSessionService(clock);
         WorkoutPlan plan = SamplePlan();
-        SetCompletion[] completed = new[] { new SetCompletion(0, 0), new SetCompletion(0, 1) };
+        SetCompletion[] completed = [new SetCompletion(0, 0), new SetCompletion(0, 1)];
 
         svc.ResumeWorkout(plan, completed);
 

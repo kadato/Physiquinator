@@ -15,12 +15,12 @@ public class PersonalRecordCalculatorTests
         var t1 = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
         var t2 = new DateTime(2026, 1, 8, 10, 0, 0, DateTimeKind.Utc);
         var t3 = new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc);
-        var rows = new[]
-        {
+        ExerciseSetLogRow[] rows =
+        [
             Row("s1", t1, reps: 10, weight: 60),   // volume 600
             Row("s2", t2, reps: 12, weight: 62.5), // volume 750
             Row("s3", t3, reps: 8, weight: 80),    // volume 640
-        };
+        ];
 
         PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.WeightAndReps);
 
@@ -44,11 +44,11 @@ public class PersonalRecordCalculatorTests
     {
         var t1 = new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc);
         var t2 = new DateTime(2026, 2, 8, 10, 0, 0, DateTimeKind.Utc);
-        var rows = new[]
-        {
+        ExerciseSetLogRow[] rows =
+        [
             Row("s1", t1, reps: 10, weight: 70),
             Row("s2", t2, reps: 10, weight: 70),
-        };
+        ];
 
         PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.WeightAndReps);
 
@@ -62,11 +62,11 @@ public class PersonalRecordCalculatorTests
     {
         var t1 = new DateTime(2026, 3, 1, 10, 0, 0, DateTimeKind.Utc);
         var t2 = new DateTime(2026, 3, 8, 10, 0, 0, DateTimeKind.Utc);
-        var rows = new[]
-        {
+        ExerciseSetLogRow[] rows =
+        [
             Row("s1", t1, reps: 45),
             Row("s2", t2, reps: 90),
-        };
+        ];
 
         PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.Duration);
 
@@ -80,10 +80,10 @@ public class PersonalRecordCalculatorTests
     public void Compute_BodyweightReps_UsesBodyweightForVolume()
     {
         var t1 = new DateTime(2026, 4, 1, 10, 0, 0, DateTimeKind.Utc);
-        var rows = new[]
-        {
+        ExerciseSetLogRow[] rows =
+        [
             Row("s1", t1, reps: 10, weight: 5), // volume 10 * (80 + 5) = 850
-        };
+        ];
 
         PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.BodyweightReps, bodyweightKg: 80);
 
@@ -96,7 +96,7 @@ public class PersonalRecordCalculatorTests
     [Fact]
     public void Compute_EmptyRows_YieldsNoEntries()
     {
-        PersonalRecords records = PersonalRecordCalculator.Compute(Array.Empty<ExerciseSetLogRow>(), ExerciseLogType.WeightAndReps);
+        PersonalRecords records = PersonalRecordCalculator.Compute([], ExerciseLogType.WeightAndReps);
 
         Assert.Empty(records.Entries);
     }
@@ -105,10 +105,10 @@ public class PersonalRecordCalculatorTests
     public void Compute_SkipsRowsWithoutTheRelevantMetric()
     {
         var t1 = new DateTime(2026, 5, 1, 10, 0, 0, DateTimeKind.Utc);
-        var rows = new[]
-        {
+        ExerciseSetLogRow[] rows =
+        [
             Row("s1", t1, reps: 10, weight: null), // reps only
-        };
+        ];
 
         PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.WeightAndReps);
 

@@ -129,14 +129,11 @@ else
     /// <summary>Show per-entry dots only for sparse series; dense series render as a clean line.</summary>
     private const int MaxChartMarkerEntries = 60;
 
-    private sealed record BodyweightEntry(DateOnly DateOnly, double BodyweightKg);
-
     private bool _ready;
     private IReadOnlyList<BodyweightEntry> _allEntries = Array.Empty<BodyweightEntry>();
     private IReadOnlyList<BodyweightEntry> _entries = Array.Empty<BodyweightEntry>();
     private BodyweightTimeRange _range = BodyweightTimeRange.AllTime;
     private string[] _chartLabels = Array.Empty<string>();
-    private sealed class ChartSeriesList : List<ChartSeries<double>> { }
     private ChartSeriesList _chartSeries = [];
     private LineChartOptions _chartOptions = new();
     private string _chartHeightPx = "280px";
@@ -191,12 +188,13 @@ else
     private async Task<IReadOnlyList<BodyweightEntry>> LoadEntriesAsync()
     {
         var rows = await HistoryRepo.GetBodyweightLogsAsync(EntryLimit);
-        return [.. rows
-            .Where(r => DateOnly.TryParseExact(
-                r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
-            .Select(r => new BodyweightEntry(
-                DateOnly.ParseExact(r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                r.BodyweightKg))];
+        var entries = new List<BodyweightEntry>(rows.Count);
+        foreach (var row in rows)
+        {
+            if (row.GetDateOnlyOrNull() is { } date)
+                entries.Add(new BodyweightEntry(date, row.BodyweightKg));
+        }
+        return entries;
     }
 
     private void ApplyRangeAndRebuild()
@@ -225,8 +223,9 @@ else
         }
 
         var chronological = _entries.AsEnumerable().Reverse().ToList();
-        _chartLabels = BuildSparseChartLabels(
+        _chartLabels = SparseChartLabelBuilder.BuildLabels(
             chronological.Select(e => e.DateOnly).ToList(),
+            UiDateFormats.DateOnlyCompact,
             MaxChartAxisLabels);
         var values = chronological.Select(e => e.BodyweightKg).ToArray();
         _chartSeries = [ new ChartSeries<double>
@@ -255,47 +254,15 @@ else
     /// of the vertical space for bodyweight values, so the step is derived from the
     /// data range to keep the axis hugging the plotted values.
     /// </summary>
+    private static readonly int[] NiceYAxisUnits = [1, 2, 5, 10, 20, 50, 100];
+
     private static int SuggestYAxisUnits(double minValue, double maxValue, int maxLines)
     {
         var range = maxValue - minValue;
         if (range <= 0)
             return 1;
 
-        int[] niceUnits = [1, 2, 5, 10, 20, 50, 100];
-        foreach (var unit in niceUnits)
-        {
-            if (range / unit <= maxLines)
-                return unit;
-        }
-
-        return niceUnits[^1];
-    }
-
-    private static string[] BuildSparseChartLabels(IReadOnlyList<DateOnly> dates, int maxLabels)
-    {
-        var count = dates.Count;
-        if (count == 0)
-            return Array.Empty<string>();
-
-        maxLabels = Math.Clamp(maxLabels, 2, 12);
-        var labels = new string[count];
-
-        if (count <= maxLabels)
-        {
-            for (var i = 0; i < count; i++)
-                labels[i] = UiDateFormats.DateOnlyCompact(dates[i]);
-            return labels;
-        }
-
-        for (var tick = 0; tick < maxLabels; tick++)
-        {
-            var index = tick == maxLabels - 1
-                ? count - 1
-                : (int)Math.Round(tick * (count - 1) / (double)(maxLabels - 1));
-            labels[index] = UiDateFormats.DateOnlyCompact(dates[index]);
-        }
-
-        return labels;
+        return NiceYAxisUnits.FirstOrDefault(unit => range / unit <= maxLines, NiceYAxisUnits[^1]);
     }
 
     private async Task DeleteEntryAsync(BodyweightEntry entry)

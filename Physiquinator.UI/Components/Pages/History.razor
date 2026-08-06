@@ -1,5 +1,4 @@
 @page "/history"
-@using System.Globalization
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject WorkoutStatsService StatsService
@@ -102,7 +101,7 @@
                 <button type="button"
                         class="bodyweight-log-row__log-btn"
                         @onclick="LogBodyweightAsync"
-                        disabled="@(!CanLogBodyweight)">
+                        disabled="@CannotLogBodyweight">
                     <MudIcon Icon="@Icons.Material.Filled.MonitorWeight" Size="Size.Small" />
                     Log
                 </button>
@@ -186,8 +185,6 @@
 @code {
     private const int HeatmapWeeks = 53;
 
-    private sealed record BodyweightEntry(DateOnly DateOnly, double BodyweightKg);
-
     private IReadOnlyList<WorkoutSessionLogEntity>? _sessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
@@ -232,13 +229,15 @@
 
     private void MapLatestBodyweight(IReadOnlyList<BodyweightLogEntity> rows)
     {
-        _latestBodyweight = rows
-            .Where(r => DateOnly.TryParseExact(
-                r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
-            .Select(r => new BodyweightEntry(
-                DateOnly.ParseExact(r.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                r.BodyweightKg))
-            .FirstOrDefault();
+        _latestBodyweight = null;
+        foreach (var row in rows)
+        {
+            if (row.GetDateOnlyOrNull() is { } date)
+            {
+                _latestBodyweight = new BodyweightEntry(date, row.BodyweightKg);
+                return;
+            }
+        }
     }
 
     private async Task RefreshBodyweightAsync()
@@ -247,6 +246,8 @@
     }
 
     private bool CanLogBodyweight => _bodyweightInput is { } weight && weight > 0;
+
+    private bool CannotLogBodyweight => !CanLogBodyweight;
 
     private void OnBodyweightInputChanged(double? value) => _bodyweightInput = value;
 

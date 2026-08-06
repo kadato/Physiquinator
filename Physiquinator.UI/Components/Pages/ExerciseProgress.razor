@@ -130,7 +130,6 @@ else
     private bool _showChart;
     private bool _hasChartData;
     private string[] _chartLabels = Array.Empty<string>();
-    private sealed class ChartSeriesList : List<ChartSeries<double> > { }
     private ChartSeriesList _chartSeries = [];
     private LineChartOptions _chartOptions = new();
     private string _chartHeightPx = "280px";
@@ -200,8 +199,9 @@ else
         }
 
         var chronological = _rows.Reverse().ToList();
-        _chartLabels = BuildSparseChartLabels(
+        _chartLabels = SparseChartLabelBuilder.BuildLabels(
             chronological.Select(r => r.StartedAtUtc).ToList(),
+            UiDateFormats.LocalDateChartAxis,
             MaxChartAxisLabels);
         var isVolumePlot = _logType == ExerciseLogType.WeightAndReps || (_logType == ExerciseLogType.BodyweightReps && _bodyweightKg.HasValue);
         var values = isVolumePlot
@@ -252,33 +252,6 @@ else
 
     private static string FormatYAxisTick(double value) =>
         value.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
-
-    private static string[] BuildSparseChartLabels(IReadOnlyList<DateTime> datesUtc, int maxLabels)
-    {
-        var count = datesUtc.Count;
-        if (count == 0)
-            return Array.Empty<string>();
-
-        maxLabels = Math.Clamp(maxLabels, 2, 12);
-        var labels = new string[count];
-
-        if (count <= maxLabels)
-        {
-            for (var i = 0; i < count; i++)
-                labels[i] = UiDateFormats.LocalDateChartAxis(datesUtc[i]);
-            return labels;
-        }
-
-        for (var tick = 0; tick < maxLabels; tick++)
-        {
-            var index = tick == maxLabels - 1
-                ? count - 1
-                : (int)Math.Round(tick * (count - 1) / (double)(maxLabels - 1));
-            labels[index] = UiDateFormats.LocalDateChartAxis(datesUtc[index]);
-        }
-
-        return labels;
-    }
 
     private string FormatBestWeight(double? weight)
     {

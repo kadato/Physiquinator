@@ -1,5 +1,6 @@
 @page "/settings"
 @using Physiquinator.Core.Services
+@using Physiquinator.Core.Services.Ai
 @using Physiquinator.Core.Models
 @using Physiquinator.UI.Components.Shared
 @inject ThemeService ThemeService
@@ -15,8 +16,10 @@
 @inject IFileTransferService FileTransfer
 @inject IAppUpdateService AppUpdateService
 @inject AppUpdateSettingsService AppUpdateSettings
+@inject AiAssistantService AiAssistant
 @inject TimeProvider TimeProvider
 @implements IDisposable
+
 
 <PageTitle>Settings</PageTitle>
 
@@ -173,7 +176,137 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">AI Assistant</span>
+                        <span class="settings-panel__subtitle">Configure OpenAI / OpenRouter / Ollama API</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudSwitch T="bool"
+                               Label="Enable AI Assistant"
+                               Value="_aiSettings.Enabled"
+                               ValueChanged="OnAiEnabledChanged" />
+
+                    @if (_aiSettings.Enabled)
+                    {
+                        <MudStack Spacing="3" Class="mt-3">
+                            <MudSelect T="AiProviderType"
+                                       Label="Provider Preset"
+                                       Variant="Variant.Filled"
+                                       Value="_aiSettings.Provider"
+                                       ValueChanged="OnAiProviderChanged">
+                                <MudSelectItem Value="AiProviderType.OpenAI">OpenAI (Official)</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenRouter">OpenRouter (Claude, Llama, DeepSeek)</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenCode">OpenCode</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OllamaLocal">Ollama / Local (http://localhost:11434/v1)</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.Custom">Custom OpenAI-Compatible API</MudSelectItem>
+                            </MudSelect>
+
+                            <MudTextField T="string"
+                                          Label="API Base URL"
+                                          Variant="Variant.Filled"
+                                          @bind-Value="_aiSettings.BaseUrl"
+                                          HelperText="Standard base URL (e.g. https://api.openai.com/v1)" />
+
+                            <MudTextField T="string"
+                                          Label="API Key"
+                                          Variant="Variant.Filled"
+                                          InputType="@(_showApiKey ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(_showApiKey ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="@(() => _showApiKey = !_showApiKey)"
+                                          @bind-Value="_aiSettings.ApiKey"
+                                          HelperText="Stored securely on-device" />
+
+                             @if (_fetchingModels)
+                             {
+                                 <div class="d-flex align-center gap-2 py-1">
+                                     <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">Fetching models from endpoint...</MudText>
+                                 </div>
+                             }
+
+                             @if (_availableModels.Count > 0)
+                             {
+                                 <MudSelect T="string"
+                                            Label="Model Name"
+                                            Variant="Variant.Filled"
+                                            Value="_aiSettings.ModelName"
+                                            ValueChanged="OnModelSelected"
+                                            HelperText="Select from models fetched dynamically from endpoint">
+                                     @foreach (var m in _availableModels)
+                                     {
+                                         <MudSelectItem Value="@m">@m</MudSelectItem>
+                                     }
+                                 </MudSelect>
+                             }
+                             else
+                             {
+                                 <MudTextField T="string"
+                                               Label="Model Name"
+                                               Variant="Variant.Filled"
+                                               @bind-Value="_aiSettings.ModelName"
+                                               HelperText="e.g. gpt-4o-mini, anthropic/claude-3.5-sonnet, deepseek/deepseek-r1" />
+                             }
+
+                            <MudTextField T="string"
+                                          Label="Custom Instructions / Prompt (Optional)"
+                                          Variant="Variant.Filled"
+                                          Lines="2"
+                                          @bind-Value="_aiSettings.CustomSystemPrompt"
+                                          HelperText="Extra instructions passed to the AI assistant" />
+
+                            <div class="settings-btn-group mt-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           OnClick="SaveAiSettings"
+                                           StartIcon="@Icons.Material.Filled.Save">
+                                    Save Settings
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Info"
+                                           Disabled="_fetchingModels"
+                                           OnClick="FetchModelsAsync"
+                                           StartIcon="@Icons.Material.Filled.CloudDownload">
+                                    @if (_fetchingModels)
+                                    {
+                                        <span>Fetching...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Fetch Models</span>
+                                    }
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Secondary"
+                                           Disabled="_testingAiConnection"
+                                           OnClick="TestAiConnectionAsync"
+                                           StartIcon="@Icons.Material.Filled.CheckCircle">
+                                    @if (_testingAiConnection)
+                                    {
+                                        <span>Testing...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Test Connection</span>
+                                    }
+                                </MudButton>
+                            </div>
+                        </MudStack>
+                    }
+                </div>
+
+            </ChildContent>
+        </MudExpansionPanel>
     </MudExpansionPanels>
+
 
     <MudText Typo="Typo.caption" Class="settings-group-label">Data</MudText>
     <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
@@ -411,6 +544,45 @@
         _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
     }
 
+    private AiProviderSettings _aiSettings = new();
+    private bool _showApiKey;
+    private bool _testingAiConnection;
+    private bool _fetchingModels;
+    private List<string> _availableModels = [];
+
+    private void OnModelSelected(string model)
+    {
+        _aiSettings.ModelName = model;
+        SaveAiSettings();
+    }
+
+    private async Task FetchModelsAsync()
+    {
+        _fetchingModels = true;
+        try
+        {
+            SaveAiSettings();
+            _availableModels = await AiAssistant.FetchAvailableModelsAsync();
+            if (_availableModels.Count > 0)
+            {
+                Snackbar.Add($"Fetched {_availableModels.Count} available models!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("No models returned. Verify Base URL and API key.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to fetch models: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _fetchingModels = false;
+        }
+    }
+
+
     private void SyncFromService()
     {
         _preference = ThemeService.Preference;
@@ -418,7 +590,59 @@
         _restAlertsEnabled = RestAlertSettings.Enabled;
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
         _scheduleDays = [.. WorkoutSchedule.Days];
+        _aiSettings = AiAssistant.GetSettings();
     }
+
+    private void OnAiEnabledChanged(bool enabled)
+    {
+        _aiSettings.Enabled = enabled;
+        SaveAiSettings();
+    }
+
+    private async Task OnAiProviderChanged(AiProviderType provider)
+    {
+        _aiSettings.Provider = provider;
+        _aiSettings.BaseUrl = _aiSettings.GetDefaultBaseUrl();
+        _aiSettings.ModelName = _aiSettings.GetDefaultModel();
+        SaveAiSettings();
+        await FetchModelsAsync();
+    }
+
+
+
+    private void SaveAiSettings()
+    {
+        AiAssistant.SaveSettings(_aiSettings);
+        Snackbar.Add("AI Assistant settings saved.", Severity.Success);
+    }
+
+    private async Task TestAiConnectionAsync()
+    {
+        _testingAiConnection = true;
+        try
+        {
+            SaveAiSettings();
+            await AiAssistant.SendUserMessageAsync("Hello! Respond with a brief 1-sentence confirmation that connection is successful.");
+            var lastMsg = AiAssistant.Messages.LastOrDefault();
+            if (lastMsg != null && lastMsg.IsError)
+            {
+                Snackbar.Add($"Connection test failed: {lastMsg.Content}", Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add("AI Connection test successful!", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Test failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _testingAiConnection = false;
+        }
+    }
+
 
     private void ToggleScheduleDay(DayOfWeek day)
     {

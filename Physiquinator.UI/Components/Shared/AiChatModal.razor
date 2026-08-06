@@ -1,0 +1,253 @@
+@using Physiquinator.Core.Services.Ai
+@using Physiquinator.Core.Models
+@using Markdig
+@inject AiAssistantService AiAssistant
+@inject NavigationManager Navigation
+@implements IDisposable
+
+
+<MudDialog Class="ai-chat-dialog">
+    <DialogContent>
+        <div class="ai-chat-container" style="display: flex; flex-direction: column; height: min(580px, 75dvh); width: 100%;">
+            <!-- Header -->
+            <div class="ai-chat-header" style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--mud-palette-lines-default, rgba(255,255,255,0.1)); width: 100%;">
+                <div class="ai-chat-header__title" style="display: flex; align-items: center; gap: 8px;">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Color="Color.Primary" />
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold" Style="margin: 0; line-height: 1.2;">Physiquinator AI</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin: 0;">Fitness Assistant & Plan Engine</MudText>
+                    </div>
+                </div>
+                <div class="ai-chat-header__actions" style="display: flex; align-items: center; gap: 4px;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.DeleteSweep"
+                                   aria-label="Clear History"
+                                   Size="Size.Small"
+                                   OnClick="ClearHistory" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   aria-label="Close"
+                                   Size="Size.Small"
+                                   OnClick="Close" />
+                </div>
+            </div>
+
+            <!-- API Key Warning Banner if Not Configured -->
+            @if (IsApiKeyMissing)
+            {
+                <div class="ai-api-key-banner" style="background: var(--mud-palette-background-grey, rgba(255, 255, 255, 0.05)); border: 1px dashed var(--mud-palette-warning, #f59e0b); border-radius: 12px; padding: 10px 14px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                        <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Medium" />
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold" Style="line-height: 1.2;">API Key Required</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI.</MudText>
+                        </div>
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" OnClick="NavigateToSettings" Style="flex-shrink: 0; font-weight: 600;">
+                        Setup Key
+                    </MudButton>
+                </div>
+            }
+
+            <!-- Messages Area -->
+            <div class="ai-chat-messages" style="flex: 1; overflow-y: auto; padding: 12px 0; display: flex; flex-direction: column; gap: 12px;">
+                @if (AiAssistant.Messages.Count == 0)
+                {
+                    <div class="ai-chat-empty" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 200px; text-align: center; padding: 16px;">
+                        <MudIcon Icon="@Icons.Material.Outlined.FitnessCenter" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                        <MudText Typo="Typo.h6" Class="font-weight-semibold">How can I help you train?</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary align-center max-w-400" Style="margin-top: 4px;">
+                            Ask me to create workout plans, log bodyweight, analyze your personal records, tweak app settings, or generate progressive overload recommendations!
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var msg in AiAssistant.Messages)
+                    {
+                        if (msg.Role == AiMessageRole.User)
+                        {
+                            <div class="ai-msg ai-msg--user" style="display: flex; flex-direction: column; align-self: flex-end; max-width: 85%;">
+                                <div class="ai-msg__bubble">
+                                    @msg.Content
+                                </div>
+                                <span class="ai-msg__time" style="text-align: right;">@msg.Timestamp.ToString("t")</span>
+                            </div>
+                        }
+                        else if (msg.Role == AiMessageRole.Assistant)
+                        {
+                            <div class="@GetAssistantClass(msg)" style="display: flex; flex-direction: column; align-self: flex-start; max-width: 85%;">
+                                <div class="ai-msg__bubble">
+                                    @if (msg.IsThinking)
+                                    {
+                                        <div class="ai-msg__thinking" style="display: flex; align-items: center; gap: 8px;">
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                            <span>Thinking & executing actions...</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="ai-msg__content markdown-body">@((MarkupString)RenderMarkdown(msg.Content))</div>
+                                    }
+                                </div>
+                                @if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
+                                {
+                                    <div class="ai-msg__tools" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                        @foreach (var tc in msg.ToolCalls)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
+                                                Executed @tc.Name
+                                            </MudChip>
+                                        }
+                                    </div>
+                                }
+                                <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            <!-- Quick Action Chips -->
+            <div class="ai-chat-quick-actions" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0;">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnProgressiveOverloadClick">
+                    ⚡ Progressive Overload
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnPerformanceStatsClick">
+                    📊 Performance Stats
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnLogBodyweightClick">
+                    ⚖️ Log Bodyweight
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnDeloadPlanClick">
+                    🔄 Deload Plan
+                </MudChip>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="ai-chat-input" style="display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--mud-palette-lines-default, rgba(255,255,255,0.1)); width: 100%;">
+                <div style="flex: 1;">
+                    <MudTextField T="string"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="Ask Physiquinator AI..."
+                                  Immediate="true"
+                                  @bind-Value="_inputText"
+                                  OnKeyDown="HandleKeyDown"
+                                  Disabled="_isSending"
+                                  Margin="Margin.Dense"
+                                  Class="ai-chat-textfield" />
+                </div>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               aria-label="Send Message"
+                               Disabled="@(string.IsNullOrWhiteSpace(_inputText) || _isSending)"
+                               OnClick="SendMessageAsync"
+                               Style="height: 40px; min-width: 40px;" />
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+
+    private string _inputText = string.Empty;
+    private bool _isSending = false;
+
+    private bool IsApiKeyMissing
+    {
+        get
+        {
+            var settings = AiAssistant.GetSettings();
+            return !settings.Enabled || (settings.Provider != AiProviderType.OllamaLocal && string.IsNullOrWhiteSpace(settings.ApiKey));
+        }
+    }
+
+
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .DisableHtml()
+        .Build();
+
+    private static string RenderMarkdown(string? rawMarkdown) =>
+        Markdown.ToHtml(rawMarkdown ?? string.Empty, MarkdownPipeline);
+
+    private static string GetAssistantClass(AiChatMessage msg) =>
+        msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error" : "ai-msg ai-msg--assistant";
+
+
+    protected override void OnInitialized()
+    {
+        AiAssistant.OnMessagesChanged += HandleMessagesChanged;
+    }
+
+    private void HandleMessagesChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey && !string.IsNullOrWhiteSpace(_inputText) && !_isSending)
+        {
+            await SendMessageAsync();
+        }
+    }
+
+    private async Task OnProgressiveOverloadClick() =>
+        await SendPrompt("Suggest progressive overload recommendations for my active workout plans.");
+
+    private async Task OnPerformanceStatsClick() =>
+        await SendPrompt("Show my current workout stats and recent performance.");
+
+    private async Task OnLogBodyweightClick() =>
+        await SendPrompt("Log my bodyweight for today and show my recent trends.");
+
+    private async Task OnDeloadPlanClick() =>
+        await SendPrompt("Create a deload version of my primary workout plan.");
+
+    private async Task SendPrompt(string prompt)
+    {
+        _inputText = prompt;
+        await SendMessageAsync();
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_inputText) || _isSending) return;
+
+        var text = _inputText;
+        _inputText = string.Empty;
+        _isSending = true;
+
+        try
+        {
+            await AiAssistant.SendUserMessageAsync(text);
+        }
+        finally
+        {
+            _isSending = false;
+        }
+    }
+
+    private void NavigateToSettings()
+    {
+        MudDialog?.Close();
+        Navigation.NavigateTo(AppRoutes.Settings);
+    }
+
+    private void ClearHistory()
+    {
+        AiAssistant.ClearHistory();
+    }
+
+    private void Close()
+    {
+        MudDialog?.Close();
+    }
+
+    public void Dispose()
+    {
+        AiAssistant.OnMessagesChanged -= HandleMessagesChanged;
+    }
+}

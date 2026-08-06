@@ -1,6 +1,7 @@
 @page "/"
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Services
+@using Physiquinator.UI.Components.Shared
 @implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
@@ -15,13 +16,25 @@
 @inject WorkoutScheduleService ScheduleService
 @inject IFileTransferService FileTransfer
 @inject TimeProvider TimeProvider
+@inject Physiquinator.Core.Services.Ai.AiAssistantService AiAssistant
 
 <PageTitle>Home</PageTitle>
 
 <MudStack Spacing="3" Class="home-page">
-    <header class="home-header">
+    <header class="home-header d-flex justify-space-between align-center">
         <MudText Typo="Typo.h4" Class="home-header__title">Physiquinator</MudText>
+        @if (AiAssistant.GetSettings().Enabled)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.SmartToy"
+                           Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           Size="Size.Medium"
+                           aria-label="Physiquinator AI Assistant"
+                           OnClick="OpenAiChatAsync" />
+        }
     </header>
+
+
 
     @if (_isLoading)
     {
@@ -393,4 +406,22 @@
 
         _dotNetRef?.Dispose();
     }
+
+    private async Task OpenAiChatAsync()
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = false,
+            CloseOnEscapeKey = true,
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+        await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
+    }
+
+
+
+
 }
+

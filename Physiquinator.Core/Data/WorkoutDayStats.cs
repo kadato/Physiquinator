@@ -12,23 +12,72 @@ public static class WorkoutDayStats
     /// <summary>
     /// Weeks are Monday–Sunday, matching the activity heatmap grid.
     /// Session totals sum per-day counts from <paramref name="activityByDay"/> (multiple sessions on one day count separately).
+    /// When <paramref name="schedule"/> is non-empty, streaks count completed scheduled days only;
+    /// non-scheduled (rest) days never break a streak. When it is null or empty, the legacy
+    /// calendar-day streak with a one-day grace period is used.
     /// </summary>
     public static WorkoutDaySummary Compute(
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly endLocal,
-        DateOnly gridStartLocal)
+        DateOnly gridStartLocal,
+        IReadOnlySet<DayOfWeek>? schedule = null)
     {
         if (gridStartLocal > endLocal)
             (gridStartLocal, endLocal) = (endLocal, gridStartLocal);
 
-        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal);
-        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal);
+        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, schedule);
+        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, schedule);
         (var thisWeek, var lastWeek) = ComputeWeekSessionTotals(activityByDay, endLocal);
 
         return new WorkoutDaySummary(currentStreak, longest, thisWeek, lastWeek);
     }
 
-    private static int ComputeCurrentStreak(IReadOnlyDictionary<DateOnly, int> activityByDay, DateOnly endLocal)
+    private static int ComputeCurrentStreak(
+        IReadOnlyDictionary<DateOnly, int> activityByDay,
+        DateOnly endLocal,
+        IReadOnlySet<DayOfWeek>? schedule)
+    {
+        if (schedule is null or { Count: 0 })
+        {
+            return ComputeCurrentCalendarStreak(activityByDay, endLocal);
+        }
+
+        // Most recent scheduled day at or before today.
+        DateOnly lastScheduled = endLocal;
+        while (!schedule.Contains(lastScheduled.DayOfWeek))
+            lastScheduled = lastScheduled.AddDays(-1);
+
+        // A scheduled day in the past without a workout breaks the streak.
+        if (activityByDay.GetValueOrDefault(lastScheduled, 0) == 0 && lastScheduled != endLocal)
+            return 0;
+
+        // Today is scheduled and still in progress: the streak is at risk but not lost yet.
+        var streak = 0;
+        DateOnly d = lastScheduled;
+        if (activityByDay.GetValueOrDefault(d, 0) == 0)
+            d = d.AddDays(-1);
+
+        while (true)
+        {
+            if (!schedule.Contains(d.DayOfWeek))
+            {
+                d = d.AddDays(-1);
+                continue;
+            }
+
+            if (activityByDay.GetValueOrDefault(d, 0) == 0)
+                break;
+
+            streak++;
+            d = d.AddDays(-1);
+        }
+
+        return streak;
+    }
+
+    private static int ComputeCurrentCalendarStreak(
+        IReadOnlyDictionary<DateOnly, int> activityByDay,
+        DateOnly endLocal)
     {
         DateOnly startDay;
         if (activityByDay.GetValueOrDefault(endLocal, 0) > 0)
@@ -58,12 +107,16 @@ public static class WorkoutDayStats
     private static int ComputeLongestStreakInRange(
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly rangeStart,
-        DateOnly rangeEnd)
+        DateOnly rangeEnd,
+        IReadOnlySet<DayOfWeek>? schedule)
     {
         var best = 0;
         var run = 0;
         for (DateOnly d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
         {
+            if (schedule is not null && schedule.Count > 0 && !schedule.Contains(d.DayOfWeek))
+                continue;
+
             if (activityByDay.GetValueOrDefault(d, 0) > 0)
             {
                 run++;

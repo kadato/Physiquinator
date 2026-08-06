@@ -13,4 +13,5 @@ public static class PreferenceKeys
     public const string RestAddTimeSeconds = "rest_add_time_seconds";
     public const string RestTimerSnapshot = "rest_timer_snapshot_v1";
     public const string ThemePreference = "physiquinator-theme-preference";
+    public const string WorkoutScheduleDays = "physiquinator-workout-schedule-days";
 }

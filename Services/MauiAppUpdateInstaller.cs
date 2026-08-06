@@ -1,7 +1,7 @@
-using System.Diagnostics;
-using System.IO.Compression;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
+using System.Diagnostics;
+using System.IO.Compression;
 
 #if ANDROID
 using Android.Content;
@@ -16,11 +16,15 @@ namespace Physiquinator.Services;
 /// </summary>
 public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 {
+#if ANDROID || WINDOWS
     private readonly HttpClient _http;
+#endif
 
     public MauiAppUpdateInstaller(HttpClient http)
     {
+#if ANDROID || WINDOWS
         _http = http;
+#endif
     }
 
     /// <inheritdoc />
@@ -83,6 +87,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
     }
 #endif
 
+#if ANDROID || WINDOWS
     private async Task DownloadAsync(string url, string destinationPath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         using HttpResponseMessage response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -105,6 +110,7 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
             }
         }
     }
+#endif
 
 #if ANDROID
     private static void LaunchApkInstaller(string apkPath)

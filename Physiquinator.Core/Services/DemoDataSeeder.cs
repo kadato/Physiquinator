@@ -37,6 +37,9 @@ public sealed class DemoDataSeeder(
     private static readonly IReadOnlyList<DayOfWeek> s_demoScheduleDays =
         [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday, DayOfWeek.Sunday];
 
+    /// <summary>Workout start hour indexed by session hash remainder (0-3).</summary>
+    private static readonly int[] s_startHoursByHashRemainder = [7, 9, 17, 18];
+
     private readonly WorkoutPlanService _planService = planService;
     private readonly AppDatabase _database = database;
     private readonly WorkoutHistoryRepository _historyRepository = historyRepository;
@@ -331,20 +334,12 @@ public sealed class DemoDataSeeder(
             return;
 
         var daysAgo = today.DayNumber - sessionDate.DayNumber;
-        if (daysAgo < 0)
-            return;
 
         if (daysAgo == 0 && planId == DemoDataIds.PushPlan)
             return;
 
         var hash = (week * 31) + (slotKey * 17);
-        var startHour = hash % 4 switch
-        {
-            0 => 7,
-            1 => 9,
-            2 => 17,
-            _ => 18
-        };
+        var startHour = s_startHoursByHashRemainder[hash % 4];
         var startMinute = hash % 3 * 15;
         var duration = 45 + (hash % 31);
         var isDeload = IsDeloadSession(planOrdinal);

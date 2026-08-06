@@ -98,6 +98,36 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetExerciseSetLogRowsAsync_ReturnsChronologicalRows_ScopedByPlanAndName()
+    {
+        var p1 = Guid.NewGuid();
+        var p2 = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(p1, "A", null);
+        await _sut.LogSetAsync(s1, 0, "Bench", 0, reps: 8, weightKg: 50);
+        var s2 = await _sut.BeginSessionAsync(p1, "B", null);
+        await _sut.LogSetAsync(s2, 0, "Bench", 0, reps: 6, weightKg: 55);
+        await _sut.LogSetAsync(s2, 0, "Squat", 0, reps: 5, weightKg: 100);
+        var s3 = await _sut.BeginSessionAsync(p2, "Other", null);
+        await _sut.LogSetAsync(s3, 0, "Bench", 0, reps: 1, weightKg: 200);
+
+        IReadOnlyList<ExerciseSetLogRow> rows = await _sut.GetExerciseSetLogRowsAsync(p1, "Bench");
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(s1, rows[0].SessionId);
+        Assert.Equal(8, rows[0].Reps);
+        Assert.Equal(50, rows[0].WeightKg);
+        Assert.Equal(s2, rows[1].SessionId);
+        Assert.Equal(6, rows[1].Reps);
+        Assert.Equal(55, rows[1].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetExerciseSetLogRowsAsync_ReturnsEmpty_WhenNoMatches()
+    {
+        Assert.Empty(await _sut.GetExerciseSetLogRowsAsync(Guid.NewGuid(), "Anything"));
+    }
+
+    [Fact]
     public async Task GetLatestSetMetricsForExerciseAsync_UsesMostRecentAcrossSessionsForSamePlan()
     {
         var planId = Guid.NewGuid();

@@ -26,12 +26,7 @@ builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
 builder.Services.AddSingleton<IFileTransferService, WebFileTransferService>();
 
-builder.Services.AddHttpClient<IGitHubReleaseClient, GitHubReleaseClient>();
-builder.Services.AddSingleton<IAppUpdateInstaller, NoopAppUpdateInstaller>();
-builder.Services.AddSingleton<IAppUpdateService>(sp => new AppUpdateService(
-    sp.GetRequiredService<IGitHubReleaseClient>(),
-    sp.GetRequiredService<IAppUpdateInstaller>(),
-    typeof(GitHubReleaseClient).Assembly.GetName().Version ?? new Version(1, 0, 0)));
+builder.Services.AddSingleton<IAppUpdateService, NoopAppUpdateService>();
 
 WebApplication app = builder.Build();
 

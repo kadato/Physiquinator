@@ -76,7 +76,7 @@ public class AppUpdateServiceTests
     public async Task CheckForUpdatesAsync_WhenInstallerUnsupported_ReturnsNullDownloadUrl()
     {
         var client = new FakeReleaseClient(Release("v1.2.0", new GitHubReleaseAsset(GitHubReleaseAssets.AndroidApk, "https://x/apk", 1)));
-        var sut = new AppUpdateService(client, new NoopAppUpdateInstaller(), Installed);
+        var sut = new AppUpdateService(client, new FakeInstaller("", isSupported: false), Installed);
 
         UpdateCheckResult result = await sut.CheckForUpdatesAsync();
 
@@ -121,7 +121,7 @@ public class AppUpdateServiceTests
     [Fact]
     public async Task DownloadAndInstallAsync_WhenInstallerUnsupported_Throws()
     {
-        var sut = new AppUpdateService(new FakeReleaseClient(null), new NoopAppUpdateInstaller(), Installed);
+        var sut = new AppUpdateService(new FakeReleaseClient(null), new FakeInstaller("", isSupported: false), Installed);
         var update = new UpdateCheckResult(Release("v1.2.0"), true, "https://x/apk");
 
         await Assert.ThrowsAsync<NotSupportedException>(() => sut.DownloadAndInstallAsync(update));
@@ -142,12 +142,15 @@ public class AppUpdateServiceTests
 
     private sealed class FakeInstaller : IAppUpdateInstaller
     {
-        public FakeInstaller(string assetFileName)
+        private readonly bool _isSupported;
+
+        public FakeInstaller(string assetFileName, bool isSupported = true)
         {
             AssetFileName = assetFileName;
+            _isSupported = isSupported;
         }
 
-        public bool IsSupported => true;
+        public bool IsSupported => _isSupported;
 
         public string AssetFileName { get; }
 
@@ -157,6 +160,11 @@ public class AppUpdateServiceTests
 
         public Task InstallAsync(string downloadUrl, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
+            if (!_isSupported)
+            {
+                throw new NotSupportedException("In-app updates are not supported on this platform.");
+            }
+
             InstalledUrl = downloadUrl;
             InstallCallCount++;
             return Task.CompletedTask;

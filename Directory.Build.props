@@ -7,7 +7,12 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
-  <!-- Code quality analysis for non-MAUI projects (MAUI platform code and source generators would add noise) -->
+  <!-- Code quality analysis for non-MAUI projects (MAUI platform code and source generators would add noise).
+       Warnings are treated as errors so Sonar/StyleCop/CA findings break the build instead of piling up. -->
+  <PropertyGroup Condition="'$(UseMaui)' != 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(UseMaui)' != 'true'">
     <PackageReference Include="SonarAnalyzer.CSharp">
       <PrivateAssets>all</PrivateAssets>

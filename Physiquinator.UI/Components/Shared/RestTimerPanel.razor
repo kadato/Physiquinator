@@ -22,30 +22,17 @@
         </div>
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2" Class="rest-timer-controls">
-            @if (IsRestComplete)
+            <button type="button"
+                    class="rest-timer-add-btn"
+                    aria-label="@($"Add {AddRestSeconds} seconds of rest")"
+                    @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
+            <MudIconButton Icon="@Icons.Material.Filled.Replay"
+                           Color="Color.Default"
+                           aria-label="Reset rest"
+                           OnClick="OnReset"
+                           Size="Size.Large" />
+            @if (!IsRestComplete)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                               Color="Color.Default"
-                               aria-label="Reset rest"
-                               OnClick="OnReset"
-                               Size="Size.Large" />
-                <div class="rest-timer-controls__slot" aria-hidden="true"></div>
-                <button type="button"
-                        class="rest-timer-add-btn"
-                        aria-label="@($"Add {AddRestSeconds} seconds of rest")"
-                        @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
-            }
-            else
-            {
-                <button type="button"
-                        class="rest-timer-add-btn"
-                        aria-label="@($"Add {AddRestSeconds} seconds of rest")"
-                        @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
-                <MudIconButton Icon="@Icons.Material.Filled.Replay"
-                               Color="Color.Default"
-                               aria-label="Reset rest"
-                               OnClick="OnReset"
-                               Size="Size.Large" />
                 <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
                                Color="Color.Default"
                                aria-label="Skip rest"

@@ -34,6 +34,7 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddSingleton<WorkoutSessionService>();
         services.AddSingleton<WorkoutQuickActionService>();
         services.AddSingleton<RestAlertSettingsService>();
+        services.AddSingleton<AppUpdateSettingsService>();
         services.AddSingleton<WorkoutScheduleService>();
         services.AddSingleton<RestTimerCoordinator>();
         services.AddSingleton<IDemoSeedPreferences, ScopedDemoSeedPreferences>();

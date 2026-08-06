@@ -1262,14 +1262,6 @@ button.heatmap-cell:disabled {
     box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
 }
 
-/* Control slot spacing consistency */
-.rest-timer-controls__slot {
-    display: block;
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-}
-
 .rest-timer-edge-track {
     flex-shrink: 0;
     height: 8px;
@@ -2481,13 +2473,13 @@ a,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
     padding: 0;
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--mud-palette-error);
     color: #ffffff;
     cursor: pointer;
@@ -2846,3 +2838,23 @@ html[data-theme="dark"] .app-splash__retry {
 .app-splash__retry:active {
     transform: scale(0.97);
 }
+
+/* Update dialog: release notes block */
+.update-dialog__notes {
+    background-color: var(--mud-palette-background-grey);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+}
+
+.update-dialog__notes-body {
+    margin-top: 0.25rem;
+    max-height: 40vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--mud-palette-text-primary);
+}
+

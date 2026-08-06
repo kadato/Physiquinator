@@ -1,0 +1,118 @@
+@using Microsoft.Extensions.Logging
+@using Physiquinator.Core.Models
+@using Physiquinator.Core.Services
+@inject IAppUpdateService AppUpdateService
+@inject ISnackbar Snackbar
+@inject ILogger<UpdateDialog> Logger
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.SystemUpdate" Color="Color.Primary" Size="Size.Large" />
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">Update available</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@VersionLine</MudText>
+            </div>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Class="py-2">
+            <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                Version <strong>@Release.Tag</strong> is ready to install. Your plans and history stay on this device and are not affected.
+            </MudText>
+
+            @if (!string.IsNullOrWhiteSpace(Release.Notes))
+            {
+                <div class="update-dialog__notes">
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary">What's new</MudText>
+                    <div class="update-dialog__notes-body">@Release.Notes</div>
+                </div>
+            }
+
+            @if (Downloadable)
+            {
+                @if (_downloading)
+                {
+                    <MudProgressLinear Value="(int)(_downloadProgress * 100)" Color="Color.Primary" Class="mt-2" />
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        Downloading update… @Math.Round(_downloadProgress * 100)%
+                    </MudText>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">
+                    A newer version is available, but in-app updates are not supported on this platform.
+                </MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Disabled="_downloading">Later</MudButton>
+        @if (Downloadable)
+        {
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Download"
+                       Disabled="_downloading"
+                       OnClick="DownloadAsync">
+                @(_downloading ? "Downloading…" : "Download")
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    /// <summary>The release to install.</summary>
+    [Parameter, EditorRequired]
+    public GitHubRelease Release { get; set; } = null!;
+
+    /// <summary>Asset download URL for this platform, or null when in-app install is unsupported.</summary>
+    [Parameter]
+    public string? DownloadUrl { get; set; }
+
+    private bool _downloading;
+    private double _downloadProgress;
+
+    private bool Downloadable => !string.IsNullOrEmpty(DownloadUrl);
+
+    private string VersionLine
+    {
+        get
+        {
+            var current = AppUpdateService.CurrentVersion;
+            var published = Release.PublishedAt is { } p ? $" · {p.ToLocalTime():d}" : "";
+            return $"{current} → {Release.Tag}{published}";
+        }
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (!Downloadable)
+            return;
+
+        _downloading = true;
+        _downloadProgress = 0;
+        await MudDialog.SetOptionsAsync(new DialogOptions { BackdropClick = false });
+        try
+        {
+            var progress = new Progress<double>(p => _downloadProgress = p);
+
+            var update = new UpdateCheckResult(Release, true, DownloadUrl);
+            await AppUpdateService.DownloadAndInstallAsync(update, progress);
+            Snackbar.Add("Update installed. The app will restart automatically.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Update download failed");
+            Snackbar.Add($"Update failed: {ex.Message}", Severity.Error);
+            MudDialog.Close(DialogResult.Cancel());
+        }
+    }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(false));
+}

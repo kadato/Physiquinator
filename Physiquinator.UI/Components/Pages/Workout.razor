@@ -123,12 +123,12 @@ else
 @if (_undoVisible)
 {
     <div class="undo-toast" role="status" aria-live="polite">
-        <span class="undo-toast__message">Set logged</span>
+        <span class="undo-toast__message">Logged</span>
         <button type="button"
                 class="undo-toast__btn"
                 aria-label="Undo"
                 @onclick="UndoLastSetCoreAsync">
-            <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Medium" />
+            <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Large" />
         </button>
     </div>
 }

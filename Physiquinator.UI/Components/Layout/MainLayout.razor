@@ -5,6 +5,10 @@
 @inject ThemeService ThemeService
 @inject AppInitializationService AppInit
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject IAppUpdateService AppUpdateService
+@inject AppUpdateSettingsService AppUpdateSettings
+@inject WorkoutSessionService SessionService
 @inject ILogger<MainLayout> Logger
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDark" />
@@ -98,6 +102,7 @@ else
     private bool _showBottomNav = true;
     private bool _useFixedDockPadding;
     private string? _initError;
+    private bool _updatePromptShown;
 
     protected override async Task OnInitializedAsync()
     {
@@ -105,11 +110,57 @@ else
         {
             await AppInit.EnsureInitializedAsync();
             SyncThemeFromService();
+            _ = CheckForUpdatesAndPromptAsync();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "App initialization failed");
             _initError = "Something went wrong while loading your data. Please try again.";
+        }
+    }
+
+    /// <summary>
+    /// Checks for a newer release once per session and shows the update dialog.
+    /// Skipped when automatic checking is disabled or a workout is in progress.
+    /// </summary>
+    private async Task CheckForUpdatesAndPromptAsync()
+    {
+        if (_updatePromptShown)
+            return;
+
+        _updatePromptShown = true;
+
+        if (!AppUpdateSettings.AutoCheckEnabled)
+            return;
+
+        try
+        {
+            UpdateCheckResult result = await AppUpdateService.CheckForUpdatesAsync();
+            if (!result.IsUpdateAvailable || result.Latest is null)
+                return;
+
+            if (SessionService.CurrentPlan != null)
+                return;
+
+            var parameters = new DialogParameters<UpdateDialog>
+            {
+                { x => x.Release, result.Latest },
+                { x => x.DownloadUrl, result.DownloadUrl },
+            };
+
+            var options = new DialogOptions
+            {
+                CloseButton = false,
+                CloseOnEscapeKey = false,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            };
+
+            await DialogService.ShowAsync<UpdateDialog>("Update available", parameters, options);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Update check failed; skipping update prompt");
         }
     }
 

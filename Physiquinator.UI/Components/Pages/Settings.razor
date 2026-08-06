@@ -17,6 +17,7 @@
 @inject WorkoutScheduleService WorkoutSchedule
 @inject IFileTransferService FileTransfer
 @inject IAppUpdateService AppUpdateService
+@inject AppUpdateSettingsService AppUpdateSettings
 @inject TimeProvider TimeProvider
 @implements IDisposable
 
@@ -275,37 +276,27 @@
             </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
+                    <MudSwitch T="bool"
+                               Label="Check for updates automatically"
+                               Value="_autoCheckEnabled"
+                               ValueChanged="OnAutoCheckEnabledChanged" />
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available.
+                    </MudText>
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                         New releases are published on GitHub and can be installed from here.
                     </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
-                                   Disabled="@(_checkingForUpdates || _downloading)"
+                                   Disabled="@_checkingForUpdates"
                                    OnClick="CheckForUpdatesAsync"
                                    StartIcon="@Icons.Material.Filled.SystemUpdate">
                             Check for updates
                         </MudButton>
-                        @if (_updateAvailable && !string.IsNullOrEmpty(_downloadUrl))
-                        {
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Disabled="@(_checkingForUpdates || _downloading)"
-                                       OnClick="DownloadAndInstallAsync"
-                                       StartIcon="@Icons.Material.Filled.Download">
-                                Download and install
-                            </MudButton>
-                        }
                     </div>
                     @if (_checkingForUpdates)
                     {
                         <MudProgressLinear Indeterminate="true" Class="mt-3" Color="Color.Primary" />
-                    }
-                    @if (_downloading)
-                    {
-                        <MudProgressLinear Value="(int)(_downloadProgress * 100)" Class="mt-3" Color="Color.Primary" />
-                        <MudText Typo="Typo.caption" Class="mt-1 mud-text-secondary">
-                            Downloading update… @Math.Round(_downloadProgress * 100)%
-                        </MudText>
                     }
                     @if (_latestRelease != null)
                     {
@@ -402,8 +393,7 @@
     private bool _updateAvailable;
     private string? _downloadUrl;
     private bool _checkingForUpdates;
-    private bool _downloading;
-    private double _downloadProgress;
+    private bool _autoCheckEnabled = true;
 
     private double? _addTimeSecondsValue
     {
@@ -429,6 +419,7 @@
         _activeProfile = UserProfileService.GetActiveProfile();
         _bodyweight = _activeProfile.BodyweightKg;
         _currentVersion = AppUpdateService.CurrentVersion.ToString();
+        _autoCheckEnabled = AppUpdateSettings.AutoCheckEnabled;
     }
 
     /// <summary>
@@ -478,6 +469,12 @@
     {
         RestAlertSettings.SetEnabled(enabled);
         _restAlertsEnabled = enabled;
+    }
+
+    private void OnAutoCheckEnabledChanged(bool enabled)
+    {
+        AppUpdateSettings.SetAutoCheckEnabled(enabled);
+        _autoCheckEnabled = enabled;
     }
 
     private async Task OnThemePreferenceChanged(string preference)
@@ -636,9 +633,23 @@
             {
                 Snackbar.Add("A newer version is available, but in-app updates are not supported on this platform.", Severity.Info);
             }
-            else
+            else if (result.Latest is { } release)
             {
-                Snackbar.Add($"Version {result.Latest?.Tag} is available.", Severity.Info);
+                var parameters = new DialogParameters<UpdateDialog>
+                {
+                    { x => x.Release, release },
+                    { x => x.DownloadUrl, _downloadUrl },
+                };
+
+                var options = new DialogOptions
+                {
+                    CloseButton = true,
+                    CloseOnEscapeKey = true,
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                };
+
+                await DialogService.ShowAsync<UpdateDialog>("Update available", parameters, options);
             }
         }
         catch (Exception ex)
@@ -648,39 +659,6 @@
         finally
         {
             _checkingForUpdates = false;
-        }
-    }
-
-    private async Task DownloadAndInstallAsync()
-    {
-        if (_latestRelease == null || string.IsNullOrEmpty(_downloadUrl))
-            return;
-
-        var confirmed = await DialogService.ConfirmAsync(
-            "Install update?",
-            $"Download version {_latestRelease.Tag} and install it. Your plans and history stay on this device and are not affected.",
-            confirmText: "Download",
-            confirmColor: Color.Primary);
-
-        if (!confirmed)
-            return;
-
-        _downloading = true;
-        _downloadProgress = 0;
-        try
-        {
-            var progress = new Progress<double>(p => _downloadProgress = p);
-            var result = new UpdateCheckResult(_latestRelease, true, _downloadUrl);
-            await AppUpdateService.DownloadAndInstallAsync(result, progress);
-            Snackbar.Add("Update installed. The app will restart automatically.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Update failed: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _downloading = false;
         }
     }
 

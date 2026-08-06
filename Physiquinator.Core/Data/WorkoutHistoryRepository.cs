@@ -281,7 +281,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.EnsureInitializedAsync();
         var key = ToDateKey(localDate);
         BodyweightLogEntity row = await _db.Database.FindAsync<BodyweightLogEntity>(key);
-        var nowUtc = _time.GetUtcNow().UtcDateTime;
+        DateTime nowUtc = _time.GetUtcNow().UtcDateTime;
         if (row == null)
         {
             await _db.Database.InsertAsync(new BodyweightLogEntity

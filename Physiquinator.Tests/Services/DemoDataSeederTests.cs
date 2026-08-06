@@ -187,10 +187,10 @@ public class DemoDataSeederTests : IAsyncLifetime
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
         await _sut.SeedDemoExtrasIfNeededAsync();
-        var c1 = await _historyRepo.GetBodyweightLogsAsync(1000);
+        IReadOnlyList<BodyweightLogEntity> c1 = await _historyRepo.GetBodyweightLogsAsync(1000);
 
         await _sut.SeedDemoExtrasIfNeededAsync();
-        var c2 = await _historyRepo.GetBodyweightLogsAsync(1000);
+        IReadOnlyList<BodyweightLogEntity> c2 = await _historyRepo.GetBodyweightLogsAsync(1000);
 
         Assert.Equal(c1.Count, c2.Count);
     }

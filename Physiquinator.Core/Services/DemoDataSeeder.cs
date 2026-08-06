@@ -246,7 +246,7 @@ public sealed class DemoDataSeeder(
         for (var week = 0; week < DemoHistoryWeeks; week++)
         {
             DateOnly weekMonday = gridStartMonday.AddDays(week * 7);
-            double baseKg = DemoStartBodyweightKg
+            var baseKg = DemoStartBodyweightKg
                 + (week * DemoWeeklyBodyweightDeltaKg)
                 + (Math.Sin(week / 2.0) * 0.4);
 
@@ -271,7 +271,7 @@ public sealed class DemoDataSeeder(
             return;
 
         var hash = (week * 31) + ((int)date.DayOfWeek * 17);
-        var jitter = (hash % 7 - 3) * 0.05;
+        var jitter = ((hash % 7) - 3) * 0.05;
 
         entries.Add(new BodyweightLogEntity
         {

@@ -3,7 +3,6 @@ using Android.Content;
 using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Provider;
-using Microsoft.Maui.ApplicationModel;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
 
@@ -68,7 +67,7 @@ public sealed class AndroidRestNotificationService(
         if (HasOverlayPermission())
             return Task.CompletedTask;
 
-        Intent intent = new Intent(Settings.ActionManageOverlayPermission,
+        var intent = new Intent(Settings.ActionManageOverlayPermission,
             global::Android.Net.Uri.Parse("package:" + _context.PackageName));
 
         Activity? activity = Platform.CurrentActivity;

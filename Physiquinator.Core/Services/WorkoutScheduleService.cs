@@ -1,5 +1,5 @@
-using System.Globalization;
 using Physiquinator.Core.Models;
+using System.Globalization;
 
 namespace Physiquinator.Core.Services;
 
@@ -31,11 +31,11 @@ public sealed class WorkoutScheduleService(
         get
         {
             var raw = preferences.Get(PreferenceKey, string.Empty);
-            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int mask) || mask == 0)
+            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var mask) || mask == 0)
                 return new HashSet<DayOfWeek>();
 
             var days = new HashSet<DayOfWeek>();
-            for (var day = DayOfWeek.Sunday; day <= DayOfWeek.Saturday; day++)
+            for (DayOfWeek day = DayOfWeek.Sunday; day <= DayOfWeek.Saturday; day++)
             {
                 if ((mask & (1 << (int)day)) != 0)
                     days.Add(day);
@@ -50,7 +50,7 @@ public sealed class WorkoutScheduleService(
     public void SetDays(IEnumerable<DayOfWeek> days)
     {
         var mask = 0;
-        foreach (var day in days)
+        foreach (DayOfWeek day in days)
             mask |= 1 << (int)day;
 
         preferences.Set(PreferenceKey, mask.ToString(CultureInfo.InvariantCulture));
@@ -62,7 +62,7 @@ public sealed class WorkoutScheduleService(
     /// <summary>Next scheduled day on or after <paramref name="from"/>; null when no schedule is configured.</summary>
     public DateOnly? NextWorkoutDay(DateOnly from)
     {
-        var days = Days;
+        IReadOnlySet<DayOfWeek> days = Days;
         if (days.Count == 0)
             return null;
 

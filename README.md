@@ -206,6 +206,36 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 
 ---
 
+## Agent API (MCP Server)
+
+The web client (`Physiquinator.Web`) exposes its AI assistant tools over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, 2026-07-28 spec). Any MCP-compatible agent harness can connect to it by URL — no per-client code:
+
+| Client | How to connect |
+|--------|----------------|
+| Claude Desktop / Cursor / any MCP host | Add a server with URL `https://your-host/mcp` |
+| MCP Inspector | Pick "Streamable HTTP", enter `http://localhost:5000/mcp` |
+
+All tools from the in-app assistant (`get_workout_plans`, `create_workout_plan`, `log_bodyweight_entry`, `get_workout_history_stats`, …) are exposed automatically, with JSON schemas and read-only/destructive annotations. Destructive tools (`delete_workout_plan`, `delete_bodyweight_entry`) ask the user for explicit confirmation via the protocol's multi-round-trip `input_required` mechanism before executing; clients on older protocol revisions run them directly.
+
+Configuration (`appsettings.json` or env vars):
+
+```json
+"Mcp": {
+  "ApiKey": "",        // when set, requests must send X-Api-Key or Authorization: Bearer
+  "CorsOrigins": ""    // comma-separated origins for browser-based clients (e.g. Copilot)
+}
+```
+
+The server is stateless (horizontally scalable), emits per-tool telemetry through `ILogger`, and ships a `/healthz` probe. Endpoint usage:
+
+```bash
+curl -X POST http://localhost:5000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+---
+
 ## Tech Stack
 
 ### Core Technologies

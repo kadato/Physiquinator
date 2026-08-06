@@ -1,6 +1,7 @@
 using MudBlazor.Services;
 using Physiquinator.Core.Services;
 using Physiquinator.Web.Components;
+using Physiquinator.Web.Mcp;
 using Physiquinator.Web.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,9 @@ builder.Services.AddSingleton<IFileTransferService, WebFileTransferService>();
 
 builder.Services.AddSingleton<IAppUpdateService, NoopAppUpdateService>();
 
+builder.Services.AddPhysiquinatorMcpServer(builder.Configuration);
+builder.Services.AddHealthChecks();
+
 WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -37,10 +41,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseAntiforgery();
+app.UsePhysiquinatorMcpApiKey();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(Physiquinator.UI.Routes).Assembly);
+
+app.MapPhysiquinatorMcp(builder.Configuration);
+app.MapHealthChecks("/healthz");
 
 await app.RunAsync();

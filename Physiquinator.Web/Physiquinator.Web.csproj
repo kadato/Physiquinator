@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Physiquinator.UI\Physiquinator.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
 </Project>

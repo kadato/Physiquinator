@@ -171,6 +171,7 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 - **Audio Notifications** - Audible beep when rest is complete
 - **Animation** - Green glow indicates rest completion
 - **Full Control** - Pause, resume, reset, or skip rest periods
+- **Phone Overlay Window** - Translucent picture-in-picture floating rest timer overlay on Android that stays visible when switching to other apps (e.g. YouTube or browser)
 
 ### Live Progress Tracking
 - **Real-Time Updates** - See completed vs remaining sets instantly
@@ -203,6 +204,10 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 - **Bulk Export** - Export all plans at once for backup
 - **History Backup** - Export and import workout session history, merging by session and set ID
 - **Demo Data Seeding** - Automatically populate demo data to explore the app's features right after installation
+
+### Agent API (MCP Server)
+- **Model Context Protocol** - Connect your favorite AI agents (like Claude Desktop or Cursor) to query your workout history, log bodyweight, or design custom plans
+- **Destructive Action Safety** - Built-in verification prompt for database deletions (e.g. plan or bodyweight log removals)
 
 ---
 

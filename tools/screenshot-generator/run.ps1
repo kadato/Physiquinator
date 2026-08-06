@@ -13,7 +13,7 @@ Write-Host "Building Windows app in Debug configuration..." -ForegroundColor Yel
 Push-Location $ProjectDir
 try {
     dotnet publish Physiquinator.csproj `
-        -f net10.0-windows10.0.19041.0 `
+        -f net11.0-windows10.0.19041.0 `
         -c Debug `
         -p:WindowsPackageType=None `
         -p:WindowsAppSDKSelfContained=true `

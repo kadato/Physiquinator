@@ -18,7 +18,7 @@ else if (_session == null)
 }
 else
 {
-    <MudStack Spacing="3">
+    <MudStack Spacing="3" Class="app-fab-page-padding">
         <MudPaper Class="pa-4 settings-card" Elevation="0">
             <MudText Typo="Typo.h5" Class="settings-card__title">@_session.PlanName</MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -103,28 +103,25 @@ else
             </MudPaper>
         }
 
-        <AppActionBar AriaLabel="Session actions">
-            <div class="app-action-bar__row app-action-bar__row--stacked">
-                @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
-                {
-                    <MudButton Variant="Variant.Filled"
-                               FullWidth="true"
-                               Class="premium-btn premium-btn-lg premium-btn-filled"
-                               StartIcon="@Icons.Material.Filled.PlayArrow"
-                               OnClick="@(() => ContinueWorkout(activePlanId))">
-                        Continue workout
-                    </MudButton>
-                }
-                <MudButton Variant="Variant.Outlined"
-                           FullWidth="true"
-                           Class="premium-btn premium-btn-lg premium-btn-error-outlined"
-                           OnClick="DeleteSessionClick">
-                    Delete this workout
-                </MudButton>
-            </div>
-        </AppActionBar>
     </MudStack>
+
+    @* HistoryDetail FABs *@
+    @* Delete — mini error FAB bottom-left *@
+    <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-1"
+                   Icon="@Icons.Material.Filled.Delete"
+                   OnClick="DeleteSessionClick"
+                   arialabel="Delete this workout" />
+
+    @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId2)
+    {
+        @* Continue Workout — primary FAB bottom-right *@
+        <MudIconButton Class="app-fab app-fab--primary app-fab--br-2"
+                       Icon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="@(() => ContinueWorkout(activePlanId2))"
+                       arialabel="Continue workout" />
+    }
 }
+
 
 @code {
     [Parameter]

@@ -101,37 +101,35 @@ else
             {
                 <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete!</MudAlert>
             }
+            <MudStack Spacing="2" Class="mt-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Error"
+                           FullWidth="true"
+                           Class="workout-end-btn"
+                           OnClick="EndWorkoutClick">
+                    End workout
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           FullWidth="true"
+                           OnClick="DiscardWorkoutClick">
+                    Discard workout
+                </MudButton>
+            </MudStack>
         </div>
 
-        <MudStack Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Error"
-                       FullWidth="true"
-                       Class="workout-end-btn"
-                       OnClick="EndWorkoutClick">
-                End workout
-            </MudButton>
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Error"
-                       FullWidth="true"
-                       OnClick="DiscardWorkoutClick">
-                Discard workout
-            </MudButton>
-        </MudStack>
     </MudStack>
 }
 
 @if (_undoVisible)
 {
-    <div class="undo-toast" role="status" aria-live="polite">
-        <span class="undo-toast__message">Logged</span>
-        <button type="button"
-                class="undo-toast__btn"
-                aria-label="Undo"
-                @onclick="UndoLastSetCoreAsync">
-            <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Large" />
-        </button>
-    </div>
+    <MudButton Class="workout-undo-btn"
+               Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.Restore"
+               OnClick="UndoLastSetCoreAsync"
+               arialabel="Undo last set">
+        Undo
+    </MudButton>
 }
 
 @code {

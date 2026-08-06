@@ -10,6 +10,13 @@
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject WorkoutSessionService SessionService
 @inject ILogger<MainLayout> Logger
+@inject IJSRuntime JSRuntime
+
+@{
+    var appShellClasses = "app-shell" +
+        (_showBottomNav ? string.Empty : " app-shell--immersive") +
+        (_useFixedDockPadding ? " app-shell--fixed-dock" : string.Empty);
+}
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDark" />
 <MudPopoverProvider />
@@ -18,7 +25,7 @@
 
 @if (AppInit.IsReady)
 {
-    <div class="app-shell @(_showBottomNav ? null : "app-shell--immersive") @(_useFixedDockPadding ? "app-shell--fixed-dock" : null)">
+    <div class="@appShellClasses">
         <main class="app-main-scroll">
             <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
                 @Body
@@ -27,26 +34,30 @@
 
         @if (_showBottomNav)
         {
-            <nav class="app-tab-bar" aria-label="Main navigation">
-                <div class="app-tab-bar__inner app-bottom-dock">
-                    <NavLink href="@AppRoutes.Home" class="app-tab" Match="NavLinkMatch.All" ActiveClass="app-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
-                        <span class="app-tab__label">Home</span>
+            <nav class="app-nav-pill" aria-label="Main navigation">
+                <div class="app-nav-pill__inner">
+                    <NavLink href="@AppRoutes.Home" class="app-nav-tab" Match="NavLinkMatch.All" ActiveClass="app-nav-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+                        <span class="app-nav-tab__label">Home</span>
                     </NavLink>
-                    <NavLink href="@AppRoutes.History" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Medium" />
-                        <span class="app-tab__label">History</span>
+                    <NavLink href="@AppRoutes.History" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                        <span class="app-nav-tab__label">History</span>
                     </NavLink>
-                    <NavLink href="@AppRoutes.PlanEditor" class="app-tab app-tab--create" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Medium" />
-                        <span class="app-tab__label">New plan</span>
-                    </NavLink>
-                    <NavLink href="@AppRoutes.Settings" class="app-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Medium" />
-                        <span class="app-tab__label">Settings</span>
+                    <NavLink href="@AppRoutes.Settings" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
+                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                        <span class="app-nav-tab__label">Settings</span>
                     </NavLink>
                 </div>
             </nav>
+        }
+
+        @if (ShouldShowBackFab())
+        {
+            <MudIconButton Class="app-fab app-fab--secondary app-fab--br-1"
+                           Icon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="GoBack"
+                           arialabel="Go back" />
         }
     </div>
 }
@@ -221,6 +232,24 @@ else
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal)) return false;
         if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal)) return false;
         return true;
+    }
+
+    private bool ShouldShowBackFab()
+    {
+        if (_showBottomNav) return false;
+
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+
+        // Exclude plan editor route which has its own Close/Cancel and Save FABs
+        if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))
+            return false;
+
+        return true;
+    }
+
+    private async Task GoBack()
+    {
+        await JSRuntime.InvokeVoidAsync("history.back");
     }
 
     public void Dispose()

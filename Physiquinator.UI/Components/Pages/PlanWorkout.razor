@@ -10,8 +10,8 @@
 @inject TimeProvider TimeProvider
 @inject ILogger<PlanWorkout> Logger
 
-<div class="plan-page">
-    <PageHeader Title="@(IsNew ? "New plan" : "Edit plan")" OnBack="GoHome" />
+<div class="plan-page app-fab-page-padding">
+    <PageHeader Title="@PageTitleText" OnBack="GoHome" />
 
     @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
     {
@@ -127,6 +127,7 @@
     private string NewExerciseName { get; set; } = "";
     private int _sortableVersion;
     private bool IsNew => PlanId == null;
+    private string PageTitleText => IsNew ? "New plan" : "Edit plan";
 
     private bool CanSave => !string.IsNullOrWhiteSpace(PlanName)
         && Exercises.Any()

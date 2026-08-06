@@ -23,6 +23,17 @@
     --app-action-bar-height: 64px;
     --app-page-bottom-extra: 12px;
     --app-page-top: 2rem;
+    /* FAB & nav pill system */
+    --app-nav-pill-height: 64px;
+    --app-nav-pill-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    --app-fab-size: 56px;
+    --app-fab-mini-size: 44px;
+    --app-fab-bottom: calc(var(--app-nav-pill-height) + var(--app-nav-pill-bottom) + 16px);
+    --app-fab-right: 20px;
+    --app-fab-left: 20px;
+    --app-fab-shadow: none !important;
+    --app-fab-shadow-hover: none !important;
+
 }
 html, body {
     margin: 0;
@@ -98,7 +109,7 @@ input, select, textarea {
 .mud-input-control input:invalid,
 .mud-input-control textarea:invalid {
     border-color: var(--mud-palette-error, #EF4444) !important;
-    box-shadow: 0 0 0 1px var(--mud-palette-error, #EF4444) !important;
+    box-shadow: none !important;
 }
 
 .mud-input-control input:valid:focus,
@@ -248,7 +259,6 @@ textarea.auto-size,
     justify-content: center;
     background-color: var(--mud-palette-background);
 }
-
 .app-main-scroll {
     flex: 1 1 auto;
     min-height: 0;
@@ -256,7 +266,9 @@ textarea.auto-size,
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 }
+
 
 .app-page-container {
     padding-left: var(--app-page-x) !important;
@@ -274,176 +286,329 @@ textarea.auto-size,
     overflow: visible;
 }
 
-/* In-flow bottom tab bar (MainLayout) */
-.app-tab-bar {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0.375rem var(--app-page-x) calc(0.375rem + env(safe-area-inset-bottom, 0px));
-    box-sizing: border-box;
-}
+/* ============================================================
+   Floating Nav Pill (MainLayout bottom navigation)
+   ============================================================ */
 
-/* Shared glass surface for tab bar and action docks */
+/* Shared glass surface */
 .app-bottom-dock {
     border-radius: 16px;
     background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--mud-palette-lines-default);
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: none !important;
     box-sizing: border-box;
 }
 
-.app-tab-bar__inner {
-    display: flex;
-    align-items: stretch;
-    justify-content: space-around;
-    gap: 0.25rem;
-    min-height: var(--app-tab-bar-height);
-    padding: 0.375rem 0.5rem;
+/* Floating pill wrapper — sits outside app-main-scroll as fixed overlay */
+.app-nav-pill {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: var(--app-nav-pill-bottom);
+    z-index: 30;
+    width: calc(100% - 2 * var(--app-page-x));
+    max-width: 420px;
+    pointer-events: none; /* let clicks fall through the gap */
 }
 
+.app-nav-pill__inner {
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 0;
+    height: var(--app-nav-pill-height);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 92%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 80%, transparent);
+    box-shadow: none !important;
+    padding: 0 0.5rem;
+    overflow: hidden;
+}
 
-.app-tab {
+/* Each nav tab item */
+.app-nav-tab {
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     min-width: 0;
-    min-height: 44px;
-    padding: 6px 4px;
+    height: calc(var(--app-nav-pill-height) - 12px);
+    margin: 6px 4px;
+    padding: 0 8px;
     border: none;
-    border-radius: 12px;
+    border-radius: 999px;
     background: transparent;
     color: var(--mud-palette-text-secondary);
     text-decoration: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.2s cubic-bezier(0.34,1.56,0.64,1),
+                color 0.18s ease,
+                transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
 }
 
-.app-tab:hover {
-    text-decoration: none;
-    color: var(--mud-palette-text-primary);
+.app-nav-tab:active {
+    transform: scale(0.93);
 }
 
-.app-tab:active {
-    opacity: 0.88;
-}
-
-.app-tab--active {
-    background: color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
+.app-nav-tab--active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
     color: var(--mud-palette-primary);
 }
 
-.app-tab--active .mud-icon-root {
+.app-nav-tab--active .mud-icon-root {
     color: var(--mud-palette-primary) !important;
+    transform: scale(1.1);
 }
 
-.app-tab__label {
-    font-size: 0.65rem;
-    font-weight: 500;
-    line-height: 1.1;
-    text-align: center;
-}
-
-.app-tab--active .app-tab__label {
-    color: var(--mud-palette-primary);
+.app-nav-tab__label {
+    font-size: 0.6rem;
     font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.18s ease;
 }
 
-/* Fixed page action dock (plan / workout / session) */
-.app-action-bar {
+.app-nav-tab--active .app-nav-tab__label {
+    color: var(--mud-palette-primary);
+}
+
+/* Main scroll area padding accounts for the floating nav pill */
+.app-shell .app-main-scroll {
+    padding-bottom: calc(var(--app-nav-pill-height) + var(--app-nav-pill-bottom) + 8px);
+}
+
+.app-shell--immersive .app-main-scroll {
+    padding-bottom: 0;
+}
+
+/* ============================================================
+   FAB — Floating Action Button system
+   ============================================================ */
+
+/* Base FAB */
+.app-fab {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    width: 100%;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0.375rem var(--app-page-x) calc(0.375rem + env(safe-area-inset-bottom, 0px));
-    box-sizing: border-box;
-}
-
-.app-action-bar__dock {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-}
-
-
-.app-action-bar__rows--stacked {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.app-action-bar__row {
-    display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    width: 100%;
-    min-height: 2.75rem;
-}
-
-.app-action-bar__row--stacked {
-    flex-direction: column;
-    flex-wrap: nowrap;
-}
-
-.app-action-bar__row--secondary {
-    flex-wrap: nowrap;
-}
-
-.app-action-bar__row--secondary > .mud-button-root {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.app-action-bar__row--secondary > .app-action-bar__home-btn {
-    flex: 0 0 auto;
-}
-
-.app-action-bar__row--workout {
-    flex-wrap: nowrap;
-}
-
-.app-action-bar__row--workout > .mud-button-root {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.app-action-bar__row--workout > .app-action-bar__home-btn {
-    flex: 0 0 auto;
-}
-.app-action-bar__row--center {
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    width: var(--app-fab-size) !important;
+    height: var(--app-fab-size) !important;
+    border-radius: 50% !important;
+    border: none !important;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: none !important;
+    background-color: var(--mud-palette-primary) !important;
+    color: #ffffff !important;
+    transition: box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease;
+    outline: none;
+    overflow: hidden;
+    animation: fab-enter 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
+    padding: 0 !important;
+}
+
+.app-fab::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+
+
+.app-fab:active {
+    transform: scale(0.94) !important;
+}
+
+.app-fab:active::after {
+    opacity: 0.14;
+}
+
+/* FAB variants */
+.app-fab--primary {
+    background-color: var(--mud-palette-primary) !important;
+    color: #fff !important;
+}
+
+.app-fab--secondary {
+    background-color: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-text-primary) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+}
+
+.app-fab--error {
+    background-color: var(--mud-palette-error) !important;
+    color: #fff !important;
+}
+
+.app-fab--success {
+    background-color: var(--mud-palette-success) !important;
+    color: #fff !important;
+}
+
+/* Mini FAB */
+.app-fab--mini {
+    width: var(--app-fab-mini-size);
+    height: var(--app-fab-mini-size);
+}
+
+/* Extended FAB (with label) */
+.app-fab--extended {
+    width: auto;
+    border-radius: 28px;
+    padding: 0 20px;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* Disabled FAB */
+.app-fab:disabled,
+.app-fab--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none !important;
+}
+
+/* FAB icon sizing */
+.app-fab .mud-icon-root {
+    font-size: 24px !important;
+    pointer-events: none;
+    color: inherit !important;
+}
+
+.app-fab--mini .mud-icon-root {
+    font-size: 20px !important;
+}
+
+/* FAB positioning helpers — bottom-right stack */
+.app-fab--br-1 {
+    right: var(--app-fab-right);
+    bottom: var(--app-fab-bottom);
+}
+
+.app-fab--br-2 {
+    animation-delay: 0.04s;
+    right: var(--app-fab-right);
+    bottom: calc(var(--app-fab-bottom) + var(--app-fab-size) + 12px);
+}
+
+.app-fab--br-3 {
+    right: var(--app-fab-right);
+    bottom: calc(var(--app-fab-bottom) + (var(--app-fab-size) + 12px) * 2);
+    animation-delay: 0.08s;
+}
+
+/* FAB positioning helpers — bottom-left */
+.app-fab--bl-1 {
+    left: var(--app-fab-left);
+    bottom: var(--app-fab-bottom);
+}
+
+.app-fab--bl-2 {
+    animation-delay: 0.04s;
+    left: var(--app-fab-left);
+    bottom: calc(var(--app-fab-bottom) + var(--app-fab-size) + 12px);
+}
+
+/* Immersive mode (workout/plan): FAB sits lower since no nav pill */
+.app-shell--immersive .app-fab--br-1,
+.app-shell--immersive .app-fab--bl-1 {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell--immersive .app-fab--br-2,
+.app-shell--immersive .app-fab--bl-2 {
+    animation-delay: 0.04s;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-fab-size) + 12px);
+}
+
+/* Wide screen handling for FABs: keep them aligned inside the centered 600px layout container */
+@media (min-width: 600px) {
+    .app-fab--br-1 {
+        right: calc(50% - 300px + var(--app-fab-right));
+    }
+    .app-fab--br-2 {
+    animation-delay: 0.04s;
+        right: calc(50% - 300px + var(--app-fab-right));
+    }
+    .app-fab--br-3 {
+        right: calc(50% - 300px + var(--app-fab-right));
+    }
+    .app-fab--bl-1 {
+        left: calc(50% - 300px + var(--app-fab-left));
+    }
+    .app-fab--bl-2 {
+    animation-delay: 0.04s;
+        left: calc(50% - 300px + var(--app-fab-left));
+    }
+}
+
+/* Page bottom padding: enough room for 1-2 FABs */
+.app-fab-page-padding {
+    padding-bottom: calc(var(--app-fab-bottom) + var(--app-fab-size) + 24px) !important;
+}
+
+/* FAB entrance animation */
+@keyframes fab-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+
+
+
+
+
+
+/* FAB label tooltip (shown on long-press hover on desktop) */
+
+
+
+
+.app-action-bar {
+    display: none; /* hidden — replaced by FABs */
 }
 
 .app-shell--fixed-dock .app-main-scroll {
     scroll-padding-bottom: calc(
-        var(--app-action-bar-height) + 1.5rem + env(safe-area-inset-bottom, 0px)
+        var(--app-fab-size) + var(--app-fab-bottom) + 24px
     );
 }
 
 .app-shell--fixed-dock .app-page-container {
     padding-bottom: calc(
-        var(--app-action-bar-height) + 1.5rem + env(safe-area-inset-bottom, 0px)
+        var(--app-fab-size) + var(--app-fab-bottom) + 24px
     ) !important;
 }
+
 .home-header {
     margin-bottom: 0.75rem;
-    text-align: center;
+    justify-content: center !important;
 }
 
 .home-header__title {
@@ -480,12 +645,8 @@ textarea.auto-size,
         color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
     );
     overflow: hidden;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: none !important;
     transition: border-color 120ms ease, transform 120ms ease;
-}
-
-.home-stat.mud-paper:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 24%, transparent);
 }
 
 
@@ -498,7 +659,7 @@ textarea.auto-size,
         color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) 0%,
         color-mix(in srgb, var(--mud-palette-primary) 3%, transparent) 100%
     ) !important;
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) !important;
+    box-shadow: none !important;
 }
 
 
@@ -564,19 +725,13 @@ textarea.auto-size,
     border-radius: 16px;
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
     background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 8%, transparent),
-        0 6px 16px color-mix(in srgb, #000 4%, transparent);
+    box-shadow: none !important;
     transition: border-color 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .plan-card.mud-card {
     width: 100%;
     overflow: hidden;
-}
-
-.plan-card.mud-card:hover,
-.app-page-container .mud-card:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
 }
 
 .plan-card__content {
@@ -626,10 +781,6 @@ textarea.auto-size,
 
 .mud-table.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row.mud-table-row-stripe {
     background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)) !important;
-}
-
-.mud-table.mud-table-hover.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row:nth-of-type(odd):hover {
-    background-color: color-mix(in srgb, var(--mud-palette-primary) 16%, var(--mud-palette-surface)) !important;
 }
 
 .mud-table .mud-table-head .mud-table-cell {
@@ -746,7 +897,7 @@ input[type="number"] {
     background: color-mix(in srgb, var(--mud-palette-surface) 55%, transparent);
     overflow: hidden;
     border-radius: 16px;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent);
+    box-shadow: none !important;
 }
 
 
@@ -834,7 +985,7 @@ input[type="number"] {
 
 .plan-exercise-row--drag,
 .plan-exercise-row--fallback {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: none !important;
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: 1px;
     opacity: 0.95;
@@ -896,10 +1047,6 @@ input[type="number"] {
     text-align: left;
     cursor: pointer;
     font: inherit;
-}
-
-.plan-exercise-row__body:hover {
-    background: var(--mud-palette-action-default-hover);
 }
 
 .plan-exercise-row__index {
@@ -1076,12 +1223,12 @@ button.heatmap-cell:disabled {
 
 .heatmap-selected.heatmap-on,
 .heatmap-selected.heatmap-off {
-    box-shadow: 0 0 0 2px var(--mud-palette-primary);
+    box-shadow: none !important;
     border-radius: 2px;
 }
 
 .heatmap-today {
-    box-shadow: 0 0 0 2px var(--mud-palette-text-primary) !important;
+    box-shadow: none !important;
     border: 1px solid var(--mud-palette-surface) !important;
 }
 
@@ -1139,7 +1286,7 @@ button.heatmap-cell:disabled {
         color-mix(in srgb, var(--mud-palette-success) 12%, transparent) 45%,
         var(--mud-palette-surface) 100%
     );
-    box-shadow: 0 12px 40px color-mix(in srgb, var(--mud-palette-success) 25%, transparent);
+    box-shadow: none !important;
     animation: rest-timer-complete-in 0.45s ease-out;
 }
 
@@ -1302,16 +1449,11 @@ button.heatmap-cell:disabled {
     border-radius: 12px !important;
     background-color: color-mix(in srgb, var(--mud-palette-action-default) 8%, transparent);
     color: var(--mud-palette-text-secondary);
-    box-shadow: 0 2px 8px color-mix(in srgb, #000 6%, transparent);
-}
-
-.rest-timer-controls .mud-icon-button:hover {
-    background-color: color-mix(in srgb, var(--mud-palette-action-default) 14%, transparent);
-    box-shadow: 0 4px 12px color-mix(in srgb, #000 12%, transparent);
+    box-shadow: none !important;
 }
 
 .rest-timer-controls .mud-icon-button:active {
-    box-shadow: 0 1px 4px color-mix(in srgb, #000 4%, transparent);
+    box-shadow: none !important;
 }
 
 /* Specific styling for Pause button */
@@ -1319,19 +1461,12 @@ button.heatmap-cell:disabled {
     background-color: color-mix(in srgb, var(--mud-palette-info) 10%, transparent) !important;
     color: var(--mud-palette-info) !important;
 }
-.rest-timer-controls .mud-icon-button[aria-label*="Pause"]:hover {
-    background-color: color-mix(in srgb, var(--mud-palette-info) 18%, transparent) !important;
-}
 
 /* Specific styling for Play/Resume button */
 .rest-timer-controls .mud-icon-button[aria-label*="Resume"],
 .rest-timer-controls .mud-icon-button[aria-label*="Play"] {
     background-color: color-mix(in srgb, var(--mud-palette-success) 10%, transparent) !important;
     color: var(--mud-palette-success) !important;
-}
-.rest-timer-controls .mud-icon-button[aria-label*="Resume"]:hover,
-.rest-timer-controls .mud-icon-button[aria-label*="Play"]:hover {
-    background-color: color-mix(in srgb, var(--mud-palette-success) 18%, transparent) !important;
 }
 
 /* Text Buttons (Skip/Continue) */
@@ -1344,15 +1479,11 @@ button.heatmap-cell:disabled {
     font-weight: 700 !important;
     text-transform: none !important;
     letter-spacing: 0.02em !important;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
-}
-
-.rest-timer-controls .mud-button:hover {
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--mud-palette-primary) 40%, transparent) !important;
+    box-shadow: none !important;
 }
 
 .rest-timer-controls .mud-button:active {
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
+    box-shadow: none !important;
 }
 
 .rest-timer-edge-track {
@@ -1407,7 +1538,7 @@ button.heatmap-cell:disabled {
     width: clamp(5rem, 22vw, 6.5rem) !important;
     height: clamp(5rem, 22vw, 6.5rem) !important;
     font-size: clamp(2.5rem, 10vw, 3.25rem) !important;
-    box-shadow: 0 8px 28px color-mix(in srgb, var(--mud-palette-success) 50%, transparent);
+    box-shadow: none !important;
 }
 
 .rest-timer-complete__title {
@@ -1436,9 +1567,7 @@ button.heatmap-cell:disabled {
     max-height: 100dvh;
 }
 
-.mud-dialog-container .mud-dialog.set-log-dialog {
-    max-height: min(92dvh, 100dvh);
-}
+
 
 /* Log set dialog — global (dialog renders in MudDialogProvider portal) */
 .mud-dialog-container .mud-dialog.set-log-dialog {
@@ -1521,6 +1650,14 @@ button.heatmap-cell:disabled {
     align-items: center;
     justify-content: center;
     user-select: none;
+}
+
+.set-metric-stepper__value-unit {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.65;
+    margin-left: 0.25rem;
+    display: inline-block;
 }
 
 
@@ -1620,13 +1757,8 @@ button.heatmap-cell:disabled {
         color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
     );
     overflow: hidden;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: none !important;
     transition: border-color 120ms ease, box-shadow 120ms ease;
-}
-
-.history-stat.mud-paper:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-primary) 8%, transparent);
 }
 
 .history-stat__value {
@@ -1662,16 +1794,11 @@ button.heatmap-cell:disabled {
     border-radius: 16px;
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
     background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: none !important;
     transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease;
     cursor: pointer;
     overflow: hidden;
     text-decoration: none !important;
-}
-
-.history-session-card:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
-    box-shadow: 0 2px 6px color-mix(in srgb, #000 8%, transparent);
 }
 
 .history-session-card__inner {
@@ -1738,10 +1865,6 @@ button.heatmap-cell:disabled {
     transition: opacity 150ms ease;
 }
 
-.history-session-card:hover .history-session-card__chevron {
-    opacity: 0.9;
-}
-
 /* Bodyweight tracking panel */
 .bodyweight-panel.mud-paper {
     display: flex;
@@ -1754,7 +1877,7 @@ button.heatmap-cell:disabled {
         var(--mud-palette-surface) 0%,
         color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
     );
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: none !important;
 }
 
 .bodyweight-panel__header {
@@ -1908,10 +2031,6 @@ button.heatmap-cell:disabled {
     border-bottom: none;
 }
 
-.pr-dialog-row:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent);
-}
-
 .pr-dialog-row__icon {
     color: var(--mud-palette-primary);
     flex-shrink: 0;
@@ -2009,13 +2128,8 @@ button.heatmap-cell:disabled {
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
+    box-shadow: none !important;
     transition: box-shadow 120ms ease, border-color 120ms ease !important;
-}
-
-.settings-card.mud-paper:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent) !important;
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-primary) 6%, transparent) !important;
 }
 
 .settings-card--danger.mud-paper {
@@ -2025,11 +2139,6 @@ button.heatmap-cell:disabled {
         color-mix(in srgb, var(--mud-palette-error) 4%, transparent) 0%,
         var(--mud-palette-surface) 100%
     ) !important;
-}
-
-.settings-card--danger.mud-paper:hover {
-    border-color: var(--mud-palette-error) !important;
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-error) 6%, transparent) !important;
 }
 
 .settings-card__header {
@@ -2073,7 +2182,7 @@ button.heatmap-cell:disabled {
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
     border-radius: 16px !important;
     background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background)) !important;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
+    box-shadow: none !important;
     overflow: hidden;
 }
 
@@ -2097,16 +2206,8 @@ button.heatmap-cell:disabled {
     transition: background 120ms ease;
 }
 
-.premium-table .mud-table-body .mud-table-row:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
-}
-
 .premium-table .mud-table-body .mud-table-row:nth-of-type(odd) {
     background: color-mix(in srgb, var(--mud-palette-text-primary) 1.5%, transparent) !important;
-}
-
-.premium-table .mud-table-body .mud-table-row:nth-of-type(odd):hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent) !important;
 }
 
 .premium-table .mud-table-cell {
@@ -2134,12 +2235,7 @@ button.heatmap-cell:disabled {
 .premium-btn-filled.mud-button-root {
     background: var(--mud-palette-primary) !important;
     color: var(--mud-palette-background) !important;
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
-}
-
-.premium-btn-filled.mud-button-root:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 85%, #fff) !important;
-    box-shadow: 0 2px 5px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
+    box-shadow: none !important;
 }
 
 .premium-btn-outlined.mud-button-root {
@@ -2148,20 +2244,10 @@ button.heatmap-cell:disabled {
     background: color-mix(in srgb, var(--mud-palette-surface) 40%, transparent) !important;
 }
 
-.premium-btn-outlined.mud-button-root:hover {
-    background: color-mix(in srgb, var(--mud-palette-text-primary) 4%, transparent) !important;
-    border-color: color-mix(in srgb, var(--mud-palette-text-primary) 25%, transparent) !important;
-}
-
 .premium-btn-error-outlined.mud-button-root {
     border: 1px solid color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
     color: var(--mud-palette-error) !important;
     background: color-mix(in srgb, var(--mud-palette-error) 3%, transparent) !important;
-}
-
-.premium-btn-error-outlined.mud-button-root:hover {
-    background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent) !important;
-    border-color: var(--mud-palette-error) !important;
 }
 
 /* Exercise Tag Chips */
@@ -2174,11 +2260,6 @@ button.heatmap-cell:disabled {
     transition: background-color 120ms ease, border-color 120ms ease !important;
 }
 
-.exercise-chip.mud-chip-outlined:hover {
-    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent) !important;
-    border-color: var(--mud-palette-primary) !important;
-}
-
 /* Workout Completed Accordion Header */
 .workout-completed-header {
     display: flex;
@@ -2187,16 +2268,10 @@ button.heatmap-cell:disabled {
     padding: 0.75rem 1.25rem;
     background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface));
     border: 1px solid color-mix(in srgb, var(--mud-palette-success) 20%, transparent);
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    box-shadow: none !important;
     transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
     cursor: pointer;
     user-select: none;
-}
-
-.workout-completed-header:hover {
-    background: color-mix(in srgb, var(--mud-palette-success) 10%, var(--mud-palette-surface));
-    border-color: color-mix(in srgb, var(--mud-palette-success) 40%, transparent);
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
 }
 
 /* Premium, pill-shaped progress bars for workout cards */
@@ -2217,18 +2292,22 @@ button.heatmap-cell:disabled {
 /* Gradient fill for upcoming exercise progress */
 .workout-upcoming-section .mud-progress-linear.mud-progress-linear-primary .mud-progress-linear-bar {
     background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-primary) 70%, #fff) 0%, var(--mud-palette-primary) 100%) !important;
-    box-shadow: 0 1px 3px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
+    box-shadow: none !important;
 }
 
 /* Gradient fill for completed exercise progress */
 .workout-completed-section .mud-progress-linear.mud-progress-linear-success .mud-progress-linear-bar {
     background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-success) 70%, #fff) 0%, var(--mud-palette-success) 100%) !important;
-    box-shadow: 0 1px 3px color-mix(in srgb, var(--mud-palette-success) 30%, transparent);
+    box-shadow: none !important;
 }
 
 /* Clickable snackbars styling */
 .mud-snackbar {
     cursor: pointer;
+
+    min-width: min(288px, calc(100vw - 32px));
+    padding: 4px 10px 4px 14px;
+    border-radius: 16px;
 }
 .mud-snackbar .mud-button-root,
 .mud-snackbar button,
@@ -2253,7 +2332,7 @@ button.heatmap-cell:disabled {
 
 .exercise-accordion-card--expanded {
     border-color: color-mix(in srgb, var(--mud-palette-primary) 35%, transparent) !important;
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--mud-palette-primary) 8%, transparent) !important;
+    box-shadow: none !important;
 }
 
 .exercise-accordion-header {
@@ -2435,7 +2514,7 @@ button.heatmap-cell:disabled {
 .inline-set-input:focus {
     outline: none;
     border-color: var(--mud-palette-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
+    box-shadow: none !important;
 }
 
 .inline-set-input::placeholder {
@@ -2523,11 +2602,6 @@ button.heatmap-cell:disabled {
     -webkit-user-select: none;
 }
 
-.plan-card-handle:hover {
-    background: var(--mud-palette-action-default-hover);
-    color: var(--mud-palette-text-primary);
-}
-
 .plan-card-handle:active {
     cursor: grabbing;
     background: var(--mud-palette-action-default-hover);
@@ -2546,7 +2620,7 @@ button.heatmap-cell:disabled {
 
 .plan-card--drag,
 .plan-card--fallback {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: none !important;
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: 1px;
     opacity: 0.95;
@@ -2633,9 +2707,7 @@ a,
 }
 
 /* Contain scroll chaining so the WebView never rubber-bands away from the app */
-.app-main-scroll {
-    overscroll-behavior-y: contain;
-}
+
 
 /* Sentence-case button labels everywhere (modern, compact on small screens) */
 .mud-button-label {
@@ -2681,85 +2753,57 @@ a,
 }
 
 /* Compact, refined snackbar toasts */
-.mud-snackbar {
-    min-width: min(288px, calc(100vw - 32px));
-    padding: 4px 10px 4px 14px;
-    border-radius: 16px;
-}
 
-/* Undo toast (Workout): floating pill, bottom-right, with a circular accent button */
-.undo-toast {
+
+/* Undo FAB — pill-shaped floating undo button, bottom-right, aligned for easy thumb reach */
+.workout-undo-btn {
     position: fixed;
-    right: calc(1rem + env(safe-area-inset-right, 0px));
-    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
-    z-index: 1400;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    max-width: calc(100vw - 2rem);
-    padding: 0.25rem 0.25rem 0.25rem 1rem;
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--mud-palette-surface) 92%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--mud-palette-lines-default);
-    box-shadow: 0 4px 24px color-mix(in srgb, #000 18%, transparent);
-    animation: undo-toast-in 160ms ease-out;
-}
-
-.undo-toast__message {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--mud-palette-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.undo-toast__btn {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-fab-size) + 12px);
+    right: var(--app-fab-right);
+    z-index: 1000;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
-    min-width: 56px;
-    min-height: 56px;
-    padding: 0;
-    border: none;
-    border-radius: 14px;
-    background: var(--mud-palette-error);
-    color: #ffffff;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px !important;
+    background-color: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-primary) !important;
+    border: 1px solid var(--mud-palette-primary) !important;
+    border-radius: 22px !important;
+    box-shadow: none !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-error) 35%, transparent);
-    transition: background-color 120ms ease;
+    animation: undo-fab-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    white-space: nowrap;
+    outline: none;
 }
 
-.undo-toast__btn:active {
-    background: color-mix(in srgb, var(--mud-palette-error) 82%, #000);
+
+
+.workout-undo-btn:active {
+    transform: scale(0.96) !important;
 }
 
-@keyframes undo-toast-in {
+@keyframes undo-fab-in {
     from {
         opacity: 0;
-        transform: translateX(12px);
+        transform: translateY(16px) scale(0.9);
     }
-
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0) scale(1);
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .undo-toast {
-        animation: none;
+/* Wide screen handling for undo button */
+@media (min-width: 600px) {
+    .workout-undo-btn {
+        right: calc(50% - 300px + var(--app-fab-right));
     }
 }
-
 /* Page header back button meets the 44px touch-target guideline */
 .page-header .mud-icon-button {
     width: 44px !important;
@@ -2783,101 +2827,8 @@ a,
    Touch devices: drop hover-only styling so taps never leave ghost states
    ========================================================================== */
 @media (hover: none) and (pointer: coarse) {
-    .app-tab:hover {
-        color: var(--mud-palette-text-secondary);
-    }
-
-    .home-stat.mud-paper:hover,
-    .plan-card.mud-card:hover,
-    .app-page-container .mud-card:hover,
-    .settings-card.mud-paper:hover,
-    .history-stat.mud-paper:hover {
-        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
-    }
-
-    .history-session-card:hover {
-        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
-        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
-    }
-
-    .history-session-card:hover .history-session-card__chevron {
-        opacity: 0.5;
-    }
-
-    .history-stat.mud-paper:hover,
-    .settings-card.mud-paper:hover {
-        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
-    }
-
-    .settings-card--danger.mud-paper:hover {
-        border-color: color-mix(in srgb, var(--mud-palette-error) 25%, transparent);
-        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
-    }
-
-    .plan-card-handle:hover {
-        background: transparent;
-        color: var(--mud-palette-text-secondary);
-    }
-
-    .plan-exercise-row__body:hover {
-        background: transparent;
-    }
-
-    .premium-table .mud-table-body .mud-table-row:hover,
-    .premium-table .mud-table-body .mud-table-row:nth-of-type(odd):hover {
-        background: transparent !important;
-    }
-
     .premium-table .mud-table-body .mud-table-row:nth-of-type(odd) {
         background: color-mix(in srgb, var(--mud-palette-text-primary) 1.5%, transparent) !important;
-    }
-
-    .exercise-chip.mud-chip-outlined:hover {
-        background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent);
-        border-color: color-mix(in srgb, var(--mud-palette-primary) 24%, transparent);
-    }
-
-    .workout-completed-header:hover {
-        background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface));
-        border-color: color-mix(in srgb, var(--mud-palette-success) 20%, transparent);
-        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
-    }
-
-    .premium-btn-filled.mud-button-root:hover {
-        background: var(--mud-palette-primary) !important;
-        box-shadow: 0 1px 2px color-mix(in srgb, var(--mud-palette-primary) 20%, transparent) !important;
-    }
-
-    .premium-btn-outlined.mud-button-root:hover {
-        background: color-mix(in srgb, var(--mud-palette-surface) 40%, transparent) !important;
-        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent) !important;
-    }
-
-    .premium-btn-error-outlined.mud-button-root:hover {
-        background: color-mix(in srgb, var(--mud-palette-error) 3%, transparent) !important;
-        border-color: color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
-    }
-
-    .rest-timer-controls .mud-icon-button:hover {
-        background-color: color-mix(in srgb, var(--mud-palette-action-default) 8%, transparent);
-        box-shadow: 0 2px 8px color-mix(in srgb, #000 6%, transparent);
-    }
-
-    .rest-timer-controls .mud-icon-button[aria-label*="Pause"]:hover {
-        background-color: color-mix(in srgb, var(--mud-palette-info) 10%, transparent) !important;
-    }
-
-    .rest-timer-controls .mud-icon-button[aria-label*="Resume"]:hover,
-    .rest-timer-controls .mud-icon-button[aria-label*="Play"]:hover {
-        background-color: color-mix(in srgb, var(--mud-palette-success) 10%, transparent) !important;
-    }
-
-    .rest-timer-controls .mud-button:hover {
-        box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 30%, transparent) !important;
-    }
-
-    .mud-table.mud-table-hover.mud-table-striped .mud-table-container .mud-table-root .mud-table-body .mud-table-row:nth-of-type(odd):hover {
-        background-color: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)) !important;
     }
 }
 
@@ -2919,24 +2870,14 @@ a,
 .settings-panels .mud-expand-panel {
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
     border-radius: 16px;
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
+    box-shadow: none !important;
     background: var(--mud-palette-surface);
     margin-bottom: 0.75rem;
     overflow: hidden;
     transition: box-shadow 120ms ease, border-color 120ms ease !important;
 }
 
-.settings-panels .mud-expand-panel:hover {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 28%, transparent) !important;
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--mud-palette-primary) 6%, transparent) !important;
-}
 
-@media (hover: none) and (pointer: coarse) {
-    .settings-panels .mud-expand-panel:hover {
-        border-color: color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
-        box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent) !important;
-    }
-}
 
 .settings-panels .mud-expand-panel .mud-expand-panel-header.mud-expand-panel-header-gutters {
     padding: 0.625rem 1rem;
@@ -3028,8 +2969,8 @@ a,
     padding: 2rem;
     box-sizing: border-box;
     text-align: center;
-    background-color: #10B981;
-    color: #FFFFFF;
+    background-color: #0B0C10;
+    color: #10B981;
     font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -3079,193 +3020,7 @@ html[data-theme="light"] .app-splash {
 
 html[data-theme="dark"] .app-splash__retry {
     background-color: #FFFFFF;
-    color: #10B981;
-}
-
-.app-splash__retry:active {
-    transform: scale(0.97);
-}
-
-/* Update dialog: release notes block */
-.update-dialog__notes {
-    background-color: var(--mud-palette-background-grey);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-}
-
-.update-dialog__notes-body {
-    margin-top: 0.25rem;
-    max-height: 40vh;
-    overflow-y: auto;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: var(--mud-palette-text-primary);
-}
-
-/* Rendered markdown release notes */
-.update-dialog__notes-body.markdown-body > :first-child {
-    margin-top: 0;
-}
-
-.update-dialog__notes-body.markdown-body > :last-child {
-    margin-bottom: 0;
-}
-
-.update-dialog__notes-body.markdown-body h1,
-.update-dialog__notes-body.markdown-body h2,
-.update-dialog__notes-body.markdown-body h3,
-.update-dialog__notes-body.markdown-body h4 {
-    font-weight: 600;
-    margin: 0.75rem 0 0.375rem;
-    line-height: 1.3;
-}
-
-.update-dialog__notes-body.markdown-body h1 { font-size: 1.125rem; }
-.update-dialog__notes-body.markdown-body h2 { font-size: 1.0625rem; }
-.update-dialog__notes-body.markdown-body h3 { font-size: 1rem; }
-.update-dialog__notes-body.markdown-body h4 { font-size: 0.9375rem; }
-
-.update-dialog__notes-body.markdown-body p,
-.update-dialog__notes-body.markdown-body ul,
-.update-dialog__notes-body.markdown-body ol,
-.update-dialog__notes-body.markdown-body blockquote,
-.update-dialog__notes-body.markdown-body pre,
-.update-dialog__notes-body.markdown-body table {
-    margin: 0.5rem 0;
-}
-
-.update-dialog__notes-body.markdown-body ul,
-.update-dialog__notes-body.markdown-body ol {
-    padding-left: 1.25rem;
-}
-
-.update-dialog__notes-body.markdown-body li {
-    margin: 0.25rem 0;
-}
-
-.update-dialog__notes-body.markdown-body li > ul,
-.update-dialog__notes-body.markdown-body li > ol {
-    margin: 0.25rem 0;
-}
-
-.update-dialog__notes-body.markdown-body a {
-    color: var(--mud-palette-primary);
-}
-
-.update-dialog__notes-body.markdown-body code {
-    background-color: var(--mud-palette-background-grey);
-    border-radius: 4px;
-    padding: 0.125rem 0.3125rem;
-    font-size: 0.8125rem;
-}
-
-.update-dialog__notes-body.markdown-body pre {
-    background-color: var(--mud-palette-background-grey);
-    border-radius: 8px;
-    padding: 0.625rem 0.75rem;
-    overflow-x: auto;
-}
-
-.update-dialog__notes-body.markdown-body pre code {
-    background: none;
-    padding: 0;
-}
-
-.update-dialog__notes-body.markdown-body blockquote {
-    border-left: 3px solid var(--mud-palette-primary);
-    padding-left: 0.75rem;
-    color: var(--mud-palette-text-secondary);
-}
-
-.update-dialog__notes-body.markdown-body hr {
-.settings-panel__content {
-    padding: 0.5rem 1rem 1.25rem;
-}
-
-.settings-schedule-days {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-}
-
-.settings-schedule-day.mud-chip {
-    min-width: 3.25rem;
-    justify-content: center;
-    font-weight: 600;
-}
-
-.settings-panels .mud-expand-panel .mud-expand-panel-icon {
-    color: var(--mud-palette-text-secondary);
-}
-
-/* ==========================================================================
-   Startup splash — shown until app initialization completes
-   ========================================================================== */
-.app-splash {
-    position: fixed;
-    inset: 0;
-    z-index: 3000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
-    padding: 2rem;
-    box-sizing: border-box;
-    text-align: center;
-    background-color: #10B981;
-    color: #FFFFFF;
-    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-html[data-theme="light"] .app-splash {
-    background-color: #0F766E;
-    color: #FFFFFF;
-}
-
-.app-splash__logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Matches the native splash icon size (108dp on Android 12+) so the handoff is seamless */
-.app-splash__logo svg {
-    width: 11.9rem;
-    height: 11.9rem;
-}
-
-.app-splash__status {
-    margin: 0;
-    font-size: 0.875rem;
-    color: color-mix(in srgb, currentColor 72%, transparent);
-}
-
-.app-splash__status--error {
-    color: #EF4444;
-    font-weight: 600;
-}
-
-.app-splash__retry {
-    min-width: 8.5rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 12px;
-    background-color: #FFFFFF;
-    color: #0F766E;
-    font: inherit;
-    font-size: 0.9375rem;
-    font-weight: 700;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: background-color 120ms ease, transform 100ms ease;
-}
-
-html[data-theme="dark"] .app-splash__retry {
-    background-color: #FFFFFF;
-    color: #10B981;
+    color: #0B0C10; /* high contrast dark text on white */
 }
 
 .app-splash__retry:active {
@@ -3370,10 +3125,6 @@ html[data-theme="dark"] .app-splash__retry {
     margin: 0.75rem 0;
 }
 
-.update-dialog__notes-body.markdown-body img {
-    max-width: 100%;
-}
-
 /* AI Assistant Chat Modal Styling */
 
 .mud-dialog-container .mud-dialog.ai-chat-dialog,
@@ -3385,7 +3136,7 @@ html[data-theme="dark"] .app-splash__retry {
     max-width: 600px !important;
     width: min(600px, calc(100vw - 32px)) !important;
     background: var(--mud-palette-surface) !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: none !important;
     border: 1px solid var(--mud-palette-lines-default) !important;
     margin: 16px auto !important;
 }
@@ -3457,7 +3208,7 @@ html[data-theme="dark"] .app-splash__retry {
     font-size: 0.925rem;
     line-height: 1.5;
     overflow-wrap: anywhere;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: none !important;
 }
 
 .ai-msg--user .ai-msg__bubble {

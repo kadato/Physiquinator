@@ -20,20 +20,10 @@
 
 <PageTitle>Home</PageTitle>
 
-<MudStack Spacing="3" Class="home-page">
+<MudStack Spacing="3" Class="home-page app-fab-page-padding">
     <header class="home-header d-flex justify-space-between align-center">
         <MudText Typo="Typo.h4" Class="home-header__title">Physiquinator</MudText>
-        @if (AiAssistant.GetSettings().Enabled)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.SmartToy"
-                           Color="Color.Primary"
-                           Variant="Variant.Filled"
-                           Size="Size.Medium"
-                           aria-label="Physiquinator AI Assistant"
-                           OnClick="OpenAiChatAsync" />
-        }
     </header>
-
 
 
     @if (_isLoading)
@@ -114,9 +104,8 @@
 
         @if (_plans == null || !_plans.Any())
         {
-            <EmptyState Message="No plans yet. Tap New plan below to create your first workout plan."
+            <EmptyState Message="No plans yet. Tap the + button below to create your first workout plan."
                         Icon="@Icons.Material.Outlined.FitnessCenter">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/plan">Create plan</MudButton>
             </EmptyState>
         }
         else
@@ -136,6 +125,20 @@
     </section>
     }
 </MudStack>
+
+@* FABs: New Plan (bottom-right primary) and AI Chat (above it, if enabled) *@
+<MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
+               Icon="@Icons.Material.Filled.Add"
+               OnClick="@(() => Navigation.NavigateTo(AppRoutes.PlanEditor))"
+               arialabel="New plan" />
+
+@if (AiAssistant.GetSettings().Enabled)
+{
+    <MudIconButton Class="app-fab app-fab--secondary app-fab--br-2"
+                   Icon="@Icons.Material.Filled.SmartToy"
+                   OnClick="OpenAiChatAsync"
+                   arialabel="AI Assistant" />
+}
 
 @code {
     private const int HomeStatsWeeks = 12;

@@ -274,6 +274,75 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task UpsertBodyweightLogAsync_InsertsThenReplacesForSameDay()
+    {
+        var day = new DateOnly(2026, 8, 6);
+
+        await _sut.UpsertBodyweightLogAsync(day, 82.5);
+        await _sut.UpsertBodyweightLogAsync(day, 81.8);
+
+        IReadOnlyList<BodyweightLogEntity> rows = await _sut.GetBodyweightLogsAsync();
+        Assert.Single(rows);
+        Assert.Equal(81.8, rows[0].BodyweightKg);
+        Assert.Equal("2026-08-06", rows[0].Date);
+    }
+
+    [Fact]
+    public async Task UpsertBodyweightLogAsync_RejectsNonPositiveValues()
+    {
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 6), 0));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 6), -5));
+    }
+
+    [Fact]
+    public async Task GetBodyweightLogsAsync_OrdersNewestFirst_AndRespectsLimit()
+    {
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 4), 84);
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 6), 83);
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 5), 83.5);
+
+        IReadOnlyList<BodyweightLogEntity> rows = await _sut.GetBodyweightLogsAsync(2);
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(["2026-08-06", "2026-08-05"], rows.Select(r => r.Date));
+    }
+
+    [Fact]
+    public async Task DeleteBodyweightLogAsync_RemovesOnlyThatDay()
+    {
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 5), 83.5);
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 6), 83);
+
+        Assert.True(await _sut.DeleteBodyweightLogAsync(new DateOnly(2026, 8, 5)));
+        Assert.False(await _sut.DeleteBodyweightLogAsync(new DateOnly(2026, 8, 5)));
+
+        IReadOnlyList<BodyweightLogEntity> rows = await _sut.GetBodyweightLogsAsync();
+        Assert.Single(rows);
+        Assert.Equal("2026-08-06", rows[0].Date);
+    }
+
+    [Fact]
+    public async Task CreateBackupSnapshotAsync_IncludesBodyweightEntries_AndImportRestoresThem()
+    {
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 5), 83.5);
+        await _sut.UpsertBodyweightLogAsync(new DateOnly(2026, 8, 6), 83);
+
+        WorkoutHistoryBackup backup = await _sut.CreateBackupSnapshotAsync();
+        Assert.Equal(2, backup.BodyweightEntries.Count);
+
+        await _sut.DeleteBodyweightLogAsync(new DateOnly(2026, 8, 5));
+        await _sut.DeleteBodyweightLogAsync(new DateOnly(2026, 8, 6));
+        Assert.Empty(await _sut.GetBodyweightLogsAsync());
+
+        await _sut.ImportBackupAsync(backup);
+
+        IReadOnlyList<BodyweightLogEntity> rows = await _sut.GetBodyweightLogsAsync();
+        Assert.Equal(2, rows.Count);
+        Assert.Contains(rows, r => r.Date == "2026-08-05" && Math.Abs(r.BodyweightKg - 83.5) < 0.001);
+        Assert.Contains(rows, r => r.Date == "2026-08-06" && Math.Abs(r.BodyweightKg - 83) < 0.001);
+    }
+
+    [Fact]
     public async Task GetSessionCountsByLocalDayAsync_GroupsSameUtcInstantIntoOneDay()
     {
         var started = new DateTime(2024, 4, 10, 15, 30, 0, DateTimeKind.Utc);

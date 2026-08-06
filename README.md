@@ -188,6 +188,7 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 
 ### Workout History & Analytics
 - **Activity Heatmap** - Visual GitHub-style contribution grid for your workout consistency
+- **Workout Schedule** - Set your training days so rest days never break your streak; missed scheduled days are marked on the heatmap
 - **Exercise Progress** - Per-exercise chart for tracking performance progression over time
 - **Session History** - Detailed review of completed sessions and set logs
 

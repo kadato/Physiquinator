@@ -37,14 +37,28 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Physiquinator.csproj
 
+    - name: Decode signing keystore
+      run: |
+        New-Item -ItemType Directory -Force -Path ./keystore
+        [IO.File]::WriteAllBytes('./keystore/physiquinator-release.keystore', [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64))
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
     - name: Build Android APK
       run: |
         dotnet publish Physiquinator.csproj `
           -f net11.0-android `
           -c Release `
           -p:AndroidPackageFormat=apk `
-          -p:AndroidKeyStore=false `
+          -p:AndroidKeyStore=true `
+          -p:AndroidSigningKeyStore=./keystore/physiquinator-release.keystore `
+          -p:AndroidSigningStorePass=$env:ANDROID_KEYSTORE_PASSWORD `
+          -p:AndroidSigningKeyAlias=physiquinator `
+          -p:AndroidSigningKeyPass=$env:ANDROID_KEY_PASSWORD `
           -o ./artifacts/android
+      env:
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     - name: Upload Android APK
       uses: actions/upload-artifact@v4

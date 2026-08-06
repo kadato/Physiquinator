@@ -265,10 +265,7 @@ public sealed class RestOverlayService : Service
             // Row 2: weight and reps steppers (hidden by default)
             _stepperRow = CreateStepperRow(colors);
 
-            // Row 3: log set button (full width, primary)
-            _logSetButton = CreateLogSetButton(colors);
-
-            // Row 4: +Ns, Reset, Skip (centered)
+            // Row 3: +Ns, Reset, and Log set (or Skip during rest) in one row
             var actionRow = new AndroidLinearLayout(this)
             {
                 Orientation = Orientation.Horizontal
@@ -278,19 +275,22 @@ public sealed class RestOverlayService : Service
             _addTimeButton = CreateAddTimeButton(addSeconds, colors);
             _resetButton = CreateIconButton(Resource.Drawable.ic_timer_reset, OnResetClicked, colors);
             _skipButton = CreateIconButton(Resource.Drawable.ic_timer_skip, OnSkipClicked, colors);
+            _logSetButton = CreateLogSetButton(colors);
 
             AddActionBtn(actionRow, _addTimeButton);
             AddActionBtn(actionRow, _resetButton);
+            AddActionBtn(actionRow, _logSetButton);
             AddActionBtn(actionRow, _skipButton);
 
             root.AddView(headerFrame);
             root.AddView(_stepperRow);
-            var logSetParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, Dp(40))
+            var actionRowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MatchParent,
+                LinearLayout.LayoutParams.WrapContent)
             {
-                BottomMargin = Dp(8)
+                TopMargin = Dp(8)
             };
-            root.AddView(_logSetButton, logSetParams);
-            root.AddView(actionRow);
+            root.AddView(actionRow, actionRowParams);
 
             root.SetOnTouchListener(new OverlayDragListener(this));
 
@@ -330,13 +330,13 @@ public sealed class RestOverlayService : Service
         row.Visibility = ViewStates.Gone;
 
         // Weight stepper: [-] value kg
-        AndroidButton weightMinus = CreateStepperBtn("-", colors, OnWeightMinus);
+        AndroidTextButton weightMinus = CreateStepperBtn("-", colors, OnWeightMinus);
         _weightValue = new AndroidTextView(this) { Text = "0", Gravity = GravityFlags.Center };
         _weightValue.SetTextColor(colors.TextPrimary);
         _weightValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
         _weightValue.SetTextSize(ComplexUnitType.Sp, 15);
         _weightValue.SetMinWidth(Dp(44));
-        AndroidButton weightPlus = CreateStepperBtn("+", colors, OnWeightPlus);
+        AndroidTextButton weightPlus = CreateStepperBtn("+", colors, OnWeightPlus);
         var weightLabel = new AndroidTextView(this) { Text = "kg", Gravity = GravityFlags.CenterVertical };
         weightLabel.SetTextColor(colors.TextSecondary);
         weightLabel.SetTextSize(ComplexUnitType.Sp, 11);
@@ -349,13 +349,13 @@ public sealed class RestOverlayService : Service
         AddStepperElement(weightGroup, weightLabel);
 
         // Reps stepper: [-] value reps
-        AndroidButton repsMinus = CreateStepperBtn("-", colors, OnRepsMinus);
+        AndroidTextButton repsMinus = CreateStepperBtn("-", colors, OnRepsMinus);
         _repsValue = new AndroidTextView(this) { Text = "10", Gravity = GravityFlags.Center };
         _repsValue.SetTextColor(colors.TextPrimary);
         _repsValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
         _repsValue.SetTextSize(ComplexUnitType.Sp, 15);
         _repsValue.SetMinWidth(Dp(36));
-        AndroidButton repsPlus = CreateStepperBtn("+", colors, OnRepsPlus);
+        AndroidTextButton repsPlus = CreateStepperBtn("+", colors, OnRepsPlus);
         var repsLabel = new AndroidTextView(this) { Text = "reps", Gravity = GravityFlags.CenterVertical };
         repsLabel.SetTextColor(colors.TextSecondary);
         repsLabel.SetTextSize(ComplexUnitType.Sp, 11);
@@ -377,19 +377,23 @@ public sealed class RestOverlayService : Service
     }
 
     /// <summary>Creates a stepper button matching the style of other overlay action buttons.</summary>
-    private AndroidButton CreateStepperBtn(string text,
+    private AndroidTextButton CreateStepperBtn(string text,
         (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors,
         Action onClick)
     {
-        var btn = new AndroidButton(this);
-        btn.SetImageResource(text == "+" ? Resource.Drawable.ic_timer_add : Resource.Drawable.ic_timer_minus);
-        btn.SetScaleType(ImageView.ScaleType.FitCenter);
-        btn.SetAdjustViewBounds(true);
+        var btn = new AndroidTextButton(this)
+        {
+            Text = text
+        };
+        btn.SetTextColor(colors.Primary);
+        btn.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        btn.SetTextSize(ComplexUnitType.Sp, 18);
+        btn.SetAllCaps(false);
         btn.SetPadding(Dp(6), Dp(6), Dp(6), Dp(6));
-        btn.SetColorFilter(colors.TextPrimary);
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x14, 0xFF, 0xFF, 0xFF));
+        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
+        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
         bg.SetCornerRadius(Dp(10));
         btn.Background = bg;
 
@@ -403,7 +407,14 @@ public sealed class RestOverlayService : Service
 
     private static void AddStepperElement(AndroidLinearLayout row, AndroidView view)
     {
-        row.AddView(view, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        var lp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WrapContent,
+            DpStatic(row, 40))
+        {
+            LeftMargin = DpStatic(row, 2),
+            RightMargin = DpStatic(row, 2)
+        };
+        row.AddView(view, lp);
     }
 
     private void OnWeightMinus() { _currentWeightKg = Math.Max(0, _currentWeightKg - 2.5); UpdateStepperDisplay(); }
@@ -421,7 +432,9 @@ public sealed class RestOverlayService : Service
 
     private static void AddActionBtn(AndroidLinearLayout row, AndroidView button)
     {
-        var lp = new LinearLayout.LayoutParams(DpStatic(row, 40), DpStatic(row, 40))
+        var lp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WrapContent,
+            DpStatic(row, 40))
         {
             LeftMargin = DpStatic(row, 4),
             RightMargin = DpStatic(row, 4)
@@ -490,8 +503,9 @@ public sealed class RestOverlayService : Service
         button.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
         button.SetTextSize(ComplexUnitType.Sp, 13);
         button.SetAllCaps(false);
+        button.SetSingleLine(true);
         button.Gravity = GravityFlags.Center;
-        button.SetPadding(Dp(8), Dp(4), Dp(8), Dp(4));
+        button.SetPadding(Dp(12), Dp(6), Dp(12), Dp(6));
 
         var bg = new GradientDrawable();
         bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));

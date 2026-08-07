@@ -246,8 +246,8 @@ async function run() {
     startMockAiServer(9099);
 
     try {
-        // --- PHASE 1: STANDARD SCREENS & AI CHAT & GRANTED OVERLAY STATUS ---
-        console.log('--- STARTING PHASE 1: STANDARD SCREENS & AI CHAT ---');
+        // --- STANDARD SCREENS & AI CHAT ---
+        console.log('--- STARTING SCREENSHOT CAPTURE ---');
         
         const normalPrefs = {
             "physiquinator-theme-preference": "2", // Default to Dark
@@ -258,210 +258,110 @@ async function run() {
         };
         writePrefs(normalPrefs);
 
-        const phase1 = await launchAppAndConnect();
+        const app = await launchAppAndConnect();
         const themes = ['light', 'dark'];
 
         for (const theme of themes) {
-            console.log(`--- CAPTURING ${theme.toUpperCase()} THEME SCREENSHOTS (PHASE 1) ---`);
+            console.log(`--- CAPTURING ${theme.toUpperCase()} THEME SCREENSHOTS ---`);
             
             // Set the theme preference
-            await selectTheme(phase1.page, theme);
+            await selectTheme(app.page, theme);
 
             // Settings screen
-            await capture(phase1.page, `settings-${theme}.png`);
+            await capture(app.page, `settings-${theme}.png`);
 
             // Home screen
-            await blazorNavigate(phase1.page, '/');
-            await phase1.page.waitForSelector('.home-hero', { timeout: 5000 });
+            await blazorNavigate(app.page, '/');
+            await app.page.waitForSelector('.home-hero', { timeout: 5000 });
             await delay(500);
-            await capture(phase1.page, `home-${theme}.png`);
+            await capture(app.page, `home-${theme}.png`);
 
             // Create Plan screen
-            await blazorNavigate(phase1.page, '/plan');
-            await phase1.page.waitForSelector('.plan-page', { timeout: 5000 });
-            await phase1.page.fill('.plan-details-card input[type="text"]', 'My Custom Workout');
-            await phase1.page.fill('input[placeholder="Add exercise…"]', 'Squats');
-            await phase1.page.click('.plan-add-exercise__btn');
-            await phase1.page.waitForSelector('.plan-exercise-sheet', { timeout: 5000 });
+            await blazorNavigate(app.page, '/plan');
+            await app.page.waitForSelector('.plan-page', { timeout: 5000 });
+            await app.page.fill('.plan-details-card input[type="text"]', 'My Custom Workout');
+            await app.page.fill('input[placeholder="Add exercise…"]', 'Squats');
+            await app.page.click('.plan-add-exercise__btn');
+            await app.page.waitForSelector('.plan-exercise-sheet', { timeout: 5000 });
             await delay(500);
-            await phase1.page.click('.plan-exercise-sheet button:has-text("Save exercise")');
-            await phase1.page.waitForSelector('.plan-exercise-row', { timeout: 5000 });
+            await app.page.click('.plan-exercise-sheet button:has-text("Save exercise")');
+            await app.page.waitForSelector('.plan-exercise-row', { timeout: 5000 });
             await delay(500);
-            await capture(phase1.page, `create-plan-${theme}.png`);
+            await capture(app.page, `create-plan-${theme}.png`);
 
             // Edit Plan screen
             // Navigate to Home first to force Blazor to destroy and re-initialize the PlanWorkout component
-            await blazorNavigate(phase1.page, '/');
+            await blazorNavigate(app.page, '/');
             await delay(200);
-            await blazorNavigate(phase1.page, `/plan/${PUSH_PLAN_ID}`);
-            await phase1.page.waitForSelector('.plan-page', { timeout: 5000 });
+            await blazorNavigate(app.page, `/plan/${PUSH_PLAN_ID}`);
+            await app.page.waitForSelector('.plan-page', { timeout: 5000 });
             await delay(500);
-            await capture(phase1.page, `edit-plan-${theme}.png`);
+            await capture(app.page, `edit-plan-${theme}.png`);
 
             // History screen
-            await blazorNavigate(phase1.page, '/history');
-            await phase1.page.waitForSelector('.history-heatmap-panel', { timeout: 5000 });
+            await blazorNavigate(app.page, '/history');
+            await app.page.waitForSelector('.history-heatmap-panel', { timeout: 5000 });
             // Scroll the heatmap to the end to show the latest activity
-            await phase1.page.evaluate(() => {
+            await app.page.evaluate(() => {
                 const el = document.querySelector('.history-heatmap-panel div');
                 if (el) el.scrollLeft = el.scrollWidth;
             });
             await delay(500);
-            await capture(phase1.page, `history-${theme}.png`);
+            await capture(app.page, `history-${theme}.png`);
 
             // Session Details screen (click the second history card which is a completed session)
-            const cards = phase1.page.locator('.history-session-card');
+            const cards = app.page.locator('.history-session-card');
             await cards.nth(1).click();
-            await phase1.page.waitForSelector('.session-details-page, .mud-paper', { timeout: 5000 }); // Wait for navigation
+            await app.page.waitForSelector('.session-details-page, .mud-paper', { timeout: 5000 }); // Wait for navigation
             await delay(500);
-            await capture(phase1.page, `session-details-${theme}.png`);
+            await capture(app.page, `session-details-${theme}.png`);
 
             // Exercise Progression screen
-            await blazorNavigate(phase1.page, `/history/exercise-progress/${PUSH_PLAN_ID}/Bench Press`);
-            await phase1.page.waitForSelector('.exercise-progress-chart, .premium-table', { timeout: 10000 });
+            await blazorNavigate(app.page, `/history/exercise-progress/${PUSH_PLAN_ID}/Bench Press`);
+            await app.page.waitForSelector('.exercise-progress-chart, .premium-table', { timeout: 10000 });
             await delay(1000); // Give the progression line chart time to draw
-            await capture(phase1.page, `exercise-progression-${theme}.png`);
+            await capture(app.page, `exercise-progression-${theme}.png`);
 
-            // Workout (Active Workout Log Set & Rest Timer)
-            await blazorNavigate(phase1.page, `/workout/${PUSH_PLAN_ID}`);
-            await phase1.page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
-            await phase1.page.waitForSelector('.set-active-panel', { timeout: 5000 });
+            // Workout (Active Workout rest timer)
+            await blazorNavigate(app.page, `/workout/${PUSH_PLAN_ID}`);
+            await app.page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
+            await app.page.waitForSelector('.set-active-panel', { timeout: 5000 });
             await delay(500);
-            await capture(phase1.page, `log-set-${theme}.png`);
 
             // Click the inline Log Set button to complete a set and start the rest timer
-            await phase1.page.click('.log-set-btn');
-            await phase1.page.waitForSelector('.rest-timer-panel', { timeout: 5000 });
+            await app.page.click('.log-set-btn');
+            await app.page.waitForSelector('.rest-timer-panel', { timeout: 5000 });
             await delay(500);
-            await capture(phase1.page, `rest-timer-${theme}.png`);
+            await capture(app.page, `rest-timer-${theme}.png`);
 
             // Skip the rest timer so we are ready for next actions
-            await phase1.page.click('button[aria-label="Skip rest"]');
-            await phase1.page.waitForTimeout(500);
+            await app.page.click('button[aria-label="Skip rest"]');
+            await app.page.waitForTimeout(500);
 
             // AI Chat modal while in use
-            await blazorNavigate(phase1.page, '/');
-            await phase1.page.waitForSelector('.home-hero', { timeout: 5000 });
+            await blazorNavigate(app.page, '/');
+            await app.page.waitForSelector('.home-hero', { timeout: 5000 });
             await delay(500);
-            await phase1.page.click('button[arialabel="AI Assistant"]');
-            await phase1.page.waitForSelector('.ai-chat-container', { timeout: 5000 });
+            await app.page.click('button[arialabel="AI Assistant"]');
+            await app.page.waitForSelector('.ai-chat-container', { timeout: 5000 });
             await delay(500);
             // Click "Progressive Overload" chip
-            await phase1.page.click('.mud-chip:has-text("Progressive Overload")');
+            await app.page.click('.mud-chip:has-text("Progressive Overload")');
             // Wait for thinking indicator to appear (if slow) or wait directly for the streamed AI text response
             try {
-                await phase1.page.waitForSelector('.ai-msg__content:has-text("Bench Press")', { timeout: 15000 });
+                await app.page.waitForSelector('.ai-msg__content:has-text("Bench Press")', { timeout: 15000 });
             } catch (e) {
                 // If it timed out, try waiting for any assistant message content bubble
-                await phase1.page.waitForSelector('.ai-msg__content', { timeout: 10000 });
+                await app.page.waitForSelector('.ai-msg__content', { timeout: 10000 });
             }
             await delay(1000);
-            await capture(phase1.page, `ai-chat-${theme}.png`);
+            await capture(app.page, `ai-chat-${theme}.png`);
             // Close AI chat modal
-            await phase1.page.click('button[aria-label="Close"]');
-            await delay(500);
-
-            // Settings with Rest timer expanded (granted state)
-            await blazorNavigate(phase1.page, '/settings');
-            await phase1.page.waitForSelector('.settings-panel', { timeout: 5000 });
-            await phase1.page.locator('.settings-panel:has-text("Rest timer") .mud-expand-panel-header').click();
-            await phase1.page.waitForSelector('label:has-text("Notify when rest ends")', { state: 'visible', timeout: 5000 });
-            await delay(500);
-            await capture(phase1.page, `settings-overlay-granted-${theme}.png`);
-            // Collapse rest timer panel so we leave it clean
-            await phase1.page.locator('.settings-panel:has-text("Rest timer") .mud-expand-panel-header').click();
+            await app.page.click('button[aria-label="Close"]');
             await delay(500);
         }
 
-        // Close Phase 1 app
-        await currentBrowser.close();
-        currentBrowser = null;
-        currentAppProcess.kill();
-        currentAppProcess = null;
-
-        // Delay to allow file release
-        await delay(2000);
-
-        // --- PHASE 2: MISSING OVERLAY PERMISSION STATES ---
-        console.log('--- STARTING PHASE 2: MISSING OVERLAY PERMISSION STATES ---');
-        
-        const missingOverlayPrefs = {
-            "physiquinator-theme-preference": "2", // Default to Dark
-            "physiquinator_ai_enabled": "True",
-            "physiquinator_ai_provider": "OpenAI",
-            "physiquinator_ai_base_url": "http://127.0.0.1:9099/v1",
-            "physiquinator_ai_api_key": "dummy-key-for-screenshots",
-            "physiquinator_simulate_no_overlay_permission": "True"
-        };
-        writePrefs(missingOverlayPrefs);
-
-        const phase2 = await launchAppAndConnect();
-
-        for (const theme of themes) {
-            console.log(`--- CAPTURING ${theme.toUpperCase()} THEME FOR PHASE 2 ---`);
-            
-            // Set the theme preference
-            await selectTheme(phase2.page, theme);
-
-            // Settings with Rest timer expanded (missing state)
-            await blazorNavigate(phase2.page, '/settings');
-            await phase2.page.waitForSelector('.settings-panel', { timeout: 5000 });
-            await phase2.page.locator('.settings-panel:has-text("Rest timer") .mud-expand-panel-header').click();
-            await phase2.page.waitForSelector('label:has-text("Notify when rest ends")', { state: 'visible', timeout: 5000 });
-            await delay(500);
-            await capture(phase2.page, `settings-overlay-missing-${theme}.png`);
-            // Collapse rest timer panel
-            await phase2.page.locator('.settings-panel:has-text("Rest timer") .mud-expand-panel-header').click();
-            await delay(500);
-
-            // Active Workout page with warning alert shown
-            await blazorNavigate(phase2.page, `/workout/${PUSH_PLAN_ID}`);
-            await phase2.page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
-            await phase2.page.waitForSelector('.mud-alert', { timeout: 5000 }); // Wait for the warning alert to show
-            await delay(500);
-            await capture(phase2.page, `workout-overlay-missing-${theme}.png`);
-        }
-
-        // Close Phase 2 app
-        await currentBrowser.close();
-        currentBrowser = null;
-        currentAppProcess.kill();
-        currentAppProcess = null;
-
-        // Delay to allow file release
-        await delay(2000);
-
-        // --- PHASE 3: WORKING OVERLAY STATE ---
-        console.log('--- STARTING PHASE 3: WORKING OVERLAY STATE ---');
-        
-        const workingOverlayPrefs = {
-            "physiquinator-theme-preference": "2", // Default to Dark
-            "physiquinator_ai_enabled": "True",
-            "physiquinator_ai_provider": "OpenAI",
-            "physiquinator_ai_base_url": "http://127.0.0.1:9099/v1",
-            "physiquinator_ai_api_key": "dummy-key-for-screenshots",
-            "physiquinator_simulate_no_overlay_permission": "False",
-            "physiquinator_simulate_overlay_active": "True"
-        };
-        writePrefs(workingOverlayPrefs);
-
-        const phase3 = await launchAppAndConnect();
-
-        for (const theme of themes) {
-            console.log(`--- CAPTURING ${theme.toUpperCase()} THEME FOR PHASE 3 ---`);
-            
-            // Set the theme preference
-            await selectTheme(phase3.page, theme);
-
-            // Active Workout page with working overlay shown floating
-            await blazorNavigate(phase3.page, `/workout/${PUSH_PLAN_ID}`);
-            await phase3.page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
-            await phase3.page.waitForSelector('.simulated-overlay-bubble', { timeout: 5000 });
-            await delay(500);
-            await capture(phase3.page, `workout-overlay-working-${theme}.png`);
-        }
-
-        // Close Phase 3 app
+        // Close the app
         await currentBrowser.close();
         currentBrowser = null;
         currentAppProcess.kill();

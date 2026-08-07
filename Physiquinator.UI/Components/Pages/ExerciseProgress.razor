@@ -6,6 +6,7 @@
 @inject NavigationManager Navigation
 @inject UserProfileService UserProfileService
 @inject IDialogService DialogService
+@inject WeightUnitService WeightUnitService
 
 <PageHeader Title="@_decodedExerciseName" ShowBack="false">
     @if (_ready && _rows.Any())
@@ -81,7 +82,7 @@ else
                         }
                         else
                         {
-                            <MudTh>kg (Best)</MudTh>
+                            <MudTh>@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current) (Best)</MudTh>
                             <MudTh>Reps (Total)</MudTh>
                             <MudTh>Sets</MudTh>
                         }
@@ -178,10 +179,10 @@ else
             return;
         }
 
-        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, MaxSessions, _bodyweightKg);
         var plan = await PlanService.GetPlanAsync(PlanId);
         var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
+        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, MaxSessions, _bodyweightKg, _logType);
         BuildChartData();
         _ready = true;
     }
@@ -204,7 +205,7 @@ else
             MaxChartAxisLabels);
         var isVolumePlot = _logType == ExerciseLogType.WeightAndReps || (_logType == ExerciseLogType.BodyweightReps && _bodyweightKg.HasValue);
         var values = isVolumePlot
-            ? chronological.Select(r => r.TotalVolumeKg).ToArray()
+            ? chronological.Select(r => ExerciseWeightFormatter.ToDisplay(r.TotalVolumeKg, WeightUnitService.Current)).ToArray()
             : chronological.Select(r => (double)r.TotalReps).ToArray();
         _hasChartData = values.Any(v => v > 0);
 
@@ -236,6 +237,7 @@ else
 
     private string GetChartCaption()
     {
+        var unitSuffix = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
         if (_logType == ExerciseLogType.Duration)
         {
             return "Per set: duration in seconds.";
@@ -243,10 +245,10 @@ else
         if (_logType == ExerciseLogType.BodyweightReps)
         {
             return _bodyweightKg.HasValue
-                ? $"Per set: reps × (bodyweight [{ExerciseWeightFormatter.FormatKg(_bodyweightKg.Value)} kg] + offset)."
-                : "Per set: reps (bodyweight not set in settings).";
+                ? $"Volume per set: reps × (bodyweight [{ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)}] + offset)."
+                : "Bodyweight is not set in Settings, so only total reps are plotted.";
         }
-        return "Per set: reps × kg when both are logged; otherwise reps or kg alone.";
+        return $"Volume per set: reps × {unitSuffix} (both must be logged).";
     }
 
     private static string FormatYAxisTick(double value) =>
@@ -255,7 +257,7 @@ else
     private string FormatBestWeight(double? weight)
     {
         if (_logType == ExerciseLogType.BodyweightReps)
-            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg);
-        return weight is { } w ? $"{ExerciseWeightFormatter.FormatKg(w)} kg" : "—";
+            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "—";
     }
 }

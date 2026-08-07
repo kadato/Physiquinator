@@ -5,6 +5,7 @@
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject WeightUnitService WeightUnitService
 
 <PageHeader Title="Bodyweight" ShowBack="false" />
 
@@ -51,7 +52,7 @@ else
         {
             <div class="history-stats">
                 <MudPaper Class="history-stat" Elevation="0">
-                    <span class="history-stat__value">@FormatKg(_entries[0].BodyweightKg)</span>
+                    <span class="history-stat__value">@FormatWeightWithUnit(_entries[0].BodyweightKg)</span>
                     <span class="history-stat__label">Latest</span>
                 </MudPaper>
                 <MudPaper Class="history-stat" Elevation="0">
@@ -98,7 +99,7 @@ else
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@UiDateFormats.DateOnlyCompact(context.DateOnly)</MudTd>
-                        <MudTd>@FormatKg(context.BodyweightKg) kg</MudTd>
+                        <MudTd>@FormatWeightWithUnit(context.BodyweightKg)</MudTd>
                         <MudTd Class="bodyweight-table__action">
                             <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                            Size="Size.Small"
@@ -148,11 +149,12 @@ else
             if (_entries.Count < 2) return "—";
             var diff = _entries[0].BodyweightKg - _entries[^1].BodyweightKg;
             var sign = diff >= 0 ? "+" : "-";
-            return $"{sign}{FormatKg(Math.Abs(diff))} kg";
+            return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(diff), WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
         }
     }
 
-    private static string FormatKg(double kg) => ExerciseWeightFormatter.FormatKg(kg);
+    private string FormatWeightWithUnit(double kg) =>
+        ExerciseWeightFormatter.FormatWeightWithUnit(kg, WeightUnitService.Current);
 
 
     private void OnRangeChanged(BodyweightTimeRange range)
@@ -233,7 +235,9 @@ else
             chronological.Select(e => e.DateOnly).ToList(),
             UiDateFormats.DateOnlyCompact,
             MaxChartAxisLabels);
-        var values = chronological.Select(e => e.BodyweightKg).ToArray();
+        var values = chronological
+            .Select(e => ExerciseWeightFormatter.ToDisplay(e.BodyweightKg, WeightUnitService.Current))
+            .ToArray();
         _chartSeries = [ new ChartSeries<double>
         {
             Name = "Bodyweight",

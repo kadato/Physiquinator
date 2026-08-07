@@ -1,4 +1,5 @@
 @inject NavigationManager Navigation
+@inject WeightUnitService WeightUnitService
 
 <MudDialog>
     <DialogContent>
@@ -81,13 +82,13 @@
     private string FormatValue(PersonalRecordEntry entry) => entry.Kind switch
     {
         ExerciseRecordKind.BestWeight when LogType == ExerciseLogType.BodyweightReps =>
-            ExerciseWeightFormatter.FormatBodyweightOffset(entry.Value, BodyweightKg),
+            ExerciseWeightFormatter.FormatBodyweightOffset(entry.Value, BodyweightKg, WeightUnitService.Current),
         ExerciseRecordKind.BestWeight =>
-            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} kg",
+            ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.MostReps =>
             $"{ExerciseWeightFormatter.FormatKg(entry.Value)} reps",
         ExerciseRecordKind.BestVolume =>
-            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} kg",
+            ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.LongestDuration =>
             $"{ExerciseWeightFormatter.FormatKg(entry.Value)}s",
         _ => ExerciseWeightFormatter.FormatKg(entry.Value)

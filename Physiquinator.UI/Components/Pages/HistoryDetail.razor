@@ -1,11 +1,20 @@
 @page "/history/{SessionId}"
+@using System.Text
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject UserProfileService UserProfileService
+@inject WeightUnitService WeightUnitService
+@inject IFileTransferService FileTransfer
+@inject ISnackbar Snackbar
+@inject TimeProvider TimeProvider
 
 <PageHeader Title="Session" ShowBack="false">
-    <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
+    @if (_ready && _session != null)
+    {
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">Share</MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
+    }
 </PageHeader>
 
 @if (!_ready)
@@ -90,7 +99,7 @@ else
                     <HeaderContent>
                         <MudTh>Exercise</MudTh>
                         <MudTh>Reps</MudTh>
-                        <MudTh>kg</MudTh>
+                        <MudTh>@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</MudTh>
                         <MudTh>Time</MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -211,7 +220,65 @@ else
         var type = GetLogType(exerciseName);
         if (type == ExerciseLogType.Duration) return "—";
         if (type == ExerciseLogType.BodyweightReps)
-            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg);
-        return weight is { } w ? ExerciseWeightFormatter.FormatKg(w) : "—";
+            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "—";
+    }
+
+    /// <summary>Builds a readable text summary of the session for sharing.</summary>
+    private async Task ShareSessionAsync()
+    {
+        if (_session == null) return;
+
+        var sb = new StringBuilder();
+        sb.AppendLine(_session.PlanName);
+        sb.AppendLine($"Started: {UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)}");
+        if (_session.EndedAtUtc is { } ended)
+            sb.AppendLine($"Ended: {UiDateFormats.LocalDateTimeCompact(ended)}");
+        sb.AppendLine();
+
+        foreach (var group in _sets.GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase))
+        {
+            sb.AppendLine($"{group.Key}:");
+            foreach (var set in group)
+            {
+                sb.AppendLine($"  Set {set.SetIndex + 1}: {FormatSetForShare(set)}");
+            }
+            sb.AppendLine();
+        }
+
+        var text = sb.ToString().TrimEnd();
+        var fileName = FileTransferNames.TextFileName(
+            FileTransferNames.SafeFileStem(_session.PlanName),
+            TimeProvider.GetLocalNow());
+        try
+        {
+            await FileTransfer.ExportTextAsync(fileName, text, "Share session");
+            Snackbar.Add("Session summary shared.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Share failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string FormatSetForShare(WorkoutSetLogEntity set)
+    {
+        var type = GetLogType(set.ExerciseName);
+        var weight = type switch
+        {
+            ExerciseLogType.Duration => "",
+            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(set.WeightKg, _bodyweightKg, WeightUnitService.Current),
+            _ => set.WeightKg is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : ""
+        };
+        string reps;
+        if (set.Reps is { } r)
+        {
+            reps = type == ExerciseLogType.Duration ? $"{r}s" : $"{r} reps";
+        }
+        else
+        {
+            reps = "";
+        }
+        return $"{weight} {reps}".Trim();
     }
 }

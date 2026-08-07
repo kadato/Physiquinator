@@ -1,10 +1,13 @@
 @page "/history"
+@implements IAsyncDisposable
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject WorkoutStatsService StatsService
 @inject WorkoutScheduleService ScheduleService
 @inject UserProfileService UserProfileService
 @inject ISnackbar Snackbar
+@inject WeightUnitService WeightUnitService
+@inject IJSRuntime JS
 <MudStack Spacing="3">
     <PageHeader Title="Workout history" ShowBack="false" />
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -20,7 +23,7 @@
         <MudTextField T="string"
                       Value="_searchText"
                       ValueChanged="OnSearchTextChanged"
-                      Placeholder="Search by plan name..."
+                      Placeholder="Search by plan or exercise name..."
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Clearable="true"
@@ -62,7 +65,7 @@
                     @if (_latestBodyweight is { } latest)
                     {
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
-                            @ExerciseWeightFormatter.FormatKg(latest.BodyweightKg) kg · @UiDateFormats.DateOnlyCompact(latest.DateOnly)
+                            @ExerciseWeightFormatter.FormatWeightWithUnit(latest.BodyweightKg, WeightUnitService.Current) · @UiDateFormats.DateOnlyCompact(latest.DateOnly)
                         </MudChip>
                         <MudButton Variant="Variant.Outlined"
                                    Color="Color.Primary"
@@ -77,16 +80,16 @@
             </div>
 
             <div class="bodyweight-log-row">
-                <SetMetricStepper Value="@_bodyweightInput"
+                <SetMetricStepper Value="@BodyweightInputDisplay"
                                   ValueChanged="OnBodyweightInputChanged"
-                                  Step="0.5"
-                                  Min="1"
-                                  Max="500"
+                                  Step="@BodyweightStep"
+                                  Min="@BodyweightMin"
+                                  Max="@BodyweightMax"
                                   IsInteger="false"
-                                  Format="0.##"
+                                  Format="0.#"
                                   Compact="true"
-                                  Unit="kg"
-                                  Placeholder="@_bodyweightDefault" />
+                                  Unit="@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)"
+                                  Placeholder="@(_bodyweightDefault is { } d ? ExerciseWeightFormatter.ToDisplay(d, WeightUnitService.Current) : null)" />
                 <button type="button"
                         class="bodyweight-log-row__log-btn"
                         @onclick="LogBodyweightAsync"
@@ -167,14 +170,28 @@
                     </div>
                 }
             </div>
+
+            @if (_isLoadingMore)
+            {
+                <div class="history-infinite-scroll-loading" aria-hidden="true">
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                </div>
+            }
+
+            @if (_hasMoreSessions && _selectedDay == null)
+            {
+                <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
+            }
         }
     }
 </MudStack>
 
 @code {
     private const int HeatmapWeeks = 53;
+    private const int SessionPageSize = 50;
+    private const string LoadMoreSentinelId = "history-load-more-sentinel";
 
-    private IReadOnlyList<WorkoutSessionLogEntity>? _sessions;
+    private List<WorkoutSessionLogEntity>? _sessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
     private IReadOnlyDictionary<DateOnly, int>? _activityByDay;
@@ -182,10 +199,24 @@
     private WorkoutDaySummary? _summary;
     private DateOnly? _selectedDay;
     private string _searchText = "";
+    private int _loadedSessionCount;
+    private bool _hasMoreSessions;
+    private bool _isLoadingMore;
+    private bool _sentinelObserved;
+    private DotNetObjectReference<History>? _dotNetRef;
 
     private BodyweightEntry? _latestBodyweight;
-    private double? _bodyweightInput;
+    private double? _bodyweightInputKg;
     private double? _bodyweightDefault;
+
+    private double? BodyweightInputDisplay =>
+        _bodyweightInputKg is { } kg ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current) : null;
+
+    private double BodyweightStep => WeightUnitService.Current == WeightUnit.Pounds ? 1 : 0.5;
+
+    private double BodyweightMin => ExerciseWeightFormatter.ToDisplay(1, WeightUnitService.Current);
+
+    private double BodyweightMax => ExerciseWeightFormatter.ToDisplay(500, WeightUnitService.Current);
 
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
@@ -201,17 +232,89 @@
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
-        var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);
+        var sessionsTask = HistoryRepo.GetRecentSessionsAsync(SessionPageSize);
         var bodyweightTask = HistoryRepo.GetBodyweightLogsAsync(1);
         await Task.WhenAll(sessionsTask, statsTask, bodyweightTask);
 
-        _sessions = await sessionsTask;
+        _sessions = [.. await sessionsTask];
+        _loadedSessionCount = _sessions.Count;
+        _hasMoreSessions = _sessions.Count >= SessionPageSize;
         (_summary, _activityByDay) = await statsTask;
         MapLatestBodyweight(await bodyweightTask);
-        _bodyweightInput = _latestBodyweight?.BodyweightKg
+        _bodyweightInputKg = _latestBodyweight?.BodyweightKg
             ?? UserProfileService.GetActiveProfile()?.BodyweightKg;
-        _bodyweightDefault = _bodyweightInput;
+        _bodyweightDefault = _bodyweightInputKg;
         await UpdateSessionsListAsync();
+    }
+
+    /// <summary>
+    /// Invoked from JS when the sentinel scrolls into view. Loads the next
+    /// page of sessions and returns whether more pages may exist (the JS
+    /// observer re-arms itself only while that is true).
+    /// </summary>
+    [JSInvokable]
+    public async Task<bool> OnLoadMoreVisible()
+    {
+        if (_sessions == null || _selectedDay != null || !_hasMoreSessions || _isLoadingMore)
+            return false;
+
+        _isLoadingMore = true;
+        try
+        {
+            var more = await HistoryRepo.GetRecentSessionsAsync(SessionPageSize, _loadedSessionCount);
+            if (more.Count > 0)
+            {
+                _sessions.AddRange(more);
+                _loadedSessionCount += more.Count;
+            }
+            _hasMoreSessions = more.Count >= SessionPageSize;
+            await UpdateSessionsListAsync();
+            return _hasMoreSessions;
+        }
+        finally
+        {
+            _isLoadingMore = false;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_selectedDay != null || !_hasMoreSessions)
+        {
+            if (_sentinelObserved)
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+                _sentinelObserved = false;
+            }
+            return;
+        }
+
+        if (!_sentinelObserved)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await InfiniteScrollInterop.ObserveAsync(JS, LoadMoreSentinelId, _dotNetRef, nameof(OnLoadMoreVisible));
+            _sentinelObserved = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sentinelObserved)
+        {
+            try
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+            }
+            catch (JSDisconnectedException)
+            {
+                // WebView disposed
+            }
+            _sentinelObserved = false;
+        }
+
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
     }
 
     private void MapLatestBodyweight(IReadOnlyList<BodyweightLogEntity> rows)
@@ -232,17 +335,20 @@
         MapLatestBodyweight(await HistoryRepo.GetBodyweightLogsAsync(1));
     }
 
-    private bool CanLogBodyweight => _bodyweightInput is { } weight && weight > 0;
+    private bool CanLogBodyweight => _bodyweightInputKg is { } weight && weight > 0;
 
     private bool CannotLogBodyweight => !CanLogBodyweight;
 
-    private void OnBodyweightInputChanged(double? value) => _bodyweightInput = value;
+    private void OnBodyweightInputChanged(double? value) =>
+        _bodyweightInputKg = value.HasValue
+            ? ExerciseWeightFormatter.ToKg(value.Value, WeightUnitService.Current)
+            : null;
 
     private async Task LogBodyweightAsync()
     {
         if (!CanLogBodyweight) return;
 
-        var kg = _bodyweightInput!.Value;
+        var kg = _bodyweightInputKg!.Value;
         var today = DateOnly.FromDateTime(DateTime.Today);
         await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
 
@@ -261,6 +367,13 @@
     {
         if (_sessions == null) return;
 
+        IReadOnlySet<string>? exerciseSessionIds = null;
+        var query = _searchText.Trim();
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            exerciseSessionIds = await HistoryRepo.GetSessionIdsForExerciseNameAsync(query);
+        }
+
         IEnumerable<WorkoutSessionLogEntity> source;
         if (_selectedDay == null)
         {
@@ -275,10 +388,12 @@
             source = _daySessions;
         }
 
-        if (!string.IsNullOrWhiteSpace(_searchText))
+        if (!string.IsNullOrWhiteSpace(query))
         {
-            var query = _searchText.Trim();
-            source = source.Where(s => s.PlanName.Contains(query, StringComparison.OrdinalIgnoreCase));
+            var ids = exerciseSessionIds;
+            source = source.Where(s =>
+                s.PlanName.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || (ids != null && ids.Contains(s.Id)));
         }
 
         _listSessions = source.ToList();

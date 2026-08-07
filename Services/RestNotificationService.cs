@@ -72,6 +72,8 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         {
             LocalNotificationCenter.Current.Cancel(ImmediateRestCompleteNotificationId);
 
+            long[]? vibration = _settings.SoundVibrationEnabled ? [0, 500] : null;
+
             var request = new NotificationRequest
             {
                 NotificationId = ImmediateRestCompleteNotificationId,
@@ -82,7 +84,7 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
                 {
                     ChannelId = AndroidChannelId,
                     Priority = AndroidPriority.High,
-                    VibrationPattern = [0, 500]
+                    VibrationPattern = vibration
                 }
             };
 
@@ -111,6 +113,8 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
 
         try
         {
+            long[]? vibration = _settings.SoundVibrationEnabled ? [0, 400, 200, 400] : null;
+
             var request = new NotificationRequest
             {
                 NotificationId = ScheduledRestNotificationId,
@@ -121,7 +125,7 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
                 {
                     ChannelId = AndroidChannelId,
                     Priority = AndroidPriority.High,
-                    VibrationPattern = [0, 400, 200, 400]
+                    VibrationPattern = vibration
                 },
                 Schedule = new NotificationRequestSchedule
                 {
@@ -144,43 +148,13 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
         return Task.CompletedTask;
     }
 
-    public async Task ShowWorkoutTimerUiAsync(Physiquinator.Core.Models.WorkoutTimerState state)
+    public Task ShowWorkoutTimerUiAsync(Physiquinator.Core.Models.WorkoutTimerState state)
     {
-        if (!_settings.Enabled)
-            return;
-
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
-            return;
-
-        var description = state.RestEndsAtUtc is { } end
-            ? $"Rest ends at {TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(end, DateTimeKind.Utc), TimeZoneInfo.Local):HH:mm}"
-            : state.NextExerciseName is { } next
-                ? $"Next: {next} {state.NextSetIndex}/{state.NextSetTotal}"
-                : "Workout complete";
-
-        try
-        {
-            LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId);
-
-            var request = new NotificationRequest
-            {
-                NotificationId = OngoingRestNotificationId,
-                Title = state.PlanName ?? "Workout",
-                Description = description,
-                CategoryType = NotificationCategoryType.Status,
-                Android = new AndroidOptions
-                {
-                    ChannelId = AndroidChannelId,
-                    Priority = AndroidPriority.High
-                }
-            };
-
-            await LocalNotificationCenter.Current.Show(request);
-        }
-        catch
-        {
-            // Ignore
-        }
+        // The ongoing workout status notification has been removed.
+        // The floating overlay (Android only) is handled by AndroidRestNotificationService.
+        // Cancel any leftover notification from previous installs.
+        try { LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId); } catch { }
+        return Task.CompletedTask;
     }
 
     public Task HideWorkoutTimerUiAsync()

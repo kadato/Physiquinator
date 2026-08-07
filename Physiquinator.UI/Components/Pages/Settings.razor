@@ -72,9 +72,20 @@
                                Label="Notify when rest ends"
                                Value="_restAlertsEnabled"
                                ValueChanged="OnRestAlertsEnabledChanged" />
-                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                        When off, the rest-end knock sound is disabled during workouts. The on-screen rest timer still runs.
+                    <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                        Push notification when your rest timer expires. Includes the next exercise name.
                     </MudText>
+
+                    <MudSwitch T="bool"
+                               Class="mt-3"
+                               Label="Sound &amp; vibration"
+                               Disabled="!_restAlertsEnabled"
+                               Value="_restSoundVibrationEnabled"
+                               ValueChanged="OnRestSoundVibrationChanged" />
+                    <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                        Play the knock sound and vibrate when the rest-end notification fires.
+                    </MudText>
+
                     <MudStack Spacing="0" Class="mt-4">
                         <SetMetricStepper Label="Add rest time (s)"
                                           @bind-Value="_addTimeSecondsValue"
@@ -466,6 +477,7 @@
     private string _preference = ThemePreference.System;
     private string _effectiveTheme = ThemePreference.Dark;
     private bool _restAlertsEnabled = true;
+    private bool _restSoundVibrationEnabled = true;
     private bool _overlayPermissionGranted = true;
     private int _planCount;
     private int _historySessionCount;
@@ -588,6 +600,7 @@
         _preference = ThemeService.Preference;
         _effectiveTheme = ThemeService.EffectiveTheme;
         _restAlertsEnabled = RestAlertSettings.Enabled;
+        _restSoundVibrationEnabled = RestAlertSettings.SoundVibrationEnabled;
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
         _scheduleDays = [.. WorkoutSchedule.Days];
         _aiSettings = AiAssistant.GetSettings();
@@ -662,6 +675,12 @@
     {
         RestAlertSettings.SetEnabled(enabled);
         _restAlertsEnabled = enabled;
+    }
+
+    private void OnRestSoundVibrationChanged(bool enabled)
+    {
+        RestAlertSettings.SetSoundVibrationEnabled(enabled);
+        _restSoundVibrationEnabled = enabled;
     }
 
     private void OnAutoCheckEnabledChanged(bool enabled)

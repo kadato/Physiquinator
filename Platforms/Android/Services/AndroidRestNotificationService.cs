@@ -25,7 +25,10 @@ public sealed class AndroidRestNotificationService(
     public const int ImmediateRestCompleteNotificationId = 9002;
     public const int SetLoggedNotificationId = 9003;
     public const string OngoingChannelId = "physiquinator_rest_ongoing";
+    /// <summary>Silent low-importance channel for the mandatory FGS notification — invisible to the user.</summary>
+    public const string SilentOngoingChannelId = "physiquinator_rest_ongoing_silent";
     public const string RestEndChannelId = "physiquinator_rest";
+    public const string RestEndSilentChannelId = "physiquinator_rest_silent";
 
     private const string ExtraAction = "action";
 
@@ -157,7 +160,8 @@ public sealed class AndroidRestNotificationService(
 
         EnsureChannels();
 
-        Notification.Builder builder = BuildBaseNotification(_context, RestEndChannelId, "Rest complete", description, publicVisibility: true)
+        var channelId = _settings.SoundVibrationEnabled ? RestEndChannelId : RestEndSilentChannelId;
+        Notification.Builder builder = BuildBaseNotification(_context, channelId, "Rest complete", description, publicVisibility: true)
             .SetAutoCancel(true)
             .SetContentIntent(BuildOpenAppIntent(_context));
 
@@ -252,7 +256,8 @@ public sealed class AndroidRestNotificationService(
         string text;
         if (resting)
         {
-            text = $"Rest ends at {state.RestEndsAtUtc!.Value.ToLocalTime():HH:mm}";
+            // Keep a minimal, non-distracting description for the FGS notification.
+            text = state.NextExerciseName is { } next ? $"Next: {next}" : "Resting";
         }
         else if (state.NextExerciseName is { } next)
         {
@@ -263,7 +268,7 @@ public sealed class AndroidRestNotificationService(
             text = "Workout complete";
         }
 
-        Notification.Builder builder = BuildBaseNotification(context, OngoingChannelId, state.PlanName ?? "Workout", text, publicVisibility: true)
+        Notification.Builder builder = BuildBaseNotification(context, SilentOngoingChannelId, state.PlanName ?? "Workout", text, publicVisibility: false)
             .SetOngoing(true)
             .SetAutoCancel(false)
             .SetContentIntent(BuildOpenAppIntent(context));
@@ -308,9 +313,21 @@ public sealed class AndroidRestNotificationService(
         if (nm == null)
             return;
 
+        // Silent channel for the mandatory FGS notification — no sound, minimum importance.
+        var silentOngoing = new NotificationChannel(SilentOngoingChannelId, "Workout timer (background)",
+            NotificationImportance.Min)
+        {
+            Description = "Required system notification to keep the workout overlay running. No sound or alerts."
+        };
+        silentOngoing.SetSound(null, null);
+        silentOngoing.EnableVibration(false);
+        nm.CreateNotificationChannel(silentOngoing);
+
+        // Keep the old ongoing channel for backward-compat in case it was already created.
         nm.CreateNotificationChannel(new NotificationChannel(OngoingChannelId, "Workout timer status",
             NotificationImportance.Default));
 
+        // Alert channel with sound + vibration.
         var alertChannel = new NotificationChannel(RestEndChannelId, "Rest timer",
             NotificationImportance.High)
         {
@@ -319,6 +336,16 @@ public sealed class AndroidRestNotificationService(
         alertChannel.SetVibrationPattern([0, 400, 200, 400]);
         alertChannel.SetSound(global::Android.Net.Uri.Parse("android.resource://" + _context.PackageName + "/raw/rest_end_knock"), null);
         nm.CreateNotificationChannel(alertChannel);
+
+        // Silent variant of the rest-end channel (when sound & vibration is disabled).
+        var silentAlert = new NotificationChannel(RestEndSilentChannelId, "Rest timer (silent)",
+            NotificationImportance.Default)
+        {
+            Description = "Silent rest-end notification when sound & vibration is turned off"
+        };
+        silentAlert.SetSound(null, null);
+        silentAlert.EnableVibration(false);
+        nm.CreateNotificationChannel(silentAlert);
     }
 
     private void StartOverlayService(WorkoutTimerState state)

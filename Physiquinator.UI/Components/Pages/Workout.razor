@@ -101,19 +101,20 @@ else
             {
                 <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete!</MudAlert>
             }
-            <MudStack Row="true" Spacing="3" Class="mt-4 w-100 workout-actions-row">
-                <MudIconButton Variant="Variant.Outlined"
-                               Color="Color.Error"
-                               Icon="@Icons.Material.Filled.Delete"
-                               Class="premium-btn premium-btn-lg premium-btn-error-outlined"
-                               aria-label="Discard workout"
-                               OnClick="DiscardWorkoutClick" />
+            <MudStack Row="true" Spacing="3" Class="mt-4 w-100 workout-actions-row" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Class="premium-btn premium-btn-lg premium-btn-error-outlined"
+                           OnClick="DiscardWorkoutClick">
+                    Discard
+                </MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Check"
-                           Class="premium-btn premium-btn-lg premium-btn-filled flex-grow-1"
+                           Class="premium-btn premium-btn-lg premium-btn-filled"
                            OnClick="EndWorkoutClick">
-                    End workout
+                    Done
                 </MudButton>
             </MudStack>
         </div>
@@ -123,13 +124,10 @@ else
 
 @if (_undoVisible)
 {
-    <MudButton Class="workout-undo-btn"
-               Variant="Variant.Outlined"
-               StartIcon="@Icons.Material.Filled.Restore"
-               OnClick="UndoLastSetCoreAsync"
-               arialabel="Undo last set">
-        Undo
-    </MudButton>
+    <MudIconButton Class="workout-undo-btn"
+                   Icon="@Icons.Material.Filled.Restore"
+                   OnClick="UndoLastSetCoreAsync"
+                   arialabel="Undo last set" />
 }
 
 @code {

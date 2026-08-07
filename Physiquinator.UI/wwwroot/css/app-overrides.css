@@ -859,11 +859,12 @@ input[type="number"] {
     background-color: var(--mud-palette-background);
 }
 
-@media (max-width: 991px) {
-    .workout-actions-row {
-        margin-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-    }
+/* Room for the undo FAB at bottom-right when scrolled to the end */
+.workout-actions-row {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-fab-size) + 12px);
+}
 
+@media (max-width: 991px) {
     .workout-exercise-layout {
         display: flex;
         flex-direction: column;
@@ -2761,30 +2762,32 @@ a,
 /* Compact, refined snackbar toasts */
 
 
-/* Undo FAB — pill-shaped floating undo button, bottom-right, aligned for easy thumb reach */
+/* Undo FAB — circular icon button, same size as the back FAB, bottom-right */
 .workout-undo-btn {
     position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-fab-size) + 12px);
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     right: var(--app-fab-right);
     z-index: 1000;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    height: 44px;
-    padding: 0 20px !important;
+    width: var(--app-fab-size) !important;
+    height: var(--app-fab-size) !important;
+    padding: 0 !important;
     background-color: #d32f2f !important;
     color: #fff !important;
     border: none !important;
-    border-radius: 22px !important;
+    border-radius: 50% !important;
     box-shadow: 0 4px 16px rgba(211, 47, 47, 0.35) !important;
-    font-weight: 700;
-    font-size: 0.875rem;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
     animation: undo-fab-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    white-space: nowrap;
     outline: none;
+}
+
+.workout-undo-btn .mud-icon-root {
+    font-size: 24px !important;
+    pointer-events: none;
 }
 
 

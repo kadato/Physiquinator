@@ -1,5 +1,6 @@
 @page "/history/bodyweight"
 @using System.Globalization
+@using System.Linq
 @using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
@@ -29,10 +30,11 @@ else
                        Dense="true"
                        Margin="Margin.Dense"
                        AnchorOrigin="Origin.BottomRight"
+                       TransformOrigin="Origin.TopRight"
                        Class="bodyweight-range-row__select"
                        Value="_range"
                        ValueChanged="OnRangeChanged">
-                @foreach (var range in Enum.GetValues<BodyweightTimeRange>())
+                @foreach (var range in Enum.GetValues<BodyweightTimeRange>().Reverse())
                 {
                     <MudSelectItem Value="@range">@RangeLabel(range)</MudSelectItem>
                 }

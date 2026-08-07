@@ -6,6 +6,63 @@ let restStartTime = 0;
 let restTotalMs = 0;
 let chainGeneration = 0;
 
+// Selects the full value when a stepper edit input gains focus (moved out of
+// the inline onfocus attribute for CSP hygiene). Loaded with this module.
+window.physiquinator = window.physiquinator || {};
+window.physiquinator.selectInput = (element) => {
+    try {
+        if (element && typeof element.select === 'function') element.select();
+    } catch {
+        /* ignore */
+    }
+};
+
+// ---- Keep-screen-on (wake lock) ------------------------------------------
+let wakeLockSentinel = null;
+let keepScreenOnWanted = false;
+
+export async function setKeepScreenOn(enabled) {
+    keepScreenOnWanted = !!enabled;
+    if (!keepScreenOnWanted) {
+        releaseWakeLock();
+        return;
+    }
+    await requestWakeLock();
+}
+
+async function requestWakeLock() {
+    if (!keepScreenOnWanted || !('wakeLock' in navigator)) return;
+    try {
+        if (wakeLockSentinel && !wakeLockSentinel.released) return;
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+        });
+    } catch {
+        // Unsupported or denied; the screen just may sleep.
+        wakeLockSentinel = null;
+    }
+}
+
+function releaseWakeLock() {
+    try {
+        if (wakeLockSentinel && !wakeLockSentinel.released) {
+            wakeLockSentinel.release();
+        }
+    } catch {
+        /* ignore */
+    }
+    wakeLockSentinel = null;
+}
+
+// Browsers drop the lock when the tab is hidden; re-request on return while
+// a workout still wants the screen on.
+document.addEventListener('visibilitychange', () => {
+    if (keepScreenOnWanted && document.visibilityState === 'visible') {
+        requestWakeLock();
+    }
+});
+
 export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs, continueMode) {
     if (!totalMs || totalMs <= 0) {
         stopRestTimer();
@@ -99,6 +156,103 @@ export function unregisterUndoKeyHandler() {
     window.removeEventListener('keydown', undoKeyHandler, true);
     undoKeyHandler = null;
 }
+
+// ---- Active-workout back guard -------------------------------------------
+// A guard history entry is pushed while a workout runs. Browser back, the
+// MAUI WebView back mapping, or a back gesture pops it; the guard asks .NET
+// whether to leave and re-arms itself when the user stays. The Android
+// activity consults window.physiquinatorBack.consume() for hardware back.
+const backGuardState = { physiquinatorBackGuard: true };
+let backGuardRef = null;
+let backGuardActive = false;
+let backGuardBusy = false;
+let backGuardHandler = null;
+// Set before our own history.back() in unregisterBackHandler: the browser
+// delivers that pop asynchronously, after a replacement listener may already
+// be registered (the workout page re-arms its guard on a second mount), and
+// it must not pop up the "Leave workout?" dialog on page load.
+let suppressOwnPop = false;
+
+export function registerBackHandler(dotNetRef) {
+    unregisterBackHandler();
+    backGuardRef = dotNetRef;
+    backGuardActive = true;
+    backGuardBusy = false;
+    window.history.pushState(backGuardState, '');
+    backGuardHandler = () => onBackGuardPopState();
+    window.addEventListener('popstate', backGuardHandler);
+}
+
+export function unregisterBackHandler() {
+    backGuardActive = false;
+    backGuardBusy = false;
+    backGuardRef = null;
+    if (backGuardHandler) {
+        window.removeEventListener('popstate', backGuardHandler);
+        backGuardHandler = null;
+    }
+    // Pop the guard entry so a later back press does not land on it.
+    if (window.history.state && window.history.state.physiquinatorBackGuard) {
+        suppressOwnPop = true;
+        window.history.back();
+    }
+}
+
+async function confirmLeaveWorkout() {
+    if (!backGuardRef) return true;
+    try {
+        return await backGuardRef.invokeMethodAsync('OnLeaveWorkoutRequested');
+    } catch {
+        // Component torn down mid-prompt; do not trap the user.
+        return true;
+    }
+}
+
+async function onBackGuardPopState() {
+    // Pop caused by our own unregisterBackHandler (delivered asynchronously,
+    // possibly through a replacement listener): not a user back press.
+    if (suppressOwnPop) {
+        suppressOwnPop = false;
+        return;
+    }
+    // In-app Blazor navigation never fires popstate, so any pop while the
+    // guard is armed is a user-initiated back press. The guard entry sits on
+    // top of the workout entry (same URL), so the first pop lands on the
+    // workout entry itself — that is when the confirmation is shown.
+    if (!backGuardActive) return;
+    if (backGuardBusy) {
+        // A prompt is already open; keep the guard entry so the next back
+        // cannot silently navigate past it.
+        window.history.pushState(backGuardState, '');
+        return;
+    }
+    backGuardBusy = true;
+    const leave = await confirmLeaveWorkout();
+    backGuardBusy = false;
+    if (!leave) {
+        window.history.pushState(backGuardState, '');
+    }
+}
+
+window.physiquinatorBack = {
+    // Invoked from the Android activity on hardware back. Returns true when
+    // the guard took over (or is busy); false lets the system fall back to
+    // its default back behavior.
+    consume: function () {
+        if (!backGuardActive) return false;
+        if (backGuardBusy) return true;
+        backGuardBusy = true;
+        confirmLeaveWorkout()
+            .then((leave) => {
+                backGuardBusy = false;
+                if (!leave) window.history.pushState(backGuardState, '');
+            })
+            .catch(() => {
+                backGuardBusy = false;
+            });
+        return true;
+    }
+};
 
 export function stopRestTimer() {
     restTimerActive = false;

@@ -10,7 +10,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 {
     // Cache-busting query: the module's progress-bar logic evolved; older
     // WebView caches of the module would show a stale bar.
-    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=4";
+    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=7";
 
     private IJSObjectReference? _module;
     private bool _disposed;
@@ -47,6 +47,16 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         where T : class =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("registerUndoKeyHandler", dotNetRef));
 
+    public Task SetKeepScreenOnAsync(bool enabled) =>
+        InvokeModuleAsync(module => module.InvokeVoidAsync("setKeepScreenOn", enabled));
+
+    public Task RegisterBackHandlerAsync<T>(DotNetObjectReference<T> dotNetRef)
+        where T : class =>
+        InvokeModuleAsync(module => module.InvokeVoidAsync("registerBackHandler", dotNetRef));
+
+    public Task UnregisterBackHandlerAsync() =>
+        InvokeModuleAsync(module => module.InvokeVoidAsync("unregisterBackHandler"));
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -54,6 +64,8 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 
         _disposed = true;
         await InvokeModuleAsync(module => module.InvokeVoidAsync("unregisterUndoKeyHandler"));
+        await InvokeModuleAsync(module => module.InvokeVoidAsync("setKeepScreenOn", false));
+        await InvokeModuleAsync(module => module.InvokeVoidAsync("unregisterBackHandler"));
         await InvokeModuleAsync(module => module.InvokeVoidAsync("stopRestTimer"));
         if (_module != null)
         {

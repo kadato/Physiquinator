@@ -25,7 +25,9 @@
                 <MudText Typo="Typo.overline" Class="plan-section__label">Plan details</MudText>
                 <MudPaper Class="plan-details-card plan-section__card pa-3" Elevation="0">
                     <MudStack Spacing="2">
-                        <MudTextField @bind-Value="PlanName"
+                        <MudTextField T="string"
+                                      Value="PlanName"
+                                      ValueChanged="OnPlanNameChanged"
                                       Variant="Variant.Filled"
                                       Label="Plan name"
                                       Placeholder="e.g. Push day"
@@ -122,6 +124,7 @@
 
     private MudTextField<string>? _newExerciseField;
     private bool _formValid;
+    private bool _dirty;
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
     private int DefaultSetCount { get; set; } = 4;
@@ -140,13 +143,27 @@
     private double? DefaultSetCountValue
     {
         get => DefaultSetCount;
-        set => DefaultSetCount = Math.Max(1, (int)Math.Round(value ?? 1));
+        set
+        {
+            DefaultSetCount = Math.Max(1, (int)Math.Round(value ?? 1));
+            _dirty = true;
+        }
     }
 
     private double? RestIntervalSecondsValue
     {
         get => RestIntervalSeconds;
-        set => RestIntervalSeconds = Math.Max(0, (int)Math.Round(value ?? 0));
+        set
+        {
+            RestIntervalSeconds = Math.Max(0, (int)Math.Round(value ?? 0));
+            _dirty = true;
+        }
+    }
+
+    private void OnPlanNameChanged(string value)
+    {
+        PlanName = value;
+        _dirty = true;
     }
 
     protected override async Task OnInitializedAsync()
@@ -162,6 +179,7 @@
                 Exercises = plan.Exercises.OrderBy(e => e.Order).Select(CloneExercise).ToList();
             }
         }
+        _dirty = false;
     }
 
     private void BumpSortable() => _sortableVersion++;
@@ -177,9 +195,23 @@
         Exercises.Insert(newIndex, item);
         RenumberExercises();
         BumpSortable();
+        _dirty = true;
     }
 
-    private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
+    private async Task GoHome()
+    {
+        if (_dirty)
+        {
+            var confirmed = await DialogService.ConfirmAsync(
+                "Discard changes?",
+                "You have unsaved changes to this plan. Leave without saving?",
+                confirmText: "Discard",
+                confirmColor: Color.Error);
+            if (!confirmed) return;
+        }
+
+        Navigation.NavigateTo(AppRoutes.Home);
+    }
 
     private async Task FocusAddExercise()
     {
@@ -257,6 +289,7 @@
 
             RenumberExercises();
             BumpSortable();
+            _dirty = true;
         }
         else if (isNew && insertAtEnd)
         {
@@ -294,6 +327,7 @@
         Exercises.RemoveAt(index);
         RenumberExercises();
         BumpSortable();
+        _dirty = true;
     }
 
     private void RenumberExercises()
@@ -336,6 +370,7 @@
         }
 
         Snackbar.Add("Plan saved.", Severity.Success);
+        _dirty = false;
         Navigation.NavigateTo(AppRoutes.Home);
     }
 

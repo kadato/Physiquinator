@@ -99,6 +99,17 @@ button.heatmap-cell.heatmap-scheduled {
     border-radius: 50%;
 }
 
+.heatmap-grid .heatmap-cell {
+    position: relative;
+    touch-action: manipulation;
+}
+
+.heatmap-cell::after {
+    content: '';
+    position: absolute;
+    inset: -6.5px;
+}
+
 @media (max-width: 576px) {
     .activity-heatmap {
         --heatmap-cell-size: 12px;

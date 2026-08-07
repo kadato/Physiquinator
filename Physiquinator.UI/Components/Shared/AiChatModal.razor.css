@@ -6,9 +6,10 @@
 .ai-chat-container {
     display: flex;
     flex-direction: column;
-    height: 520px;
+    height: min(580px, 75dvh);
     max-height: 80vh;
     padding: 4px;
+    width: 100%;
 }
 
 .ai-chat-header {
@@ -17,11 +18,38 @@
     justify-content: space-between;
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
 }
 
 .ai-chat-header__title {
     display: flex;
     align-items: center;
+    gap: 8px;
+}
+
+.ai-chat-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ai-api-key-banner {
+    background: var(--mud-palette-background-grey, rgba(255, 255, 255, 0.05));
+    border: 1px dashed var(--mud-palette-warning, #f59e0b);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-api-key-banner__content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
 }
 
 .ai-chat-messages {
@@ -38,10 +66,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    flex: 1;
+    min-height: 200px;
     text-align: center;
     padding: 24px;
     opacity: 0.85;
+}
+
+.ai-chat-empty__hint {
+    margin-top: 4px;
 }
 
 .ai-msg {
@@ -88,6 +121,7 @@
 .ai-msg__thinking {
     display: flex;
     align-items: center;
+    gap: 8px;
     opacity: 0.85;
     font-style: italic;
 }
@@ -114,7 +148,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    padding: 8px 0;
+    padding: 6px 0;
     overflow-x: auto;
 }
 
@@ -124,8 +158,36 @@
     gap: 8px;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
 }
 
-.ai-chat-textfield {
+.ai-chat-input__field {
     flex: 1;
+}
+
+::deep .ai-chat-textfield {
+    flex: 1;
+}
+
+::deep .ai-chat-title {
+    margin: 0;
+    line-height: 1.2;
+}
+
+::deep .ai-chat-subtitle {
+    margin: 0;
+}
+
+::deep .ai-banner-title {
+    line-height: 1.2;
+}
+
+::deep .ai-banner-button {
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+::deep .ai-chat-send-button {
+    height: 40px;
+    min-width: 40px;
 }

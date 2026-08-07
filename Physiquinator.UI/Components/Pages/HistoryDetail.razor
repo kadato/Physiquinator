@@ -94,19 +94,106 @@ else
         else
         {
             <MudPaper Elevation="0" Class="premium-table">
-                <MudText Typo="Typo.h6" Class="pa-4 pb-1">Sets</MudText>
+                <div class="pa-4 pb-1 d-flex align-center justify-space-between">
+                    <MudText Typo="Typo.h6">Sets</MudText>
+                    @if (_sets.Any())
+                    {
+                        @if (_editMode)
+                        {
+                            <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="ToggleEditMode">
+                                Done
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEditMode">
+                                Edit
+                            </MudButton>
+                        }
+                    }
+                </div>
                 <MudTable Items="_sets" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
                         <MudTh>Exercise</MudTh>
                         <MudTh>Reps</MudTh>
                         <MudTh>@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</MudTh>
                         <MudTh>Time</MudTh>
+                        @if (_editMode)
+                        {
+                            <MudTh Class="history-detail-table__action" />
+                        }
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.ExerciseName</MudTd>
-                        <MudTd>@FormatReps(context.ExerciseName, context.Reps)</MudTd>
-                        <MudTd>@FormatWeight(context.ExerciseName, context.WeightKg)</MudTd>
+                        @if (_editingSetId == context.Id)
+                        {
+                            <MudTd>
+                                <input type="number"
+                                       class="history-detail-table__input"
+                                       inputmode="numeric"
+                                       min="0"
+                                       step="1"
+                                       value="@_editRepsText"
+                                       aria-label="Reps"
+                                       @onchange="OnEditRepsChanged" />
+                            </MudTd>
+                            <MudTd>
+                                @if (GetLogType(context.ExerciseName) == ExerciseLogType.Duration)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">—</MudText>
+                                }
+                                else
+                                {
+                                    <input type="number"
+                                           class="history-detail-table__input"
+                                           inputmode="decimal"
+                                           min="0"
+                                           step="0.5"
+                                           value="@_editWeightText"
+                                           aria-label="@($"Weight ({ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)})")"
+                                           @onchange="OnEditWeightChanged" />
+                                }
+                            </MudTd>
+                        }
+                        else
+                        {
+                            <MudTd>@FormatReps(context.ExerciseName, context.Reps)</MudTd>
+                            <MudTd>@FormatWeight(context.ExerciseName, context.WeightKg)</MudTd>
+                        }
                         <MudTd>@UiDateFormats.LocalTimeOnly(context.CompletedAtUtc)</MudTd>
+                        @if (_editMode)
+                        {
+                            <MudTd Class="history-detail-table__action">
+                                @if (_editingSetId == context.Id)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   Class="history-detail-table__btn"
+                                                   aria-label="Save set"
+                                                   OnClick="@(() => SaveSetAsync(context))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Class="history-detail-table__btn"
+                                                   aria-label="Cancel edit"
+                                                   OnClick="CancelEditSet" />
+                                }
+                                else
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Class="history-detail-table__btn"
+                                                   aria-label="Edit set"
+                                                   OnClick="@(() => StartEditSet(context))" />
+                                    <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   Class="history-detail-table__btn"
+                                                   aria-label="Delete set"
+                                                   OnClick="@(() => DeleteSetAsync(context))" />
+                                }
+                            </MudTd>
+                        }
                     </RowTemplate>
                 </MudTable>
             </MudPaper>
@@ -144,6 +231,10 @@ else
     private List<string> _distinctExerciseNames = new();
     private Dictionary<string, ExerciseLogType> _logTypesByExercise = new();
     private double? _bodyweightKg;
+    private bool _editMode;
+    private string? _editingSetId;
+    private string _editRepsText = "";
+    private string _editWeightText = "";
 
 
     private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
@@ -158,6 +249,14 @@ else
     protected override async Task OnParametersSetAsync()
     {
         _ready = false;
+        _editMode = false;
+        _editingSetId = null;
+        await ReloadAsync();
+        _ready = true;
+    }
+
+    private async Task ReloadAsync()
+    {
         var id = Uri.UnescapeDataString(SessionId ?? "");
         _session = string.IsNullOrWhiteSpace(id) ? null : await HistoryRepo.GetSessionAsync(id);
         _snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(_session?.PlanSnapshotJson);
@@ -184,7 +283,88 @@ else
             .Distinct(StringComparer.Ordinal)
             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
             .ToList();
-        _ready = true;
+    }
+
+    private void ToggleEditMode()
+    {
+        _editMode = !_editMode;
+        if (!_editMode)
+            _editingSetId = null;
+    }
+
+    private void StartEditSet(WorkoutSetLogEntity set)
+    {
+        _editingSetId = set.Id;
+        _editRepsText = set.Reps?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        _editWeightText = GetLogType(set.ExerciseName) == ExerciseLogType.Duration || set.WeightKg is not { } kg
+            ? ""
+            : ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
+                .ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private void CancelEditSet() => _editingSetId = null;
+
+    private void OnEditRepsChanged(ChangeEventArgs e) =>
+        _editRepsText = e.Value as string ?? "";
+
+    private void OnEditWeightChanged(ChangeEventArgs e) =>
+        _editWeightText = e.Value as string ?? "";
+
+    private async Task SaveSetAsync(WorkoutSetLogEntity set)
+    {
+        if (_session == null || _editingSetId != set.Id) return;
+
+        int? reps = null;
+        if (int.TryParse(_editRepsText, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsedReps) && parsedReps >= 0)
+            reps = parsedReps;
+
+        double? weightKg = null;
+        if (GetLogType(set.ExerciseName) != ExerciseLogType.Duration
+            && double.TryParse(_editWeightText, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsedWeight) && parsedWeight > 0)
+            weightKg = ExerciseWeightFormatter.ToKg(parsedWeight, WeightUnitService.Current);
+
+        try
+        {
+            await HistoryRepo.UpdateSetLogAsync(_session.Id, set.ExerciseIndex, set.SetIndex, reps, weightKg);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not update set: {ex.Message}", Severity.Error);
+            return;
+        }
+
+        _editingSetId = null;
+        await ReloadAsync();
+        Snackbar.Add("Set updated.", Severity.Success);
+    }
+
+    private async Task DeleteSetAsync(WorkoutSetLogEntity set)
+    {
+        if (_session == null) return;
+
+        var ok = await DialogService.ConfirmAsync(
+            "Delete set",
+            $"Remove set {set.SetIndex + 1} of '{set.ExerciseName}'? This cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
+
+        if (!ok) return;
+
+        try
+        {
+            await HistoryRepo.DeleteSetLogAsync(_session.Id, set.ExerciseIndex, set.SetIndex);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not delete set: {ex.Message}", Severity.Error);
+            return;
+        }
+
+        _editingSetId = null;
+        await ReloadAsync();
+        Snackbar.Add("Set removed.", Severity.Success);
     }
 
     private async Task DeleteSessionClick()

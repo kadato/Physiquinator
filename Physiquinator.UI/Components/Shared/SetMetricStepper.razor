@@ -22,12 +22,11 @@
                        autocomplete="off"
                        spellcheck="false"
                        enterkeyhint="done"
+                       aria-label="@EditInputAriaLabel"
                        @bind="EditText"
                        @bind:event="oninput"
                        @onblur="CommitEdit"
-                       @onkeydown="OnEditKeyDown"
-                       onfocus="this.select()"
-                       autofocus />
+                       @onkeydown="OnEditKeyDown" />
             </form>
         }
         else
@@ -80,12 +79,11 @@ else
                            autocomplete="off"
                            spellcheck="false"
                            enterkeyhint="done"
+                           aria-label="@EditInputAriaLabel"
                            @bind="EditText"
                            @bind:event="oninput"
                            @onblur="CommitEdit"
-                           @onkeydown="OnEditKeyDown"
-                           onfocus="this.select()"
-                           autofocus />
+                           @onkeydown="OnEditKeyDown" />
                 </form>
             }
             else
@@ -162,6 +160,9 @@ else
     private bool _hasTyped;
     private bool _jsInitialized;
 
+    private string EditInputAriaLabel =>
+        string.IsNullOrWhiteSpace(Label) ? "Edit" : $"Edit {Label}";
+
     private string EditText
     {
         get => _editText;
@@ -207,6 +208,7 @@ else
             try
             {
                 await _inputRef.FocusAsync();
+                await JSRuntime.InvokeVoidAsync("physiquinator.selectInput", _inputRef);
                 await JSRuntime.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", _inputRef);
             }
             catch

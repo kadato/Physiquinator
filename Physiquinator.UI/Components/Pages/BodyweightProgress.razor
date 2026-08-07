@@ -4,6 +4,7 @@
 @using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject WeightUnitService WeightUnitService
 
@@ -51,18 +52,9 @@ else
         else
         {
             <div class="history-stats">
-                <MudPaper Class="history-stat" Elevation="0">
-                    <span class="history-stat__value">@FormatWeightWithUnit(_entries[0].BodyweightKg)</span>
-                    <span class="history-stat__label">Latest</span>
-                </MudPaper>
-                <MudPaper Class="history-stat" Elevation="0">
-                    <span class="history-stat__value">@TrendLabel</span>
-                    <span class="history-stat__label">Change</span>
-                </MudPaper>
-                <MudPaper Class="history-stat" Elevation="0">
-                    <span class="history-stat__value">@_entries.Count</span>
-                    <span class="history-stat__label">Entries</span>
-                </MudPaper>
+                <StatCard Value="@FormatWeightWithUnit(_entries[0].BodyweightKg)" Label="Latest" />
+                <StatCard Value="@TrendLabel" Label="Change" />
+                <StatCard Value="@_entries.Count.ToString()" Label="Entries" />
             </div>
 
             <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
@@ -277,6 +269,14 @@ else
 
     private async Task DeleteEntryAsync(BodyweightEntry entry)
     {
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete entry",
+            $"Remove the {UiDateFormats.DateOnlyCompact(entry.DateOnly)} bodyweight entry ({FormatWeightWithUnit(entry.BodyweightKg)})? This cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
+
+        if (!confirmed) return;
+
         await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
         _allEntries = await LoadEntriesAsync();
         if (_allEntries.Count == 0)

@@ -5,7 +5,7 @@
 @inject WeightUnitService WeightUnitService
 
 <MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
-    <div class="@HeaderClass" @onclick="@OnHeaderClick">
+    <button type="button" class="@HeaderClass" @onclick="@OnHeaderClick">
         <div class="header-left">
             @if (IsCompleted)
             {
@@ -42,7 +42,7 @@
             }
             <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
         </div>
-    </div>
+    </button>
 
     @if (IsExpanded && !IsCompleted)
     {

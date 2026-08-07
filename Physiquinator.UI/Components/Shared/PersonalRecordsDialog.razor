@@ -18,7 +18,10 @@
             @foreach (var entry in Records.Entries)
             {
                 var record = entry;
-                <div class="pr-dialog-row" @onclick="() => OpenSession(record)">
+                <button type="button"
+                        class="pr-dialog-row"
+                        style="background: none; border: none; width: 100%; text-align: left; font: inherit; color: inherit;"
+                        @onclick="() => OpenSession(record)">
                     <MudIcon Icon="@GetIcon(record.Kind)" Class="pr-dialog-row__icon" />
                     <div class="pr-dialog-row__main">
                         <MudText Typo="Typo.body2">@GetLabel(record.Kind)</MudText>
@@ -28,7 +31,7 @@
                     </div>
                     <MudText Typo="Typo.subtitle2" Class="pr-dialog-row__value">@FormatValue(record)</MudText>
                     <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="pr-dialog-row__chevron" />
-                </div>
+                </button>
             }
         }
     </DialogContent>

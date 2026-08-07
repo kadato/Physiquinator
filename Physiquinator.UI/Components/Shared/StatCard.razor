@@ -1,0 +1,15 @@
+<MudPaper Class="stat-card" Elevation="0">
+    <span class="stat-card__value @ValueClass">@Value</span>
+    <span class="stat-card__label">@Label</span>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = "";
+
+    [Parameter]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string? ValueClass { get; set; }
+}

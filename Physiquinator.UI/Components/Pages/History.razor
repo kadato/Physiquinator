@@ -40,22 +40,10 @@
         </MudPaper>
 
         <div class="history-stats">
-            <MudPaper Class="history-stat" Elevation="0">
-                <span class="history-stat__value">@_summary.CurrentStreakWorkoutDays</span>
-                <span class="history-stat__label">Streak</span>
-            </MudPaper>
-            <MudPaper Class="history-stat" Elevation="0">
-                <span class="history-stat__value">@_summary.LongestStreakWorkoutDays</span>
-                <span class="history-stat__label">Longest streak</span>
-            </MudPaper>
-            <MudPaper Class="history-stat" Elevation="0">
-                <span class="history-stat__value">@_summary.ThisWeekSessionCount</span>
-                <span class="history-stat__label">This week</span>
-            </MudPaper>
-            <MudPaper Class="history-stat" Elevation="0">
-                <span class="history-stat__value">@_summary.LastWeekSessionCount</span>
-                <span class="history-stat__label">Last week</span>
-            </MudPaper>
+            <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="Streak" />
+            <StatCard Value="@_summary.LongestStreakWorkoutDays.ToString()" Label="Longest streak" />
+            <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="This week" />
+            <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="Last week" />
         </div>
 
         <MudPaper Class="pa-3 bodyweight-panel" Elevation="1">
@@ -100,11 +88,11 @@
             </div>
         </MudPaper>
 
-        @if (_selectedDay != null)
+        @if (_selectedDay is { } selectedDay)
         {
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                 <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
-                    @UiDateFormats.DateOnlyCompact(_selectedDay.Value)
+                    @UiDateFormats.DateOnlyCompact(selectedDay)
                 </MudChip>
                 @if (!_listSessions.Any())
                 {
@@ -130,7 +118,7 @@
                 @foreach (var s in _listSessions)
                 {
                     var sid = s.Id;
-                    <div @key="s.Id" class="history-session-card" @onclick="@(() => OpenSession(sid))">
+                    <button @key="s.Id" type="button" class="history-session-card" @onclick="@(() => OpenSession(sid))">
                         <div class="history-session-card__inner">
                             <div class="history-session-card__left">
                                 <div class="history-session-card__info">
@@ -151,7 +139,7 @@
                             <div class="history-session-card__right">
                                 @if (s.EndedAtUtc == null && s.TryGetPlanId() is { } continuePlanId)
                                 {
-                                    <div @onclick:stopPropagation="true">
+                                    <span @onclick:stopPropagation="true">
                                         <MudButton Variant="Variant.Filled"
                                                    Color="Color.Primary"
                                                    Size="Size.Small"
@@ -159,7 +147,7 @@
                                                    OnClick="@(() => ContinueWorkout(continuePlanId))">
                                             Continue
                                         </MudButton>
-                                    </div>
+                                    </span>
                                 }
                                 else
                                 {
@@ -167,7 +155,7 @@
                                 }
                             </div>
                         </div>
-                    </div>
+                    </button>
                 }
             </div>
 

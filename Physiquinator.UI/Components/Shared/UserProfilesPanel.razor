@@ -38,18 +38,20 @@
                         <MudIconButton Icon="@Icons.Material.Filled.SwapHoriz"
                                        Variant="Variant.Filled"
                                        Color="Color.Primary"
-                                       Size="Size.Small"
+                                       Size="Size.Medium"
                                        OnClick="@(() => SwitchProfileAsync(profile.Id))"
                                        title="Switch Profile"
+                                       aria-label="@($"Switch to profile {profile.Name}")"
                                        Class="icon-btn-square" />
                     }
 
                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                    Variant="Variant.Outlined"
                                    Color="Color.Info"
-                                   Size="Size.Small"
+                                   Size="Size.Medium"
                                    OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
                                    title="Rename Profile"
+                                   aria-label="@($"Rename profile {profile.Name}")"
                                    Class="icon-btn-square" />
 
                     @if (profile.Id != UserProfileService.DemoProfileId)
@@ -57,9 +59,10 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        Variant="Variant.Outlined"
                                        Color="Color.Error"
-                                       Size="Size.Small"
+                                       Size="Size.Medium"
                                        OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
                                        title="Delete Profile"
+                                       aria-label="@($"Delete profile {profile.Name}")"
                                        Class="icon-btn-square" />
                     }
                 </MudStack>
@@ -84,6 +87,9 @@
 
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    private WorkoutSessionService SessionService { get; set; } = null!;
 
     private List<UserProfile> _profiles = new();
     private UserProfile _activeProfile = new();
@@ -150,6 +156,16 @@
 
     private async Task SwitchProfileAsync(Guid id)
     {
+        if (SessionService.CurrentPlan != null)
+        {
+            var confirmed = await DialogService.ConfirmAsync(
+                "Workout in progress",
+                "Switching profiles ends your current workout. Switch anyway?",
+                confirmText: "Switch",
+                confirmColor: Color.Primary);
+            if (!confirmed) return;
+        }
+
         try
         {
             await UserProfileService.SwitchProfileAsync(id);

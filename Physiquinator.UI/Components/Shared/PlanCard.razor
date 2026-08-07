@@ -19,6 +19,7 @@
                                OnClick="OnStart" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Class="plan-card-icon-btn"
+                               aria-label="@($"Edit {PlanName}")"
                                OnClick="OnEdit" />
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="plan-card-icon-btn" Dense="true" AriaLabel="Plan options">
                     <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">Export</MudMenuItem>

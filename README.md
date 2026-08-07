@@ -184,7 +184,7 @@ Configuration (`appsettings.json` or env vars):
 }
 ```
 
-The server is stateless (horizontally scalable), emits per-tool telemetry through `ILogger`, and ships a `/healthz` probe:
+State is isolated per client: database connections, preferences, and session state are scoped per Blazor circuit, and MCP requests resolve those services in their own scope, so concurrent clients never share an in-memory workout or settings store. The server emits per-tool telemetry through `ILogger` and ships a `/healthz` probe:
 
 ```bash
 curl -X POST http://localhost:5000/mcp \
@@ -204,7 +204,7 @@ Physiquinator.Core   Domain model, SQLite repositories, and all business logic
 Physiquinator.UI     Blazor Hybrid UI (Razor class library): pages, components, theming
 Physiquinator        Platform hosts: .NET MAUI shell for Android/iOS/Windows/macOS
 Physiquinator.Web    ASP.NET Core web host: same UI as a Blazor web app + MCP server
-Physiquinator.Tests  xUnit test suite (211 tests) covering repositories, services,
+Physiquinator.Tests  xUnit test suite (260 tests) covering repositories, services,
                      formatting, and the MCP surface
 ```
 
@@ -213,7 +213,7 @@ Key design points:
 - **Blazor Hybrid everywhere** - The exact same Razor UI runs natively via WebView2 (MAUI) and in the browser (Web), so every page is tested and built once
 - **Platform services behind interfaces** - Notifications, vibration, file transfer, and update installation are abstracted (`INotificationService`, `IVibrationService`, ...) with real, no-op, and test-double implementations
 - **Android overlay as a foreground service** - The floating rest timer is a draggable overlay hosted in a foreground service with exact alarms, so it keeps running when the app is backgrounded
-- **A single service registry** - `AddPhysiquinatorServices()` in the Core project is shared by both hosts, keeping the web client feature-complete with zero duplication
+- **A single service registry** - `AddPhysiquinatorServices()` in the Core project is shared by both hosts, keeping the web client feature-complete with zero duplication; stateful services (database, session, rest timer, profile) are singletons on MAUI and scoped per Blazor circuit on the web host
 
 ---
 
@@ -297,7 +297,7 @@ cd tools/screenshot-generator
 
 ## Testing & CI
 
-- **211 xUnit tests** covering repositories, workout/session/history services, stats and formatting, the AI tool registry, and the MCP surface
+- **260 xUnit tests** covering repositories, workout/session/history services, stats and formatting, the AI tool registry, and the MCP surface
 - **CI on every push/PR** - restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`)
 - **SonarCloud analysis** with coverage for Core, UI, Web, and Tests (`.github/workflows/sonarcloud.yml`)
 - **Tag-based releases** (`v*`) - signed Android APK and Windows package built and published automatically (`.github/workflows/release.yml`)

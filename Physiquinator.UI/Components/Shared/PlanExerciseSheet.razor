@@ -1,5 +1,8 @@
 @using Physiquinator.Core.Models
+@using Physiquinator.Core.Formatting
 @inject IJSRuntime JS
+@inject WorkoutHistoryRepository HistoryRepository
+@inject WeightUnitService WeightUnitService
 
 <MudDialog Class="plan-exercise-sheet">
     <TitleContent>
@@ -8,17 +11,19 @@
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
             <MudStack Spacing="3" Class="plan-exercise-sheet__body">
-                <MudTextField @bind-Value="_name"
-                              id="exercise-sheet-name-input"
-                              Variant="Variant.Filled"
-                              Label="Exercise name"
-                              Placeholder="e.g. Bench press"
-                              Required="true"
-                              Immediate="true"
-                              autocapitalize="words"
-                              autocomplete="off"
-                              enterkeyhint="done"
-                              @onfocus="OnExerciseNameFocus" />
+                <MudAutocomplete T="string"
+                                 @bind-Value="_name"
+                                 id="exercise-sheet-name-input"
+                                 Variant="Variant.Filled"
+                                 Label="Exercise name"
+                                 Placeholder="e.g. Bench press"
+                                 SearchFunc="SearchExerciseNamesAsync"
+                                 CoerceValue="false"
+                                 ResetValueOnEmptyText="true"
+                                 MaxItems="50"
+                                 Dense="false"
+                                 autocapitalize="words"
+                                 @onfocus="OnExerciseNameFocus" />
 
             <MudSelect Value="_logType"
                        ValueChanged="OnLogTypeChanged"
@@ -57,10 +62,11 @@
             @if (_logType != ExerciseLogType.Duration)
             {
                 <SetMetricStepper @key="@($"weight-stepper-{_logType}")"
-                                  Label="@(_logType == ExerciseLogType.BodyweightReps ? "Default weight offset (kg)" : "Default weight (kg)")"
-                                  @bind-Value="_defaultWeightKg"
-                                  Step="2.5"
-                                  Min="@(_logType == ExerciseLogType.BodyweightReps ? -200 : 0)"
+                                  Label="@DefaultWeightLabel"
+                                  Value="@DefaultWeightDisplay"
+                                  ValueChanged="OnDefaultWeightChanged"
+                                  Step="@DefaultWeightStep"
+                                  Min="@DefaultWeightMin"
                                   Format="0.#"
                                   InputMode="decimal" />
             }
@@ -100,10 +106,32 @@
     private double? _defaultReps;
     private double? _defaultWeightKg;
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
+    private List<string> _exerciseNames = [];
 
     private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
 
-    protected override void OnInitialized()
+    private string DefaultWeightLabel =>
+        _logType == ExerciseLogType.BodyweightReps
+            ? $"Default weight offset ({ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)})"
+            : $"Default weight ({ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)})";
+
+    private double? DefaultWeightDisplay =>
+        _defaultWeightKg is { } kg
+            ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
+            : null;
+
+    private double DefaultWeightStep => WeightUnitService.Current == WeightUnit.Pounds ? 5 : 2.5;
+
+    private double DefaultWeightMin => _logType == ExerciseLogType.BodyweightReps
+        ? ExerciseWeightFormatter.ToDisplay(-200, WeightUnitService.Current)
+        : 0;
+
+    private void OnDefaultWeightChanged(double? displayValue) =>
+        _defaultWeightKg = displayValue.HasValue
+            ? ExerciseWeightFormatter.ToKg(displayValue.Value, WeightUnitService.Current)
+            : null;
+
+    protected override async Task OnInitializedAsync()
     {
         _name = Exercise.Name;
         _setCount = Exercise.SetCount;
@@ -111,6 +139,17 @@
         _defaultReps = Exercise.DefaultReps;
         _defaultWeightKg = Exercise.DefaultWeightKg;
         _logType = Exercise.LogType;
+        _exerciseNames = [.. await HistoryRepository.GetExerciseNamesAsync(100)];
+    }
+
+    private Task<IEnumerable<string>> SearchExerciseNamesAsync(string? text, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return Task.FromResult<IEnumerable<string>>(_exerciseNames);
+
+        var query = text.Trim();
+        return Task.FromResult<IEnumerable<string>>(
+            _exerciseNames.Where(n => n.Contains(query, StringComparison.OrdinalIgnoreCase)));
     }
 
     private void Cancel() => MudDialog.Cancel();

@@ -90,7 +90,7 @@ public static class PhysiquinatorMcpTools
             CallToolResult result = await next(context, cancellationToken);
             stopwatch.Stop();
 
-            var logger = context.Server.Services!
+            ILogger logger = context.Server.Services!
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger("Physiquinator.Mcp");
             var elapsedMs = stopwatch.ElapsedMilliseconds;

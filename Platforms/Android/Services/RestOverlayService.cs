@@ -256,7 +256,7 @@ public sealed class RestOverlayService : Service
             headerRow.AddView(_timerText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
             headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
 
-            var closeButton = CreateCloseButton(colors);
+            AndroidButton closeButton = CreateCloseButton(colors);
             closeButton.ContentDescription = "Close overlay";
 
             var headerRowParams = new FrameLayout.LayoutParams(
@@ -714,7 +714,7 @@ public sealed class RestOverlayService : Service
             nextExerciseName = exercise.Name;
             nextSetTotal = exercise.SetCount;
             logType = exercise.LogType;
-            double defaultWeight = exercise.DefaultWeightKg ?? 0;
+            var defaultWeight = exercise.DefaultWeightKg ?? 0;
             var defaultReps = exercise.DefaultReps ?? 10;
             var setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;

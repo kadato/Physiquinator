@@ -83,6 +83,7 @@ public class WorkoutScheduleServiceTests
     public async Task Schedule_IsIsolatedPerProfile()
     {
         var dbPath = Path.Combine(Path.GetTempPath(), $"physiq-sched-test-{Guid.NewGuid():N}.db3");
+        UserProfile? alice = null;
         try
         {
             var db = new AppDatabase(dbPath);
@@ -90,12 +91,12 @@ public class WorkoutScheduleServiceTests
             var profiles = new UserProfileService(db, new WorkoutSessionService(TimeProvider.System), preferences, new TempDbPathProvider(dbPath), TimeProvider.System);
 
             // The default (demo) profile owns the base key.
-            var schedule = new WorkoutScheduleService(preferences, profiles);
+            var schedule = new WorkoutScheduleService(preferences, profiles, db);
             schedule.SetDays([DayOfWeek.Monday]);
 
             // A new profile reads and writes its own key.
             profiles.CreateProfile("Alice");
-            UserProfile alice = profiles.GetProfiles().First(p => p.Name == "Alice");
+            alice = profiles.GetProfiles().First(p => p.Name == "Alice");
             await profiles.SwitchProfileAsync(alice.Id);
 
             Assert.Empty(schedule.Days);
@@ -110,8 +111,102 @@ public class WorkoutScheduleServiceTests
         }
         finally
         {
-            if (File.Exists(dbPath))
-                File.Delete(dbPath);
+            var aliceDbPath = alice != null ? Path.ChangeExtension(dbPath, $".{alice.Id:N}.db3") : null;
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    if (File.Exists(dbPath))
+                        File.Delete(dbPath);
+                    if (aliceDbPath != null && File.Exists(aliceDbPath))
+                        File.Delete(aliceDbPath);
+                    break;
+                }
+                catch (IOException)
+                {
+                    await Task.Delay(50);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void GetScheduleForDate_ReturnsHistoricalSchedulesCorrectly()
+    {
+        Fixture fix = CreateFixture();
+
+        // Initially no schedule
+        Assert.Empty(fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 1)));
+
+        // Set Mon-Wed-Fri effective on 2026-05-01
+        fix.Schedule.SetDays([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday], new DateOnly(2026, 5, 1));
+
+        // Set Tue-Thu effective on 2026-05-10
+        fix.Schedule.SetDays([DayOfWeek.Tuesday, DayOfWeek.Thursday], new DateOnly(2026, 5, 10));
+
+        // Query historical dates:
+        // Before 2026-05-01: empty
+        Assert.Empty(fix.Schedule.GetScheduleForDate(new DateOnly(2026, 4, 30)));
+
+        // Between 2026-05-01 and 2026-05-09: Mon-Wed-Fri
+        var sched1 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 5));
+        Assert.Equal(3, sched1.Count);
+        Assert.Contains(DayOfWeek.Monday, sched1);
+        Assert.Contains(DayOfWeek.Wednesday, sched1);
+        Assert.Contains(DayOfWeek.Friday, sched1);
+
+        // On and after 2026-05-10: Tue-Thu
+        var sched2 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 10));
+        Assert.Equal(2, sched2.Count);
+        Assert.Contains(DayOfWeek.Tuesday, sched2);
+        Assert.Contains(DayOfWeek.Thursday, sched2);
+
+        var sched3 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 20));
+        Assert.Equal(2, sched3.Count);
+        Assert.Contains(DayOfWeek.Tuesday, sched3);
+        Assert.Contains(DayOfWeek.Thursday, sched3);
+    }
+
+    [Fact]
+    public async Task Initialize_MigratesExistingPreferences()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"physiq-sched-test-{Guid.NewGuid():N}.db3");
+        try
+        {
+            var db = new AppDatabase(dbPath);
+            var preferences = new InMemoryPreferences();
+            var profiles = new UserProfileService(db, new WorkoutSessionService(TimeProvider.System), preferences, new TempDbPathProvider(dbPath), TimeProvider.System);
+
+            // Set preferences directly (Demo Profile)
+            var schedule = new WorkoutScheduleService(preferences, profiles, db);
+            preferences.Set("physiquinator-workout-schedule-days", "42"); // 1<<Monday(1) | 1<<Wednesday(3) | 1<<Friday(5) = 2 | 8 | 32 = 42
+
+            // Warm the cache/run migration
+            await schedule.EnsureLoadedAsync();
+
+            // Verify it was migrated
+            var days = schedule.GetScheduleForDate(new DateOnly(2026, 1, 1));
+            Assert.Contains(DayOfWeek.Monday, days);
+            Assert.Contains(DayOfWeek.Wednesday, days);
+            Assert.Contains(DayOfWeek.Friday, days);
+
+            await db.Database.CloseAsync();
+        }
+        finally
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    if (File.Exists(dbPath))
+                        File.Delete(dbPath);
+                    break;
+                }
+                catch (IOException)
+                {
+                    await Task.Delay(50);
+                }
+            }
         }
     }
 
@@ -119,8 +214,9 @@ public class WorkoutScheduleServiceTests
     {
         var dbPath = Path.Combine(Path.GetTempPath(), $"physiq-sched-test-{Guid.NewGuid():N}.db3");
         var preferences = new InMemoryPreferences();
-        var profiles = new UserProfileService(new AppDatabase(dbPath), new WorkoutSessionService(TimeProvider.System), preferences, new TempDbPathProvider(dbPath), TimeProvider.System);
-        return new Fixture(new WorkoutScheduleService(preferences, profiles));
+        var database = new AppDatabase(dbPath);
+        var profiles = new UserProfileService(database, new WorkoutSessionService(TimeProvider.System), preferences, new TempDbPathProvider(dbPath), TimeProvider.System);
+        return new Fixture(new WorkoutScheduleService(preferences, profiles, database));
     }
 
     private sealed record Fixture(WorkoutScheduleService Schedule);

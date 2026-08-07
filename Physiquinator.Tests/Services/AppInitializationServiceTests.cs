@@ -15,6 +15,7 @@ public class AppInitializationServiceTests : IAsyncLifetime
     private DemoDataSeeder _seeder = null!;
     private MemoryDemoSeedPreferences _prefs = null!;
     private RecordingThemeInitialization _theme = null!;
+    private WorkoutScheduleService _scheduleService = null!;
 
     static AppInitializationServiceTests() => SQLitePCL.Batteries_V2.Init();
 
@@ -33,11 +34,12 @@ public class AppInitializationServiceTests : IAsyncLifetime
             _appPreferences,
             new TempDbPathProvider(":memory:"),
             TimeProvider.System);
+        _scheduleService = new WorkoutScheduleService(_appPreferences, profiles, _db);
         _seeder = new DemoDataSeeder(
             _planService,
             _db,
             _historyRepo,
-            new WorkoutScheduleService(_appPreferences, profiles),
+            _scheduleService,
             profiles,
             _prefs,
             TimeProvider.System);
@@ -113,7 +115,7 @@ public class AppInitializationServiceTests : IAsyncLifetime
     }
 
     private AppInitializationService CreateSut() =>
-        new(_theme, _seeder, _prefs);
+        new(_theme, _seeder, _prefs, _scheduleService);
 
     private sealed class RecordingThemeInitialization : IThemeInitialization
     {

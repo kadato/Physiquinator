@@ -56,7 +56,7 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
     public async Task GetSummaryAsync_with_schedule_counts_scheduled_days_only()
     {
         var preferences = new InMemoryPreferences();
-        var schedule = new WorkoutScheduleService(preferences, CreateProfileService(preferences));
+        var schedule = new WorkoutScheduleService(preferences, CreateProfileService(preferences), _db);
 
         // Today is scheduled and completed.
         schedule.SetDays(AllDaysOfWeek);

@@ -34,7 +34,7 @@ public class DemoDataSeederTests : IAsyncLifetime
             _appPreferences,
             new TempDbPathProvider(":memory:"),
             TimeProvider.System);
-        _scheduleService = new WorkoutScheduleService(_appPreferences, _profileService);
+        _scheduleService = new WorkoutScheduleService(_appPreferences, _profileService, _db);
         _prefs = new MemoryDemoSeedPreferences();
         _sut = new DemoDataSeeder(_planService, _db, _historyRepo, _scheduleService, _profileService, _prefs, TimeProvider.System);
     }

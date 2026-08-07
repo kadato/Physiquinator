@@ -23,9 +23,9 @@ public sealed class WorkoutStatsService(
         (DateTime utcStart, DateTime utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks);
         DateOnly gridStart = HeatmapGrid.GetMondayOfWeek(endLocal).AddDays(-7 * (weeks - 1));
 
-        IReadOnlySet<DayOfWeek>? schedule = _scheduleService is { IsSet: true } svc ? svc.Days : null;
         IReadOnlyDictionary<DateOnly, int> activityByDay = await _repository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
-        WorkoutDaySummary summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart, schedule);
+        Func<DateOnly, IReadOnlySet<DayOfWeek>> getSchedule = date => _scheduleService?.GetScheduleForDate(date) ?? new HashSet<DayOfWeek>();
+        WorkoutDaySummary summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart, getSchedule);
         return (summary, activityByDay);
     }
 }

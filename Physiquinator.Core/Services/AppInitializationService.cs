@@ -6,7 +6,8 @@ namespace Physiquinator.Core.Services;
 public sealed class AppInitializationService(
     IThemeInitialization theme,
     DemoDataSeeder demoSeeder,
-    IDemoSeedPreferences preferences)
+    IDemoSeedPreferences preferences,
+    WorkoutScheduleService scheduleService)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Task? _initializationTask;
@@ -33,6 +34,7 @@ public sealed class AppInitializationService(
             }
 
             await theme.EnsureInitializedAsync().ConfigureAwait(false);
+            await scheduleService.EnsureLoadedAsync().ConfigureAwait(false);
 
             if (preferences.IsDefaultProfile)
             {

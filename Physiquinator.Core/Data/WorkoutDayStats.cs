@@ -10,11 +10,7 @@ public sealed record WorkoutDaySummary(
 public static class WorkoutDayStats
 {
     /// <summary>
-    /// Weeks are Monday–Sunday, matching the activity heatmap grid.
-    /// Session totals sum per-day counts from <paramref name="activityByDay"/> (multiple sessions on one day count separately).
-    /// When <paramref name="schedule"/> is non-empty, streaks count completed scheduled days only;
-    /// non-scheduled (rest) days never break a streak. When it is null or empty, the legacy
-    /// calendar-day streak with a one-day grace period is used.
+    /// Legacy overload for backward compatibility and testing.
     /// </summary>
     public static WorkoutDaySummary Compute(
         IReadOnlyDictionary<DateOnly, int> activityByDay,
@@ -22,11 +18,28 @@ public static class WorkoutDayStats
         DateOnly gridStartLocal,
         IReadOnlySet<DayOfWeek>? schedule = null)
     {
+        return Compute(activityByDay, endLocal, gridStartLocal, 
+            date => schedule ?? new HashSet<DayOfWeek>());
+    }
+
+    /// <summary>
+    /// Weeks are Monday–Sunday, matching the activity heatmap grid.
+    /// Session totals sum per-day counts from <paramref name="activityByDay"/> (multiple sessions on one day count separately).
+    /// When <paramref name="getSchedule"/> resolves a non-empty schedule for a date, streaks count completed scheduled days only;
+    /// non-scheduled (rest) days never break a streak. When it is null or returns an empty schedule, the legacy
+    /// calendar-day streak with a one-day grace period is used.
+    /// </summary>
+    public static WorkoutDaySummary Compute(
+        IReadOnlyDictionary<DateOnly, int> activityByDay,
+        DateOnly endLocal,
+        DateOnly gridStartLocal,
+        Func<DateOnly, IReadOnlySet<DayOfWeek>> getSchedule)
+    {
         if (gridStartLocal > endLocal)
             (gridStartLocal, endLocal) = (endLocal, gridStartLocal);
 
-        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, schedule);
-        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, schedule);
+        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, getSchedule);
+        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, getSchedule);
         (var thisWeek, var lastWeek) = ComputeWeekSessionTotals(activityByDay, endLocal);
 
         return new WorkoutDaySummary(currentStreak, longest, thisWeek, lastWeek);
@@ -35,17 +48,28 @@ public static class WorkoutDayStats
     private static int ComputeCurrentStreak(
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly endLocal,
-        IReadOnlySet<DayOfWeek>? schedule)
+        Func<DateOnly, IReadOnlySet<DayOfWeek>>? getSchedule)
     {
-        if (schedule is null or { Count: 0 })
+        if (getSchedule is null)
+        {
+            return ComputeCurrentCalendarStreak(activityByDay, endLocal);
+        }
+
+        var todaySchedule = getSchedule(endLocal);
+        if (todaySchedule.Count == 0)
         {
             return ComputeCurrentCalendarStreak(activityByDay, endLocal);
         }
 
         // Most recent scheduled day at or before today.
         DateOnly lastScheduled = endLocal;
-        while (!schedule.Contains(lastScheduled.DayOfWeek))
+        while (true)
+        {
+            var sched = getSchedule(lastScheduled);
+            if (sched.Count == 0 || sched.Contains(lastScheduled.DayOfWeek))
+                break;
             lastScheduled = lastScheduled.AddDays(-1);
+        }
 
         // A scheduled day in the past without a workout breaks the streak.
         if (activityByDay.GetValueOrDefault(lastScheduled, 0) == 0 && lastScheduled != endLocal)
@@ -59,7 +83,18 @@ public static class WorkoutDayStats
 
         while (true)
         {
-            if (!schedule.Contains(d.DayOfWeek))
+            var sched = getSchedule(d);
+            if (sched.Count == 0)
+            {
+                // Fallback to checking calendar day
+                if (activityByDay.GetValueOrDefault(d, 0) == 0)
+                    break;
+                streak++;
+                d = d.AddDays(-1);
+                continue;
+            }
+
+            if (!sched.Contains(d.DayOfWeek))
             {
                 d = d.AddDays(-1);
                 continue;
@@ -108,13 +143,14 @@ public static class WorkoutDayStats
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly rangeStart,
         DateOnly rangeEnd,
-        IReadOnlySet<DayOfWeek>? schedule)
+        Func<DateOnly, IReadOnlySet<DayOfWeek>>? getSchedule)
     {
         var best = 0;
         var run = 0;
         for (DateOnly d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
         {
-            if (schedule is not null && schedule.Count > 0 && !schedule.Contains(d.DayOfWeek))
+            var sched = getSchedule?.Invoke(d);
+            if (sched is not null && sched.Count > 0 && !sched.Contains(d.DayOfWeek))
                 continue;
 
             if (activityByDay.GetValueOrDefault(d, 0) > 0)
@@ -156,4 +192,3 @@ public static class WorkoutDayStats
         return date.AddDays(-diff);
     }
 }
-

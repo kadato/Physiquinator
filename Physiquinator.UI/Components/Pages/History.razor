@@ -64,15 +64,15 @@
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
                             @ExerciseWeightFormatter.FormatKg(latest.BodyweightKg) kg · @UiDateFormats.DateOnlyCompact(latest.DateOnly)
                         </MudChip>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Class="bodyweight-panel__details-btn"
+                                   StartIcon="@Icons.Material.Filled.ShowChart"
+                                   OnClick="OpenBodyweightProgress">
+                            View details
+                        </MudButton>
                     }
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               Size="Size.Small"
-                               Class="bodyweight-panel__details-btn"
-                               StartIcon="@Icons.Material.Filled.ShowChart"
-                               OnClick="OpenBodyweightProgress">
-                        View details
-                    </MudButton>
                 </span>
             </div>
 

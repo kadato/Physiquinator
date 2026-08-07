@@ -182,11 +182,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         _allEntries = await LoadEntriesAsync();
+        if (_allEntries.Count == 0)
+        {
+            Navigation.NavigateTo(AppRoutes.History);
+            return;
+        }
         ApplyRangeAndRebuild();
         _ready = true;
     }
 
-    private async Task<IReadOnlyList<BodyweightEntry>> LoadEntriesAsync()
+    private async Task<BodyweightEntry[]> LoadEntriesAsync()
     {
         var rows = await HistoryRepo.GetBodyweightLogsAsync(EntryLimit);
         var entries = new List<BodyweightEntry>(rows.Count);
@@ -195,7 +200,7 @@ else
             if (row.GetDateOnlyOrNull() is { } date)
                 entries.Add(new BodyweightEntry(date, row.BodyweightKg));
         }
-        return entries;
+        return entries.ToArray();
     }
 
     private void ApplyRangeAndRebuild()
@@ -270,6 +275,12 @@ else
     {
         await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
         _allEntries = await LoadEntriesAsync();
+        if (_allEntries.Count == 0)
+        {
+            Navigation.NavigateTo(AppRoutes.History);
+            Snackbar.Add("Entry removed.", Severity.Info);
+            return;
+        }
         ApplyRangeAndRebuild();
         Snackbar.Add("Entry removed.", Severity.Info);
     }

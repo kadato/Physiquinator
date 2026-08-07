@@ -84,7 +84,7 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
                 {
                     ChannelId = AndroidChannelId,
                     Priority = AndroidPriority.High,
-                    VibrationPattern = vibration
+                    VibrationPattern = vibration!
                 }
             };
 
@@ -125,7 +125,7 @@ public sealed class RestNotificationService(RestAlertSettingsService settings, T
                 {
                     ChannelId = AndroidChannelId,
                     Priority = AndroidPriority.High,
-                    VibrationPattern = vibration
+                    VibrationPattern = vibration!
                 },
                 Schedule = new NotificationRequestSchedule
                 {

@@ -136,6 +136,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Download Android APK
       uses: actions/download-artifact@v4
@@ -171,38 +173,42 @@ jobs:
           echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
         fi
 
+    - name: Generate What's new notes
+      id: notes
+      shell: bash
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        PREV=$(git tag --sort=-version:refname | grep -vx "v${VERSION}" | head -1 || true)
+        echo "Previous tag: ${PREV:-<none>}"
+        RANGE="${PREV:+${PREV}..}HEAD"
+        FEATURES=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^feat' | sed -E 's/^feat(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
+        FIXES=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^fix' | sed -E 's/^fix(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
+        {
+          echo "## What's new"
+          echo ""
+          if [ -n "$FEATURES" ]; then
+            echo "### Features"
+            echo "$FEATURES" | sed 's/^/- /'
+            echo ""
+          fi
+          if [ -n "$FIXES" ]; then
+            echo "### Bug fixes"
+            echo "$FIXES" | sed 's/^/- /'
+            echo ""
+          fi
+          if [ -z "$FEATURES" ] && [ -z "$FIXES" ]; then
+            echo "Improvements and under-the-hood changes."
+            echo ""
+          fi
+        } > RELEASE_NOTES.md
+        cat RELEASE_NOTES.md
+
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.get_version.outputs.version }}
         name: Physiquinator v${{ steps.get_version.outputs.version }}
-        body: |
-          ## Downloads
-
-          ### Android
-          - **Physiquinator-Android.apk** - Install on Android devices
-            - You may need to enable "Install from Unknown Sources" in your device settings
-
-          ### Windows
-          - **Physiquinator-Windows.zip** - Extract and run on Windows 10/11
-            - Extract the ZIP file
-            - Run `Physiquinator.exe`
-
-          ## Installation Instructions
-
-          ### Android Installation
-          1. Download `Physiquinator-Android.apk`
-          2. Enable "Install from Unknown Sources" in Settings - Security
-          3. Open the APK file to install
-
-          ### Windows Installation
-          1. Download `Physiquinator-Windows.zip`
-          2. Extract all files to a folder
-          3. Run `Physiquinator.exe`
-
-          ---
-
-          Built with .NET MAUI 11
+        body_path: RELEASE_NOTES.md
         files: |
           release/android/Physiquinator-Android.apk
           release/Physiquinator-Windows.zip

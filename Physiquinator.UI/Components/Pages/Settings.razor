@@ -131,24 +131,33 @@
                     </MudStack>
                     <MudStack Spacing="0" Class="mt-4">
                         <MudText Typo="Typo.body2" Class="font-weight-semibold">Floating timer</MudText>
-                        @if (_overlayPermissionGranted)
+                        @if (RestNotifications.SupportsOverlay)
                         {
-                            <MudText Typo="Typo.body2" Color="Color.Success" Class="mt-1">
-                                Enabled - a draggable bubble shows the rest countdown over other apps while you train.
-                            </MudText>
+                            @if (_overlayPermissionGranted)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Success" Class="mt-1">
+                                    Enabled - a draggable bubble shows the rest countdown over other apps while you train.
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                                    The floating bubble needs the "Display over other apps" permission. Without it, no bubble appears when you leave the app during a rest.
+                                </MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Class="mt-3 align-self-start"
+                                           StartIcon="@Icons.Material.Filled.PictureInPictureAlt"
+                                           OnClick="OpenOverlaySettingsAsync">
+                                    Grant permission
+                                </MudButton>
+                            }
                         }
                         else
                         {
                             <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                                The floating bubble needs the "Display over other apps" permission. Without it, no bubble appears when you leave the app during a rest.
+                                Not available on this device.
                             </MudText>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       Class="mt-3 align-self-start"
-                                       StartIcon="@Icons.Material.Filled.PictureInPictureAlt"
-                                       OnClick="OpenOverlaySettingsAsync">
-                                Grant permission
-                            </MudButton>
                         }
                     </MudStack>
                 </div>
@@ -191,12 +200,13 @@
                         @foreach (var day in ScheduleDayOrder)
                         {
                             var d = day;
-                            <MudChip T="string"
-                                     Text="@d.ToString()[..3]"
-                                     Variant="@(_scheduleDays.Contains(d) ? Variant.Filled : Variant.Outlined)"
-                                     Color="Color.Primary"
-                                     Class="settings-schedule-day"
-                                     OnClick="@(() => ToggleScheduleDay(d))" />
+                            var isSelected = _scheduleDays.Contains(d);
+                            <button type="button"
+                                    class="settings-schedule-day"
+                                    aria-pressed="@(isSelected ? "true" : "false")"
+                                    @onclick="@(() => ToggleScheduleDay(d))">
+                                @d.ToString()[..3]
+                            </button>
                         }
                     </div>
                     @if (_scheduleDays.Count == 0)

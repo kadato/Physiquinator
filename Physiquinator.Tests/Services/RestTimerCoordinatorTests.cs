@@ -27,6 +27,8 @@ public class RestTimerCoordinatorTests
 
         public Task EnsurePermissionAsync() => Task.CompletedTask;
 
+        public bool SupportsOverlay => false;
+
         public bool HasOverlayPermission() => true;
 
         public Task RequestOverlayPermissionAsync() => Task.CompletedTask;

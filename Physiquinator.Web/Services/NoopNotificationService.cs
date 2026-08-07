@@ -8,7 +8,9 @@ public sealed class NoopNotificationService : INotificationService
 {
     public Task EnsurePermissionAsync() => Task.CompletedTask;
 
-    public bool HasOverlayPermission() => true;
+    public bool SupportsOverlay => false;
+
+    public bool HasOverlayPermission() => false;
 
     public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
 

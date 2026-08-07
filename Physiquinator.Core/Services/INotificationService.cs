@@ -8,6 +8,13 @@ public interface INotificationService
     Task EnsurePermissionAsync();
 
     /// <summary>
+    /// True when the platform hosts a floating rest-timer overlay at all
+    /// (Android only today). The overlay permission UI must be hidden on
+    /// platforms where this is false.
+    /// </summary>
+    bool SupportsOverlay { get; }
+
+    /// <summary>
     /// True when the platform can show the floating rest-timer overlay. On
     /// Android this is the "Display over other apps" permission, which the
     /// user must grant from system settings.

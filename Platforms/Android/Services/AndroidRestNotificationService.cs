@@ -58,6 +58,9 @@ public sealed class AndroidRestNotificationService(
         return Task.CompletedTask;
     }
 
+    /// <summary>The floating rest-timer bubble is hosted on Android.</summary>
+    public bool SupportsOverlay => true;
+
     /// <summary>
     /// The floating rest-timer bubble requires "Display over other apps"
     /// (SYSTEM_ALERT_WINDOW). It can never be requested with a runtime
@@ -268,7 +271,7 @@ public sealed class AndroidRestNotificationService(
             text = "Workout complete";
         }
 
-        Notification.Builder builder = BuildBaseNotification(context, SilentOngoingChannelId, state.PlanName ?? "Workout", text, publicVisibility: false)
+        Notification.Builder builder = BuildBaseNotification(context, SilentOngoingChannelId, state.PlanName ?? NotificationConstants.DefaultFallbackPlanName, text, publicVisibility: false)
             .SetOngoing(true)
             .SetAutoCancel(false)
             .SetContentIntent(BuildOpenAppIntent(context));
@@ -333,7 +336,7 @@ public sealed class AndroidRestNotificationService(
         {
             Description = "Alerts when rest periods end"
         };
-        alertChannel.SetVibrationPattern([0, 400, 200, 400]);
+        alertChannel.SetVibrationPattern(NotificationConstants.RestEndVibrationPattern);
         alertChannel.SetSound(global::Android.Net.Uri.Parse("android.resource://" + _context.PackageName + "/raw/rest_end_knock"), null);
         nm.CreateNotificationChannel(alertChannel);
 
@@ -354,7 +357,7 @@ public sealed class AndroidRestNotificationService(
             .SetPackage(_context.PackageName)
             .PutExtra(RestOverlayService.ExtraEndUtcTicks, state.RestEndsAtUtc?.Ticks ?? 0)
             .PutExtra(RestOverlayService.ExtraRemainingSeconds, state.RestRemainingSeconds)
-            .PutExtra(RestOverlayService.ExtraTitle, state.PlanName ?? "Physiquinator")
+            .PutExtra(RestOverlayService.ExtraTitle, state.PlanName ?? NotificationConstants.DefaultFallbackPlanName)
             .PutExtra(RestOverlayService.ExtraNextExerciseName, state.NextExerciseName ?? string.Empty)
             .PutExtra(RestOverlayService.ExtraNextExerciseIndex, state.NextExerciseIndex ?? -1)
             .PutExtra(RestOverlayService.ExtraNextSetIndex, state.NextSetIndex ?? -1)

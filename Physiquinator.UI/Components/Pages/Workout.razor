@@ -19,7 +19,11 @@
 
 <PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" ShowBack="false" />
 
-@if (SessionService.CurrentPlan == null)
+@if (_isLoading)
+{
+    <LoadingCenter Label="Loading workout..." />
+}
+else if (SessionService.CurrentPlan == null)
 {
     <EmptyState Message="No active workout. Start a plan from home."
                 Icon="@Icons.Material.Outlined.Warning">
@@ -176,6 +180,7 @@ else
     private bool _loadedForceNew;
     private bool _isCompleting;
     private bool _disposed;
+    private bool _isLoading = true;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private RestTimerPanel? _restPanel;
     private string? _historySessionId;
@@ -258,7 +263,11 @@ else
             TimeSpan.FromSeconds(30),
             TimeSpan.FromSeconds(30));
 
-        await EnsureWorkoutStartedAsync();
+        // Workout start (session restore, back guard, rest-timer arming) is
+        // driven from OnParametersSetAsync so it runs exactly once per
+        // parameter set. Starting here too would double-arm the JS back guard,
+        // whose re-registration pops a history entry and could surface the
+        // "Leave workout?" dialog on page load.
     }
 
     private void OnElapsedTick()
@@ -269,10 +278,13 @@ else
     /// <summary>
     /// Re-checks the overlay permission on every render so the warning
     /// disappears after the user grants it in system settings and returns.
+    /// Hidden entirely on platforms without a floating overlay.
     /// </summary>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var missing = RestAlertSettings.Enabled && !RestNotifications.HasOverlayPermission();
+        var missing = RestAlertSettings.Enabled
+                      && RestNotifications.SupportsOverlay
+                      && !RestNotifications.HasOverlayPermission();
         if (missing != _overlayPermissionMissing)
         {
             _overlayPermissionMissing = missing;
@@ -283,7 +295,9 @@ else
     private async Task OpenOverlaySettingsAsync()
     {
         await RestNotifications.RequestOverlayPermissionAsync();
-        _overlayPermissionMissing = RestAlertSettings.Enabled && !RestNotifications.HasOverlayPermission();
+        _overlayPermissionMissing = RestAlertSettings.Enabled
+                                    && RestNotifications.SupportsOverlay
+                                    && !RestNotifications.HasOverlayPermission();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -300,80 +314,93 @@ else
 
     private async Task EnsureWorkoutStartedAsync()
     {
-        var plan = await PlanService.GetPlanAsync(PlanId);
-        if (_disposed || plan == null)
-            return;
-
-        if (RestAlertSettings.Enabled)
+        _isLoading = true;
+        try
         {
-            await RestNotifications.EnsurePermissionAsync();
-            _overlayPermissionMissing = !RestNotifications.HasOverlayPermission();
-        }
+            var plan = await PlanService.GetPlanAsync(PlanId);
+            if (_disposed || plan == null)
+                return;
 
-        // Capture before loading the workout: loading stops the rest timer and
-        // would otherwise consume the persisted snapshot of a rest that
-        // survived process death.
-        string? pendingRest = RestTimer.CapturePendingSnapshot();
-
-        if (!ForceNew)
-        {
-            if (SessionService.CurrentPlan?.Id == PlanId)
+            if (RestAlertSettings.Enabled)
             {
-                var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
-                _historySessionId = openSession?.Id;
-                _sessionStartedAtUtc = openSession?.StartedAtUtc ?? TimeProvider.GetUtcNow().UtcDateTime;
-                await InitializeWorkoutStateAsync(SessionService.CurrentPlan);
-                RefreshExerciseProgress();
+                await RestNotifications.EnsurePermissionAsync();
+                _overlayPermissionMissing = RestNotifications.SupportsOverlay && !RestNotifications.HasOverlayPermission();
+            }
 
-                if (SessionService.IsResting)
+            // Every path from here results in an active session: keep the
+            // screen on and arm the leave-workout back guard.
+            await TimerInterop.SetKeepScreenOnAsync(true);
+            await TimerInterop.RegisterBackHandlerAsync(_dotNetRef!);
+
+            // Capture before loading the workout: loading stops the rest timer and
+            // would otherwise consume the persisted snapshot of a rest that
+            // survived process death.
+            string? pendingRest = RestTimer.CapturePendingSnapshot();
+
+            if (!ForceNew)
+            {
+                if (SessionService.CurrentPlan?.Id == PlanId)
                 {
-                    var remainingMs = RestRemainingMs;
-                    if (remainingMs > 0)
+                    var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+                    _historySessionId = openSession?.Id;
+                    _sessionStartedAtUtc = openSession?.StartedAtUtc ?? TimeProvider.GetUtcNow().UtcDateTime;
+                    await InitializeWorkoutStateAsync(SessionService.CurrentPlan);
+                    RefreshExerciseProgress();
+
+                    if (SessionService.IsResting)
                     {
-                        _isRestComplete = false;
-                        await StartJsTimerAsync(remainingMs);
+                        var remainingMs = RestRemainingMs;
+                        if (remainingMs > 0)
+                        {
+                            _isRestComplete = false;
+                            await StartJsTimerAsync(remainingMs);
+                        }
+                        else
+                        {
+                            _isRestComplete = true;
+                        }
                     }
                     else
                     {
-                        _isRestComplete = true;
+                        await RestorePendingRestAsync(pendingRest);
                     }
+                    return;
                 }
-                else
+
+                var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+                if (open != null)
                 {
+                    var workoutPlan = WorkoutHistoryRepository.TryParsePlanSnapshot(open.PlanSnapshotJson) ?? plan;
+                    var sets = await HistoryRepository.GetSetsForSessionAsync(open.Id);
+                    var completions = sets.Select(s => new SetCompletion(s.ExerciseIndex, s.SetIndex));
+                    SessionService.ResumeWorkout(workoutPlan, completions);
+                    _historySessionId = open.Id;
+                    _sessionStartedAtUtc = open.StartedAtUtc;
+                    await InitializeWorkoutStateAsync(workoutPlan);
+                    RefreshExerciseProgress();
                     await RestorePendingRestAsync(pendingRest);
+                    return;
                 }
-                return;
             }
-
-            var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
-            if (open != null)
+            else
             {
-                var workoutPlan = WorkoutHistoryRepository.TryParsePlanSnapshot(open.PlanSnapshotJson) ?? plan;
-                var sets = await HistoryRepository.GetSetsForSessionAsync(open.Id);
-                var completions = sets.Select(s => new SetCompletion(s.ExerciseIndex, s.SetIndex));
-                SessionService.ResumeWorkout(workoutPlan, completions);
-                _historySessionId = open.Id;
-                _sessionStartedAtUtc = open.StartedAtUtc;
-                await InitializeWorkoutStateAsync(workoutPlan);
-                RefreshExerciseProgress();
-                await RestorePendingRestAsync(pendingRest);
-                return;
+                var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
+                if (open != null)
+                    await HistoryRepository.EndSessionAsync(open.Id);
             }
-        }
-        else
-        {
-            var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
-            if (open != null)
-                await HistoryRepository.EndSessionAsync(open.Id);
-        }
 
-        SessionService.StartWorkout(plan);
-        var snapshot = WorkoutPlanService.SerializePlanToJson(plan);
-        _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
-        _sessionStartedAtUtc = TimeProvider.GetUtcNow().UtcDateTime;
-        await InitializeWorkoutStateAsync(plan);
-        RefreshExerciseProgress();
-        await RestorePendingRestAsync(pendingRest);
+            SessionService.StartWorkout(plan);
+            var snapshot = WorkoutPlanService.SerializePlanToJson(plan);
+            _historySessionId = await HistoryRepository.BeginSessionAsync(plan.Id, plan.Name, snapshot);
+            _sessionStartedAtUtc = TimeProvider.GetUtcNow().UtcDateTime;
+            await InitializeWorkoutStateAsync(plan);
+            RefreshExerciseProgress();
+            await RestorePendingRestAsync(pendingRest);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     /// <summary>
@@ -544,6 +571,8 @@ else
     {
         if (_disposed) return;
 
+        await TimerInterop.SetKeepScreenOnAsync(false);
+        await TimerInterop.UnregisterBackHandlerAsync();
         await TimerInterop.StopTimerAsync();
 
         if (_historySessionId != null)
@@ -837,6 +866,32 @@ else
     [JSInvokable]
     public Task OnUndoKeyDown() => UndoLastSetCoreAsync();
 
+    /// <summary>
+    /// Invoked from JS by the back guard (browser back, back gesture, Android
+    /// hardware back). Returns <c>true</c> when the user chose to leave; the
+    /// session is kept in progress and can be resumed from Home.
+    /// </summary>
+    [JSInvokable]
+    public async Task<bool> OnLeaveWorkoutRequested()
+    {
+        if (_disposed || SessionService.CurrentPlan == null)
+            return true;
+
+        var confirmed = await DialogService.ConfirmAsync(
+            "Leave workout?",
+            "Your session is still in progress. You can resume it from Home.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmColor: Color.Warning);
+        if (!confirmed)
+            return false;
+
+        await TimerInterop.SetKeepScreenOnAsync(false);
+        await TimerInterop.UnregisterBackHandlerAsync();
+        Navigation.NavigateTo(AppRoutes.Home);
+        return true;
+    }
+
     private async Task UndoLastSetCoreAsync()
     {
         if (_disposed || _isCompleting) return;
@@ -1005,6 +1060,8 @@ else
     {
         if (_disposed) return;
 
+        await TimerInterop.SetKeepScreenOnAsync(false);
+        await TimerInterop.UnregisterBackHandlerAsync();
         await TimerInterop.StopTimerAsync();
 
         try
@@ -1098,6 +1155,8 @@ else
             _elapsedTimer = null;
         }
 
+        await TimerInterop.SetKeepScreenOnAsync(false);
+        await TimerInterop.UnregisterBackHandlerAsync();
         await TimerInterop.DisposeAsync();
 
         _disposed = true;

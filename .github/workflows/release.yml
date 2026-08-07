@@ -19,6 +19,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Get version
+      id: get_version
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -49,6 +59,7 @@ jobs:
         dotnet publish Physiquinator.csproj `
           -f net11.0-android `
           -c Release `
+          -p:ApplicationDisplayVersion=${{ steps.get_version.outputs.version }} `
           -p:AndroidPackageFormat=apk `
           -p:AndroidKeyStore=true `
           -p:AndroidSigningKeyStore=./keystore/physiquinator-release.keystore `
@@ -73,6 +84,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Get version
+      id: get_version
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -96,6 +117,7 @@ jobs:
         dotnet publish Physiquinator.csproj `
           -f net11.0-windows10.0.19041.0 `
           -c Release `
+          -p:ApplicationDisplayVersion=${{ steps.get_version.outputs.version }} `
           -p:WindowsPackageType=None `
           -o ./artifacts/windows
 

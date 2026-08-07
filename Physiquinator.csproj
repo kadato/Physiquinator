@@ -113,7 +113,7 @@
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#d5d6db" />
 
         <!-- Splash Screen (light theme background; dark theme override in Platforms\Android\Resources\values-night) -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0F766E" BaseSize="128,128" />
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#F8F9FA" BaseSize="128,128" />
 
         <!-- Images -->
         <MauiImage Include="Resources\Images\*" />

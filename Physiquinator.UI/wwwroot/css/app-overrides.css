@@ -2970,13 +2970,21 @@ a,
     box-sizing: border-box;
     text-align: center;
     background-color: #0B0C10;
-    color: #10B981;
+    color: #F3F4F6;
     font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+.app-splash__logo svg g {
+    fill: #10B981;
+}
+
 html[data-theme="light"] .app-splash {
-    background-color: #0F766E;
-    color: #FFFFFF;
+    background-color: #F8F9FA;
+    color: #111827;
+}
+
+html[data-theme="light"] .app-splash__logo svg g {
+    fill: #0F766E;
 }
 
 .app-splash__logo {
@@ -3313,5 +3321,10 @@ html[data-theme="dark"] .app-splash__retry {
 
 .ai-chat-textfield {
     flex: 1;
+}
+
+.plan-exercise-sheet__form {
+    display: block;
+    width: 100%;
 }
 

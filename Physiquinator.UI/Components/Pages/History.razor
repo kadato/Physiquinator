@@ -55,17 +55,6 @@
             </MudPaper>
         </div>
 
-        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            @if (_schedule is { Count: > 0 })
-            {
-                <text>A streak day is any scheduled training day with at least one logged session. Rest days never break it; skipped training days do.</text>
-            }
-            else
-            {
-                <text>A streak day is any calendar day with at least one logged session.</text>
-            }
-        </MudText>
-
         <MudPaper Class="pa-3 bodyweight-panel" Elevation="1">
             <div class="bodyweight-panel__header">
                 <MudText Typo="Typo.h6">Bodyweight</MudText>

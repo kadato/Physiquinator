@@ -10,23 +10,25 @@
                 aria-label="@($"Decrease {Label}")">&#x2212;</button>
         @if (_editing)
         {
-            <input @ref="_inputRef"
-                   class="set-metric-stepper__input set-metric-stepper__input--compact"
-                   type="number"
-                   inputmode="@InputMode"
-                   min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                   placeholder="@PlaceholderText"
-                   autocapitalize="off"
-                   autocomplete="off"
-                   spellcheck="false"
-                   enterkeyhint="done"
-                   @bind="EditText"
-                   @bind:event="oninput"
-                   @onblur="CommitEdit"
-                   @onkeydown="OnEditKeyDown"
-                   onfocus="this.select()"
-                   autofocus />
+            <form @onsubmit="CommitEdit" @onsubmit:preventDefault class="set-metric-stepper__edit-form">
+                <input @ref="_inputRef"
+                       class="set-metric-stepper__input set-metric-stepper__input--compact"
+                       type="number"
+                       inputmode="@InputMode"
+                       min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                       placeholder="@PlaceholderText"
+                       autocapitalize="off"
+                       autocomplete="off"
+                       spellcheck="false"
+                       enterkeyhint="done"
+                       @bind="EditText"
+                       @bind:event="oninput"
+                       @onblur="CommitEdit"
+                       @onkeydown="OnEditKeyDown"
+                       onfocus="this.select()"
+                       autofocus />
+            </form>
         }
         else
         {
@@ -62,27 +64,29 @@ else
                        Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
                        OnClick="@(() => Adjust(-1))"
                        aria-label="@($"Decrease {Label}")">
-                -
+                &#x2212;
             </MudButton>
             @if (_editing)
             {
-                <input @ref="_inputRef"
-                       class="set-metric-stepper__input"
-                       type="number"
-                       inputmode="@InputMode"
-                       min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                       step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                       placeholder="@PlaceholderText"
-                       autocapitalize="off"
-                       autocomplete="off"
-                       spellcheck="false"
-                       enterkeyhint="done"
-                       @bind="EditText"
-                       @bind:event="oninput"
-                       @onblur="CommitEdit"
-                       @onkeydown="OnEditKeyDown"
-                       onfocus="this.select()"
-                       autofocus />
+                <form @onsubmit="CommitEdit" @onsubmit:preventDefault class="set-metric-stepper__edit-form">
+                    <input @ref="_inputRef"
+                           class="set-metric-stepper__input"
+                           type="number"
+                           inputmode="@InputMode"
+                           min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                           step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                           placeholder="@PlaceholderText"
+                           autocapitalize="off"
+                           autocomplete="off"
+                           spellcheck="false"
+                           enterkeyhint="done"
+                           @bind="EditText"
+                           @bind:event="oninput"
+                           @onblur="CommitEdit"
+                           @onkeydown="OnEditKeyDown"
+                           onfocus="this.select()"
+                           autofocus />
+                </form>
             }
             else
             {
@@ -203,6 +207,7 @@ else
             try
             {
                 await _inputRef.FocusAsync();
+                await JSRuntime.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", _inputRef);
             }
             catch
             {

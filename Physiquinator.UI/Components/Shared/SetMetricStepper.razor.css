@@ -190,3 +190,14 @@
 .set-metric-stepper__input--compact:focus {
     outline: none;
 }
+
+.set-metric-stepper__edit-form {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+}
+.set-metric-stepper__edit-form .set-metric-stepper__input {
+    width: 100%;
+    flex: 1 1 auto;
+}

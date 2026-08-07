@@ -25,6 +25,22 @@
         }
     };
 
+    /** Scroll an element or selector into view with a delay to accommodate visual viewport keyboard resizing */
+    window.physiquinator.scrollSelectorIntoView = (elOrSelector) => {
+        try {
+            setTimeout(() => {
+                const el = typeof elOrSelector === "string"
+                    ? document.querySelector(elOrSelector)
+                    : elOrSelector;
+                if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 300);
+        } catch {
+            /* ignore */
+        }
+    };
+
     const storageKey = "physiquinator-theme-preference";
     let dotNetRef = null;
     let mediaQuery = null;

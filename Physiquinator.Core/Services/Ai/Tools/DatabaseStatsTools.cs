@@ -55,7 +55,7 @@ public sealed class GetWorkoutHistoryStatsTool(WorkoutHistoryRepository reposito
     }
 }
 
-public sealed class GetExerciseProgressionTool(WorkoutHistoryRepository repository, WorkoutPlanService planService) : IAiTool
+public sealed class GetExerciseProgressionTool(WorkoutHistoryRepository repository) : IAiTool
 {
     public string Name => "get_exercise_progression";
     public string Description => "Get session-by-session progression metrics for a specific exercise (volume, best weight, total reps per session).";
@@ -81,14 +81,7 @@ public sealed class GetExerciseProgressionTool(WorkoutHistoryRepository reposito
         }
 
         var exerciseName = exProp.GetString()!;
-        List<WorkoutPlan> plans = await planService.GetAllPlansAsync();
-
-        var allProgress = new List<ExerciseSessionProgressEntry>();
-        foreach (WorkoutPlan plan in plans)
-        {
-            IReadOnlyList<ExerciseSessionProgressEntry> planProgress = await repository.GetExerciseSessionProgressAsync(plan.Id, exerciseName);
-            allProgress.AddRange(planProgress);
-        }
+        IReadOnlyList<ExerciseSessionProgressEntry> allProgress = await repository.GetExerciseSessionProgressAcrossPlansAsync(exerciseName);
 
         var result = new
         {

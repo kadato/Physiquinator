@@ -15,41 +15,52 @@ public static class PhysiquinatorServiceCollectionExtensions
     public static IServiceCollection AddPhysiquinatorServices(
         this IServiceCollection services,
         IAppPreferences preferences,
-        IDatabasePathProvider databasePathProvider)
+        IDatabasePathProvider databasePathProvider,
+        bool scopeStatefulServicesPerCircuit = false)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(preferences);
         ArgumentNullException.ThrowIfNull(databasePathProvider);
 
-        services.AddSingleton(preferences);
-        services.AddSingleton(databasePathProvider);
         services.AddSingleton(TimeProvider.System);
 
-        var activeIdStr = preferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
-        Guid activeId = Guid.TryParse(activeIdStr, out Guid g) ? g : UserProfileService.DemoProfileId;
-        services.AddSingleton(new AppDatabase(databasePathProvider.GetDatabasePath(activeId)));
+        if (scopeStatefulServicesPerCircuit)
+        {
+            services.AddScoped<IAppPreferences>(_ => CreatePerScopeInstance(preferences));
+            services.AddScoped<IDatabasePathProvider>(_ => CreatePerScopeInstance(databasePathProvider));
+            services.AddScoped(sp => new AppDatabase(
+                sp.GetRequiredService<IDatabasePathProvider>().GetDatabasePath(
+                    GetActiveProfileId(sp.GetRequiredService<IAppPreferences>()))));
+        }
+        else
+        {
+            services.AddSingleton(preferences);
+            services.AddSingleton(databasePathProvider);
+            services.AddSingleton(new AppDatabase(
+                databasePathProvider.GetDatabasePath(GetActiveProfileId(preferences))));
+        }
 
-        services.AddSingleton<WorkoutPlanRepository>();
-        services.AddSingleton<WorkoutHistoryRepository>();
-        services.AddSingleton<WorkoutHistoryService>();
-        services.AddSingleton<WorkoutPlanService>();
-        services.AddSingleton<WorkoutStatsService>();
-        services.AddSingleton<WorkoutSessionService>();
-        services.AddSingleton<WorkoutQuickActionService>();
-        services.AddSingleton<RestAlertSettingsService>();
-        services.AddSingleton<AppUpdateSettingsService>();
-        services.AddSingleton<WorkoutScheduleService>();
-        services.AddSingleton<RestTimerCoordinator>();
-        services.AddSingleton<IDemoSeedPreferences, ScopedDemoSeedPreferences>();
-        services.AddSingleton<DemoDataSeeder>();
+        AddStatefulService<WorkoutPlanRepository>();
+        AddStatefulService<WorkoutHistoryRepository>();
+        AddStatefulService<WorkoutHistoryService>();
+        AddStatefulService<WorkoutPlanService>();
+        AddStatefulService<WorkoutStatsService>();
+        AddStatefulService<WorkoutSessionService>();
+        AddStatefulService<WorkoutQuickActionService>();
+        AddStatefulService<RestAlertSettingsService>();
+        AddStatefulService<AppUpdateSettingsService>();
+        AddStatefulService<WorkoutScheduleService>();
+        AddStatefulService<RestTimerCoordinator>();
+        AddStatefulServicePair<IDemoSeedPreferences, ScopedDemoSeedPreferences>();
+        AddStatefulService<DemoDataSeeder>();
         services.AddScoped<AppDataResetService>();
-        services.AddSingleton<BackupRestoreService>();
+        AddStatefulService<BackupRestoreService>();
         services.AddScoped<ThemeService>();
         services.AddScoped<IThemeInitialization>(sp => sp.GetRequiredService<ThemeService>());
         services.AddScoped<AppInitializationService>();
         services.AddScoped<WorkoutTimerInterop>();
-        services.AddSingleton<UserProfileService>();
-        services.AddSingleton<WeightUnitService>();
+        AddStatefulService<UserProfileService>();
+        AddStatefulService<WeightUnitService>();
 
         // AI Services & Tools (Registered as Scoped to safely consume scoped dependencies like ThemeService)
         services.AddScoped(sp => new OpenAiCompatibleClient(sp.GetService<HttpClient>() ?? new HttpClient()));
@@ -73,5 +84,40 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<AiAssistantService>();
 
         return services;
+
+        void AddStatefulService<TService>() where TService : class
+        {
+            if (scopeStatefulServicesPerCircuit)
+            {
+                services.AddScoped<TService>();
+            }
+            else
+            {
+                services.AddSingleton<TService>();
+            }
+        }
+
+        void AddStatefulServicePair<TService, TImplementation>()
+            where TService : class
+            where TImplementation : class, TService
+        {
+            if (scopeStatefulServicesPerCircuit)
+            {
+                services.AddScoped<TService, TImplementation>();
+            }
+            else
+            {
+                services.AddSingleton<TService, TImplementation>();
+            }
+        }
+    }
+
+    private static TService CreatePerScopeInstance<TService>(TService seed) where TService : class
+        => (TService)Activator.CreateInstance(seed.GetType())!;
+
+    private static Guid GetActiveProfileId(IAppPreferences preferences)
+    {
+        var activeIdStr = preferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
+        return Guid.TryParse(activeIdStr, out Guid g) ? g : UserProfileService.DemoProfileId;
     }
 }

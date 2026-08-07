@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Models;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -26,7 +27,7 @@ public sealed class StreamingChatChunk
 }
 
 
-public sealed class OpenAiCompatibleClient(HttpClient httpClient)
+public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAiCompatibleClient>? logger = null)
 {
     private const string ReasoningContentProperty = "reasoning_content";
 
@@ -35,24 +36,34 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public async Task<List<string>> GetAvailableModelsAsync(AiProviderSettings settings)
+    public async Task<List<string>> GetAvailableModelsAsync(AiProviderSettings settings, CancellationToken cancellationToken = default)
     {
+        var modelsUrl = GetModelsUrl(settings.GetEffectiveBaseUrl());
         try
         {
-            var modelsUrl = GetModelsUrl(settings.GetEffectiveBaseUrl());
             using var request = new HttpRequestMessage(HttpMethod.Get, modelsUrl);
 
             AddAuthenticationHeader(request, settings);
             AddProviderHeaders(request, settings);
 
-            HttpResponseMessage httpResponse = await httpClient.SendAsync(request);
-            if (!httpResponse.IsSuccessStatusCode) return [];
+            HttpResponseMessage httpResponse = await httpClient.SendAsync(request, cancellationToken);
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                logger?.LogWarning("Models request to {ModelsUrl} failed with HTTP {StatusCode}.", modelsUrl, (int)httpResponse.StatusCode);
+                return [];
+            }
 
-            var json = await httpResponse.Content.ReadAsStringAsync();
+            var json = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
             return ParseModelsJson(json);
         }
-        catch
+        catch (OperationCanceledException ex)
         {
+            logger?.LogWarning(ex, "Models request to {ModelsUrl} was cancelled.", modelsUrl);
+            return [];
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Failed to load available models from {ModelsUrl}.", modelsUrl);
             return [];
         }
     }
@@ -91,7 +102,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
         {
             response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             connectionError = $"Connection error: {ex.Message}";
         }
@@ -171,7 +182,8 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
     public async Task<OpenAiCompatibleResponse> SendChatCompletionAsync(
         AiProviderSettings settings,
         List<AiChatMessage> messageHistory,
-        object? toolsSchema = null)
+        object? toolsSchema = null,
+        CancellationToken cancellationToken = default)
     {
         var response = new OpenAiCompatibleResponse();
 
@@ -180,8 +192,8 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient)
             var endpointUrl = GetChatCompletionsUrl(settings.GetEffectiveBaseUrl());
             using HttpRequestMessage request = BuildHttpRequest(endpointUrl, settings, messageHistory, toolsSchema, stream: false);
 
-            HttpResponseMessage httpResponse = await httpClient.SendAsync(request);
-            var responseString = await httpResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage httpResponse = await httpClient.SendAsync(request, cancellationToken);
+            var responseString = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
             if (!httpResponse.IsSuccessStatusCode)
             {

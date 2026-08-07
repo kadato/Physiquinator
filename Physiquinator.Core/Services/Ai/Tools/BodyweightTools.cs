@@ -55,8 +55,10 @@ public sealed class GetBodyweightHistoryTool(WorkoutHistoryRepository repository
     }
 }
 
-public sealed class LogBodyweightTool(WorkoutHistoryRepository repository, UserProfileService profileService) : IAiTool
+public sealed class LogBodyweightTool(WorkoutHistoryRepository repository, UserProfileService profileService, TimeProvider? time = null) : IAiTool
 {
+    private readonly TimeProvider _time = time ?? TimeProvider.System;
+
     public string Name => "log_bodyweight_entry";
     public string Description => "Record or update bodyweight for a given date (defaults to today if date omitted) and update the active user profile bodyweight.";
 
@@ -81,7 +83,7 @@ public sealed class LogBodyweightTool(WorkoutHistoryRepository repository, UserP
             return JsonSerializer.Serialize(new { success = false, error = "Invalid bodyweightKg value" });
         }
 
-        var date = DateOnly.FromDateTime(DateTime.Today);
+        var date = DateOnly.FromDateTime(_time.GetLocalNow().LocalDateTime);
         if (root.TryGetProperty("date", out JsonElement dateProp) &&
             !string.IsNullOrWhiteSpace(dateProp.GetString()) &&
             DateOnly.TryParseExact(dateProp.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsedDate))

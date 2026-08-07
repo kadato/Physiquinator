@@ -8,17 +8,27 @@ public sealed class AiAssistantService(
     IAppPreferences preferences,
     UserProfileService userProfileService,
     OpenAiCompatibleClient client,
-    AiToolRegistry toolRegistry)
+    AiToolRegistry toolRegistry,
+    TimeProvider? time = null)
 {
     private readonly List<AiChatMessage> _messages = [];
+    private readonly TimeProvider _time = time ?? TimeProvider.System;
 
     // Persistent API history maintains the full message exchange (including tool call/response pairs)
     // across user turns so the provider never sees an assistant tool_calls message without matching tool responses.
     private List<AiChatMessage> _apiHistory = [];
 
+    private CancellationTokenSource? _turnCts;
+    private Task? _inFlightTurn;
+
     public event Action? OnMessagesChanged;
 
     public IReadOnlyList<AiChatMessage> Messages => _messages.AsReadOnly();
+
+    public void CancelCurrentTurn()
+    {
+        _turnCts?.Cancel();
+    }
 
     public AiProviderSettings GetSettings()
     {
@@ -50,7 +60,7 @@ public sealed class AiAssistantService(
     public Task<List<string>> FetchAvailableModelsAsync()
     {
         AiProviderSettings settings = GetSettings();
-        return client.GetAvailableModelsAsync(settings);
+        return client.GetAvailableModelsAsync(settings, CancellationToken.None);
     }
 
     public void ClearHistory()
@@ -64,35 +74,79 @@ public sealed class AiAssistantService(
     {
         if (string.IsNullOrWhiteSpace(userPrompt)) return;
 
-        AddUserMessage(userPrompt);
-        AiChatMessage assistantMessage = AddInitialAssistantMessage();
-
-        AiProviderSettings settings = GetSettings();
-        if (!IsConfigured(settings))
+        if (_inFlightTurn is { IsCompleted: false } pendingTurn)
         {
-            SetNotConfiguredError(assistantMessage);
-            return;
+            if (_turnCts is { } currentTurnCts)
+            {
+                await currentTurnCts.CancelAsync();
+            }
+            await pendingTurn;
         }
 
-        // Re-initialise the persistent API history with the fresh system prompt + carry-over history
-        _apiHistory = BuildApiMessageHistory(settings);
-        var toolsSchema = toolRegistry.GetOpenAiToolsSchema();
+        _turnCts?.Dispose();
+        var turnCts = new CancellationTokenSource();
+        _turnCts = turnCts;
 
-        await ExecuteConversationLoopAsync(settings, toolsSchema, assistantMessage);
+        Task turn = ExecuteUserTurnAsync(userPrompt, turnCts.Token);
+        _inFlightTurn = turn;
+        try
+        {
+            await turn;
+        }
+        finally
+        {
+            if (ReferenceEquals(_inFlightTurn, turn))
+            {
+                _inFlightTurn = null;
+                if (ReferenceEquals(_turnCts, turnCts)) _turnCts = null;
+            }
+            turnCts.Dispose();
+        }
+    }
+
+    private async Task ExecuteUserTurnAsync(string userPrompt, CancellationToken cancellationToken)
+    {
+        AiChatMessage userMessage = AddUserMessage(userPrompt);
+        AiChatMessage assistantMessage = AddInitialAssistantMessage();
+
+        try
+        {
+            AiProviderSettings settings = GetSettings();
+            if (!IsConfigured(settings))
+            {
+                SetNotConfiguredError(assistantMessage);
+                return;
+            }
+
+            // Re-initialise the persistent API history with the fresh system prompt + carry-over history
+            _apiHistory = BuildApiMessageHistory(settings);
+            var toolsSchema = toolRegistry.GetOpenAiToolsSchema();
+
+            await ExecuteConversationLoopAsync(settings, toolsSchema, assistantMessage, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _messages.Remove(userMessage);
+            _messages.Remove(assistantMessage);
+            _apiHistory = [];
+            OnMessagesChanged?.Invoke();
+        }
     }
 
 
     private static bool IsConfigured(AiProviderSettings settings) =>
         settings.Enabled && (!string.IsNullOrWhiteSpace(settings.ApiKey) || settings.Provider == AiProviderType.OllamaLocal);
 
-    private void AddUserMessage(string userPrompt)
+    private AiChatMessage AddUserMessage(string userPrompt)
     {
-        _messages.Add(new AiChatMessage
+        var msg = new AiChatMessage
         {
             Role = AiMessageRole.User,
             Content = userPrompt.Trim(),
-            Timestamp = DateTime.Now
-        });
+            Timestamp = _time.GetLocalNow().LocalDateTime
+        };
+        _messages.Add(msg);
+        return msg;
     }
 
     private AiChatMessage AddInitialAssistantMessage()
@@ -102,7 +156,7 @@ public sealed class AiAssistantService(
             Role = AiMessageRole.Assistant,
             IsThinking = true,
             Content = string.Empty,
-            Timestamp = DateTime.Now
+            Timestamp = _time.GetLocalNow().LocalDateTime
         };
         _messages.Add(msg);
         OnMessagesChanged?.Invoke();
@@ -120,14 +174,15 @@ public sealed class AiAssistantService(
     private async Task ExecuteConversationLoopAsync(
         AiProviderSettings settings,
         object? toolsSchema,
-        AiChatMessage currentAssistantMessage)
+        AiChatMessage currentAssistantMessage,
+        CancellationToken cancellationToken)
     {
         const int maxToolLoops = 5;
         AiChatMessage assistantMsg = currentAssistantMessage;
 
         for (var loop = 0; loop < maxToolLoops; loop++)
         {
-            (List<AiToolCallInfo>? executedToolCalls, var errorMessage) = await ConsumeResponseStreamAsync(settings, toolsSchema, assistantMsg);
+            (List<AiToolCallInfo>? executedToolCalls, var errorMessage) = await ConsumeResponseStreamAsync(settings, toolsSchema, assistantMsg, cancellationToken);
 
             if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -167,14 +222,15 @@ public sealed class AiAssistantService(
     private async Task<(List<AiToolCallInfo> ToolCalls, string? ErrorMessage)> ConsumeResponseStreamAsync(
         AiProviderSettings settings,
         object? toolsSchema,
-        AiChatMessage assistantMessage)
+        AiChatMessage assistantMessage,
+        CancellationToken cancellationToken)
     {
         var toolCallAccumulator = new Dictionary<int, (string Id, string Name, StringBuilder Args)>();
         var contentBuilder = new StringBuilder();
         var reasoningBuilder = new StringBuilder();
         string? errorMessage = null;
 
-        await foreach (StreamingChatChunk chunk in client.StreamChatCompletionAsync(settings, _apiHistory, toolsSchema))
+        await foreach (StreamingChatChunk chunk in client.StreamChatCompletionAsync(settings, _apiHistory, toolsSchema, cancellationToken))
         {
 
             if (chunk.IsError)
@@ -279,7 +335,7 @@ public sealed class AiAssistantService(
             Content = assistantContent,
             ReasoningContent = reasoningContent,
             ToolCalls = toolCalls,
-            Timestamp = DateTime.Now
+            Timestamp = _time.GetLocalNow().LocalDateTime
         });
 
         foreach (AiToolCallInfo toolCall in toolCalls)
@@ -291,7 +347,7 @@ public sealed class AiAssistantService(
                 ToolCallId = toolCall.Id,
                 ToolName = toolCall.Name,
                 Content = toolResultJson,
-                Timestamp = DateTime.Now
+                Timestamp = _time.GetLocalNow().LocalDateTime
             });
         }
     }
@@ -307,7 +363,7 @@ public sealed class AiAssistantService(
             You are Physiquinator AI, an intelligent fitness, workout, and bodyweight assistant inside the Physiquinator workout tracking application.
             Current Active User Profile: {activeProfile.Name}
             Current Active Bodyweight: {activeBw} kg
-            Current System Time: {DateTime.Now:F}
+            Current System Time: {_time.GetLocalNow().LocalDateTime:F}
 
             Capabilities:
             - Analyze, modify, or create workout plans.

@@ -81,29 +81,29 @@ public sealed class CalculateProgressiveOverloadWorkflowTool(WorkoutHistoryRepos
 
         foreach (WorkoutPlan plan in plans)
         {
+            IReadOnlyList<ExerciseProgressRow> progressRows = await repository.GetExercisesSessionProgressAsync(plan.Id);
+            var latestByExercise = progressRows
+                .GroupBy(r => r.ExerciseName)
+                .ToDictionary(g => g.Key, g => g.First());
+
             foreach (ExercisePlan exercise in plan.Exercises)
             {
-                IReadOnlyList<ExerciseSessionProgressEntry> progressList = await repository.GetExerciseSessionProgressAsync(plan.Id, exercise.Name);
-                if (progressList.Count == 0) continue;
+                if (!latestByExercise.TryGetValue(exercise.Name, out ExerciseProgressRow? latestSession) || latestSession is null) continue;
 
-                ExerciseSessionProgressEntry latestSession = progressList[0];
-                var currentBestWeight = latestSession.BestWeightKg;
-                var currentReps = latestSession.TotalReps;
-
-                var recommendedWeight = currentBestWeight.HasValue
-                    ? Math.Round(currentBestWeight.Value * 1.025, 1) // +2.5% increment
+                var recommendedWeight = latestSession.BestWeightKg.HasValue
+                    ? Math.Round(latestSession.BestWeightKg.Value * 1.025, 1)
                     : exercise.DefaultWeightKg;
 
                 recommendations.Add(new
                 {
                     planName = plan.Name,
                     exerciseName = exercise.Name,
-                    lastLoggedWeightKg = currentBestWeight,
-                    lastLoggedTotalReps = currentReps,
+                    lastLoggedWeightKg = latestSession.BestWeightKg,
+                    lastLoggedTotalReps = latestSession.TotalReps,
                     targetRepsConfigured = exercise.DefaultReps,
                     recommendedWeightKg = recommendedWeight,
-                    recommendationReason = currentBestWeight.HasValue
-                        ? $"Increase weight by +2.5% from {currentBestWeight.Value}kg to {recommendedWeight}kg for next session."
+                    recommendationReason = latestSession.BestWeightKg.HasValue
+                        ? $"Increase weight by +2.5% from {latestSession.BestWeightKg.Value}kg to {recommendedWeight}kg for next session."
                         : "Focus on adding 1 extra rep per set before increasing weight."
                 });
             }

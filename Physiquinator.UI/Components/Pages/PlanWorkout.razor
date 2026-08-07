@@ -9,6 +9,7 @@
 @inject IFileTransferService FileTransfer
 @inject TimeProvider TimeProvider
 @inject ILogger<PlanWorkout> Logger
+@inject IJSRuntime JS
 
 <div class="plan-page app-fab-page-padding">
     <PageHeader Title="@PageTitleText" OnBack="GoHome" />
@@ -82,9 +83,10 @@
                                       OnDelete="ConfirmRemoveExerciseAsync" />
                 }
 
-                <div class="plan-add-exercise">
+                <form @onsubmit="AddExerciseAsync" @onsubmit:preventDefault class="plan-add-exercise">
                     <MudTextField @bind-Value="NewExerciseName"
                                   @ref="_newExerciseField"
+                                  id="new-exercise-input"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   Placeholder="Add exercise…"
@@ -93,16 +95,16 @@
                                   autocapitalize="words"
                                   autocomplete="off"
                                   enterkeyhint="done"
-                                  OnKeyDown="AddExerciseKeydown" />
+                                  @onfocus="OnAddExerciseFocus" />
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                Size="Size.Small"
                                Class="plan-add-exercise__btn"
-                               OnClick="AddExerciseAsync"
+                               ButtonType="ButtonType.Submit"
                                Disabled="@string.IsNullOrWhiteSpace(NewExerciseName)">
                         Add
                     </MudButton>
-                </div>
+                </form>
             </section>
         </MudStack>
     </MudForm>
@@ -202,21 +204,15 @@
         await EditExerciseAsync(exercise, isNew: true, insertAtEnd: true);
     }
 
-    private void AddExerciseKeydown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-            _ = AddExerciseFromKeyboardAsync();
-    }
-
-    private async Task AddExerciseFromKeyboardAsync()
+    private async Task OnAddExerciseFocus()
     {
         try
         {
-            await AddExerciseAsync();
+            await JS.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", "#new-exercise-input");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Add exercise error");
+            Logger.LogError(ex, "Scroll to input failed");
         }
     }
 

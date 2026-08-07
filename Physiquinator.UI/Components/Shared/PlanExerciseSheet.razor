@@ -1,20 +1,24 @@
 @using Physiquinator.Core.Models
+@inject IJSRuntime JS
 
 <MudDialog Class="plan-exercise-sheet">
     <TitleContent>
         <MudText Typo="Typo.h6">@(IsNew ? "Add exercise" : "Edit exercise")</MudText>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3" Class="plan-exercise-sheet__body">
-            <MudTextField @bind-Value="_name"
-                          Variant="Variant.Filled"
-                          Label="Exercise name"
-                          Placeholder="e.g. Bench press"
-                          Required="true"
-                          Immediate="true"
-                          autocapitalize="words"
-                          autocomplete="off"
-                          enterkeyhint="done" />
+        <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
+            <MudStack Spacing="3" Class="plan-exercise-sheet__body">
+                <MudTextField @bind-Value="_name"
+                              id="exercise-sheet-name-input"
+                              Variant="Variant.Filled"
+                              Label="Exercise name"
+                              Placeholder="e.g. Bench press"
+                              Required="true"
+                              Immediate="true"
+                              autocapitalize="words"
+                              autocomplete="off"
+                              enterkeyhint="done"
+                              @onfocus="OnExerciseNameFocus" />
 
             <MudSelect Value="_logType"
                        ValueChanged="OnLogTypeChanged"
@@ -61,21 +65,22 @@
                                   InputMode="decimal" />
             }
 
-            <div class="plan-exercise-sheet__footer">
-                <MudButton Color="Color.Primary"
-                           Variant="Variant.Filled"
-                           FullWidth="true"
-                           OnClick="Confirm"
-                           Disabled="@ConfirmDisabled">
-                    Save exercise
-                </MudButton>
-                <MudButton Variant="Variant.Text"
-                           FullWidth="true"
-                           OnClick="Cancel">
-                    Cancel
-                </MudButton>
-            </div>
-        </MudStack>
+                <div class="plan-exercise-sheet__footer">
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               FullWidth="true"
+                               ButtonType="ButtonType.Submit"
+                               Disabled="@ConfirmDisabled">
+                        Save exercise
+                    </MudButton>
+                    <MudButton Variant="Variant.Text"
+                               FullWidth="true"
+                               OnClick="Cancel">
+                        Cancel
+                    </MudButton>
+                </div>
+            </MudStack>
+        </form>
     </DialogContent>
 </MudDialog>
 
@@ -137,5 +142,17 @@
         await Task.Delay(50);
         _logType = type;
         StateHasChanged();
+    }
+
+    private async Task OnExerciseNameFocus()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", "#exercise-sheet-name-input");
+        }
+        catch (Exception)
+        {
+            // JS interop might not be ready or fail during initialization/disposal.
+        }
     }
 }

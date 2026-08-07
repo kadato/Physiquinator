@@ -2,6 +2,7 @@
 @using Physiquinator.Core.Services
 @using Physiquinator.Core.Services.Ai
 @using Physiquinator.Core.Models
+@using Physiquinator.Core.Formatting
 @using Physiquinator.UI.Components.Shared
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
@@ -19,6 +20,7 @@
 @inject AiAssistantService AiAssistant
 @inject TimeProvider TimeProvider
 @inject BackupRestoreService BackupRestore
+@inject WeightUnitService WeightUnitService
 @implements IDisposable
 
 
@@ -52,6 +54,33 @@
                     </MudSelect>
                     <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
                         Active mode: <strong>@_effectiveThemeLabel</strong>
+                    </MudText>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Class="settings-panel">
+            <TitleContent>
+                <div class="settings-panel__header">
+                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
+                    <span class="settings-panel__text">
+                        <span class="settings-panel__title">Units</span>
+                        <span class="settings-panel__subtitle">How weights are displayed</span>
+                    </span>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudSelect T="WeightUnit"
+                               Variant="Variant.Filled"
+                               Label="Weight unit"
+                               Value="_weightUnit"
+                               ValueChanged="OnWeightUnitChanged">
+                        <MudSelectItem Value="WeightUnit.Kilograms">Kilograms (kg)</MudSelectItem>
+                        <MudSelectItem Value="WeightUnit.Pounds">Pounds (lb)</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                        Weights are stored in kilograms and converted when displayed.
                     </MudText>
                 </div>
             </ChildContent>
@@ -247,17 +276,16 @@
 
                              @if (_availableModels.Count > 0)
                              {
-                                 <MudSelect T="string"
-                                            Label="Model Name"
-                                            Variant="Variant.Filled"
-                                            Value="_aiSettings.ModelName"
-                                            ValueChanged="OnModelSelected"
-                                            HelperText="Select from models fetched dynamically from endpoint">
-                                     @foreach (var m in _availableModels)
-                                     {
-                                         <MudSelectItem Value="@m">@m</MudSelectItem>
-                                     }
-                                 </MudSelect>
+                                 <MudAutocomplete T="string"
+                                                  @bind-Value="_aiSettings.ModelName"
+                                                  Label="Model Name"
+                                                  Variant="Variant.Filled"
+                                                  SearchFunc="SearchAiModelsAsync"
+                                                  CoerceValue="false"
+                                                  ResetValueOnEmptyText="false"
+                                                  MaxItems="50"
+                                                  HelperText="Type to filter fetched models, or enter any model name">
+                                 </MudAutocomplete>
                              }
                              else
                              {
@@ -495,6 +523,7 @@
 @code {
     private string _preference = ThemePreference.System;
     private string _effectiveTheme = ThemePreference.Dark;
+    private WeightUnit _weightUnit = WeightUnit.Kilograms;
     private bool _restAlertsEnabled = true;
     private bool _restSoundVibrationEnabled = true;
     private bool _overlayPermissionGranted = true;
@@ -581,10 +610,15 @@
     private bool _fetchingModels;
     private List<string> _availableModels = [];
 
-    private void OnModelSelected(string model)
+    /// <summary>Filters the fetched model list for the autocomplete, keeping it case-insensitive.</summary>
+    private Task<IEnumerable<string>> SearchAiModelsAsync(string? text, CancellationToken token)
     {
-        _aiSettings.ModelName = model;
-        SaveAiSettings();
+        if (string.IsNullOrWhiteSpace(text))
+            return Task.FromResult<IEnumerable<string>>(_availableModels);
+
+        var query = text.Trim();
+        return Task.FromResult<IEnumerable<string>>(
+            _availableModels.Where(m => m.Contains(query, StringComparison.OrdinalIgnoreCase)));
     }
 
     private async Task FetchModelsAsync()
@@ -623,6 +657,14 @@
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
         _scheduleDays = [.. WorkoutSchedule.Days];
         _aiSettings = AiAssistant.GetSettings();
+        _weightUnit = WeightUnitService.Current;
+    }
+
+    private void OnWeightUnitChanged(WeightUnit unit)
+    {
+        WeightUnitService.Set(unit);
+        _weightUnit = unit;
+        Snackbar.Add($"Weights now shown in {ExerciseWeightFormatter.UnitSuffix(unit)}.", Severity.Success);
     }
 
     private void OnAiEnabledChanged(bool enabled)

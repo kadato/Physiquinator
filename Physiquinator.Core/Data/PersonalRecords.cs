@@ -60,13 +60,17 @@ public static class PersonalRecordCalculator
         return new PersonalRecords(entries);
     }
 
-    /// <summary>Volume of a single set, mirroring the history SQL: reps × weight when both are logged, otherwise the logged value alone.</summary>
+    /// <summary>
+    /// Volume of a single set: reps × weight. Both metrics must be logged;
+    /// a set missing either contributes 0 (no tonnage can be attributed).
+    /// Bodyweight-relative exercises include the user's bodyweight when known.
+    /// </summary>
     public static double ComputeVolume(int? reps, double? weightKg, ExerciseLogType logType, double? bodyweightKg = null)
     {
-        if (reps is not { } r) return weightKg ?? 0;
-        if (weightKg is not { } w) return r;
+        if (reps is not { } r) return 0;
         if (logType == ExerciseLogType.BodyweightReps && bodyweightKg is > 0)
-            return r * (bodyweightKg.Value + w);
+            return r * (bodyweightKg.Value + (weightKg ?? 0));
+        if (weightKg is not { } w) return 0;
         return r * w;
     }
 
@@ -82,7 +86,7 @@ public static class PersonalRecordCalculator
         PersonalRecordEntry? best = null;
         foreach (ExerciseSetLogRow row in rows)
         {
-            if (valueOf(row) is not { } value) continue;
+            if (valueOf(row) is not { } value || value <= 0) continue;
             if (best == null || value > best.Value)
                 best = new PersonalRecordEntry(kind, value, row.CompletedAtUtc, row.SessionId);
         }

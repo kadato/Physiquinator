@@ -217,22 +217,30 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     /// <summary>
     /// Last <paramref name="maxSessions"/> sessions for the plan that logged <paramref name="exerciseName"/>, newest first.
+    /// Volume is reps × weight (both must be logged); bodyweight-relative
+    /// exercises include the user's bodyweight when known.
     /// </summary>
     public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAsync(
         Guid workoutPlanId,
         string exerciseName,
         int maxSessions = 30,
-        double? bodyweightKg = null)
+        double? bodyweightKg = null,
+        ExerciseLogType logType = ExerciseLogType.WeightAndReps)
     {
         if (string.IsNullOrWhiteSpace(exerciseName)) return [];
         maxSessions = Math.Clamp(maxSessions, 1, 200);
         await _db.EnsureInitializedAsync();
 
         var planIdStr = workoutPlanId.ToString();
+        var useBodyweight = logType == ExerciseLogType.BodyweightReps
+            && bodyweightKg.HasValue
+            && bodyweightKg.Value > 0;
+        var bodyweightForQuery = useBodyweight ? bodyweightKg!.Value : 0;
+
         string query;
         object[] args;
 
-        if (bodyweightKg.HasValue && bodyweightKg.Value > 0)
+        if (useBodyweight)
         {
             query = @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
                              MAX(s.WeightKg) AS BestWeightKg,
@@ -248,7 +256,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                       GROUP BY sess.Id
                       ORDER BY sess.StartedAtUtc DESC
                       LIMIT ?";
-            args = [bodyweightKg.Value, planIdStr, exerciseName, maxSessions];
+            args = [bodyweightForQuery, planIdStr, exerciseName, maxSessions];
         }
         else
         {
@@ -258,8 +266,6 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                              COUNT(*) AS SetCount,
                              SUM(CASE
                                    WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg
-                                   WHEN s.Reps IS NOT NULL THEN s.Reps
-                                   WHEN s.WeightKg IS NOT NULL THEN s.WeightKg
                                    ELSE 0
                                  END) AS TotalVolumeKg
                       FROM WorkoutSessionLogs sess

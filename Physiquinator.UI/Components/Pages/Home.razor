@@ -103,6 +103,7 @@
                 {
                     <PlanCard PlanName="@plan.Name"
                               ExerciseCount="@plan.Exercises.Count"
+                              LastDoneLabel="@LastDoneLabelFor(plan.Id)"
                               OnStart="@(() => StartWorkoutAsync(plan.Id, plan.Name))"
                               OnEdit="@(() => Navigation.NavigateTo(AppRoutes.Plan(plan.Id)))"
                               OnExport="@(() => ExportSinglePlan(plan.Id, plan.Name))"
@@ -137,6 +138,7 @@
     private Guid? _inProgressPlanId;
     private WorkoutDaySummary? _summary;
     private IReadOnlyDictionary<DateOnly, int> _activityByDay = new Dictionary<DateOnly, int>();
+    private IReadOnlyDictionary<string, DateTime> _lastSessionByPlan = new Dictionary<string, DateTime>();
     private WorkoutSessionLogEntity? _lastSession;
     private bool _isLoading = true;
     private DotNetObjectReference<Home>? _dotNetRef;
@@ -147,6 +149,21 @@
         _lastSession == null
             ? "—"
             : UiDateFormats.LocalDateCompact(_lastSession.StartedAtUtc);
+
+    private string LastDoneLabelFor(Guid planId) =>
+        _lastSessionByPlan.TryGetValue(planId.ToString(), out var lastUtc)
+            ? FormatLastDone(lastUtc)
+            : "Never done";
+
+    private static string FormatLastDone(DateTime lastUtc)
+    {
+        var local = lastUtc.ToLocalTime().Date;
+        var days = (DateTime.Today - local).Days;
+        if (days <= 0) return "Done today";
+        if (days == 1) return "Done yesterday";
+        if (days < 7) return $"Done {days} days ago";
+        return $"Last done {UiDateFormats.LocalDateCompact(lastUtc)}";
+    }
 
     private IEnumerable<WorkoutPlan> SortedPlans =>
         (_plans ?? []).OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt);
@@ -159,8 +176,9 @@
         var plansTask = PlanService.GetAllPlansAsync();
         var recentTask = HistoryRepository.GetRecentSessionsAsync(1);
         var inProgressTask = HistoryRepository.GetAnyInProgressSessionAsync();
+        var lastDoneTask = HistoryRepository.GetLastSessionDateByPlanAsync();
 
-        await Task.WhenAll(summaryTask, plansTask, recentTask, inProgressTask);
+        await Task.WhenAll(summaryTask, plansTask, recentTask, inProgressTask, lastDoneTask);
 
         (_summary, _activityByDay) = await summaryTask;
         _plans = await plansTask;
@@ -168,6 +186,7 @@
         _lastSession = recent.FirstOrDefault();
         _inProgressSession = await inProgressTask;
         _inProgressPlanId = _inProgressSession?.TryGetPlanId();
+        _lastSessionByPlan = await lastDoneTask;
         _isLoading = false;
     }
 

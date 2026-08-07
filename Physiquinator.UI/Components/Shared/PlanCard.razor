@@ -8,7 +8,7 @@
             </button>
             <MudStack Spacing="0" Class="plan-card__info">
                 <MudText Typo="Typo.subtitle1" Class="plan-card-name">@PlanName</MudText>
-                <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel@LastDoneSuffix</MudText>
             </MudStack>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__actions">
                 <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
@@ -32,6 +32,7 @@
 @code {
     [Parameter] public string PlanName { get; set; } = "";
     [Parameter] public int ExerciseCount { get; set; }
+    [Parameter] public string LastDoneLabel { get; set; } = "";
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnEdit { get; set; }
     [Parameter] public EventCallback OnExport { get; set; }
@@ -39,4 +40,7 @@
 
     private string ExerciseCountLabel =>
         ExerciseCount == 1 ? "1 exercise" : $"{ExerciseCount} exercises";
+
+    private string LastDoneSuffix =>
+        string.IsNullOrEmpty(LastDoneLabel) ? "" : $" · {LastDoneLabel}";
 }

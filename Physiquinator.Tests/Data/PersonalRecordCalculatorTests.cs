@@ -115,16 +115,32 @@ public class PersonalRecordCalculatorTests
         Assert.Null(records.Entries.FirstOrDefault(e => e.Kind == ExerciseRecordKind.BestWeight));
         PersonalRecordEntry reps = Assert.Single(records.Entries, e => e.Kind == ExerciseRecordKind.MostReps);
         Assert.Equal(10, reps.Value);
-        PersonalRecordEntry volume = Assert.Single(records.Entries, e => e.Kind == ExerciseRecordKind.BestVolume);
-        Assert.Equal(10, volume.Value);
+        // Volume needs both metrics; a reps-only set has no tonnage.
+        Assert.DoesNotContain(records.Entries, e => e.Kind == ExerciseRecordKind.BestVolume);
     }
 
     [Fact]
-    public void ComputeVolume_CountsSingleLoggedValue()
+    public void ComputeVolume_RequiresBothMetrics()
     {
-        Assert.Equal(10, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.WeightAndReps));
-        Assert.Equal(40, PersonalRecordCalculator.ComputeVolume(reps: null, weightKg: 40, ExerciseLogType.WeightAndReps));
+        Assert.Equal(0, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.WeightAndReps));
+        Assert.Equal(0, PersonalRecordCalculator.ComputeVolume(reps: null, weightKg: 40, ExerciseLogType.WeightAndReps));
         Assert.Equal(0, PersonalRecordCalculator.ComputeVolume(reps: null, weightKg: null, ExerciseLogType.WeightAndReps));
         Assert.Equal(300, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 30, ExerciseLogType.WeightAndReps));
+    }
+
+    [Fact]
+    public void ComputeVolume_BodyweightReps_UsesBodyweightWhenKnown()
+    {
+        Assert.Equal(800, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.BodyweightReps, bodyweightKg: 80));
+        Assert.Equal(850, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 5, ExerciseLogType.BodyweightReps, bodyweightKg: 80));
+        // Without a known bodyweight there is no tonnage to compute.
+        Assert.Equal(0, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.BodyweightReps));
+    }
+
+    [Fact]
+    public void ComputeVolume_WeightedExercises_IgnoreBodyweight()
+    {
+        // The profile bodyweight must never be folded into a weighted exercise's volume.
+        Assert.Equal(300, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 30, ExerciseLogType.WeightAndReps, bodyweightKg: 80));
     }
 }

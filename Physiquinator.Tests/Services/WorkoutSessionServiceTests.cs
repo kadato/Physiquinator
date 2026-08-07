@@ -293,7 +293,7 @@ public class WorkoutSessionServiceTests
     }
 
     [Fact]
-    public void RestStateChanged_fires_on_every_rest_mutation_but_not_workout_load()
+    public void RestStateChanged_fires_on_material_rest_changes_only()
     {
         var clock = new ManualTimeProvider();
         clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
@@ -306,12 +306,30 @@ public class WorkoutSessionServiceTests
         svc.StartRest(60);
         Assert.Equal(1, fired);
 
+        // A steady countdown must not fire per tick (the UI countdown is
+        // JS-driven; the coordinator must not re-run platform work).
+        clock.Advance(TimeSpan.FromSeconds(30));
+        Assert.False(svc.TickRest());
+        Assert.Equal(1, fired);
+
         svc.AddRestSeconds(30);
         Assert.Equal(2, fired);
 
+        // A reset that lands on the same wall-clock end time as the extended
+        // rest is not a material change (same alarm, same snapshot, same
+        // remaining), so it stays silent.
+        svc.ResetRest();
+        Assert.Equal(2, fired);
+
+        clock.Advance(TimeSpan.FromSeconds(10));
         svc.ResetRest();
         Assert.Equal(3, fired);
 
+        svc.SkipRest();
+        Assert.Equal(4, fired);
+
+        // No-op mutations must stay silent.
+        svc.CancelRest();
         svc.SkipRest();
         Assert.Equal(4, fired);
 
@@ -322,8 +340,16 @@ public class WorkoutSessionServiceTests
         svc.ResumeWorkout(SamplePlan(), []);
         Assert.Equal(4, fired);
 
+        // Ending a workout that already stopped is not a rest change.
         svc.EndWorkout();
+        Assert.Equal(4, fired);
+
+        // Ending a workout while resting is.
+        svc.StartWorkout(SamplePlan());
+        svc.StartRest(60);
         Assert.Equal(5, fired);
+        svc.EndWorkout();
+        Assert.Equal(6, fired);
     }
 
     [Fact]

@@ -121,4 +121,65 @@ public class AiToolsTests
         Assert.Equal(2, deloadPlan.Exercises[0].SetCount); // 50% volume of 4 sets
         Assert.Equal(108.0, deloadPlan.Exercises[0].DefaultWeightKg); // 90% of 120kg
     }
+
+    [Fact]
+    public async Task CalculateProgressiveOverloadWorkflowTool_RecommendsIncreaseFromLatestSession()
+    {
+        (AppDatabase _, WorkoutPlanRepository _, WorkoutHistoryRepository? historyRepo, WorkoutPlanService? planService, UserProfileService _) = CreateTestContext();
+
+        var plan = new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Push",
+            Exercises = [new ExercisePlan { Id = Guid.NewGuid(), Name = "Bench Press", SetCount = 3, DefaultReps = 8, DefaultWeightKg = 80.0 }]
+        };
+        await planService.SavePlanAsync(plan);
+
+        var sessionId = await historyRepo.BeginSessionAsync(plan.Id, plan.Name, null);
+        await historyRepo.LogSetAsync(sessionId, 0, "Bench Press", 0, reps: 8, weightKg: 100);
+        await historyRepo.LogSetAsync(sessionId, 0, "Bench Press", 1, reps: 8, weightKg: 100);
+        await historyRepo.EndSessionAsync(sessionId);
+
+        var tool = new CalculateProgressiveOverloadWorkflowTool(historyRepo, planService);
+        var responseJson = await tool.ExecuteAsync("{}");
+
+        using var doc = JsonDocument.Parse(responseJson);
+        JsonElement recommendations = doc.RootElement.GetProperty("recommendations");
+        Assert.Equal(1, recommendations.GetArrayLength());
+        Assert.Equal("Bench Press", recommendations[0].GetProperty("exerciseName").GetString());
+        Assert.Equal(16, recommendations[0].GetProperty("lastLoggedTotalReps").GetInt32());
+        Assert.Equal(100.0, recommendations[0].GetProperty("lastLoggedWeightKg").GetDouble());
+        Assert.Equal(102.5, recommendations[0].GetProperty("recommendedWeightKg").GetDouble());
+        Assert.Contains("+2.5%", recommendations[0].GetProperty("recommendationReason").GetString());
+    }
+
+    [Fact]
+    public async Task GetExerciseProgressionTool_ReturnsSessionsAcrossPlans()
+    {
+        (AppDatabase _, WorkoutPlanRepository _, WorkoutHistoryRepository? historyRepo, WorkoutPlanService? planService, UserProfileService _) = CreateTestContext();
+
+        var planA = new WorkoutPlan { Id = Guid.NewGuid(), Name = "A" };
+        var planB = new WorkoutPlan { Id = Guid.NewGuid(), Name = "B" };
+        await planService.SavePlanAsync(planA);
+        await planService.SavePlanAsync(planB);
+
+        var s1 = await historyRepo.BeginSessionAsync(planA.Id, planA.Name, null);
+        await historyRepo.LogSetAsync(s1, 0, "Squat", 0, reps: 5, weightKg: 100);
+        await historyRepo.EndSessionAsync(s1);
+
+        var s2 = await historyRepo.BeginSessionAsync(planB.Id, planB.Name, null);
+        await historyRepo.LogSetAsync(s2, 0, "Squat", 0, reps: 8, weightKg: 110);
+        await historyRepo.EndSessionAsync(s2);
+
+        var tool = new GetExerciseProgressionTool(historyRepo);
+        var args = JsonSerializer.Serialize(new { exerciseName = "Squat" });
+        var responseJson = await tool.ExecuteAsync(args);
+
+        using var doc = JsonDocument.Parse(responseJson);
+        Assert.Equal(2, doc.RootElement.GetProperty("totalSessions").GetInt32());
+        JsonElement sessions = doc.RootElement.GetProperty("sessions");
+        Assert.Equal(2, sessions.GetArrayLength());
+        Assert.Contains(sessions.EnumerateArray(), s => s.GetProperty("SessionId").GetString() == s1 && Math.Abs(s.GetProperty("BestWeightKg").GetDouble() - 100) < 0.001);
+        Assert.Contains(sessions.EnumerateArray(), s => s.GetProperty("SessionId").GetString() == s2 && Math.Abs(s.GetProperty("BestWeightKg").GetDouble() - 110) < 0.001);
+    }
 }

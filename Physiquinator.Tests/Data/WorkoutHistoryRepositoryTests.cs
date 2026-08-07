@@ -566,6 +566,86 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetExercisesSessionProgressAsync_ReturnsNewestSessionPerExercise_ScopedByPlan()
+    {
+        var planId = Guid.NewGuid();
+        var otherPlanId = Guid.NewGuid();
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(new DateOnly(2024, 6, 1).ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+        DateTime t2 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(new DateOnly(2024, 6, 3).ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var s1 = await InsertSessionAtUtcAsync(planId, "Day1", t1);
+        await _sut.LogSetAsync(s1, 0, "Bench", 0, reps: 8, weightKg: 50);
+        await _sut.LogSetAsync(s1, 0, "Squat", 0, reps: 5, weightKg: 100);
+
+        var s2 = await InsertSessionAtUtcAsync(planId, "Day2", t2);
+        await _sut.LogSetAsync(s2, 0, "Bench", 0, reps: 6, weightKg: 60);
+
+        var otherSession = await InsertSessionAtUtcAsync(otherPlanId, "Other", t2.AddHours(1));
+        await _sut.LogSetAsync(otherSession, 0, "Bench", 0, reps: 1, weightKg: 200);
+
+        IReadOnlyList<ExerciseProgressRow> rows = await _sut.GetExercisesSessionProgressAsync(planId);
+
+        Assert.Equal(3, rows.Count);
+        Assert.DoesNotContain(rows, r => r.SessionId == otherSession);
+
+        ExerciseProgressRow[] benchRows = rows.Where(r => r.ExerciseName == "Bench").ToArray();
+        Assert.Equal(2, benchRows.Length);
+        Assert.Equal(s2, benchRows[0].SessionId);
+        Assert.Equal(60, benchRows[0].BestWeightKg);
+        Assert.Equal(6, benchRows[0].TotalReps);
+        Assert.Equal(360, benchRows[0].TotalVolumeKg);
+        Assert.Equal(s1, benchRows[1].SessionId);
+
+        ExerciseProgressRow squat = Assert.Single(rows, r => r.ExerciseName == "Squat");
+        Assert.Equal(100, squat.BestWeightKg);
+        Assert.Equal(500, squat.TotalVolumeKg);
+    }
+
+    [Fact]
+    public async Task GetExercisesSessionProgressAsync_LimitsSessionsPerExercise()
+    {
+        var planId = Guid.NewGuid();
+        var baseTime = new DateTime(2026, 7, 1, 12, 0, 0, DateTimeKind.Utc);
+        for (var i = 0; i < 5; i++)
+        {
+            var sessionId = await InsertSessionAtUtcAsync(planId, $"Day{i}", baseTime.AddDays(i));
+            await _sut.LogSetAsync(sessionId, 0, "Bench", 0, reps: 5, weightKg: 60);
+        }
+
+        IReadOnlyList<ExerciseProgressRow> rows = await _sut.GetExercisesSessionProgressAsync(planId, maxSessionsPerExercise: 3);
+
+        Assert.Equal(3, rows.Count);
+        Assert.All(rows, r => Assert.Equal("Bench", r.ExerciseName));
+        Assert.True(rows[0].StartedAtUtc > rows[^1].StartedAtUtc);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAcrossPlansAsync_CombinesSessionsFromAllPlans()
+    {
+        var p1 = Guid.NewGuid();
+        var p2 = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(p1, "A", null);
+        await _sut.LogSetAsync(s1, 0, "Bench", 0, reps: 8, weightKg: 50);
+        var s2 = await _sut.BeginSessionAsync(p2, "B", null);
+        await _sut.LogSetAsync(s2, 0, "Bench", 0, reps: 6, weightKg: 60);
+        var s3 = await _sut.BeginSessionAsync(p2, "B2", null);
+        await _sut.LogSetAsync(s3, 0, "Squat", 0, reps: 5, weightKg: 100);
+
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAcrossPlansAsync("Bench");
+
+        Assert.Equal(2, rows.Count);
+        Assert.Contains(rows, r => r.SessionId == s1 && Math.Abs(r.BestWeightKg.GetValueOrDefault() - 50) < 0.001);
+        Assert.Contains(rows, r => r.SessionId == s2 && Math.Abs(r.BestWeightKg.GetValueOrDefault() - 60) < 0.001);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAcrossPlansAsync_ReturnsEmpty_ForUnknownExercise()
+    {
+        Assert.Empty(await _sut.GetExerciseSessionProgressAcrossPlansAsync("Does Not Exist"));
+    }
+
+    [Fact]
     public async Task ImportBackupAsync_Idempotent_WhenReImportingSameBackup()
     {
         var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);

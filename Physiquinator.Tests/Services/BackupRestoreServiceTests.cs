@@ -44,7 +44,8 @@ public sealed class BackupRestoreServiceTests : IAsyncLifetime
             _planService,
             _historyService,
             _scheduleService,
-            _db);
+            _db,
+            _planRepo);
     }
 
     public async Task DisposeAsync() => await _db.Database.CloseAsync();

@@ -16,6 +16,11 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     private int _activeRestDurationSeconds;
     private bool _isResting;
 
+    // Last rest state broadcast through RestStateChanged, so the 500 ms
+    // internal tick stays silent while the countdown just counts down.
+    private DateTime? _lastEmittedRestEndsAtUtc;
+    private bool _lastEmittedIsResting;
+
     private readonly List<SetCompletion> _completedSets = [];
     private readonly HashSet<SetCompletion> _completedSetLookup = [];
 
@@ -63,9 +68,11 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     public event EventHandler? RestCompletedWhileBackground;
 
     /// <summary>
-    /// Fired after every rest state change (start, reset, add, skip, cancel,
+    /// Fired on material rest state changes (start, reset, add, skip, cancel,
     /// restore, expiry) so platform surfaces such as the ongoing
     /// notification, floating overlay and exact alarm can stay in sync.
+    /// Not fired by the 500 ms internal tick or no-op mutations; the UI
+    /// countdown is driven by the JS bridge instead.
     /// </summary>
     public event EventHandler? RestStateChanged;
 
@@ -77,6 +84,25 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     public event EventHandler? WorkoutStateChanged;
 
     private DateTime UtcNow => _time.GetUtcNow().UtcDateTime;
+
+    /// <summary>
+    /// Raises <see cref="RestStateChanged"/> only when the rest state actually
+    /// changed since the last emission (rest started/stopped/reset/extended or
+    /// restored). The 500 ms internal tick and no-op mutations stay silent, so
+    /// subscribers such as <see cref="RestTimerCoordinator"/> do not re-run
+    /// platform work (snapshot persist, exact-alarm re-arm, overlay restart)
+    /// on every tick. The UI countdown is driven by the JS bridge instead.
+    /// </summary>
+    private void RaiseRestStateChangedIfChanged()
+    {
+        DateTime? end = _isResting ? _restEndsAtUtc : null;
+        if (_lastEmittedIsResting == _isResting && _lastEmittedRestEndsAtUtc == end)
+            return;
+
+        _lastEmittedIsResting = _isResting;
+        _lastEmittedRestEndsAtUtc = end;
+        RestStateChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public void StartWorkout(WorkoutPlan plan)
     {
@@ -212,7 +238,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
         StartInternalTimer();
-        RestStateChanged?.Invoke(this, EventArgs.Empty);
+        RaiseRestStateChangedIfChanged();
     }
 
     /// <summary>
@@ -258,7 +284,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
         StartInternalTimer();
-        RestStateChanged?.Invoke(this, EventArgs.Empty);
+        RaiseRestStateChangedIfChanged();
     }
 
     /// <summary>
@@ -272,7 +298,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         if (_restEndsAtUtc.HasValue)
         {
             _restEndsAtUtc = _restEndsAtUtc.Value.AddSeconds(seconds);
-            RestStateChanged?.Invoke(this, EventArgs.Empty);
+            RaiseRestStateChangedIfChanged();
         }
     }
 
@@ -294,7 +320,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         _restEndsAtUtc = restEndsAtUtc;
         _isResting = true;
         StartInternalTimer();
-        RestStateChanged?.Invoke(this, EventArgs.Empty);
+        RaiseRestStateChangedIfChanged();
         return true;
     }
 
@@ -320,7 +346,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     private void StopRest()
     {
         ResetRestSilently();
-        RestStateChanged?.Invoke(this, EventArgs.Empty);
+        RaiseRestStateChangedIfChanged();
     }
 
     private void StartInternalTimer()
@@ -346,10 +372,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         {
             StopRest();
             RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
-            return;
         }
-
-        RestStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void Dispose()

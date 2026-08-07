@@ -16,6 +16,9 @@ public sealed class RestNotificationService(
     private readonly RestAlertSettingsService _settings = settings;
     private readonly TimeProvider _time = time;
 
+    /// <summary>Rest-end alerts only make sense on mobile platforms; desktop hosts are stubbed.</summary>
+    private bool IsSupportedPlatform => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
     public const int OngoingRestNotificationId = 9101;
@@ -28,7 +31,7 @@ public sealed class RestNotificationService(
         if (!_settings.Enabled)
             return;
 
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+        if (!IsSupportedPlatform)
             return;
 
         try
@@ -36,18 +39,28 @@ public sealed class RestNotificationService(
             if (await LocalNotificationCenter.Current.AreNotificationsEnabled() != true)
                 await LocalNotificationCenter.Current.RequestNotificationPermission();
         }
-        catch
+        catch (Exception ex)
         {
-            // Permission flow can fail on desktop TFMs or simulators
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService permission flow failed: {ex}");
         }
     }
 
     // The floating rest-timer bubble is Android-only; Android registers
-    // AndroidRestNotificationService, so this implementation always reports
-    // the overlay as available (nothing to grant elsewhere).
-    public bool HasOverlayPermission() => true;
+    // AndroidRestNotificationService, so this implementation only reports the
+    // overlay as available on platforms that could host one.
+    public bool SupportsOverlay => false;
 
-    public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
+    public bool HasOverlayPermission() => IsSupportedPlatform;
+
+    public Task RequestOverlayPermissionAsync()
+    {
+        if (!IsSupportedPlatform)
+            return Task.CompletedTask;
+
+        // Nothing to grant here: the Android implementation registers its own
+        // overlay permission flow.
+        return Task.CompletedTask;
+    }
 
     public void CancelAllRestNotifications()
     {
@@ -56,9 +69,9 @@ public sealed class RestNotificationService(
             LocalNotificationCenter.Current.Cancel(ScheduledRestNotificationId);
             LocalNotificationCenter.Current.Cancel(ImmediateRestCompleteNotificationId);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore when platform plugin is unavailable
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService cancel all failed: {ex}");
         }
     }
 
@@ -67,14 +80,14 @@ public sealed class RestNotificationService(
         if (!_settings.Enabled)
             return;
 
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+        if (!IsSupportedPlatform)
             return;
 
         try
         {
             LocalNotificationCenter.Current.Cancel(ImmediateRestCompleteNotificationId);
 
-            long[]? vibration = _settings.SoundVibrationEnabled ? [0, 500] : null;
+            var vibration = _settings.SoundVibrationEnabled ? NotificationConstants.ImmediateRestCompleteVibrationPattern : null;
 
             var request = new NotificationRequest
             {
@@ -92,9 +105,9 @@ public sealed class RestNotificationService(
 
             await LocalNotificationCenter.Current.Show(request);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService show complete failed: {ex}");
         }
     }
 
@@ -103,7 +116,7 @@ public sealed class RestNotificationService(
         if (!_settings.Enabled)
             return Task.CompletedTask;
 
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+        if (!IsSupportedPlatform)
             return Task.CompletedTask;
 
         CancelAllRestNotifications();
@@ -115,7 +128,7 @@ public sealed class RestNotificationService(
 
         try
         {
-            long[]? vibration = _settings.SoundVibrationEnabled ? [0, 400, 200, 400] : null;
+            var vibration = _settings.SoundVibrationEnabled ? NotificationConstants.RestEndVibrationPattern : null;
 
             var request = new NotificationRequest
             {
@@ -137,9 +150,9 @@ public sealed class RestNotificationService(
 
             return LocalNotificationCenter.Current.Show(request);
         }
-        catch
+        catch (Exception ex)
         {
-            // Scheduling can fail on unsupported hosts
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService schedule alarm failed: {ex}");
             return Task.CompletedTask;
         }
     }
@@ -155,7 +168,15 @@ public sealed class RestNotificationService(
         // The ongoing workout status notification has been removed.
         // The floating overlay (Android only) is handled by AndroidRestNotificationService.
         // Cancel any leftover notification from previous installs.
-        try { LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId); } catch { }
+        try
+        {
+            LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService show timer UI failed: {ex}");
+        }
+
         return Task.CompletedTask;
     }
 
@@ -165,9 +186,9 @@ public sealed class RestNotificationService(
         {
             LocalNotificationCenter.Current.Cancel(OngoingRestNotificationId);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService hide timer UI failed: {ex}");
         }
 
         return Task.CompletedTask;
@@ -178,7 +199,7 @@ public sealed class RestNotificationService(
         if (!_settings.Enabled)
             return;
 
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+        if (!IsSupportedPlatform)
             return;
 
         try
@@ -200,9 +221,9 @@ public sealed class RestNotificationService(
 
             await LocalNotificationCenter.Current.Show(request);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService set logged failed: {ex}");
         }
     }
 
@@ -212,9 +233,9 @@ public sealed class RestNotificationService(
         {
             LocalNotificationCenter.Current.Cancel(SetLoggedNotificationId);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore
+            System.Diagnostics.Debug.WriteLine($"RestNotificationService cancel set logged failed: {ex}");
         }
 
         return Task.CompletedTask;

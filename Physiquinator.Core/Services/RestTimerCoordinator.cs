@@ -12,13 +12,20 @@ namespace Physiquinator.Core.Services;
 /// is persisted as a snapshot, so a rest countdown survives process death and
 /// is restored when the workout page loads again.
 /// </summary>
-public sealed class RestTimerCoordinator
+public sealed class RestTimerCoordinator : IDisposable
 {
     private readonly WorkoutSessionService _session;
     private readonly INotificationService _notifications;
     private readonly RestAlertSettingsService _settings;
     private readonly IAppPreferences _preferences;
     private readonly TimeProvider _time;
+    private readonly SemaphoreSlim _syncGate = new(1, 1);
+
+    // Last rest state processed by SyncAsync, so per-tick re-syncs skip the
+    // platform work (snapshot persist, exact-alarm re-arm, overlay restart).
+    private DateTime? _lastSyncedRestEndUtc;
+    private bool _lastSyncedResting;
+    private bool _hasSynced;
 
     public RestTimerCoordinator(
         WorkoutSessionService session,
@@ -36,6 +43,14 @@ public sealed class RestTimerCoordinator
         _session.RestStateChanged += OnRestStateChanged;
         _session.WorkoutStateChanged += OnWorkoutStateChanged;
         _settings.Changed += OnSettingsChanged;
+    }
+
+    public void Dispose()
+    {
+        _session.RestStateChanged -= OnRestStateChanged;
+        _session.WorkoutStateChanged -= OnWorkoutStateChanged;
+        _settings.Changed -= OnSettingsChanged;
+        _syncGate.Dispose();
     }
 
     /// <summary>
@@ -152,10 +167,14 @@ public sealed class RestTimerCoordinator
 
     private async Task SyncAsync()
     {
+        await _syncGate.WaitAsync();
         try
         {
             if (_session.CurrentPlan == null)
             {
+                _hasSynced = false;
+                _lastSyncedRestEndUtc = null;
+                _lastSyncedResting = false;
                 ClearSnapshot();
                 await _notifications.HideWorkoutTimerUiAsync();
                 await _notifications.CancelRestEndAlarmAsync();
@@ -163,6 +182,19 @@ public sealed class RestTimerCoordinator
             }
 
             WorkoutTimerState state = BuildState();
+
+            // Only re-run platform work when the rest end time (or the
+            // resting flag) actually changed since the last sync. The 500 ms
+            // session tick and repeated settings events therefore no longer
+            // re-persist the snapshot, re-arm the exact alarm or restart the
+            // overlay service for an unchanged countdown.
+            DateTime? restEnd = _session.IsResting ? state.RestEndsAtUtc : null;
+            if (_hasSynced && restEnd == _lastSyncedRestEndUtc && _session.IsResting == _lastSyncedResting)
+                return;
+
+            _hasSynced = true;
+            _lastSyncedRestEndUtc = restEnd;
+            _lastSyncedResting = _session.IsResting;
 
             // Rest state survives process death; between-set state is rebuilt
             // from the persisted workout session, so only rest needs a snapshot.
@@ -181,7 +213,7 @@ public sealed class RestTimerCoordinator
             await _notifications.ShowWorkoutTimerUiAsync(state);
 
             if (state.RestEndsAtUtc is { } end)
-                await _notifications.ScheduleRestEndAlarmAsync(end, state.PlanName ?? "Physiquinator", BuildRestCompleteDescription());
+                await _notifications.ScheduleRestEndAlarmAsync(end, state.PlanName ?? NotificationConstants.DefaultFallbackPlanName, BuildRestCompleteDescription());
             else
                 await _notifications.CancelRestEndAlarmAsync();
         }
@@ -189,6 +221,10 @@ public sealed class RestTimerCoordinator
         {
             // Platform surfaces must never break the workout flow
             System.Diagnostics.Debug.WriteLine($"RestTimerCoordinator sync failed: {ex}");
+        }
+        finally
+        {
+            _syncGate.Release();
         }
     }
 

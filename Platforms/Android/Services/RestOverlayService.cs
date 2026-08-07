@@ -120,7 +120,7 @@ public sealed class RestOverlayService : Service
     {
         WorkoutTimerState state = intent != null ? ReadState(intent) : ReadSessionState();
 
-        Notification notification = AndroidRestNotificationService.BuildWorkoutNotification(this, state, ResolveSettings()?.AddTimeSeconds ?? 30);
+        Notification notification = AndroidRestNotificationService.BuildWorkoutNotification(this, state, ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds);
         if (Build.VERSION.SdkInt >= BuildVersionCodes.UpsideDownCake)
             StartForeground(AndroidRestNotificationService.OngoingRestNotificationId, notification, ForegroundService.TypeSpecialUse);
         else
@@ -207,8 +207,8 @@ public sealed class RestOverlayService : Service
         try
         {
             _windowManager = GetSystemService(Context.WindowService)?.JavaCast<IWindowManager>();
-            (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors = GetThemeColors();
-            var addSeconds = ResolveSettings()?.AddTimeSeconds ?? 30;
+            var colors = GetThemeColors();
+            var addSeconds = ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds;
 
             var root = new AndroidLinearLayout(this)
             {
@@ -587,7 +587,7 @@ public sealed class RestOverlayService : Service
         if (session == null)
             return;
 
-        var addSeconds = ResolveSettings()?.AddTimeSeconds ?? 30;
+        var addSeconds = ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds;
 
         if (session.IsResting)
         {
@@ -620,7 +620,7 @@ public sealed class RestOverlayService : Service
                 ? await quickAction.LogNextSetAsync(weightKg, reps)
                 : await quickAction.LogNextSetAsync();
 
-            if (result.Status == QuickActionResult.NothingToLog)
+            if (result.Status == QuickActionStatus.NothingToLog)
                 return;
 
             IServiceProvider? services = IPlatformApplication.Current?.Services;
@@ -628,7 +628,7 @@ public sealed class RestOverlayService : Service
                 result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
                 await notifications.ShowSetLoggedNotificationAsync(result.ExerciseName, result.LoggedSetIndex.Value, result.SetTotal.Value);
 
-            if (result.Status == QuickActionResult.WorkoutCompleted)
+            if (result.Status == QuickActionStatus.WorkoutCompleted)
             {
                 var vibration = services?.GetService(typeof(IVibrationService)) as IVibrationService;
                 vibration?.Vibrate(TimeSpan.FromMilliseconds(800));

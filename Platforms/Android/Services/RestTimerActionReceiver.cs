@@ -60,7 +60,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
             switch (action)
             {
                 case ActionAddRest:
-                    session.AddRestSeconds(settings?.AddTimeSeconds ?? 30);
+                    session.AddRestSeconds(settings?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds);
                     break;
                 case ActionSkipRest:
                     session.SkipRest();
@@ -78,7 +78,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
         try
         {
             QuickActionResult result = await quickAction.LogNextSetAsync();
-            if (result.Status != QuickActionResult.NothingToLog)
+            if (result.Status != QuickActionStatus.NothingToLog)
             {
                 var notifications = services.GetService(typeof(INotificationService)) as INotificationService;
                 if (notifications != null && result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)

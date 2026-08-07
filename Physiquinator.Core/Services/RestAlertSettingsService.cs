@@ -10,18 +10,20 @@ public sealed class RestAlertSettingsService(
     IServiceProvider serviceProvider)
 {
     /// <summary>
-    /// Resolved lazily: <see cref="INotificationService"/> implementations depend on this
-    /// service, so constructor injection would form a circular dependency.
+    /// Resolved lazily and cached: <see cref="INotificationService"/>
+    /// implementations depend on this service, so constructor injection would
+    /// form a circular dependency.
     /// </summary>
-    private INotificationService Notifications =>
-        serviceProvider.GetRequiredService<INotificationService>();
+    private INotificationService? _notifications;
+
+    private INotificationService Notifications => _notifications ??= serviceProvider.GetRequiredService<INotificationService>();
 
     private string PreferenceKey
     {
         get
         {
             UserProfile activeProfile = userProfileService.GetActiveProfile();
-            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestAlertsEnabled : $"{PreferenceKeys.RestAlertsEnabled}_{activeProfile.Id}";
+            return ProfilePreferenceKeys.For(PreferenceKeys.RestAlertsEnabled, activeProfile);
         }
     }
 
@@ -30,7 +32,7 @@ public sealed class RestAlertSettingsService(
         get
         {
             UserProfile activeProfile = userProfileService.GetActiveProfile();
-            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestNotifSoundVibration : $"{PreferenceKeys.RestNotifSoundVibration}_{activeProfile.Id}";
+            return ProfilePreferenceKeys.For(PreferenceKeys.RestNotifSoundVibration, activeProfile);
         }
     }
 
@@ -58,7 +60,8 @@ public sealed class RestAlertSettingsService(
         Changed?.Invoke();
     }
 
-    private const int DefaultAddTimeSeconds = 30;
+    /// <summary>Seconds added by the + button on the rest timer (clamped to 5-300).</summary>
+    public const int DefaultAddTimeSeconds = 30;
     private const int MinAddTimeSeconds = 5;
     private const int MaxAddTimeSeconds = 300;
 
@@ -67,7 +70,7 @@ public sealed class RestAlertSettingsService(
         get
         {
             UserProfile activeProfile = userProfileService.GetActiveProfile();
-            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestAddTimeSeconds : $"{PreferenceKeys.RestAddTimeSeconds}_{activeProfile.Id}";
+            return ProfilePreferenceKeys.For(PreferenceKeys.RestAddTimeSeconds, activeProfile);
         }
     }
 

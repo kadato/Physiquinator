@@ -24,12 +24,7 @@ public sealed record QuickActionResult(
     QuickActionStatus Status,
     string? ExerciseName = null,
     int? LoggedSetIndex = null,
-    int? SetTotal = null)
-{
-    public static QuickActionStatus NothingToLog => QuickActionStatus.NothingToLog;
-
-    public static QuickActionStatus WorkoutCompleted => QuickActionStatus.WorkoutCompleted;
-}
+    int? SetTotal = null);
 
 /// <summary>
 /// Logs the next set from the background surfaces (ongoing notification

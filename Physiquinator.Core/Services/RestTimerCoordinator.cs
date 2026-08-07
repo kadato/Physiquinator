@@ -221,10 +221,18 @@ public sealed class RestTimerCoordinator
 
     private string BuildRestCompleteDescription()
     {
-        var planName = _session.CurrentPlan?.Name;
-        return planName == null
-            ? "Rest finished - time for your next set."
-            : $"{planName}: start your next set when you are ready.";
+        var exerciseIndex = _session.GetFirstUncompletedExerciseIndex();
+        WorkoutPlan? plan = _session.CurrentPlan;
+
+        if (plan != null && exerciseIndex >= 0 && exerciseIndex < plan.Exercises.Count)
+        {
+            ExercisePlan exercise = plan.Exercises[exerciseIndex];
+            var setIndex = _session.GetFirstUncompletedSetIndex(exerciseIndex);
+            var setLabel = setIndex >= 0 ? $" · Set {setIndex + 1}/{exercise.SetCount}" : string.Empty;
+            return $"Next up: {exercise.Name}{setLabel}";
+        }
+
+        return "Rest done — time for your next set.";
     }
 
     private void PersistSnapshot(WorkoutTimerState state)

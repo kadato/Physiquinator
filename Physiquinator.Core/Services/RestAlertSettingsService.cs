@@ -25,7 +25,20 @@ public sealed class RestAlertSettingsService(
         }
     }
 
+    private string SoundVibrationPreferenceKey
+    {
+        get
+        {
+            UserProfile activeProfile = userProfileService.GetActiveProfile();
+            return activeProfile.Id == UserProfileService.DemoProfileId ? PreferenceKeys.RestNotifSoundVibration : $"{PreferenceKeys.RestNotifSoundVibration}_{activeProfile.Id}";
+        }
+    }
+
+    /// <summary>When false, no rest-end notification or alarm is posted.</summary>
     public bool Enabled => preferences.Get(PreferenceKey, true);
+
+    /// <summary>When false, the rest-end notification plays no sound and does not vibrate.</summary>
+    public bool SoundVibrationEnabled => preferences.Get(SoundVibrationPreferenceKey, true);
 
     public event Action? Changed;
 
@@ -36,6 +49,12 @@ public sealed class RestAlertSettingsService(
         if (!enabled)
             Notifications.CancelAllRestNotifications();
 
+        Changed?.Invoke();
+    }
+
+    public void SetSoundVibrationEnabled(bool enabled)
+    {
+        preferences.Set(SoundVibrationPreferenceKey, enabled);
         Changed?.Invoke();
     }
 

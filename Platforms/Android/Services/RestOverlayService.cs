@@ -53,7 +53,7 @@ public sealed class RestOverlayService : Service
     private AndroidTextView? _weightValue;
     private AndroidTextView? _repsValue;
     private AndroidView? _stepperRow;
-    private AndroidTextButton? _logSetButton;
+    private AndroidButton? _logSetButton;
     private AndroidTextButton? _addTimeButton;
     private AndroidButton? _resetButton;
     private AndroidButton? _skipButton;
@@ -302,9 +302,10 @@ public sealed class RestOverlayService : Service
             root.AddView(headerFrame);
             root.AddView(_stepperRow);
             var actionRowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MatchParent,
+                LinearLayout.LayoutParams.WrapContent,
                 LinearLayout.LayoutParams.WrapContent)
             {
+                Gravity = GravityFlags.CenterHorizontal,
                 TopMargin = Dp(8)
             };
             root.AddView(actionRow, actionRowParams);
@@ -406,7 +407,12 @@ public sealed class RestOverlayService : Service
         btn.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
         btn.SetTextSize(ComplexUnitType.Sp, 18);
         btn.SetAllCaps(false);
-        btn.SetPadding(Dp(6), Dp(6), Dp(6), Dp(6));
+        btn.SetPadding(0, 0, 0, 0);
+        btn.SetMinWidth(0);
+        btn.SetMinHeight(0);
+        btn.SetMinimumWidth(0);
+        btn.SetMinimumHeight(0);
+        btn.Gravity = GravityFlags.Center;
 
         var bg = new GradientDrawable();
         bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
@@ -424,12 +430,20 @@ public sealed class RestOverlayService : Service
 
     private static void AddStepperElement(AndroidLinearLayout row, AndroidView view)
     {
-        var lp = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WrapContent,
-            DpStatic(row, 40))
+        int width = LinearLayout.LayoutParams.WrapContent;
+        int height = DpStatic(row, 40);
+
+        if (view is AndroidTextButton)
+        {
+            width = DpStatic(row, 36);
+            height = DpStatic(row, 36);
+        }
+
+        var lp = new LinearLayout.LayoutParams(width, height)
         {
             LeftMargin = DpStatic(row, 2),
-            RightMargin = DpStatic(row, 2)
+            RightMargin = DpStatic(row, 2),
+            Gravity = GravityFlags.CenterVertical
         };
         row.AddView(view, lp);
     }
@@ -509,20 +523,15 @@ public sealed class RestOverlayService : Service
         return button;
     }
 
-    private AndroidTextButton CreateLogSetButton(
+    private AndroidButton CreateLogSetButton(
         (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
     {
-        var button = new AndroidTextButton(this)
-        {
-            Text = "Log set"
-        };
-        button.SetTextColor(colors.Primary);
-        button.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
-        button.SetTextSize(ComplexUnitType.Sp, 13);
-        button.SetAllCaps(false);
-        button.SetSingleLine(true);
-        button.Gravity = GravityFlags.Center;
-        button.SetPadding(Dp(12), Dp(6), Dp(12), Dp(6));
+        var button = new AndroidButton(this);
+        button.SetImageResource(Resource.Drawable.ic_timer_check);
+        button.SetScaleType(ImageView.ScaleType.FitCenter);
+        button.SetAdjustViewBounds(true);
+        button.SetPadding(Dp(8), Dp(8), Dp(8), Dp(8));
+        button.SetColorFilter(colors.Primary);
 
         var bg = new GradientDrawable();
         bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));

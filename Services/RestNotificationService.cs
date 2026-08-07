@@ -11,12 +11,10 @@ namespace Physiquinator.Services;
 /// </summary>
 public sealed class RestNotificationService(
     RestAlertSettingsService settings,
-    TimeProvider time,
-    IAppPreferences preferences) : Physiquinator.Core.Services.INotificationService
+    TimeProvider time) : Physiquinator.Core.Services.INotificationService
 {
     private readonly RestAlertSettingsService _settings = settings;
     private readonly TimeProvider _time = time;
-    private readonly IAppPreferences _preferences = preferences;
 
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
@@ -47,15 +45,7 @@ public sealed class RestNotificationService(
     // The floating rest-timer bubble is Android-only; Android registers
     // AndroidRestNotificationService, so this implementation always reports
     // the overlay as available (nothing to grant elsewhere).
-    // For screenshot testing, we check a mock preference.
-    public bool HasOverlayPermission()
-    {
-        if (_preferences.Get("physiquinator_simulate_no_overlay_permission", false))
-        {
-            return false;
-        }
-        return true;
-    }
+    public bool HasOverlayPermission() => true;
 
     public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
 

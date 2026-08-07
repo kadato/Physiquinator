@@ -28,3 +28,143 @@
     margin-right: auto !important;
     overflow: visible !important;
 }
+
+/* Simulated Rest Timer Overlay Bubble */
+.simulated-overlay-bubble-container {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    pointer-events: none;
+}
+
+.simulated-overlay-bubble {
+    width: 90%;
+    max-width: 360px;
+    backdrop-filter: blur(10px);
+    background-color: rgba(21, 24, 33, 0.96); /* default dark theme surface */
+    border: 2px solid rgba(16, 185, 129, 0.35); /* default dark theme volt green */
+    border-radius: 20px;
+    padding: 16px 16px 12px 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+    font-family: 'Outfit', sans-serif;
+    color: var(--mud-palette-text-primary);
+}
+
+.simulated-overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.simulated-overlay-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+.simulated-overlay-timer-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.simulated-overlay-timer {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.simulated-overlay-close-btn {
+    border: none;
+    background: transparent;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.simulated-overlay-close-btn:hover {
+    opacity: 1;
+}
+
+.simulated-overlay-subtitle {
+    font-size: 12px;
+    color: var(--mud-palette-text-secondary);
+    margin-bottom: 12px;
+}
+
+.simulated-overlay-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.simulated-overlay-btn {
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.simulated-overlay-btn--text {
+    flex: 1;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    background-color: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: var(--mud-palette-primary);
+}
+
+.simulated-overlay-btn--icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--mud-palette-text-secondary);
+}
+
+.simulated-overlay-btn--primary {
+    background-color: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: var(--mud-palette-primary);
+}
+
+/* Light Theme overrides using the theme indicator class on app-shell */
+.app-shell--light-theme .simulated-overlay-bubble {
+    background-color: rgba(255, 255, 255, 0.96);
+    border-color: rgba(15, 118, 110, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.app-shell--light-theme .simulated-overlay-btn--text {
+    background-color: rgba(15, 118, 110, 0.08);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+.app-shell--light-theme .simulated-overlay-btn--primary {
+    background-color: rgba(15, 118, 110, 0.08);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+.app-shell--light-theme .simulated-overlay-btn--icon {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+}

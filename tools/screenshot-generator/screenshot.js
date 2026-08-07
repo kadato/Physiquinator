@@ -428,6 +428,45 @@ async function run() {
         currentAppProcess.kill();
         currentAppProcess = null;
 
+        // Delay to allow file release
+        await delay(2000);
+
+        // --- PHASE 3: WORKING OVERLAY STATE ---
+        console.log('--- STARTING PHASE 3: WORKING OVERLAY STATE ---');
+        
+        const workingOverlayPrefs = {
+            "physiquinator-theme-preference": "2", // Default to Dark
+            "physiquinator_ai_enabled": "True",
+            "physiquinator_ai_provider": "OpenAI",
+            "physiquinator_ai_base_url": "http://127.0.0.1:9099/v1",
+            "physiquinator_ai_api_key": "dummy-key-for-screenshots",
+            "physiquinator_simulate_no_overlay_permission": "False",
+            "physiquinator_simulate_overlay_active": "True"
+        };
+        writePrefs(workingOverlayPrefs);
+
+        const phase3 = await launchAppAndConnect();
+
+        for (const theme of themes) {
+            console.log(`--- CAPTURING ${theme.toUpperCase()} THEME FOR PHASE 3 ---`);
+            
+            // Set the theme preference
+            await selectTheme(phase3.page, theme);
+
+            // Active Workout page with working overlay shown floating
+            await blazorNavigate(phase3.page, `/workout/${PUSH_PLAN_ID}`);
+            await phase3.page.waitForSelector('.workout-exercise-layout', { timeout: 5000 });
+            await phase3.page.waitForSelector('.simulated-overlay-bubble', { timeout: 5000 });
+            await delay(500);
+            await capture(phase3.page, `workout-overlay-working-${theme}.png`);
+        }
+
+        // Close Phase 3 app
+        await currentBrowser.close();
+        currentBrowser = null;
+        currentAppProcess.kill();
+        currentAppProcess = null;
+
         console.log('All screenshots captured successfully!');
     } catch (err) {
         console.error('An error occurred during screenshot generation:', err);

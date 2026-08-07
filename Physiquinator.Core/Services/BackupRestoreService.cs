@@ -27,7 +27,8 @@ public sealed class BackupRestoreService(
     WorkoutPlanService planService,
     WorkoutHistoryService historyService,
     WorkoutScheduleService scheduleService,
-    AppDatabase database)
+    AppDatabase database,
+    WorkoutPlanRepository planRepository)
 {
     // ---------------------------------------------------------------------------
     //  Preference key registry
@@ -121,6 +122,18 @@ public sealed class BackupRestoreService(
                 continue;
             }
 
+            // Some services (ThemeService, WeightUnitService) always write the suffixed
+            // key, even for the demo profile. Check that variant too so nothing is missed.
+            if (suffix.Length == 0)
+            {
+                var alwaysSuffixed = preferences.Get(baseKey + $"_{UserProfileService.DemoProfileId}", "\0");
+                if (alwaysSuffixed != "\0")
+                {
+                    result[baseKey] = alwaysSuffixed;
+                    continue;
+                }
+            }
+
             var valueBare = preferences.Get(baseKey, "\0");
             if (valueBare != "\0")
             {
@@ -160,13 +173,12 @@ public sealed class BackupRestoreService(
 
     private async Task<int> ImportPlansAsync(AllDataBackup backup)
     {
-        var count = 0;
-        foreach (var plan in backup.Plans ?? [])
-        {
-            await planService.SavePlanAsync(plan);
-            count++;
-        }
-        return count;
+        var plans = backup.Plans;
+        if (plans is not { Count: > 0 })
+            return 0;
+
+        await planRepository.SavePlansAsync(plans);
+        return plans.Count;
     }
 
     private async Task<(int Sessions, int Sets)> ImportHistoryAsync(AllDataBackup backup)
@@ -244,7 +256,7 @@ public sealed class BackupRestoreService(
     private string GetPreferenceSuffix()
     {
         var activeId = userProfileService.GetActiveProfile().Id;
-        return activeId == UserProfileService.DemoProfileId ? string.Empty : $"_{activeId}";
+        return ProfilePreferenceKeys.GetSuffix(activeId);
     }
 
     /// <summary>

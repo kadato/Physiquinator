@@ -49,6 +49,7 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<AppInitializationService>();
         services.AddScoped<WorkoutTimerInterop>();
         services.AddSingleton<UserProfileService>();
+        services.AddSingleton<WeightUnitService>();
 
         // AI Services & Tools (Registered as Scoped to safely consume scoped dependencies like ThemeService)
         services.AddScoped(sp => new OpenAiCompatibleClient(sp.GetService<HttpClient>() ?? new HttpClient()));

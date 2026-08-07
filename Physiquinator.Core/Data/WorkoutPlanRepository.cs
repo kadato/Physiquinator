@@ -117,6 +117,29 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
         }).ConfigureAwait(false);
     }
 
+    /// <summary>Persists all plans and their exercises in a single transaction.</summary>
+    public async Task SavePlansAsync(IReadOnlyList<WorkoutPlan> plans)
+    {
+        ArgumentNullException.ThrowIfNull(plans);
+        await _database.EnsureInitializedAsync().ConfigureAwait(false);
+
+        await _database.Database.RunInTransactionAsync(conn =>
+        {
+            foreach (WorkoutPlan plan in plans)
+            {
+                var planIdString = plan.Id.ToString();
+                conn.InsertOrReplace(ToEntity(plan));
+
+                conn.Execute("DELETE FROM ExercisePlans WHERE WorkoutPlanId = ?", planIdString);
+
+                foreach (ExercisePlan exercise in plan.Exercises)
+                {
+                    conn.Insert(ToEntity(exercise, planIdString));
+                }
+            }
+        }).ConfigureAwait(false);
+    }
+
     public async Task DeletePlanAsync(Guid id)
     {
         await _database.EnsureInitializedAsync().ConfigureAwait(false);

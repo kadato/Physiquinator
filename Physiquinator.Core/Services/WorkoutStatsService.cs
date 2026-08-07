@@ -11,6 +11,8 @@ public sealed class WorkoutStatsService(
     private readonly WorkoutHistoryRepository _repository = repository;
     private readonly WorkoutScheduleService? _scheduleService = scheduleService;
 
+    private static readonly IReadOnlySet<DayOfWeek> EmptySchedule = new HashSet<DayOfWeek>();
+
     /// <summary>
     /// Loads session counts across the last <paramref name="weeks"/> weeks (Monday–Sunday grid,
     /// ending on <paramref name="endLocal"/>) and derives the streak/week summary.
@@ -24,7 +26,7 @@ public sealed class WorkoutStatsService(
         DateOnly gridStart = HeatmapGrid.GetMondayOfWeek(endLocal).AddDays(-7 * (weeks - 1));
 
         IReadOnlyDictionary<DateOnly, int> activityByDay = await _repository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
-        Func<DateOnly, IReadOnlySet<DayOfWeek>> getSchedule = date => _scheduleService?.GetScheduleForDate(date) ?? new HashSet<DayOfWeek>();
+        Func<DateOnly, IReadOnlySet<DayOfWeek>> getSchedule = date => _scheduleService?.GetScheduleForDate(date) ?? EmptySchedule;
         WorkoutDaySummary summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart, getSchedule);
         return (summary, activityByDay);
     }

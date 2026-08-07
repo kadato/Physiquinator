@@ -16,6 +16,10 @@ public sealed class WorkoutScheduleService(
     UserProfileService userProfileService,
     AppDatabase database)
 {
+    private const string DateFormat = "yyyy-MM-dd";
+
+    private static readonly IReadOnlySet<DayOfWeek> EmptySchedule = new HashSet<DayOfWeek>();
+
     private readonly SemaphoreSlim _lock = new(1, 1);
     private SQLiteAsyncConnection? _lastConnection;
     private List<WorkoutScheduleHistoryEntity> _cache = [];
@@ -25,9 +29,7 @@ public sealed class WorkoutScheduleService(
         get
         {
             UserProfile activeProfile = userProfileService.GetActiveProfile();
-            return activeProfile.Id == UserProfileService.DemoProfileId
-                ? PreferenceKeys.WorkoutScheduleDays
-                : $"{PreferenceKeys.WorkoutScheduleDays}_{activeProfile.Id}";
+            return ProfilePreferenceKeys.For(PreferenceKeys.WorkoutScheduleDays, activeProfile);
         }
     }
 
@@ -134,7 +136,7 @@ public sealed class WorkoutScheduleService(
                         EffectiveFrom = "0001-01-01"
                     };
                     database.Database.InsertAsync(entity).GetAwaiter().GetResult();
-                    _cache.Add(entity);
+                    _cache = [.. _cache, entity];
                 }
 
                 // Sync with preferences for legacy fallback compatibility
@@ -159,7 +161,7 @@ public sealed class WorkoutScheduleService(
 
         EnsureLoadedAsync().GetAwaiter().GetResult();
 
-        var dateStr = effectiveFrom.ToString("yyyy-MM-dd");
+        var dateStr = effectiveFrom.ToString(DateFormat);
 
         _lock.Wait();
         try
@@ -178,7 +180,7 @@ public sealed class WorkoutScheduleService(
                     EffectiveFrom = dateStr
                 };
                 database.Database.InsertAsync(entity).GetAwaiter().GetResult();
-                _cache.Add(entity);
+                _cache = [.. _cache, entity];
                 _cache = _cache.OrderBy(x => x.EffectiveFrom).ToList();
             }
 
@@ -200,33 +202,26 @@ public sealed class WorkoutScheduleService(
     /// </summary>
     public IReadOnlySet<DayOfWeek> GetScheduleForDate(DateOnly date)
     {
-        EnsureLoadedAsync().GetAwaiter().GetResult();
+        if (!ReferenceEquals(_lastConnection, database.Database))
+            EnsureLoadedAsync().GetAwaiter().GetResult();
 
-        var dateStr = date.ToString("yyyy-MM-dd");
+        var dateStr = date.ToString(DateFormat);
         WorkoutScheduleHistoryEntity? activeEntity = null;
 
-        _lock.Wait();
-        try
+        foreach (var item in _cache)
         {
-            foreach (var item in _cache)
+            if (string.Compare(item.EffectiveFrom, dateStr, StringComparison.Ordinal) <= 0)
             {
-                if (string.Compare(item.EffectiveFrom, dateStr, StringComparison.Ordinal) <= 0)
-                {
-                    activeEntity = item;
-                }
-                else
-                {
-                    break;
-                }
+                activeEntity = item;
             }
-        }
-        finally
-        {
-            _lock.Release();
+            else
+            {
+                break;
+            }
         }
 
         if (activeEntity == null)
-            return new HashSet<DayOfWeek>();
+            return EmptySchedule;
 
         return Unmask(activeEntity.DaysBitmask);
     }

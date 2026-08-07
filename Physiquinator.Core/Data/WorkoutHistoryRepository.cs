@@ -17,6 +17,16 @@ public sealed record ExerciseSessionProgressEntry(
     int SetCount,
     double TotalVolumeKg);
 
+/// <summary>Per-session aggregates for one exercise, including its name (newest sessions first per exercise).</summary>
+public sealed record ExerciseProgressRow(
+    string ExerciseName,
+    string SessionId,
+    DateTime StartedAtUtc,
+    double? BestWeightKg,
+    int TotalReps,
+    int SetCount,
+    double TotalVolumeKg);
+
 public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 {
 #pragma warning disable S1144 // Unused private types or members should be removed
@@ -34,6 +44,17 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     private sealed class ExerciseProgressAggRow
     {
+        public string SessionId { get; set; } = "";
+        public DateTime StartedAtUtc { get; set; }
+        public double? BestWeightKg { get; set; }
+        public int TotalReps { get; set; }
+        public int SetCount { get; set; }
+        public double TotalVolumeKg { get; set; }
+    }
+
+    private sealed class ExerciseProgressByNameRow
+    {
+        public string ExerciseName { get; set; } = "";
         public string SessionId { get; set; } = "";
         public DateTime StartedAtUtc { get; set; }
         public double? BestWeightKg { get; set; }
@@ -231,51 +252,15 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         maxSessions = Math.Clamp(maxSessions, 1, 200);
         await _db.EnsureInitializedAsync();
 
-        var planIdStr = workoutPlanId.ToString();
         var useBodyweight = logType == ExerciseLogType.BodyweightReps
             && bodyweightKg.HasValue
             && bodyweightKg.Value > 0;
-        var bodyweightForQuery = useBodyweight ? bodyweightKg!.Value : 0;
-
-        string query;
-        object[] args;
-
-        if (useBodyweight)
-        {
-            query = @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
-                             MAX(s.WeightKg) AS BestWeightKg,
-                             IFNULL(SUM(s.Reps), 0) AS TotalReps,
-                             COUNT(*) AS SetCount,
-                             SUM(CASE
-                                   WHEN s.Reps IS NOT NULL THEN s.Reps * (? + IFNULL(s.WeightKg, 0))
-                                   ELSE 0
-                                 END) AS TotalVolumeKg
-                      FROM WorkoutSessionLogs sess
-                      INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
-                      WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
-                      GROUP BY sess.Id
-                      ORDER BY sess.StartedAtUtc DESC
-                      LIMIT ?";
-            args = [bodyweightForQuery, planIdStr, exerciseName, maxSessions];
-        }
-        else
-        {
-            query = @"SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
-                             MAX(s.WeightKg) AS BestWeightKg,
-                             IFNULL(SUM(s.Reps), 0) AS TotalReps,
-                             COUNT(*) AS SetCount,
-                             SUM(CASE
-                                   WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg
-                                   ELSE 0
-                                 END) AS TotalVolumeKg
-                      FROM WorkoutSessionLogs sess
-                      INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
-                      WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
-                      GROUP BY sess.Id
-                      ORDER BY sess.StartedAtUtc DESC
-                      LIMIT ?";
-            args = [planIdStr, exerciseName, maxSessions];
-        }
+        var (query, args) = BuildSessionProgressQuery(
+            workoutPlanId.ToString(),
+            exerciseName,
+            maxSessions,
+            useBodyweight,
+            useBodyweight ? bodyweightKg!.Value : 0);
 
         List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
 
@@ -287,6 +272,118 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                 r.TotalReps,
                 r.SetCount,
                 r.TotalVolumeKg))];
+    }
+
+    /// <summary>
+    /// Per-session aggregates for every logged exercise under one plan in a single query,
+    /// newest sessions first per exercise. Bodyweight-adjusted volume is not applied.
+    /// </summary>
+    public async Task<IReadOnlyList<ExerciseProgressRow>> GetExercisesSessionProgressAsync(
+        Guid workoutPlanId,
+        int maxSessionsPerExercise = 30)
+    {
+        maxSessionsPerExercise = Math.Clamp(maxSessionsPerExercise, 1, 200);
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        List<ExerciseProgressByNameRow> rows = await _db.Database.QueryAsync<ExerciseProgressByNameRow>(
+            @"SELECT ExerciseName, SessionId, StartedAtUtc, BestWeightKg, TotalReps, SetCount, TotalVolumeKg
+              FROM (
+                  SELECT s.ExerciseName AS ExerciseName,
+                         sess.Id AS SessionId,
+                         sess.StartedAtUtc AS StartedAtUtc,
+                         MAX(s.WeightKg) AS BestWeightKg,
+                         IFNULL(SUM(s.Reps), 0) AS TotalReps,
+                         COUNT(*) AS SetCount,
+                         " + BuildVolumeSelect(useBodyweight: false) + @" AS TotalVolumeKg,
+                         ROW_NUMBER() OVER (PARTITION BY s.ExerciseName ORDER BY sess.StartedAtUtc DESC) AS rn
+                  FROM WorkoutSessionLogs sess
+                  INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+                  WHERE sess.WorkoutPlanId = ?
+                  GROUP BY sess.Id, s.ExerciseName
+              ) ranked
+              WHERE rn <= ?
+              ORDER BY ExerciseName ASC, StartedAtUtc DESC",
+            planIdStr, maxSessionsPerExercise);
+
+        return [.. rows.Select(r => new ExerciseProgressRow(
+            r.ExerciseName,
+            r.SessionId,
+            r.StartedAtUtc,
+            r.BestWeightKg,
+            r.TotalReps,
+            r.SetCount,
+            r.TotalVolumeKg))];
+    }
+
+    /// <summary>
+    /// Per-session aggregates for one exercise name across all plans in a single query
+    /// (newest sessions first). Bodyweight-adjusted volume is not applied.
+    /// </summary>
+    public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAcrossPlansAsync(
+        string exerciseName,
+        int maxSessions = 100)
+    {
+        if (string.IsNullOrWhiteSpace(exerciseName)) return [];
+        maxSessions = Math.Clamp(maxSessions, 1, 500);
+        await _db.EnsureInitializedAsync();
+
+        var (query, args) = BuildSessionProgressQuery(null, exerciseName, maxSessions, useBodyweight: false, bodyweightForQuery: 0);
+
+        List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
+
+        return [.. rows
+            .Select(r => new ExerciseSessionProgressEntry(
+                r.SessionId,
+                r.StartedAtUtc,
+                r.BestWeightKg,
+                r.TotalReps,
+                r.SetCount,
+                r.TotalVolumeKg))];
+    }
+
+    private static string BuildVolumeSelect(bool useBodyweight) =>
+        useBodyweight
+            ? "SUM(CASE WHEN s.Reps IS NOT NULL THEN s.Reps * (? + IFNULL(s.WeightKg, 0)) ELSE 0 END)"
+            : "SUM(CASE WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg ELSE 0 END)";
+
+    private static (string Query, object[] Args) BuildSessionProgressQuery(
+        string? workoutPlanIdFilter,
+        string? exerciseNameFilter,
+        int maxSessions,
+        bool useBodyweight,
+        double bodyweightForQuery)
+    {
+        var whereClauses = new List<string>();
+        var args = new List<object>();
+        if (useBodyweight) args.Add(bodyweightForQuery);
+        if (!string.IsNullOrEmpty(workoutPlanIdFilter))
+        {
+            whereClauses.Add("sess.WorkoutPlanId = ?");
+            args.Add(workoutPlanIdFilter);
+        }
+        if (!string.IsNullOrEmpty(exerciseNameFilter))
+        {
+            whereClauses.Add("s.ExerciseName = ?");
+            args.Add(exerciseNameFilter);
+        }
+
+        var whereSql = whereClauses.Count > 0 ? $"WHERE {string.Join(" AND ", whereClauses)}" : string.Empty;
+        var query = $"""
+            SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
+                   MAX(s.WeightKg) AS BestWeightKg,
+                   IFNULL(SUM(s.Reps), 0) AS TotalReps,
+                   COUNT(*) AS SetCount,
+                   {BuildVolumeSelect(useBodyweight)} AS TotalVolumeKg
+            FROM WorkoutSessionLogs sess
+            INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
+            {whereSql}
+            GROUP BY sess.Id
+            ORDER BY sess.StartedAtUtc DESC
+            LIMIT ?
+            """;
+        args.Add(maxSessions);
+        return (query, args.ToArray());
     }
 
     public async Task<int> GetSessionCountAsync()

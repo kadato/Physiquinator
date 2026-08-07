@@ -1,5 +1,8 @@
 namespace Physiquinator.Core.Data;
 
+using Physiquinator.Core.Formatting;
+using Physiquinator.Core.Services;
+
 /// <summary>Streak and week-over-week session counts derived from local-day activity.</summary>
 public sealed record WorkoutDaySummary(
     int CurrentStreakWorkoutDays,
@@ -9,6 +12,8 @@ public sealed record WorkoutDaySummary(
 
 public static class WorkoutDayStats
 {
+    private static readonly IReadOnlySet<DayOfWeek> EmptySchedule = new HashSet<DayOfWeek>();
+
     /// <summary>
     /// Legacy overload for backward compatibility and testing.
     /// </summary>
@@ -19,7 +24,7 @@ public static class WorkoutDayStats
         IReadOnlySet<DayOfWeek>? schedule = null)
     {
         return Compute(activityByDay, endLocal, gridStartLocal,
-            date => schedule ?? new HashSet<DayOfWeek>());
+            date => schedule ?? EmptySchedule);
     }
 
     /// <summary>
@@ -38,8 +43,18 @@ public static class WorkoutDayStats
         if (gridStartLocal > endLocal)
             (gridStartLocal, endLocal) = (endLocal, gridStartLocal);
 
-        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, getSchedule);
-        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, getSchedule);
+        var scheduleCache = new Dictionary<DateOnly, IReadOnlySet<DayOfWeek>>();
+        Func<DateOnly, IReadOnlySet<DayOfWeek>> memoizedGetSchedule = date =>
+        {
+            if (scheduleCache.TryGetValue(date, out var resolved))
+                return resolved;
+            resolved = getSchedule(date);
+            scheduleCache[date] = resolved;
+            return resolved;
+        };
+
+        var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, memoizedGetSchedule);
+        var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, memoizedGetSchedule);
         (var thisWeek, var lastWeek) = ComputeWeekSessionTotals(activityByDay, endLocal);
 
         return new WorkoutDaySummary(currentStreak, longest, thisWeek, lastWeek);
@@ -171,7 +186,7 @@ public static class WorkoutDayStats
         IReadOnlyDictionary<DateOnly, int> activityByDay,
         DateOnly endLocal)
     {
-        DateOnly thisMonday = GetMondayOfWeek(endLocal);
+        DateOnly thisMonday = HeatmapGrid.GetMondayOfWeek(endLocal);
         DateOnly lastMonday = thisMonday.AddDays(-7);
 
         var thisWeek = 0;
@@ -184,11 +199,5 @@ public static class WorkoutDayStats
             lastWeek += activityByDay.GetValueOrDefault(d, 0);
 
         return (thisWeek, lastWeek);
-    }
-
-    private static DateOnly GetMondayOfWeek(DateOnly date)
-    {
-        var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        return date.AddDays(-diff);
     }
 }

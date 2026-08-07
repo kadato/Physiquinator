@@ -24,9 +24,10 @@ public sealed class AppDatabase
             await _database.ExecuteScalarAsync<string>("PRAGMA temp_store = MEMORY;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA cache_size = -2000;").ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
             // Ignore PRAGMA failures (e.g. for in-memory unit testing databases)
+            System.Diagnostics.Debug.WriteLine(ex);
         }
 
         await _database.CreateTableAsync<WorkoutPlanEntity>();

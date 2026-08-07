@@ -21,8 +21,10 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddPhysiquinatorServices(
     new WebAppPreferences(),
-    new WebDatabasePathProvider());
+    new WebDatabasePathProvider(),
+    scopeStatefulServicesPerCircuit: true);
 
+builder.Services.AddSingleton(_ => new HttpClient());
 builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
 builder.Services.AddSingleton<IFileTransferService, WebFileTransferService>();

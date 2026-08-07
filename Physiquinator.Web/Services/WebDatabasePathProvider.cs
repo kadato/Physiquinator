@@ -10,9 +10,8 @@ public sealed class WebDatabasePathProvider : IDatabasePathProvider
 
     public WebDatabasePathProvider()
     {
-        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
-        _dbDir = !string.IsNullOrWhiteSpace(customDbDir)
-            ? customDbDir
+        _dbDir = !string.IsNullOrWhiteSpace(AppEnvironment.DatabaseDirectoryOverride)
+            ? AppEnvironment.DatabaseDirectoryOverride
             : Path.Combine(Path.GetTempPath(), "physiquinator-web");
         Directory.CreateDirectory(_dbDir);
     }

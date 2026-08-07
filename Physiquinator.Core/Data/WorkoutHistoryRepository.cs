@@ -49,6 +49,22 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public double? WeightKg { get; set; }
     }
 
+    private sealed class ExerciseNameRow
+    {
+        public string ExerciseName { get; set; } = "";
+    }
+
+    private sealed class SessionIdRow
+    {
+        public string SessionId { get; set; } = "";
+    }
+
+    private sealed class PlanLastSessionRow
+    {
+        public string WorkoutPlanId { get; set; } = "";
+        public DateTime StartedAtUtc { get; set; }
+    }
+
     private sealed class SetLogRow
     {
         public string SessionId { get; set; } = "";
@@ -121,11 +137,12 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.Database.UpdateAsync(row);
     }
 
-    public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetRecentSessionsAsync(int limit = 100)
+    public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetRecentSessionsAsync(int limit = 100, int offset = 0)
     {
         await _db.EnsureInitializedAsync();
         return await _db.Database.Table<WorkoutSessionLogEntity>()
             .OrderByDescending(s => s.StartedAtUtc)
+            .Skip(Math.Max(0, offset))
             .Take(Math.Clamp(limit, 1, 500))
             .ToListAsync();
     }
@@ -271,6 +288,58 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.EnsureInitializedAsync();
         return await _db.Database.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM WorkoutSessionLogs");
     }
+
+    /// <summary>Most recent start time per plan, for "last done" labels on plan cards.</summary>
+    public async Task<IReadOnlyDictionary<string, DateTime>> GetLastSessionDateByPlanAsync()
+    {
+        await _db.EnsureInitializedAsync();
+        List<PlanLastSessionRow> rows = await _db.Database.QueryAsync<PlanLastSessionRow>(
+            "SELECT WorkoutPlanId, MAX(StartedAtUtc) AS StartedAtUtc FROM WorkoutSessionLogs GROUP BY WorkoutPlanId");
+        return rows.ToDictionary(r => r.WorkoutPlanId, r => r.StartedAtUtc, StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// Distinct exercise names from logged history, most recently used first
+    /// (for autocomplete in the plan editor).
+    /// </summary>
+    public async Task<IReadOnlyList<string>> GetExerciseNamesAsync(int limit = 100)
+    {
+        await _db.EnsureInitializedAsync();
+        limit = Math.Clamp(limit, 1, 500);
+        List<ExerciseNameRow> rows = await _db.Database.QueryAsync<ExerciseNameRow>(
+            @"SELECT ExerciseName
+              FROM WorkoutSetLogs
+              WHERE ExerciseName IS NOT NULL AND TRIM(ExerciseName) != ''
+              GROUP BY ExerciseName
+              ORDER BY MAX(CompletedAtUtc) DESC, ExerciseName ASC
+              LIMIT ?",
+            limit);
+        return [.. rows.Select(r => r.ExerciseName)];
+    }
+
+    /// <summary>
+    /// Session ids whose set logs contain an exercise name matching the text
+    /// (case-insensitive substring), for history search.
+    /// </summary>
+    public async Task<IReadOnlySet<string>> GetSessionIdsForExerciseNameAsync(string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return new HashSet<string>(StringComparer.Ordinal);
+
+        await _db.EnsureInitializedAsync();
+        List<SessionIdRow> rows = await _db.Database.QueryAsync<SessionIdRow>(
+            @"SELECT DISTINCT SessionId
+              FROM WorkoutSetLogs
+              WHERE ExerciseName LIKE ? ESCAPE '\'",
+            $"%{EscapeLikePattern(searchText.Trim())}%");
+        return new HashSet<string>(rows.Select(r => r.SessionId), StringComparer.Ordinal);
+    }
+
+    private static string EscapeLikePattern(string value) =>
+        value
+            .Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("%", "\\%", StringComparison.Ordinal)
+            .Replace("_", "\\_", StringComparison.Ordinal);
 
     /// <summary>Inserts or replaces the bodyweight log for a local calendar day.</summary>
     public async Task UpsertBodyweightLogAsync(DateOnly localDate, double bodyweightKg)
@@ -575,6 +644,23 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.Database.Table<WorkoutSetLogEntity>()
             .Where(s => s.SessionId == sessionId && s.ExerciseIndex == exerciseIndex && s.SetIndex == setIndex)
             .DeleteAsync();
+    }
+
+    /// <summary>Updates reps/weight of an already logged set (tap-to-edit during a workout).</summary>
+    public async Task<bool> UpdateSetLogAsync(string sessionId, int exerciseIndex, int setIndex, int? reps, double? weightKg)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return false;
+        await _db.EnsureInitializedAsync();
+
+        WorkoutSetLogEntity? row = await _db.Database.Table<WorkoutSetLogEntity>()
+            .Where(s => s.SessionId == sessionId && s.ExerciseIndex == exerciseIndex && s.SetIndex == setIndex)
+            .FirstOrDefaultAsync();
+        if (row == null) return false;
+
+        row.Reps = reps;
+        row.WeightKg = weightKg;
+        await _db.Database.UpdateAsync(row);
+        return true;
     }
 
     public async Task DeleteSessionAsync(string sessionId)

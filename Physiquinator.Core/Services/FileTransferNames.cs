@@ -33,4 +33,8 @@ public static class FileTransferNames
     /// <summary>Builds a timestamped JSON file name from a stem, e.g. "Push Day" → "Push_Day_20260101_120000.json".</summary>
     public static string JsonFileName(string stem, DateTimeOffset localNow) =>
         $"{stem}_{localNow:yyyyMMdd_HHmmss}.json";
+
+    /// <summary>Builds a timestamped text file name from a stem, e.g. "Push Day" → "Push_Day_20260101_120000.txt".</summary>
+    public static string TextFileName(string stem, DateTimeOffset localNow) =>
+        $"{stem}_{localNow:yyyyMMdd_HHmmss}.txt";
 }

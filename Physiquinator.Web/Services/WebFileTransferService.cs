@@ -16,6 +16,14 @@ public sealed class WebFileTransferService(ILogger<WebFileTransferService> logge
         logger.LogInformation("Exported {File} to {Path}", fileName, path);
     }
 
+    public async Task ExportTextAsync(string fileName, string text, string shareTitle = "Export")
+    {
+        Directory.CreateDirectory(s_exportDir);
+        var path = Path.Combine(s_exportDir, fileName);
+        await File.WriteAllTextAsync(path, text);
+        logger.LogInformation("Exported {File} to {Path}", fileName, path);
+    }
+
     public Task<string?> PickJsonAsync(string pickerTitle)
     {
         logger.LogWarning("JSON import is not supported in the browser debug host.");

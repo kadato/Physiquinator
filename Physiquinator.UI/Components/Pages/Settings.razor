@@ -18,6 +18,7 @@
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject AiAssistantService AiAssistant
 @inject TimeProvider TimeProvider
+@inject BackupRestoreService BackupRestore
 @implements IDisposable
 
 
@@ -333,6 +334,24 @@
             </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        Export <strong>everything</strong> — plans, workout history, bodyweight log,
+                        training schedule, and all settings — into one file. Import it to restore
+                        everything at once.
+                    </MudText>
+                    <div class="settings-btn-group">
+                        <MudButton Variant="Variant.Outlined"
+                                   OnClick="ExportAllData"
+                                   StartIcon="@Icons.Material.Filled.Upload">
+                            Export all data
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="ImportAllData" StartIcon="@Icons.Material.Filled.Download">
+                            Import all data
+                        </MudButton>
+                    </div>
+
+                    <MudDivider Class="my-4" />
+
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                         Export all plans as JSON, or import a file you exported earlier.
                     </MudText>
@@ -777,6 +796,48 @@
             var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
             await RefreshHistoryCountAsync();
             Snackbar.Add($"Imported {sessions} workout(s) and {sets} set log(s).", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportAllData()
+    {
+        try
+        {
+            var json = await BackupRestore.ExportAllDataAsync();
+            await FileTransfer.ExportJsonAsync(
+                FileTransferNames.JsonFileName("physiquinator_backup", TimeProvider.GetLocalNow()),
+                json,
+                "Export all data");
+            Snackbar.Add("Full backup exported.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ImportAllData()
+    {
+        try
+        {
+            var json = await FileTransfer.PickJsonAsync("Select full backup JSON file");
+            if (json == null)
+                return;
+
+            var result = await BackupRestore.ImportAllDataAsync(json);
+            SyncFromService();
+            await RefreshPlanCountAsync();
+            await RefreshHistoryCountAsync();
+            Snackbar.Add(
+                $"Restored {result.PlansImported} plan(s), {result.SessionsImported} workout(s), " +
+                $"{result.SetsImported} set(s), {result.SchedulesImported} schedule entry(s), " +
+                $"{result.PreferencesImported} setting(s).",
+                Severity.Success);
+            Navigation.NavigateTo(AppRoutes.Home);
         }
         catch (Exception ex)
         {

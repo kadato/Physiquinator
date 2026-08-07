@@ -43,6 +43,7 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddSingleton<IDemoSeedPreferences, ScopedDemoSeedPreferences>();
         services.AddSingleton<DemoDataSeeder>();
         services.AddScoped<AppDataResetService>();
+        services.AddSingleton<BackupRestoreService>();
         services.AddScoped<ThemeService>();
         services.AddScoped<IThemeInitialization>(sp => sp.GetRequiredService<ThemeService>());
         services.AddScoped<AppInitializationService>();

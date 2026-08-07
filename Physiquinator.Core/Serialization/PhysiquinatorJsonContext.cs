@@ -16,5 +16,7 @@ namespace Physiquinator.Core.Serialization;
 [JsonSerializable(typeof(WorkoutPlan))]
 [JsonSerializable(typeof(List<WorkoutPlan>))]
 [JsonSerializable(typeof(WorkoutHistoryBackup))]
+[JsonSerializable(typeof(AllDataBackup))]
+[JsonSerializable(typeof(List<WorkoutScheduleHistoryEntity>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 public partial class PhysiquinatorJsonContext : JsonSerializerContext;

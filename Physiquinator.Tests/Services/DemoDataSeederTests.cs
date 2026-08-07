@@ -101,7 +101,7 @@ public class DemoDataSeederTests : IAsyncLifetime
         (DateTime utcStart, DateTime utcEndExclusive) = GetHeatmapQueryUtcBounds(endLocal, 53);
         IReadOnlyDictionary<DateOnly, int> activity = await _historyRepo.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
         var weeksWithActivity = activity.Keys
-            .Select(d => GetMondayOfWeek(d))
+            .Select(GetMondayOfWeek)
             .Distinct()
             .Count();
         Assert.True(weeksWithActivity >= 20);

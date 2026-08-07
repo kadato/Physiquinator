@@ -127,32 +127,21 @@ public class AppUpdateServiceTests
         await Assert.ThrowsAsync<NotSupportedException>(() => sut.DownloadAndInstallAsync(update));
     }
 
-    private sealed class FakeReleaseClient : IGitHubReleaseClient
+    private sealed class FakeReleaseClient(GitHubRelease? release) : IGitHubReleaseClient
     {
-        private readonly GitHubRelease? _release;
-
-        public FakeReleaseClient(GitHubRelease? release)
-        {
-            _release = release;
-        }
+        private readonly GitHubRelease? _release = release;
 
         public Task<GitHubRelease?> GetLatestReleaseAsync(CancellationToken cancellationToken = default)
             => Task.FromResult(_release);
     }
 
-    private sealed class FakeInstaller : IAppUpdateInstaller
+    private sealed class FakeInstaller(string assetFileName, bool isSupported = true) : IAppUpdateInstaller
     {
-        private readonly bool _isSupported;
-
-        public FakeInstaller(string assetFileName, bool isSupported = true)
-        {
-            AssetFileName = assetFileName;
-            _isSupported = isSupported;
-        }
+        private readonly bool _isSupported = isSupported;
 
         public bool IsSupported => _isSupported;
 
-        public string AssetFileName { get; }
+        public string AssetFileName { get; } = assetFileName;
 
         public string? InstalledUrl { get; private set; }
 

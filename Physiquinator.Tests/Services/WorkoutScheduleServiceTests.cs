@@ -112,7 +112,7 @@ public class WorkoutScheduleServiceTests
         finally
         {
             var aliceDbPath = alice != null ? Path.ChangeExtension(dbPath, $".{alice.Id:N}.db3") : null;
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 try
                 {
@@ -194,7 +194,7 @@ public class WorkoutScheduleServiceTests
         }
         finally
         {
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 try
                 {

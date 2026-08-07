@@ -1,4 +1,4 @@
-namespace Physiquinator;
+namespace Physiquinator.Services;
 
 internal static class WebViewLogger
 {

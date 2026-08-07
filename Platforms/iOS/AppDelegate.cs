@@ -1,6 +1,6 @@
 using Foundation;
 
-namespace Physiquinator;
+namespace Physiquinator.Platforms.iOS;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

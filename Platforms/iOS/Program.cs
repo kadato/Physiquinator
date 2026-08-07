@@ -1,6 +1,6 @@
 using UIKit;
 
-namespace Physiquinator;
+namespace Physiquinator.Platforms.iOS;
 
 public class Program
 {

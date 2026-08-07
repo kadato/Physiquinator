@@ -18,7 +18,7 @@ public static class WorkoutDayStats
         DateOnly gridStartLocal,
         IReadOnlySet<DayOfWeek>? schedule = null)
     {
-        return Compute(activityByDay, endLocal, gridStartLocal, 
+        return Compute(activityByDay, endLocal, gridStartLocal,
             date => schedule ?? new HashSet<DayOfWeek>());
     }
 

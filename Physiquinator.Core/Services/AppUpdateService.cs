@@ -3,20 +3,13 @@ using Physiquinator.Core.Models;
 namespace Physiquinator.Core.Services;
 
 /// <summary>Shared update-check logic. Downloading and installing is delegated to the platform installer.</summary>
-public sealed class AppUpdateService : IAppUpdateService
+public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInstaller installer, Version currentVersion) : IAppUpdateService
 {
-    private readonly IGitHubReleaseClient _client;
-    private readonly IAppUpdateInstaller _installer;
-
-    public AppUpdateService(IGitHubReleaseClient client, IAppUpdateInstaller installer, Version currentVersion)
-    {
-        _client = client;
-        _installer = installer;
-        CurrentVersion = currentVersion;
-    }
+    private readonly IGitHubReleaseClient _client = client;
+    private readonly IAppUpdateInstaller _installer = installer;
 
     /// <inheritdoc />
-    public Version CurrentVersion { get; }
+    public Version CurrentVersion { get; } = currentVersion;
 
     /// <inheritdoc />
     public bool IsSupported => _installer.IsSupported;

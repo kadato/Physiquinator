@@ -1,6 +1,6 @@
 using UIKit;
 
-namespace Physiquinator;
+namespace Physiquinator.Platforms.MacCatalyst;
 
 public class Program
 {

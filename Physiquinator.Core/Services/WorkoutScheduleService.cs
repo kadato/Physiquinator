@@ -1,7 +1,7 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
-using System.Globalization;
 using SQLite;
+using System.Globalization;
 
 namespace Physiquinator.Core.Services;
 
@@ -18,7 +18,7 @@ public sealed class WorkoutScheduleService(
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
     private SQLiteAsyncConnection? _lastConnection;
-    private List<WorkoutScheduleHistoryEntity> _cache = new();
+    private List<WorkoutScheduleHistoryEntity> _cache = [];
 
     private string PreferenceKey
     {
@@ -93,7 +93,7 @@ public sealed class WorkoutScheduleService(
         _lock.Wait();
         try
         {
-            _cache = new List<WorkoutScheduleHistoryEntity>();
+            _cache = [];
             _lastConnection = null;
         }
         finally

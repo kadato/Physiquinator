@@ -5,7 +5,12 @@ using System.Text.Json;
 
 namespace Physiquinator.Core.Services;
 
-public sealed class UserProfileService
+public sealed class UserProfileService(
+    AppDatabase database,
+    WorkoutSessionService sessionService,
+    IAppPreferences preferences,
+    IDatabasePathProvider dbPathProvider,
+    TimeProvider time)
 {
     public const string ProfilesKey = PreferenceKeys.UserProfiles;
     public const string ActiveProfileIdKey = PreferenceKeys.ActiveProfileId;
@@ -14,25 +19,11 @@ public sealed class UserProfileService
     /// <summary>Legacy profile (Guid.Empty) that owns the default "physiquinator.db3" database.</summary>
     public static readonly Guid DemoProfileId = Guid.Empty;
 
-    private readonly AppDatabase _database;
-    private readonly WorkoutSessionService _sessionService;
-    private readonly IAppPreferences _preferences;
-    private readonly IDatabasePathProvider _dbPathProvider;
-    private readonly TimeProvider _time;
-
-    public UserProfileService(
-        AppDatabase database,
-        WorkoutSessionService sessionService,
-        IAppPreferences preferences,
-        IDatabasePathProvider dbPathProvider,
-        TimeProvider time)
-    {
-        _database = database;
-        _sessionService = sessionService;
-        _preferences = preferences;
-        _dbPathProvider = dbPathProvider;
-        _time = time;
-    }
+    private readonly AppDatabase _database = database;
+    private readonly WorkoutSessionService _sessionService = sessionService;
+    private readonly IAppPreferences _preferences = preferences;
+    private readonly IDatabasePathProvider _dbPathProvider = dbPathProvider;
+    private readonly TimeProvider _time = time;
 
     public List<UserProfile> GetProfiles()
     {

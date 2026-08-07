@@ -1,3 +1,5 @@
+/* Physiquinator App CSS Overrides */
+
 @font-face {
     font-family: 'Outfit';
     font-style: normal;
@@ -2770,13 +2772,13 @@ a,
     justify-content: center;
     gap: 8px;
     height: 44px;
-    padding: 0 18px !important;
-    background-color: var(--mud-palette-surface) !important;
-    color: var(--mud-palette-primary) !important;
-    border: 1px solid var(--mud-palette-primary) !important;
+    padding: 0 20px !important;
+    background-color: #d32f2f !important;
+    color: #fff !important;
+    border: none !important;
     border-radius: 22px !important;
-    box-shadow: none !important;
-    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(211, 47, 47, 0.35) !important;
+    font-weight: 700;
     font-size: 0.875rem;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;

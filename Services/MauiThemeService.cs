@@ -7,16 +7,11 @@ namespace Physiquinator.Services;
 /// MAUI implementation of <see cref="ThemeService"/> that also drives the
 /// native <see cref="AppTheme"/>, app resource colors, and system bars.
 /// </summary>
-public sealed class MauiThemeService : ThemeService
+public sealed class MauiThemeService(
+    IJSRuntime js,
+    UserProfileService userProfileService,
+    IAppPreferences preferences) : ThemeService(js, userProfileService, preferences)
 {
-    public MauiThemeService(
-        IJSRuntime js,
-        UserProfileService userProfileService,
-        IAppPreferences preferences)
-        : base(js, userProfileService, preferences)
-    {
-    }
-
     protected override string GetSystemTheme()
     {
         if (Application.Current != null)

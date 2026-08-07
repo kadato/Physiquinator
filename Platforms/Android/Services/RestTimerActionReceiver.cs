@@ -39,7 +39,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
             if (session == null)
                 return;
 
-            if (action == ActionLogSet || action == ActionUndoSet)
+            if (action is ActionLogSet or ActionUndoSet)
             {
                 var quickAction = services.GetService(typeof(WorkoutQuickActionService)) as WorkoutQuickActionService;
                 if (quickAction == null)

@@ -126,14 +126,9 @@ public class GitHubReleaseClientTests
     private static GitHubReleaseClient CreateClient(Func<HttpRequestMessage, HttpResponseMessage> responder) =>
         new(new HttpClient(new StubHttpMessageHandler(responder)));
 
-    private sealed class StubHttpMessageHandler : HttpMessageHandler
+    private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> _responder;
-
-        public StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder)
-        {
-            _responder = responder;
-        }
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> _responder = responder;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             => Task.FromResult(_responder(request));

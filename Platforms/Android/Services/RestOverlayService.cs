@@ -143,11 +143,8 @@ public sealed class RestOverlayService : Service
     public override void OnDestroy()
     {
         _stopping = true;
-        if (_handler is not null)
-        {
-            _handler.RemoveCallbacks(_tickAction!);
-            _handler = null;
-        }
+        _handler?.RemoveCallbacks(_tickAction!);
+        _handler = null;
 
         RemoveOverlayView();
 
@@ -430,8 +427,8 @@ public sealed class RestOverlayService : Service
 
     private static void AddStepperElement(AndroidLinearLayout row, AndroidView view)
     {
-        int width = LinearLayout.LayoutParams.WrapContent;
-        int height = DpStatic(row, 40);
+        var width = LinearLayout.LayoutParams.WrapContent;
+        var height = DpStatic(row, 40);
 
         if (view is AndroidTextButton)
         {
@@ -455,10 +452,8 @@ public sealed class RestOverlayService : Service
 
     private void UpdateStepperDisplay()
     {
-        if (_weightValue is not null)
-            _weightValue.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
-        if (_repsValue is not null)
-            _repsValue.Text = $"{_currentReps}";
+        _weightValue?.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
+        _repsValue?.Text = $"{_currentReps}";
     }
 
     private static void AddActionBtn(AndroidLinearLayout row, AndroidView button)

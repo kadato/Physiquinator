@@ -170,3 +170,30 @@ dotnet_diagnostic.CA2211.severity = none
 dotnet_diagnostic.CA2227.severity = none
 dotnet_diagnostic.CA2254.severity = suggestion
 dotnet_diagnostic.CA5394.severity = none           # no security-sensitive randomness
+
+# ---------------------------------------------------------------------------
+# IDE code-style rules promoted to error
+# These are caught by `dotnet build` (not just the IDE) because
+# TreatWarningsAsErrors=true is already set for non-MAUI projects in
+# Directory.Build.props. Adding them here means every `dotnet build` run
+# acts as an automatic lint gate — no separate tool or manual step required.
+# ---------------------------------------------------------------------------
+dotnet_diagnostic.IDE0007.severity = error         # use 'var' instead of explicit type
+dotnet_diagnostic.IDE0008.severity = error         # use explicit type instead of 'var' (disabled below, var wins)
+dotnet_diagnostic.IDE0078.severity = error         # use pattern matching (is < x or > y)
+dotnet_diagnostic.IDE0270.severity = error         # null check can be simplified (?? throw)
+dotnet_diagnostic.IDE0028.severity = error         # collection initialization can be simplified
+dotnet_diagnostic.IDE0031.severity = error         # use null propagation
+dotnet_diagnostic.IDE0041.severity = error         # use 'is null' check
+dotnet_diagnostic.IDE0057.severity = error         # use range operator
+dotnet_diagnostic.IDE0071.severity = error         # simplify interpolation
+dotnet_diagnostic.IDE0090.severity = error         # 'new' expression can be simplified
+dotnet_diagnostic.IDE0130.severity = error         # namespace does not match folder structure
+dotnet_diagnostic.IDE0160.severity = error         # use block-scoped namespace
+dotnet_diagnostic.IDE0161.severity = error         # use file-scoped namespace
+dotnet_diagnostic.IDE0200.severity = error         # lambda can be simplified to method group
+dotnet_diagnostic.IDE0230.severity = error         # use UTF-8 string literal
+dotnet_diagnostic.IDE0290.severity = error         # use primary constructor
+
+# IDE0008 contradicts IDE0007 — prefer 'var' everywhere, so silence the explicit-type rule
+dotnet_diagnostic.IDE0008.severity = none

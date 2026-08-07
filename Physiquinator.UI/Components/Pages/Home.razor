@@ -13,7 +13,6 @@
 @inject IDemoSeedPreferences DemoSeedPreferences
 @inject IJSRuntime JS
 @inject WorkoutStatsService StatsService
-@inject WorkoutScheduleService ScheduleService
 @inject IFileTransferService FileTransfer
 @inject TimeProvider TimeProvider
 @inject Physiquinator.Core.Services.Ai.AiAssistantService AiAssistant
@@ -78,18 +77,7 @@
                 </MudPaper>
             </div>
 
-            @if (ScheduleService.IsSet)
-            {
-                <MudText Typo="Typo.body2" Class="home-schedule-hint">
-                    @if (_todayIsScheduled)
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="@(TodayWorkoutDone ? Color.Success : Color.Primary)" Variant="Variant.Outlined">
-                            @(TodayWorkoutDone ? "Today's training done" : "Today is a training day")
-                        </MudChip>
-                    }
-                    <span>Next training day: <strong>@NextWorkoutDayLabel</strong> · @ScheduledDaysDoneThisWeek/@_scheduleDays.Count done this week</span>
-                </MudText>
-            }
+
         </section>
     }
 
@@ -149,7 +137,6 @@
     private Guid? _inProgressPlanId;
     private WorkoutDaySummary? _summary;
     private IReadOnlyDictionary<DateOnly, int> _activityByDay = new Dictionary<DateOnly, int>();
-    private IReadOnlySet<DayOfWeek> _scheduleDays = new HashSet<DayOfWeek>();
     private WorkoutSessionLogEntity? _lastSession;
     private bool _isLoading = true;
     private DotNetObjectReference<Home>? _dotNetRef;
@@ -160,11 +147,6 @@
         _lastSession == null
             ? "—"
             : UiDateFormats.LocalDateCompact(_lastSession.StartedAtUtc);
-
-    private bool _todayIsScheduled;
-    private bool TodayWorkoutDone { get; set; }
-    private string NextWorkoutDayLabel { get; set; } = "—";
-    private int ScheduledDaysDoneThisWeek { get; set; }
 
     private IEnumerable<WorkoutPlan> SortedPlans =>
         (_plans ?? []).OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt);
@@ -186,38 +168,7 @@
         _lastSession = recent.FirstOrDefault();
         _inProgressSession = await inProgressTask;
         _inProgressPlanId = _inProgressSession?.TryGetPlanId();
-        RefreshScheduleState();
         _isLoading = false;
-    }
-
-    private void RefreshScheduleState()
-    {
-        _scheduleDays = ScheduleService.Days;
-        if (!ScheduleService.IsSet)
-        {
-            _todayIsScheduled = false;
-            TodayWorkoutDone = false;
-            NextWorkoutDayLabel = "—";
-            ScheduledDaysDoneThisWeek = 0;
-            return;
-        }
-
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        _todayIsScheduled = _scheduleDays.Contains(today.DayOfWeek);
-        TodayWorkoutDone = _activityByDay.GetValueOrDefault(today, 0) > 0;
-
-        var next = ScheduleService.NextWorkoutDay(today);
-        NextWorkoutDayLabel = next is { } n
-            ? $"{n.DayOfWeek} {UiDateFormats.DateOnlyCompact(n)}"
-            : "—";
-
-        var weekStart = HeatmapGrid.GetMondayOfWeek(today);
-        ScheduledDaysDoneThisWeek = 0;
-        for (DateOnly d = weekStart; d <= today; d = d.AddDays(1))
-        {
-            if (_scheduleDays.Contains(d.DayOfWeek) && _activityByDay.GetValueOrDefault(d, 0) > 0)
-                ScheduledDaysDoneThisWeek++;
-        }
     }
 
     private async Task StartWorkoutAsync(Guid planId, string planName)

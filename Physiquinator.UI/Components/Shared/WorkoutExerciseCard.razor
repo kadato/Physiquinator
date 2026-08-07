@@ -77,9 +77,9 @@
                         <button type="button"
                                 class="log-set-btn"
                                 @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, activeSetIndex)))"
-                                disabled="@IsCompleting">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
-                            Log Set
+                                disabled="@IsCompleting"
+                                aria-label="Log set">
+                            <MudIcon Icon="@Icons.Material.Filled.Check" />
                         </button>
                     </div>
                 </div>

@@ -229,6 +229,31 @@
         }
     };
 
+    // Global handler to submit dialogs when pressing Enter on mobile keyboards
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.tagName === "INPUT" && activeEl.type !== "submit" && activeEl.type !== "button") {
+                // If it is inside a form, standard form submission will handle it
+                if (activeEl.closest("form")) {
+                    return;
+                }
+                
+                // If inside a MudDialog, find and trigger the primary action button
+                const dialog = activeEl.closest(".mud-dialog");
+                if (dialog) {
+                    const primaryBtn = dialog.querySelector(".mud-dialog-actions .mud-button-filled-primary, .mud-dialog-actions button[type='submit']")
+                        || dialog.querySelector(".mud-button-filled-primary")
+                        || dialog.querySelector("button[type='submit']");
+                    if (primaryBtn && !primaryBtn.disabled) {
+                        e.preventDefault();
+                        primaryBtn.click();
+                    }
+                }
+            }
+        }
+    });
+
     // Dismiss MudBlazor snackbars on click
     document.addEventListener("click", (e) => {
         const snackbar = e.target.closest(".mud-snackbar");

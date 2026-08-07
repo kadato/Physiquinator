@@ -858,7 +858,7 @@ input[type="number"] {
 }
 
 @media (max-width: 991px) {
-    .workout-end-btn {
+    .workout-actions-row {
         margin-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 
@@ -1240,6 +1240,10 @@ button.heatmap-cell:disabled {
 .heatmap-on {
     background-color: var(--mud-palette-primary);
     opacity: 0.9;
+}
+
+button.heatmap-cell.heatmap-scheduled {
+    border-radius: 50% !important;
 }
 
 .history-heatmap-panel {
@@ -3328,3 +3332,17 @@ html[data-theme="dark"] .app-splash__retry {
     width: 100%;
 }
 
+/* Ensure dialogs are never covered by mobile keyboards by aligning them to the top of the scrollable viewport on small screens */
+@media (max-width: 600px) {
+    .mud-dialog-container {
+        align-items: flex-start !important;
+        padding: 16px 8px 120px 8px !important;
+        overflow-y: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .mud-dialog-container .mud-dialog {
+        margin: 0 auto !important; /* Remove top/bottom margins so they rely on container padding */
+    }
+}

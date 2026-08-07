@@ -7,7 +7,7 @@
 @inject UserProfileService UserProfileService
 @inject IDialogService DialogService
 
-<PageHeader Title="@_decodedExerciseName" OnBack="GoHistory">
+<PageHeader Title="@_decodedExerciseName" ShowBack="false">
     @if (_ready && _rows.Any())
     {
         <MudButton Variant="Variant.Text"
@@ -137,7 +137,6 @@ else
     private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
 
-    private void GoHistory() => Navigation.NavigateTo(AppRoutes.History);
 
     private void GoSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));

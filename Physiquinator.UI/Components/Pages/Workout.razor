@@ -14,7 +14,7 @@
 @inject ILogger<Workout> Logger
 @implements IAsyncDisposable
 
-<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" OnBack="NavigateHome" />
+<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" ShowBack="false" />
 
 @if (SessionService.CurrentPlan == null)
 {
@@ -101,19 +101,19 @@ else
             {
                 <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete!</MudAlert>
             }
-            <MudStack Spacing="2" Class="mt-4">
+            <MudStack Row="true" Spacing="3" Class="mt-4 w-100 workout-actions-row">
+                <MudIconButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Icon="@Icons.Material.Filled.Delete"
+                               Class="premium-btn premium-btn-lg premium-btn-error-outlined"
+                               aria-label="Discard workout"
+                               OnClick="DiscardWorkoutClick" />
                 <MudButton Variant="Variant.Filled"
-                           Color="Color.Error"
-                           FullWidth="true"
-                           Class="workout-end-btn"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           Class="premium-btn premium-btn-lg premium-btn-filled flex-grow-1"
                            OnClick="EndWorkoutClick">
                     End workout
-                </MudButton>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Error"
-                           FullWidth="true"
-                           OnClick="DiscardWorkoutClick">
-                    Discard workout
                 </MudButton>
             </MudStack>
         </div>
@@ -420,10 +420,6 @@ else
         _upcomingExercises = upcoming;
     }
 
-    private void NavigateHome()
-    {
-        Navigation.NavigateTo(AppRoutes.Home);
-    }
 
     private async Task EndWorkoutClick()
     {

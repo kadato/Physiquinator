@@ -31,7 +31,7 @@
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HeatmapWeeks"
                              EndLocal="@_heatmapEndLocal"
-                             Schedule="@_schedule"
+                             GetScheduleForDate="ScheduleService.GetScheduleForDate"
                              SelectedDay="_selectedDay"
                              SelectedDayChanged="OnSelectedDayChanged" />
         </MudPaper>
@@ -178,7 +178,6 @@
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
     private IReadOnlyDictionary<DateOnly, int>? _activityByDay;
-    private IReadOnlySet<DayOfWeek>? _schedule;
     private DateOnly _heatmapEndLocal;
     private WorkoutDaySummary? _summary;
     private DateOnly? _selectedDay;
@@ -200,7 +199,6 @@
     protected override async Task OnInitializedAsync()
     {
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
-        _schedule = ScheduleService.IsSet ? ScheduleService.Days : null;
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(100);

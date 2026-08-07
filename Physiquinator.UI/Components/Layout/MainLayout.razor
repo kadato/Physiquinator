@@ -54,7 +54,7 @@
 
         @if (ShouldShowBackFab())
         {
-            <MudIconButton Class="app-fab app-fab--secondary app-fab--br-1"
+            <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1"
                            Icon="@Icons.Material.Filled.ArrowBack"
                            OnClick="GoBack"
                            arialabel="Go back" />
@@ -221,7 +221,8 @@ else
 
     private void UpdateNavigationState()
     {
-        var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        var relativeUri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var path = relativeUri.Split('?')[0].TrimEnd('/');
         _showBottomNav = ShouldShowBottomNav(path);
         _useFixedDockPadding = !_showBottomNav && !path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal);
     }
@@ -238,7 +239,8 @@ else
     {
         if (_showBottomNav) return false;
 
-        var path = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        var relativeUri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var path = relativeUri.Split('?')[0].TrimEnd('/');
 
         // Exclude plan editor route which has its own Close/Cancel and Save FABs
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))

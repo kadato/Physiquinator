@@ -6,7 +6,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageHeader Title="Bodyweight" OnBack="GoHistory" />
+<PageHeader Title="Bodyweight" ShowBack="false" />
 
 @if (!_ready)
 {
@@ -154,7 +154,6 @@ else
 
     private static string FormatKg(double kg) => ExerciseWeightFormatter.FormatKg(kg);
 
-    private void GoHistory() => Navigation.NavigateTo(AppRoutes.History);
 
     private void OnRangeChanged(BodyweightTimeRange range)
     {

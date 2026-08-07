@@ -12,7 +12,7 @@
 @inject IJSRuntime JS
 
 <div class="plan-page app-fab-page-padding">
-    <PageHeader Title="@PageTitleText" OnBack="GoHome" />
+    <PageHeader Title="@PageTitleText" ShowBack="false" />
 
     @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
     {

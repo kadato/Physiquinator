@@ -4,7 +4,7 @@
 @inject IDialogService DialogService
 @inject UserProfileService UserProfileService
 
-<PageHeader Title="Session" OnBack="GoHistoryList">
+<PageHeader Title="Session" ShowBack="false">
     <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
 </PageHeader>
 
@@ -106,8 +106,8 @@ else
     </MudStack>
 
     @* HistoryDetail FABs *@
-    @* Delete — mini error FAB bottom-left *@
-    <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-1"
+    @* Delete — mini error FAB bottom-left, stacked above back FAB *@
+    <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-2"
                    Icon="@Icons.Material.Filled.Delete"
                    OnClick="DeleteSessionClick"
                    arialabel="Delete this workout" />
@@ -115,7 +115,7 @@ else
     @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId2)
     {
         @* Continue Workout — primary FAB bottom-right *@
-        <MudIconButton Class="app-fab app-fab--primary app-fab--br-2"
+        <MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
                        Icon="@Icons.Material.Filled.PlayArrow"
                        OnClick="@(() => ContinueWorkout(activePlanId2))"
                        arialabel="Continue workout" />
@@ -136,7 +136,6 @@ else
     private Dictionary<string, ExerciseLogType> _logTypesByExercise = new();
     private double? _bodyweightKg;
 
-    private void GoHistoryList() => Navigation.NavigateTo(AppRoutes.History);
 
     private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
 

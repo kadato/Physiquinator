@@ -16,7 +16,10 @@ indent_style = space
 indent_size = 2
 
 # ---------------------------------------------------------------------------
-# C# code style (IDE): enforce in build via EnforceCodeStyleInBuild
+# C# code style (IDE): EnforceCodeStyleInBuild is on for non-MAUI projects,
+# but a rule only fails the build when its effective severity is error or
+# warning. Rules with a suggestion style option below stay suggestions and
+# are enforced by `dotnet format --verify-no-changes` in CI.
 # ---------------------------------------------------------------------------
 [*.{cs,csx}]
 
@@ -173,10 +176,12 @@ dotnet_diagnostic.CA5394.severity = none           # no security-sensitive rando
 
 # ---------------------------------------------------------------------------
 # IDE code-style rules promoted to error
-# These are caught by `dotnet build` (not just the IDE) because
-# TreatWarningsAsErrors=true is already set for non-MAUI projects in
-# Directory.Build.props. Adding them here means every `dotnet build` run
-# acts as an automatic lint gate — no separate tool or manual step required.
+# EnforceCodeStyleInBuild=true in Directory.Build.props lets error-severity
+# rules fail `dotnet build` for non-MAUI projects, but rules whose style
+# option is set to suggestion (see Style preferences above) are capped at
+# suggestion during build. Those are enforced by `dotnet format
+# --verify-no-changes` in CI (see .github/workflows/ci.yml), which runs the
+# full configuration.
 # ---------------------------------------------------------------------------
 dotnet_diagnostic.IDE0007.severity = error         # use 'var' instead of explicit type
 dotnet_diagnostic.IDE0008.severity = error         # use explicit type instead of 'var' (disabled below, var wins)

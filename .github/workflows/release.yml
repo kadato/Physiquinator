@@ -12,8 +12,32 @@ on:
         default: '1.0.0'
 
 jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '11.0.100-preview.6.26359.118'
+        dotnet-quality: 'preview'
+
+    - name: Restore dependencies
+      run: dotnet restore Physiquinator.Tests/Physiquinator.Tests.csproj
+
+    - name: Build
+      run: dotnet build Physiquinator.Tests/Physiquinator.Tests.csproj --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
   build-android:
     runs-on: windows-latest
+    needs: [test]
 
     steps:
     - name: Checkout code
@@ -32,7 +56,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '11.0.x'
+        dotnet-version: '11.0.100-preview.6.26359.118'
         dotnet-quality: 'preview'
 
     - name: Verify .NET installation
@@ -54,12 +78,23 @@ jobs:
       env:
         ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
+    - name: Compute Android versionCode
+      id: version_code
+      shell: bash
+      run: |
+        IFS='.' read -ra PARTS <<< "${{ steps.get_version.outputs.version }}"
+        MAJOR="${PARTS[0]}"
+        MINOR="${PARTS[1]:-0}"
+        PATCH="${PARTS[2]:-0}"
+        echo "code=$((MAJOR * 10000 + MINOR * 100 + PATCH))" >> $GITHUB_OUTPUT
+
     - name: Build Android APK
       run: |
         dotnet publish Physiquinator.csproj `
           -f net11.0-android `
           -c Release `
           -p:ApplicationDisplayVersion=${{ steps.get_version.outputs.version }} `
+          -p:ApplicationVersion=${{ steps.version_code.outputs.code }} `
           -p:AndroidPackageFormat=apk `
           -p:AndroidKeyStore=true `
           -p:AndroidSigningKeyStore=./keystore/physiquinator-release.keystore `
@@ -79,6 +114,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    needs: [test]
 
     steps:
     - name: Checkout code
@@ -97,7 +133,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '11.0.x'
+        dotnet-version: '11.0.100-preview.6.26359.118'
         dotnet-quality: 'preview'
 
     - name: Verify .NET installation
@@ -112,12 +148,23 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Physiquinator.csproj
 
+    - name: Compute Android versionCode
+      id: version_code
+      shell: bash
+      run: |
+        IFS='.' read -ra PARTS <<< "${{ steps.get_version.outputs.version }}"
+        MAJOR="${PARTS[0]}"
+        MINOR="${PARTS[1]:-0}"
+        PATCH="${PARTS[2]:-0}"
+        echo "code=$((MAJOR * 10000 + MINOR * 100 + PATCH))" >> $GITHUB_OUTPUT
+
     - name: Build Windows Package
       run: |
         dotnet publish Physiquinator.csproj `
           -f net11.0-windows10.0.19041.0 `
           -c Release `
           -p:ApplicationDisplayVersion=${{ steps.get_version.outputs.version }} `
+          -p:ApplicationVersion=${{ steps.version_code.outputs.code }} `
           -p:WindowsPackageType=None `
           -o ./artifacts/windows
 

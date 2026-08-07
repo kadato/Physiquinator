@@ -45,6 +45,16 @@ jobs:
           Physiquinator.csproj
         grep -n "ApplicationDisplayVersion" Physiquinator.csproj
 
+    - name: Bump ApplicationVersion (Android versionCode)
+      shell: bash
+      run: |
+        IFS='.' read -ra PARTS <<< "${{ inputs.version }}"
+        CODE=$((PARTS[0] * 10000 + PARTS[1] * 100 + PARTS[2]))
+        sed -i -E \
+          "s|<ApplicationVersion>[0-9]+</ApplicationVersion>|<ApplicationVersion>$CODE</ApplicationVersion>|" \
+          Physiquinator.csproj
+        grep -n "ApplicationVersion" Physiquinator.csproj
+
     - name: Commit version bump
       shell: bash
       run: |

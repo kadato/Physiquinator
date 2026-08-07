@@ -11,6 +11,7 @@
        Warnings are treated as errors so Sonar/StyleCop/CA findings break the build instead of piling up. -->
   <PropertyGroup Condition="'$(UseMaui)' != 'true'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(UseMaui)' != 'true'">

@@ -133,7 +133,7 @@ Download: https://dotnet.microsoft.com/download/dotnet/11.0
 - **Wall-clock countdown** - Accurate down to the second, driven by a single in-flight JS bridge call
 - **Android floating overlay** - A draggable picture-in-picture bubble stays visible when you switch to another app (e.g. YouTube or a browser); add time, reset, skip, or log a set without opening Physiquinator
 - **Alerts** - Optional sound, vibration, and local notifications when rest ends, plus exact alarms that survive Doze mode
-- **Full control** - Pause, resume, reset, or skip rest periods
+- **Full control** - Add time, reset, or skip rest periods
 
 ### Live Workout Tracking
 - **Real-time progress** - Completed vs. remaining sets with progress bars

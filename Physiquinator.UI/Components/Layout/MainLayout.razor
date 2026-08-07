@@ -26,35 +26,32 @@
 @if (AppInit.IsReady)
 {
     <div class="@appShellClasses">
+        <nav class="app-nav-pill" aria-label="Main navigation">
+            <div class="app-nav-pill__inner">
+                <NavLink href="@AppRoutes.Home" class="app-nav-tab" Match="NavLinkMatch.All" ActiveClass="app-nav-tab--active">
+                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+                    <span class="app-nav-tab__label">Home</span>
+                </NavLink>
+                <NavLink href="@AppRoutes.History" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
+                    <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                    <span class="app-nav-tab__label">History</span>
+                </NavLink>
+                <NavLink href="@AppRoutes.Settings" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
+                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                    <span class="app-nav-tab__label">Settings</span>
+                </NavLink>
+            </div>
+        </nav>
+
         <main class="app-main-scroll">
             <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
                 @Body
             </MudContainer>
         </main>
 
-        @if (_showBottomNav)
-        {
-            <nav class="app-nav-pill" aria-label="Main navigation">
-                <div class="app-nav-pill__inner">
-                    <NavLink href="@AppRoutes.Home" class="app-nav-tab" Match="NavLinkMatch.All" ActiveClass="app-nav-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
-                        <span class="app-nav-tab__label">Home</span>
-                    </NavLink>
-                    <NavLink href="@AppRoutes.History" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
-                        <span class="app-nav-tab__label">History</span>
-                    </NavLink>
-                    <NavLink href="@AppRoutes.Settings" class="app-nav-tab" Match="NavLinkMatch.Prefix" ActiveClass="app-nav-tab--active">
-                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
-                        <span class="app-nav-tab__label">Settings</span>
-                    </NavLink>
-                </div>
-            </nav>
-        }
-
         @if (ShouldShowBackFab())
         {
-            <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1"
+            <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1 app-fab--back"
                            Icon="@Icons.Material.Filled.ArrowBack"
                            OnClick="GoBack"
                            arialabel="Go back" />
@@ -244,6 +241,11 @@ else
 
         // Exclude plan editor route which has its own Close/Cancel and Save FABs
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))
+            return false;
+
+        // Exclude the active workout route: leaving is guarded and End/Discard
+        // are the page's own controls; a back FAB would bypass the guard.
+        if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal))
             return false;
 
         return true;

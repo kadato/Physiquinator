@@ -29,3 +29,21 @@
     overflow: visible !important;
 }
 
+/* Desktop & big screens: the nav pill moves to the top as a horizontal bar
+   (styled in app-overrides.css) and the page container widens so the extra
+   screen real estate is actually used. Mobile (<960px) keeps the bottom-pill
+   layout; immersive pages keep their pill hidden there. */
+@media (min-width: 960px) {
+    .app-shell .app-main-scroll {
+        padding-bottom: 0;
+    }
+
+    ::deep .app-page-container {
+        max-width: 1120px !important;
+        padding-left: 32px !important;
+        padding-right: 32px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 4rem !important;
+    }
+}
+

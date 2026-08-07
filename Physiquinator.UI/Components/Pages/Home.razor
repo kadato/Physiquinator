@@ -15,13 +15,14 @@
 @inject WorkoutStatsService StatsService
 @inject IFileTransferService FileTransfer
 @inject TimeProvider TimeProvider
+@inject WorkoutScheduleService ScheduleService
 @inject Physiquinator.Core.Services.Ai.AiAssistantService AiAssistant
 
 <PageTitle>Home</PageTitle>
 
 <MudStack Spacing="3" Class="home-page app-fab-page-padding">
     <header class="home-header d-flex justify-space-between align-center">
-        <MudText Typo="Typo.h4" Class="home-header__title">Physiquinator</MudText>
+        <MudText Typo="Typo.h1" Class="home-header__title">Physiquinator</MudText>
     </header>
 
 
@@ -63,20 +64,17 @@
     {
         <section class="home-stats-section" aria-label="Quick stats">
             <div class="home-stats">
-                <MudPaper Class="home-stat" Elevation="0">
-                    <MudText Class="home-stat__value">@_summary.CurrentStreakWorkoutDays</MudText>
-                    <MudText Class="home-stat__label">Streak</MudText>
-                </MudPaper>
-                <MudPaper Class="home-stat" Elevation="0">
-                    <MudText Class="home-stat__value">@_summary.ThisWeekSessionCount</MudText>
-                    <MudText Class="home-stat__label">This week</MudText>
-                </MudPaper>
-                <MudPaper Class="home-stat" Elevation="0">
-                    <MudText Class="home-stat__value home-stat__value--date">@LastSessionLabel</MudText>
-                    <MudText Class="home-stat__label">Last workout</MudText>
-                </MudPaper>
+                <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="Streak" />
+                <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="This week" />
+                <StatCard Value="@LastSessionLabel" Label="Last workout" ValueClass="stat-card__value--date" />
             </div>
 
+            <MudPaper Class="pa-4 home-heatmap-panel" Elevation="1">
+                <ActivityHeatmap CountsByDay="_activityByDay"
+                                 Weeks="@HomeStatsWeeks"
+                                 EndLocal="@_homeHeatmapEndLocal"
+                                 GetScheduleForDate="ScheduleService.GetScheduleForDate" />
+            </MudPaper>
 
         </section>
     }
@@ -116,21 +114,27 @@
 </MudStack>
 
 @* FABs: New Plan (bottom-right primary) and AI Chat (above it, if enabled) *@
-<MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
-               Icon="@Icons.Material.Filled.Add"
-               OnClick="@(() => Navigation.NavigateTo(AppRoutes.PlanEditor))"
-               arialabel="New plan" />
+<button type="button"
+        class="app-fab app-fab--primary app-fab--br-1 app-fab--extended"
+        aria-label="New plan"
+        @onclick="() => Navigation.NavigateTo(AppRoutes.PlanEditor)">
+    <MudIcon Icon="@Icons.Material.Filled.Add" />
+    <span class="app-fab__label">New plan</span>
+</button>
 
 @if (AiAssistant.GetSettings().Enabled)
 {
-    <MudIconButton Class="app-fab app-fab--secondary app-fab--br-2"
-                   Icon="@Icons.Material.Filled.SmartToy"
-                   OnClick="OpenAiChatAsync"
-                   arialabel="AI Assistant" />
+    <button type="button"
+            class="app-fab app-fab--secondary app-fab--br-2 app-fab--extended"
+            aria-label="AI Assistant"
+            @onclick="OpenAiChatAsync">
+        <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+        <span class="app-fab__label">AI assistant</span>
+    </button>
 }
 
 @code {
-    private const int HomeStatsWeeks = 12;
+    private const int HomeStatsWeeks = 53;
     private const string HomePlanSortableListId = "home-plan-sortable-list";
 
     private List<WorkoutPlan>? _plans;
@@ -140,6 +144,7 @@
     private IReadOnlyDictionary<DateOnly, int> _activityByDay = new Dictionary<DateOnly, int>();
     private IReadOnlyDictionary<string, DateTime> _lastSessionByPlan = new Dictionary<string, DateTime>();
     private WorkoutSessionLogEntity? _lastSession;
+    private DateOnly _homeHeatmapEndLocal;
     private bool _isLoading = true;
     private DotNetObjectReference<Home>? _dotNetRef;
     private int _lastSortableCount = -1;
@@ -171,6 +176,7 @@
     protected override async Task OnInitializedAsync()
     {
         var endLocal = DateOnly.FromDateTime(DateTime.Today);
+        _homeHeatmapEndLocal = endLocal;
 
         var summaryTask = StatsService.GetSummaryAsync(endLocal, HomeStatsWeeks);
         var plansTask = PlanService.GetAllPlansAsync();

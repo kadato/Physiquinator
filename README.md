@@ -2,16 +2,20 @@
 
 <div align="center">
 
-![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-10.0-512BD4?logo=dotnet)
-![Blazor](https://img.shields.io/badge/Blazor-Hybrid-512BD4?logo=blazor)
+![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4?logo=dotnet)
+![.NET MAUI](https://img.shields.io/badge/.NET_MAUI-11.0-512BD4?logo=dotnet)
+![Blazor Hybrid](https://img.shields.io/badge/Blazor-Hybrid-512BD4?logo=blazor)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
+[![Build](https://img.shields.io/github/actions/workflow/status/tothKarolyDavid/Physiquinator/ci.yml?label=CI&logo=github)](https://github.com/tothKarolyDavid/Physiquinator/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
 
-A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Features rest timers, real-time progress tracking, comprehensive workout history, user profiles, and workout plan management.
+A cross-platform workout tracking app built with **.NET MAUI and Blazor Hybrid**. Plan workouts, log sets with a smart rest timer, track progress and personal records, and ask an on-device AI assistant to analyze your training - all backed by a local SQLite database that works offline.
 
-[Download](#download--install) • [Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started)
+It also ships a **web client with a Model Context Protocol (MCP) server**, so any AI agent (Claude, Cursor, Copilot) can query your workout history and manage your plans.
+
+[Preview](#preview) · [Download & Install](#download--install) · [Features](#features) · [Agent API (MCP)](#agent-api-mcp-server) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Testing & CI](#testing--ci)
 
 </div>
 
@@ -22,7 +26,7 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 <div align="center">
 
 <p align="center">
-<strong>Live workout</strong> · <strong>Plans home</strong> · <strong>Settings</strong><br><br>
+<strong>Live workout</strong> · <strong>Plans home</strong> · <strong>AI assistant</strong><br><br>
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/rest-timer-dark.png">
   <img alt="Active workout with rest timer" src="./docs/rest-timer-light.png" width="220">
@@ -34,8 +38,8 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-dark.png">
-  <img alt="Settings with appearance and JSON backup" src="./docs/settings-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/ai-chat-dark.png">
+  <img alt="AI assistant chat" src="./docs/ai-chat-light.png" width="220">
 </picture>
 </p>
 
@@ -62,7 +66,7 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 <br>
 
 <p align="center">
-<strong>Create plan</strong> · <strong>Edit plan</strong> · <strong>Log set</strong><br><br>
+<strong>Create plan</strong> · <strong>Edit plan</strong> · <strong>Settings</strong><br><br>
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./docs/create-plan-dark.png">
   <img alt="Create a new workout plan" src="./docs/create-plan-light.png" width="220">
@@ -74,8 +78,8 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 </picture>
 &nbsp;&nbsp;
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/log-set-dark.png">
-  <img alt="Log a workout set" src="./docs/log-set-light.png" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/settings-dark.png">
+  <img alt="Settings with appearance and JSON backup" src="./docs/settings-light.png" width="220">
 </picture>
 </p>
 
@@ -85,61 +89,17 @@ A cross-platform workout tracking app built with .NET MAUI and Blazor Hybrid. Fe
 
 ## Download & Install
 
-### Available Builds
-
 **Latest Release**: [![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
 
 | Platform | Package | Size | Requirements |
 |----------|---------|------|--------------|
-| Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~30 MB | Android 7.0+ |
-| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~62 MB | .NET 11 Desktop Runtime* |
+| Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~115 MB | Android 7.0+ |
+| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~70 MB | .NET 11 Desktop Runtime* |
 
 **\*.NET 11 Desktop Runtime is free from Microsoft and installs in ~5 minutes (one-time setup)**  
 Download: https://dotnet.microsoft.com/download/dotnet/11.0
 
 > **Windows Users**: See [WINDOWS-INSTALL.md](WINDOWS-INSTALL.md) for installation instructions and troubleshooting.
-
----
-
-**Option 1: Using Docker** (Recommended for Android - No Android SDK required)
-```powershell
-# Build Android APK
-docker build -t physiquinator-android -f Dockerfile.android .
-docker create --name temp physiquinator-android
-docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
-docker rm temp
-```
-
-**Option 2: Build Windows Locally**
-```powershell
-# Build Windows application
-dotnet publish Physiquinator.csproj `
-  -f net11.0-windows10.0.19041.0 `
-  -c Release `
-  -p:WindowsPackageType=None `
-  -p:SelfContained=false `
-  -p:PublishTrimmed=false `
-  -o ./artifacts/windows
-
-# Run the app
-./artifacts/windows/Physiquinator.exe
-```
-
-**Option 3: Using .NET SDK (All platforms)**
-```bash
-# Android (requires Android SDK)
-dotnet build -t:Run -f net11.0-android
-
-# Windows  
-dotnet build -t:Run -f net11.0-windows10.0.19041.0
-
-# iOS (Mac only, requires Xcode)
-dotnet build -t:Run -f net11.0-ios
-```
-
-See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for detailed instructions.
-
-#### Installation Instructions
 
 **Android:**
 1. Enable "Install from Unknown Sources" in **Settings** → **Security**
@@ -151,7 +111,6 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 1. Extract the ZIP file
 2. Run `Physiquinator.exe`
 3. No installation required - runs standalone!
-4. Note: Requires .NET 11 Runtime (or use published version with runtime included)
 
 > **Tip:** The app includes sample workout plans to get you started immediately!
 
@@ -159,68 +118,62 @@ See [Docker Builds](#docker-builds) or [Getting Started](#getting-started) for d
 
 ## Features
 
-### Workout Plan Management
-- **Custom Workout Plans** - Design personalized routines with unlimited exercises
-- **Flexible Configuration** - Set rest intervals and set counts per exercise
-- **Quick Edit** - Modify plans anytime to match your progress
-- **One-Tap Start** - Jump directly into workouts from the home screen
+### AI Assistant
+- **In-app chat** - Ask questions about your training in natural language, with streaming responses
+- **15 built-in tools** - Create and edit plans, log bodyweight, pull history stats and exercise progression, control rest-timer and app settings
+- **Two providers** - OpenAI (default `gpt-4o-mini`) or a fully local [Ollama](https://ollama.com) setup
+- **Agent API** - The same tools are exposed to external AI agents over MCP (see [Agent API](#agent-api-mcp-server))
+
+### Workout Plans
+- **Custom plans** - Design routines with unlimited exercises, per-exercise rest intervals and set counts
+- **One-tap start** - Jump straight into a workout from the home screen
+- **Quick edit** - Modify plans anytime to match your progress
 
 ### Smart Rest Timer
-- **Visual Countdown** - Large, easy-to-read timer display
-- **Haptic Feedback** - Phone vibrates when rest time ends (mobile)
-- **Audio Notifications** - Audible beep when rest is complete
-- **Animation** - Green glow indicates rest completion
-- **Full Control** - Pause, resume, reset, or skip rest periods
-- **Phone Overlay Window** - Translucent picture-in-picture floating rest timer overlay on Android that stays visible when switching to other apps (e.g. YouTube or browser)
+- **Wall-clock countdown** - Accurate down to the second, driven by a single in-flight JS bridge call
+- **Android floating overlay** - A draggable picture-in-picture bubble stays visible when you switch to another app (e.g. YouTube or a browser); add time, reset, skip, or log a set without opening Physiquinator
+- **Alerts** - Optional sound, vibration, and local notifications when rest ends, plus exact alarms that survive Doze mode
+- **Full control** - Pause, resume, reset, or skip rest periods
 
-### Live Progress Tracking
-- **Real-Time Updates** - See completed vs remaining sets instantly
-- **Progress Bars** - Visual representation of workout completion
-- **Exercise Grouping** - Completed and upcoming exercises clearly separated
-- **In-Workout Set Log Editing** - Granular tracking of rep count and weight/metrics for each set
-- **Undo Actions** - Quick undo toast to revert accidental set completions
-- **Mobile-Optimized** - Upcoming exercises shown first on small screens
+### Live Workout Tracking
+- **Real-time progress** - Completed vs. remaining sets with progress bars
+- **Set logging** - Granular rep count, weight, and metric editing mid-workout, with undo
+- **Mobile-optimized** - Upcoming exercises shown first on small screens
+- **Completion celebration** - Animated trophy with glow, victory sound, and haptic pattern
 
-### Workout Completion Celebration
-- **Animated Trophy** - Bouncing, rotating trophy icon
-- **Victory Sound** - Ascending musical tones
-- **Haptic Pattern** - Celebratory vibration sequence
-- **Glowing Effect** - Pulsing green glow animation
-
-### Workout History & Analytics
-- **Activity Heatmap** - Visual GitHub-style contribution grid for your workout consistency
-- **Workout Schedule** - Set your training days so rest days never break your streak; missed scheduled days are marked on the heatmap
-- **Exercise Progress** - Per-exercise chart for tracking performance progression over time
-- **Session History** - Detailed review of completed sessions and set logs
+### History & Analytics
+- **Activity heatmap** - GitHub-style consistency grid over 53 weeks, marking missed scheduled days
+- **Exercise progression** - Per-exercise charts to track strength over time
+- **Personal records** - Automatic bests for weight, reps, volume, and session duration
+- **Bodyweight tracking** - Log and chart bodyweight alongside your training
+- **Workout schedule** - Set training days so rest days never break your streak
+- **Session history** - Detailed review of completed sessions and set logs
 
 ### User Profiles
-- **Multi-User Support** - Isolated profiles with separate plans and workout histories
-- **Easy Switching** - Quickly switch between profiles on a single device
+- **Multi-user support** - Isolated profiles, each with its own plans, history, and bodyweight log
+- **Easy switching** - Move between profiles in one tap
 
 ### Data Management
-- **Local SQLite Storage** - Fast, offline-first data persistence
-- **Export to JSON** - Share plans across devices or back them up
-- **Import Plans** - Load workout plans from JSON files
-- **Bulk Export** - Export all plans at once for backup
-- **History Backup** - Export and import workout session history, merging by session and set ID
-- **Demo Data Seeding** - Automatically populate demo data to explore the app's features right after installation
+- **Local SQLite storage** - Fast, offline-first persistence
+- **JSON backup** - Export and import plans and history, merged by session and set ID
+- **Demo data seeding** - Sample workouts and plans on first launch so you can explore immediately
 
-### Agent API (MCP Server)
-- **Model Context Protocol** - Connect your favorite AI agents (like Claude Desktop or Cursor) to query your workout history, log bodyweight, or design custom plans
-- **Destructive Action Safety** - Built-in verification prompt for database deletions (e.g. plan or bodyweight log removals)
+### Other
+- **Automatic updates** - Checks GitHub Releases and installs new versions in-app
+- **Cross-platform UI** - Light and dark themes, phone and tablet friendly
 
 ---
 
 ## Agent API (MCP Server)
 
-The web client (`Physiquinator.Web`) exposes its AI assistant tools over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, 2026-07-28 spec). Any MCP-compatible agent harness can connect to it by URL — no per-client code:
+The web client (`Physiquinator.Web`) exposes the AI assistant's tools over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, 2026-07-28 spec). Any MCP-compatible agent harness can connect by URL - no per-client code:
 
 | Client | How to connect |
 |--------|----------------|
 | Claude Desktop / Cursor / any MCP host | Add a server with URL `https://your-host/mcp` |
 | MCP Inspector | Pick "Streamable HTTP", enter `http://localhost:5000/mcp` |
 
-All tools from the in-app assistant (`get_workout_plans`, `create_workout_plan`, `log_bodyweight_entry`, `get_workout_history_stats`, …) are exposed automatically, with JSON schemas and read-only/destructive annotations. Destructive tools (`delete_workout_plan`, `delete_bodyweight_entry`) ask the user for explicit confirmation via the protocol's multi-round-trip `input_required` mechanism before executing; clients on older protocol revisions run them directly.
+All in-app assistant tools (`get_workout_plans`, `create_workout_plan`, `log_bodyweight_entry`, `get_workout_history_stats`, and more) are exposed automatically with JSON schemas and read-only/destructive annotations. Destructive tools (`delete_workout_plan`, `delete_bodyweight_entry`) ask the user for explicit confirmation via the protocol's multi-round-trip `input_required` mechanism before executing; clients on older protocol revisions run them directly.
 
 Configuration (`appsettings.json` or env vars):
 
@@ -231,7 +184,7 @@ Configuration (`appsettings.json` or env vars):
 }
 ```
 
-The server is stateless (horizontally scalable), emits per-tool telemetry through `ILogger`, and ships a `/healthz` probe. Endpoint usage:
+The server is stateless (horizontally scalable), emits per-tool telemetry through `ILogger`, and ships a `/healthz` probe:
 
 ```bash
 curl -X POST http://localhost:5000/mcp \
@@ -241,28 +194,55 @@ curl -X POST http://localhost:5000/mcp \
 
 ---
 
+## Architecture
+
+The app is split into four projects, all sharing one domain model and service layer:
+
+```
+Physiquinator.Core   Domain model, SQLite repositories, and all business logic
+                     (workouts, history, stats, AI assistant, backup, updates)
+Physiquinator.UI     Blazor Hybrid UI (Razor class library): pages, components, theming
+Physiquinator        Platform hosts: .NET MAUI shell for Android/iOS/Windows/macOS
+Physiquinator.Web    ASP.NET Core web host: same UI as a Blazor web app + MCP server
+Physiquinator.Tests  xUnit test suite (211 tests) covering repositories, services,
+                     formatting, and the MCP surface
+```
+
+Key design points:
+
+- **Blazor Hybrid everywhere** - The exact same Razor UI runs natively via WebView2 (MAUI) and in the browser (Web), so every page is tested and built once
+- **Platform services behind interfaces** - Notifications, vibration, file transfer, and update installation are abstracted (`INotificationService`, `IVibrationService`, ...) with real, no-op, and test-double implementations
+- **Android overlay as a foreground service** - The floating rest timer is a draggable overlay hosted in a foreground service with exact alarms, so it keeps running when the app is backgrounded
+- **A single service registry** - `AddPhysiquinatorServices()` in the Core project is shared by both hosts, keeping the web client feature-complete with zero duplication
+
+---
+
 ## Tech Stack
 
-### Core Technologies
-- **[.NET 11](https://dotnet.microsoft.com/)** - Latest .NET with performance improvements
-- **[.NET MAUI](https://dotnet.microsoft.com/apps/maui)** - Cross-platform native UI framework
+### Core
+- **[.NET 11](https://dotnet.microsoft.com/)** - Target framework for all projects
+- **[.NET MAUI](https://dotnet.microsoft.com/apps/maui)** - Cross-platform native shell (Android, iOS, macOS, Windows)
 - **[Blazor Hybrid](https://learn.microsoft.com/aspnet/core/blazor/hybrid/)** - Rich web UI in native apps
-- **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - Local database
+- **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - Local, offline-first storage
 
 ### UI & Styling
-- **[MudBlazor](https://mudblazor.com/)** - Material design component library for Blazor
-- **Custom CSS Animations** - Smooth, modern UI effects
-- **Dark Theme** - Eye-friendly design with gradient accents
+- **[MudBlazor](https://mudblazor.com/)** - Material Design component library
+- **[Markdig](https://github.com/xoofx/markdig)** - Markdown rendering for AI responses
+- **Custom CSS animations** - Smooth, modern UI effects with light and dark themes
 
-### Features & APIs
+### AI & Agents
+- **OpenAI-compatible client** - SSE streaming, tool-call loops, reasoning content
+- **[Ollama](https://ollama.com)** - Local, private inference provider
+- **[ModelContextProtocol.AspNetCore](https://github.com/modelcontextprotocol/csharp-sdk)** - MCP server over Streamable HTTP
+
+### Platform
+- **[Plugin.LocalNotification](https://github.com/thudugala/Plugin.LocalNotification)** - Cross-platform notifications
 - **MAUI Essentials** - File picker, share, vibration APIs
-- **Wall-clock rest countdown** - Driven by Blazor + JavaScript `setTimeout` (single in-flight bridge calls); optional scheduled **local notifications** on Android/iOS when rest ends
-- **Web Audio API** - Optional in-app beeps (primed on user gesture for mobile WebViews)
+- **Android foreground services** - Floating overlay, exact alarms, broadcast receivers
 
-### DevOps & CI/CD
-- **GitHub Actions** - Automated build and release pipeline
-- **Multi-Platform Builds** - Android APK and Windows executables
-- **Automated Releases** - Tag-based release creation
+### Tooling
+- **GitHub Actions** - CI (build, test, format), SonarCloud analysis, signed release builds
+- **Playwright + WebView2 CDP** - Automated screenshot generation (`tools/screenshot-generator`)
 
 ---
 
@@ -270,20 +250,16 @@ curl -X POST http://localhost:5000/mcp \
 
 ### Prerequisites
 
-- **[.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0)** (Preview)
-- **[Visual Studio 2026](https://visualstudio.microsoft.com/)** with MAUI workload, or
-- **[Visual Studio Code](https://code.visualstudio.com/)** with C# Dev Kit
-- **Android SDK** - For Android development (via Visual Studio)
-- **Xcode** - For iOS/macOS development (Mac only)
+- **[.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0)** (preview; pinned in `global.json`)
+- **[Visual Studio 2026](https://visualstudio.microsoft.com/)** with the MAUI workload, or **Visual Studio Code** with the C# Dev Kit
+- **Android SDK** for Android development, **Xcode** for iOS/macOS (Mac only)
 
 ### Quick Start
 
 ```bash
-# Clone the repository
 git clone https://github.com/tothKarolyDavid/Physiquinator.git
 cd Physiquinator
 
-# Restore dependencies
 dotnet restore
 
 # Run on Windows
@@ -292,63 +268,53 @@ dotnet build -t:Run -f net11.0-windows10.0.19041.0
 # Run on Android (device/emulator)
 dotnet build -t:Run -f net11.0-android
 
-# Run on iOS (Mac only)
-dotnet build -t:Run -f net11.0-ios
+# Run the web client (includes the MCP server on /mcp)
+dotnet run --project Physiquinator.Web
+
+# Run the tests
+dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj
 ```
 
-### Build Configurations
-
-#### Debug (Fast Development)
-- Shared runtime for quick deployment
-- No AOT compilation
-- Fast wireless debugging on Android
-
-#### Release (Optimized Performance)
-- Full linking and trimming
-- AOT compilation enabled
-- App bundle (AAB) format for Android
-- Self-contained Windows build
-
-### Docker Builds
-
-Build Android APK using Docker (no Android SDK setup required):
+### Build a release APK without an Android SDK (Docker)
 
 ```powershell
-# Build and extract APK
 docker build -t physiquinator-android -f Dockerfile.android .
 docker create --name temp physiquinator-android
 docker cp temp:/app/output/com.companyname.physiquinator-Signed.apk ./Physiquinator.apk
 docker rm temp
 ```
 
-**See [DOCKER.md](DOCKER.md) for complete Docker setup and troubleshooting.**
+See [DOCKER.md](DOCKER.md) for complete Docker setup and troubleshooting.
+
+### Regenerate screenshots
+
+```powershell
+cd tools/screenshot-generator
+.\run.ps1     # builds the Windows app, then captures every screen into docs/
+```
+
+---
+
+## Testing & CI
+
+- **211 xUnit tests** covering repositories, workout/session/history services, stats and formatting, the AI tool registry, and the MCP surface
+- **CI on every push/PR** - restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`)
+- **SonarCloud analysis** with coverage for Core, UI, Web, and Tests (`.github/workflows/sonarcloud.yml`)
+- **Tag-based releases** (`v*`) - signed Android APK and Windows package built and published automatically (`.github/workflows/release.yml`)
 
 ---
 
 ## Key Design Decisions
 
 ### Why .NET MAUI + Blazor Hybrid?
-- **Single Codebase** - Write once, run everywhere (Android, iOS, Windows, macOS)
-- **Web Skills** - Use Blazor/HTML/CSS for UI while maintaining native performance
-- **Native APIs** - Full access to platform features (vibration, file system, etc.)
-- **Familiar Stack** - Leverages existing .NET and web development knowledge
+- **Single codebase** - Write the UI once in Razor, run it natively on every platform
+- **Web skills** - Full use of HTML/CSS while keeping native performance and platform APIs
+- **Familiar stack** - Leverages existing .NET and web development knowledge
 
 ### Why SQLite?
-- **Offline-First** - Works without internet connection
+- **Offline-first** - Works without an internet connection
 - **Fast** - Excellent performance for local queries
-- **Cross-Platform** - Same database file format across all platforms
-- **Zero Configuration** - No server setup required
+- **Cross-platform** - The same database file format on every platform, and per-profile isolation is trivial
 
-### Why MudBlazor?
-- **Rapid Development** - Rich set of pre-built, customizable Material Design components
-- **Consistent Design** - Predictable, professional UI patterns that look great out of the box
-- **Native Blazor Feel** - Written entirely in C# without JavaScript dependencies, fitting perfectly into the Blazor Hybrid model
-
----
-<div align="center">
-
-
-
-
-</div>
-
+### Why an MCP server?
+- The workout data is already structured and local - exposing it through a standard agent protocol turns the app into a personal training copilot for any AI tool, with the same safety confirmation flow as the in-app assistant.

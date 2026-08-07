@@ -12,13 +12,13 @@ namespace Physiquinator.Services;
 /// </summary>
 public sealed class AppPreferences : IAppPreferences
 {
-    private readonly bool _isScreenshotMode = Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true";
+    private readonly bool _isScreenshotMode = AppEnvironment.IsScreenshotMode;
     private readonly Dictionary<string, string> _inMemoryPrefs = [];
     private readonly string? _filePath;
 
     public AppPreferences()
     {
-        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+        var customDbDir = AppEnvironment.DatabaseDirectoryOverride;
         if (!_isScreenshotMode || string.IsNullOrEmpty(customDbDir))
         {
             return;

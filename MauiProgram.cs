@@ -70,13 +70,6 @@ public static class MauiProgram
             sp.GetRequiredService<IAppUpdateInstaller>(),
             AppInfo.Current.Version));
 
-#if WINDOWS
-        if (Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true")
-        {
-            builder.Services.AddSingleton<ScreenshotServer>();
-        }
-#endif
-
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();

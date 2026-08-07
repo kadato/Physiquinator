@@ -14,7 +14,7 @@ public sealed class DatabasePathProvider : IDatabasePathProvider
 
     public DatabasePathProvider()
     {
-        var customDbDir = Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");
+        var customDbDir = AppEnvironment.DatabaseDirectoryOverride;
         _appDataDir = !string.IsNullOrEmpty(customDbDir) ? customDbDir : FileSystem.AppDataDirectory;
     }
 

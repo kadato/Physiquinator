@@ -6,23 +6,48 @@ let restStartTime = 0;
 let restTotalMs = 0;
 let chainGeneration = 0;
 
-export function startRestTimer(dotNetRef, intervalMs, totalMs) {
+export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs, continueMode) {
     if (!totalMs || totalMs <= 0) {
         stopRestTimer();
         return;
     }
 
     if (restTimerActive && restTimerId !== null) {
-        // If timer is already actively ticking, update total duration without cancelling active tick schedule
-        restTotalMs = totalMs;
+        if (continueMode) {
+            // Extension (+N s), overlay action, or routine sync: continue from
+            // the bar's current position and reach 100% exactly when the new
+            // remaining time elapses. Using elapsed + remaining as the scale
+            // keeps this correct even when the remaining time exceeds the
+            // original interval (adding more than the default rest time).
+            const currentProgress = Math.min(Math.max((performance.now() - restStartTime) / restTotalMs, 0), 1);
+            const elapsedMs = currentProgress * restTotalMs;
+            restTotalMs = elapsedMs + totalMs;
+            restStartTime = performance.now() - elapsedMs;
+        } else {
+            // Fresh/restart/reset: re-anchor to the true fraction of the
+            // active interval (0 for a fresh rest or reset).
+            const activeMs = Math.max(activeDurationMs || totalMs, 1);
+            const fraction = Math.min(Math.max(1 - totalMs / activeMs, 0), 1);
+            restTotalMs = activeMs;
+            restStartTime = performance.now() - fraction * activeMs;
+        }
         return;
     }
 
     stopRestTimer();
     restTimerActive = true;
     chainGeneration++;
-    restStartTime = performance.now();
-    restTotalMs = totalMs;
+    if (continueMode) {
+        // Re-arm with no live animation: start from the true fraction of the
+        // active interval.
+        const activeMs = Math.max(activeDurationMs || totalMs, 1);
+        const fraction = Math.min(Math.max(1 - totalMs / activeMs, 0), 1);
+        restTotalMs = activeMs;
+        restStartTime = performance.now() - fraction * activeMs;
+    } else {
+        restTotalMs = Math.max(activeDurationMs || totalMs, 1);
+        restStartTime = performance.now();
+    }
 
     startProgressRaf();
     scheduleTick(dotNetRef, intervalMs);

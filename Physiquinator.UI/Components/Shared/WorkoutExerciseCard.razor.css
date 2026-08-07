@@ -1,0 +1,26 @@
+.set-completed-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mud-palette-divider);
+}
+
+.set-completed-row:last-child {
+    border-bottom: none;
+}
+
+.set-completed-row__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.set-completed-row__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.exercise-skip-btn {
+    margin-left: 4px;
+}

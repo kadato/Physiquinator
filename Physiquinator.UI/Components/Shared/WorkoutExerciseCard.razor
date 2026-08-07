@@ -1,7 +1,8 @@
 @* Accordion card for one exercise in the active workout. Shows set logging steppers for
-   upcoming exercises and a static summary row for completed ones. *@
+   upcoming exercises and editable set rows for completed ones. *@
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Models
+@inject WeightUnitService WeightUnitService
 
 <MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
     <div class="@HeaderClass" @onclick="@OnHeaderClick">
@@ -31,8 +32,15 @@
             <span class="@PillClass">@CompletedSetsCount/@Exercise.SetCount</span>
             @if (!IsCompleted)
             {
-                <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
+                <div @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
+                                   Size="Size.Small"
+                                   Class="exercise-skip-btn"
+                                   aria-label="@($"Skip {Exercise.Name}")"
+                                   OnClick="SkipExercise" />
+                </div>
             }
+            <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="ml-2" />
         </div>
     </div>
 
@@ -53,16 +61,16 @@
                         <div class="set-stepper-rows">
                             @if (Exercise.LogType != ExerciseLogType.Duration)
                             {
-                                <SetMetricStepper Value="@inputs.Weight"
-                                                  ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val)))"
-                                                  Step="2.5"
-                                                  Min="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? -200 : 0)"
+                                <SetMetricStepper Value="@ToDisplayWeight(inputs.Weight)"
+                                                  ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, ToKgWeight(val))))"
+                                                  Step="@WeightStep"
+                                                  Min="@WeightMin"
                                                   IsInteger="false"
                                                   Format="0.##"
                                                   Compact="true"
-                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : "kg")'
+                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : UnitSuffix)'
                                                   CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
-                                                  Placeholder="@defaultWeight" />
+                                                  Placeholder="@ToDisplayWeight(defaultWeight)" />
                             }
                             <SetMetricStepper Value="@((double?)inputs.Reps)"
                                               ValueChanged="@(val => OnRepsChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
@@ -83,6 +91,51 @@
                         </button>
                     </div>
                 </div>
+        </MudCardContent>
+    }
+
+    @if (IsExpanded && IsCompleted)
+    {
+        <MudCardContent Class="pt-0">
+            @if (CompletedSetRows.Any())
+            {
+                @foreach (var row in CompletedSetRows)
+                {
+                    <div class="set-completed-row">
+                        <div class="set-completed-row__header">
+                            <span class="set-completed-row__label">Set @(row.SetIndex + 1)</span>
+                        </div>
+                        <div class="set-stepper-rows">
+                            @if (Exercise.LogType != ExerciseLogType.Duration)
+                            {
+                                <SetMetricStepper Value="@ToDisplayWeight(row.WeightKg)"
+                                                  ValueChanged="@(val => OnSetWeightChanged.InvokeAsync((ExerciseIndex, row.SetIndex, ToKgWeight(val))))"
+                                                  Step="@WeightStep"
+                                                  Min="@WeightMin"
+                                                  IsInteger="false"
+                                                  Format="0.##"
+                                                  Compact="true"
+                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (row.WeightKg == 0 || !row.WeightKg.HasValue) ? "" : UnitSuffix)'
+                                                  CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
+                                                  Placeholder="@ToDisplayWeight(row.WeightKg)" />
+                            }
+                            <SetMetricStepper Value="@((double?)row.Reps)"
+                                              ValueChanged="@(val => OnSetRepsChanged.InvokeAsync((ExerciseIndex, row.SetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
+                                              Step="1"
+                                              Min="1"
+                                              IsInteger="true"
+                                              Format="0"
+                                              Compact="true"
+                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
+                                              Placeholder="@((double?)row.Reps)" />
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">No sets logged for this exercise.</MudText>
+            }
         </MudCardContent>
     }
 </MudCard>
@@ -119,6 +172,11 @@
     public IReadOnlyDictionary<(int, int), (double? Weight, int? Reps)> SetInputs { get; set; } =
         new Dictionary<(int, int), (double? Weight, int? Reps)>();
 
+    /// <summary>Sets already logged in the current session, keyed by (exercise index, set index).</summary>
+    [Parameter]
+    public IReadOnlyDictionary<(int, int), (double? Weight, int? Reps)> SessionSets { get; set; } =
+        new Dictionary<(int, int), (double? Weight, int? Reps)>();
+
     [Parameter]
     public EventCallback<int> OnToggle { get; set; }
 
@@ -130,6 +188,31 @@
 
     [Parameter]
     public EventCallback<(int ExerciseIndex, int SetIndex, int? Reps)> OnRepsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, int SetIndex, double? WeightKg)> OnSetWeightChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, int SetIndex, int? Reps)> OnSetRepsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<(int ExerciseIndex, string ExerciseName)> OnSkipExercise { get; set; }
+
+    private WeightUnit Unit => WeightUnitService.Current;
+
+    private string UnitSuffix => ExerciseWeightFormatter.UnitSuffix(Unit);
+
+    private double WeightStep => Unit == WeightUnit.Pounds ? 5 : 2.5;
+
+    private double WeightMin => Exercise.LogType == ExerciseLogType.BodyweightReps
+        ? ExerciseWeightFormatter.ToDisplay(-200, Unit)
+        : 0;
+
+    private double? ToDisplayWeight(double? kg) =>
+        kg.HasValue ? ExerciseWeightFormatter.ToDisplay(kg.Value, Unit) : null;
+
+    private double? ToKgWeight(double? display) =>
+        display.HasValue ? ExerciseWeightFormatter.ToKg(display.Value, Unit) : null;
 
     private string CardClass
     {
@@ -148,8 +231,9 @@
         ? "exercise-accordion-header exercise-accordion-header--static"
         : "exercise-accordion-header";
 
-    private Task OnHeaderClick() =>
-        IsCompleted ? Task.CompletedTask : OnToggle.InvokeAsync(ExerciseIndex);
+    private Task OnHeaderClick() => OnToggle.InvokeAsync(ExerciseIndex);
+
+    private Task SkipExercise() => OnSkipExercise.InvokeAsync((ExerciseIndex, Exercise.Name));
 
     private string PillClass =>
         IsCompleted
@@ -161,15 +245,29 @@
             (exerciseIndex, setIndex),
             (Exercise.DefaultWeightKg ?? 0.0, Exercise.DefaultReps ?? DefaultReps));
 
+    /// <summary>Logged sets of this exercise ordered by set index, for the completed edit rows.</summary>
+    private List<(int SetIndex, double? WeightKg, int? Reps)> CompletedSetRows
+    {
+        get
+        {
+            var rows = new List<(int, double?, int?)>();
+            foreach (var (key, value) in SessionSets)
+            {
+                if (key.Item1 == ExerciseIndex)
+                    rows.Add((key.Item2, value.Weight, value.Reps));
+            }
+            return [.. rows.OrderBy(r => r.Item1)];
+        }
+    }
+
     private static double GetProgressValue(int completed, int total) =>
         total == 0 ? 0 : (completed * 100.0) / total;
 
-    private static string? GetBodyweightStepperDisplayText(double? value)
+    private string? GetBodyweightStepperDisplayText(double? value)
     {
         if (value == null || value.Value == 0)
             return "BW";
-        if (value.Value > 0)
-            return $"+{ExerciseWeightFormatter.FormatKg(value.Value)}";
-        return $"-{ExerciseWeightFormatter.FormatKg(Math.Abs(value.Value))}";
+        var sign = value.Value > 0 ? "+" : "-";
+        return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(value.Value), Unit)}";
     }
 }

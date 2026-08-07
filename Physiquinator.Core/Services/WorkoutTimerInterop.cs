@@ -8,7 +8,9 @@ namespace Physiquinator.Core.Services;
 /// </summary>
 public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 {
-    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js";
+    // Cache-busting query: the module's progress-bar logic evolved; older
+    // WebView caches of the module would show a stale bar.
+    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=4";
 
     private IJSObjectReference? _module;
     private bool _disposed;
@@ -24,9 +26,13 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         });
     }
 
-    public Task StartTimerAsync<T>(DotNetObjectReference<T> dotNetRef, int tickIntervalMs, int totalMs)
+    /// <param name="remainingMs">Seconds left in the active rest.</param>
+    /// <param name="activeDurationMs">Full interval of the active rest (for progress fraction).</param>
+    /// <param name="continueMode">True when the rest is extended or synced (bar continues from its
+    /// current position); false for a fresh rest or reset (bar restarts).</param>
+    public Task StartTimerAsync<T>(DotNetObjectReference<T> dotNetRef, int tickIntervalMs, int remainingMs, int activeDurationMs, bool continueMode)
         where T : class =>
-        InvokeModuleAsync(module => module.InvokeVoidAsync("startRestTimer", dotNetRef, tickIntervalMs, totalMs));
+        InvokeModuleAsync(module => module.InvokeVoidAsync("startRestTimer", dotNetRef, tickIntervalMs, remainingMs, activeDurationMs, continueMode));
 
     public Task StopTimerAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("stopRestTimer"));

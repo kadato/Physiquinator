@@ -2,4 +2,5 @@
 <resources>
     <!-- Dark theme splash background: matches the app's dark-mode primary (Volt Green) -->
     <color name="maui_splash_color">#FF0B0C10</color>
+    <color name="maui_splash_icon_color">#10B981</color>
 </resources>

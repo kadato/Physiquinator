@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="456dp"
+    android:height="456dp"
+    android:viewportWidth="456"
+    android:viewportHeight="456">
+    <group
+        android:translateX="60"
+        android:translateY="60"
+        android:scaleX="10.5"
+        android:scaleY="10.5">
+        <!-- Circle at cx="16", cy="6" with radius 4 -->
+        <path
+            android:fillColor="@color/maui_splash_icon_color"
+            android:pathData="M 16, 6 m -4, 0 a 4,4 0 1,1 8,0 a 4,4 0 1,1 -8,0" />
+        <!-- Body path matching SVG: M16,11 L2,16 L12,29 L20,29 L30,16 Z -->
+        <path
+            android:fillColor="@color/maui_splash_icon_color"
+            android:pathData="M16,11 L2,16 L12,29 L20,29 L30,16 Z" />
+    </group>
+</vector>

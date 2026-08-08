@@ -6,9 +6,9 @@ Accepted (2026-08-08)
 
 ## Context
 
-The web host (`Physiquinator.Web`) is deployed as a container on Heroku, where the
-filesystem is ephemeral: dynos restart daily and on every deploy, wiping the SQLite
-databases stored under the temp directory. The data layer (`sqlite-net-pcl`) reads
+The web host (`Physiquinator.Web`) runs on hosts with an ephemeral filesystem:
+restarts and redeploys wipe the SQLite databases stored under the temp directory.
+The data layer (`sqlite-net-pcl`) reads
 and writes local files and cannot be pointed at a managed database without a full
 repository rewrite.
 
@@ -28,7 +28,7 @@ browser's IndexedDB:
 
 ## Consequences
 
-- Data survives dyno restarts and redeploys with no changes to the Core data layer.
+- Data survives server restarts and redeploys with no changes to the Core data layer.
 - Data is bound to a browser and an account, not to a device-independent server
   store; two devices do not see each other's changes.
 - Up to 15 seconds of edits can be lost on abrupt tab close.

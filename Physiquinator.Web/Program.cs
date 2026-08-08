@@ -14,9 +14,9 @@ using System.Threading.RateLimiting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Container platforms (Heroku, Render, Fly) inject a PORT env var and route traffic
+// Container platforms (Render, Fly, ...) inject a PORT env var and route traffic
 // to it. Bind there so the platform proxy can reach Kestrel; fall back to
-// ASPNETCORE_URLS (the Dockerfile default 0.0.0.0:8080) when PORT is unset.
+// ASPNETCORE_URLS when PORT is unset.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var containerPort))
 {
@@ -101,7 +101,7 @@ builder.Services.AddPhysiquinatorMcpServer(builder.Configuration);
 
 WebApplication app = builder.Build();
 
-// PaaS routers (Heroku, Render, Fly) terminate TLS and forward the original
+// PaaS routers (Render, Fly, ...) terminate TLS and forward the original
 // scheme via X-Forwarded-Proto, so trust those headers. Known-proxy lists stay
 // empty (the documented pattern for routers with dynamic IPs).
 app.UseForwardedHeaders(new ForwardedHeadersOptions

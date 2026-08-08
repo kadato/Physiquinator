@@ -6,7 +6,7 @@ namespace Physiquinator.Web.Services;
 
 /// <summary>
 /// Periodically exports the on-disk SQLite databases to the browser's IndexedDB so
-/// data survives platform restarts with ephemeral filesystems (e.g. Heroku dynos).
+/// data survives platform restarts with ephemeral filesystems.
 /// The browser pushes the copies back on page load (see WebDbRestoreEndpoint).
 /// </summary>
 public sealed class WebDbSyncService(

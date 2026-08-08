@@ -149,12 +149,7 @@ Configuration (`appsettings.json` or env vars):
 
 `Physiquinator.Web` is the same Blazor UI as a server-rendered web app, plus the MCP endpoint at `/mcp`. Every account gets its own SQLite database (cookie auth, PBKDF2 hashes), databases are mirrored to browser IndexedDB while the page is open, and the app ships security headers, rate limiting, and a `/healthz` readiness probe.
 
-It deploys to Heroku as a Docker container via GitHub Actions (`.github/workflows/deploy-heroku.yml`):
-
-1. `heroku create physiquinator-web`
-2. Set config vars: `ASPNETCORE_ENVIRONMENT=Production`, `Mcp__ApiKey=<your-mcp-key>` (required), `AUTH_DEMO_USERNAME` / `AUTH_DEMO_PASSWORD` (optional demo login)
-3. Set GitHub secrets `HEROKU_API_KEY`, `HEROKU_APP_NAME`, `HEROKU_EMAIL`
-4. Push to `main` - the workflow tests, builds, scans with Trivy, and releases automatically
+Run it locally with `dotnet run --project Physiquinator.Web`. For a hosted deployment, set `Mcp__ApiKey` (required: `/mcp` rejects requests without it) plus `AUTH_DEMO_USERNAME` / `AUTH_DEMO_PASSWORD` (optional demo login), and serve it behind an HTTPS reverse proxy that sets `X-Forwarded-*` headers.
 
 ---
 

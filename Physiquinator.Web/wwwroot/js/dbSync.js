@@ -1,5 +1,5 @@
 // Browser-side persistence for the web host: the SQLite database file is stored in
-// IndexedDB so it survives server restarts with ephemeral filesystems (e.g. Heroku).
+// IndexedDB so it survives server restarts with ephemeral filesystems.
 // The server pushes the file here every ~15s (WebDbSyncService) and pulls it back
 // on page load before Blazor starts (WebDbRestoreEndpoint).
 (function () {

@@ -19,4 +19,7 @@ namespace Physiquinator.Core.Serialization;
 [JsonSerializable(typeof(AllDataBackup))]
 [JsonSerializable(typeof(List<WorkoutScheduleHistoryEntity>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
+[JsonSerializable(typeof(AiChatMessage))]
+[JsonSerializable(typeof(List<AiChatMessage>))]
+[JsonSerializable(typeof(List<AiToolCallInfo>))]
 public partial class PhysiquinatorJsonContext : JsonSerializerContext;

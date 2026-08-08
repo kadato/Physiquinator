@@ -9,6 +9,7 @@ public static class PreferenceKeys
     public const string DemoDataInitialSeedCompleted = "Physiquinator.DemoDataInitialSeedCompleted";
     public const string DemoHistorySeedCompleted = "Physiquinator.DemoHistorySeedCompleted";
     public const string DemoExtrasSeedCompleted = "Physiquinator.DemoExtrasSeedCompleted";
+    public const string OnboardingTourShown = "Physiquinator.OnboardingTourShown";
 
     public const string RestAlertsEnabled = "rest_alerts_enabled";
     public const string RestNotifSoundVibration = "rest_notif_sound_vibration";
@@ -25,5 +26,6 @@ public static class PreferenceKeys
     public const string AiApiKey = "physiquinator_ai_api_key";
     public const string AiModelName = "physiquinator_ai_model_name";
     public const string AiSystemPrompt = "physiquinator_ai_system_prompt";
+    public const string AiChatHistory = "physiquinator_ai_chat_history";
 }
 

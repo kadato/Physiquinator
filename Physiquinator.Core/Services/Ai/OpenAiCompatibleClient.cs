@@ -421,21 +421,43 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
         }
     }
 
+    private const int MaxErrorDetailLength = 300;
+
+    /// <summary>
+    /// Extracts the human-readable error message from an OpenAI-style error
+    /// response. Non-JSON bodies (HTML error pages, proxies) are replaced with
+    /// a generic message instead of dumping the raw body into the chat.
+    /// </summary>
     private static string ExtractErrorDetail(string responseString)
     {
+        if (string.IsNullOrWhiteSpace(responseString))
+            return "empty response";
+
         try
         {
             using var doc = JsonDocument.Parse(responseString);
             if (doc.RootElement.TryGetProperty("error", out JsonElement err) && err.TryGetProperty("message", out JsonElement msg))
             {
-                return msg.GetString() ?? responseString;
+                return TruncateError(msg.GetString() ?? "unknown error");
             }
         }
         catch (JsonException)
         {
             // Non-JSON error response fallback
         }
-        return responseString;
+
+        return "response was not valid JSON (check the API base URL and key)";
+    }
+
+    private static string TruncateError(string value)
+    {
+        if (value.Length <= MaxErrorDetailLength)
+            return value;
+
+        var cut = value.AsSpan(0, MaxErrorDetailLength);
+        var lastSpace = cut.LastIndexOf(' ');
+        var trimmed = lastSpace > 0 ? cut[..lastSpace].ToString() : cut.ToString();
+        return trimmed + "…";
     }
 
     private static string GetChatCompletionsUrl(string baseUrl)

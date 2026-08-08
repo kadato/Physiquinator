@@ -1,6 +1,8 @@
 using Physiquinator.Core.Models;
+using Physiquinator.Core.Serialization;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 namespace Physiquinator.Core.Services.Ai;
 
@@ -11,7 +13,9 @@ public sealed class AiAssistantService(
     AiToolRegistry toolRegistry,
     TimeProvider? time = null)
 {
-    private readonly List<AiChatMessage> _messages = [];
+    private const int MaxPersistedMessages = 50;
+
+    private readonly List<AiChatMessage> _messages = RestoreHistory(preferences, userProfileService);
     private readonly TimeProvider _time = time ?? TimeProvider.System;
 
     // Persistent API history maintains the full message exchange (including tool call/response pairs)
@@ -67,6 +71,7 @@ public sealed class AiAssistantService(
     {
         _messages.Clear();
         _apiHistory = [];
+        preferences.Set(GetChatHistoryKey(), string.Empty);
         OnMessagesChanged?.Invoke();
     }
 
@@ -101,6 +106,47 @@ public sealed class AiAssistantService(
                 if (ReferenceEquals(_turnCts, turnCts)) _turnCts = null;
             }
             turnCts.Dispose();
+        }
+
+        // Persist the visible conversation after the turn settles, including
+        // cancelled turns, so a closed app does not lose the chat.
+        SaveHistory();
+    }
+
+    /// <summary>
+    /// Persists the visible conversation (per active profile) so chat survives
+    /// app restarts. In-progress thinking placeholders are skipped.
+    /// </summary>
+    private void SaveHistory()
+    {
+        var visible = _messages
+            .Where(m => !m.IsThinking)
+            .TakeLast(MaxPersistedMessages)
+            .ToList();
+        var json = JsonSerializer.Serialize(visible, PhysiquinatorJsonContext.Default.ListAiChatMessage);
+        preferences.Set(GetChatHistoryKey(), json);
+    }
+
+    private string GetChatHistoryKey()
+    {
+        var suffix = ProfilePreferenceKeys.GetSuffix(userProfileService.GetActiveProfile().Id);
+        return PreferenceKeys.AiChatHistory + suffix;
+    }
+
+    private static List<AiChatMessage> RestoreHistory(IAppPreferences preferences, UserProfileService userProfileService)
+    {
+        var suffix = ProfilePreferenceKeys.GetSuffix(userProfileService.GetActiveProfile().Id);
+        var json = preferences.Get(PreferenceKeys.AiChatHistory + suffix, string.Empty);
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListAiChatMessage) ?? [];
+        }
+        catch
+        {
+            return [];
         }
     }
 

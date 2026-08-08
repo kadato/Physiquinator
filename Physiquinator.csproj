@@ -193,6 +193,28 @@
               Condition="Exists('$(TargetDir)AppX\splashSplashScreen.png')" />
     </Target>
 
+    <!-- MAUI packages the referenced Razor class library's scoped CSS bundle under
+         a content-hashed file name (Physiquinator.UI.{hash}.bundle.scp.css), but the
+         BlazorWebView shell references the un-hashed name in index.html. Ship a copy
+         under the expected name so component-scoped styles actually load in the app. -->
+    <Target Name="CopyScopedCssBundleForWebView"
+            BeforeTargets="GetAppxPackageFiles;GenerateAppxPackageFileMap;AssignTargetPaths"
+            AfterTargets="Build">
+        <ItemGroup>
+            <_ScopedBundleSource Include="$(MSBuildProjectDirectory)\Physiquinator.UI\obj\$(Configuration)\net11.0\scopedcss\projectbundle\Physiquinator.UI.bundle.scp.css" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(_ScopedBundleSource)"
+              DestinationFolder="$(TargetDir)AppX\wwwroot\_content\Physiquinator.UI"
+              SkipUnchangedFiles="false"
+              Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and Exists('$(TargetDir)AppX')" />
+
+        <Copy SourceFiles="@(_ScopedBundleSource)"
+              DestinationFolder="$(IntermediateOutputPath)assets\wwwroot\_content\Physiquinator.UI"
+              SkipUnchangedFiles="false"
+              Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" />
+    </Target>
+
 
 </Project>
 

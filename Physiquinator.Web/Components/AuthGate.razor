@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
+@using Physiquinator.UI
+@using Physiquinator.Web.Services
+@inject AuthenticationStateProvider AuthStateProvider
+@inject WebUserContext UserContext
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+@if (_authenticationChecked)
+{
+    @if (_isAuthenticated)
+    {
+        <button type="button" class="auth-logout" @onclick="LogoutAsync" title="Sign out of this account">Sign out</button>
+        <DbSyncHost />
+        <Routes />
+    }
+    else
+    {
+        <LoginPanel />
+    }
+}
+
+@code {
+    private bool _authenticationChecked;
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
+        if (_isAuthenticated)
+        {
+            // Must run before Routes resolves any app service, so the per-user
+            // database path provider knows which account's data to open.
+            UserContext.SetFromPrincipal(state.User);
+        }
+        _authenticationChecked = true;
+    }
+
+    public async Task LogoutAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("physiquinatorAuth.logout");
+        }
+        finally
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

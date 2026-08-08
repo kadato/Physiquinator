@@ -1,0 +1,150 @@
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<div class="auth-shell">
+    <MudPaper Elevation="6" Class="auth-card">
+        <div class="auth-brand">Physiquinator</div>
+        <p class="auth-tagline">Workout tracking, an AI assistant, and an agent API - now with your own account.</p>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Size="Size.Large"
+                   Class="mb-4"
+                   Disabled="_busy"
+                   OnClick="SubmitDemoAsync">
+            Try the demo
+        </MudButton>
+
+        <MudDivider Class="mb-4" />
+
+        <MudTextField @bind-Value="_username"
+                      Label="Username"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Class="mb-4"
+                      Disabled="_busy"
+                      Immediate="true" />
+        <MudTextField @bind-Value="_password"
+                      Label="Password"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      InputType="InputType.Password"
+                      Class="mb-6"
+                      Disabled="_busy"
+                      Immediate="true"
+                      @onkeydown="HandleEnterKey" />
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   FullWidth="true"
+                   Disabled="_busy"
+                   OnClick="SubmitAsync">
+            @(_mode == AuthMode.Login ? "Sign in" : "Create account")
+        </MudButton>
+
+        <MudButton Variant="Variant.Text"
+                   FullWidth="true"
+                   Disabled="_busy"
+                   OnClick="ToggleModeAsync">
+            @(_mode == AuthMode.Login ? "New here? Create an account" : "Already registered? Sign in")
+        </MudButton>
+    </MudPaper>
+</div>
+
+@code {
+    private enum AuthMode { Login, Register }
+
+    private AuthMode _mode = AuthMode.Login;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private string? _error;
+    private bool _busy;
+
+    private void ToggleModeAsync()
+    {
+        _mode = _mode == AuthMode.Login ? AuthMode.Register : AuthMode.Login;
+        _error = null;
+    }
+
+    private async Task HandleEnterKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SubmitAsync();
+        }
+    }
+
+    private async Task SubmitDemoAsync()
+    {
+        if (_busy)
+            return;
+
+        _busy = true;
+        _error = null;
+        try
+        {
+            LoginCallResult result = await JSRuntime.InvokeAsync<LoginCallResult>("physiquinatorAuth.demoLogin");
+            if (!result.Ok)
+            {
+                _error = string.IsNullOrWhiteSpace(result.Message)
+                    ? "The demo account is not available right now."
+                    : result.Message;
+                return;
+            }
+
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch
+        {
+            _error = "Could not reach the server. Please try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_busy)
+            return;
+
+        _busy = true;
+        _error = null;
+        try
+        {
+            var endpoint = _mode == AuthMode.Login ? "login" : "register";
+            LoginCallResult result = await JSRuntime.InvokeAsync<LoginCallResult>(
+                "physiquinatorAuth.login", endpoint, _username, _password);
+            if (!result.Ok)
+            {
+                _error = string.IsNullOrWhiteSpace(result.Message)
+                    ? "Something went wrong."
+                    : result.Message;
+                return;
+            }
+
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch
+        {
+            _error = "Could not reach the server. Please try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // Deserialized from the JS auth call.
+    private sealed record LoginCallResult(bool Ok, string Message);
+}

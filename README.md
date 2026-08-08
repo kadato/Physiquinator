@@ -15,7 +15,7 @@ A cross-platform workout tracking app built with **.NET MAUI and Blazor Hybrid**
 
 It also ships a **web client with a Model Context Protocol (MCP) server**, so any AI agent (Claude, Cursor, Copilot) can query your workout history and manage your plans.
 
-[Preview](#preview) · [Download & Install](#download--install) · [Features](#features) · [Agent API (MCP)](#agent-api-mcp-server) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Testing & CI](#testing--ci)
+[Preview](#preview) · [Download & Install](#download--install) · [Live Demo (Web)](#live-demo-web) · [Features](#features) · [Agent API (MCP)](#agent-api-mcp-server) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Testing & CI](#testing--ci)
 
 </div>
 
@@ -116,12 +116,24 @@ Download: https://dotnet.microsoft.com/download/dotnet/11.0
 
 ---
 
+## Live Demo (Web)
+
+The web client is deployed to Heroku via GitHub Actions (`.github/workflows/deploy-heroku.yml`) on every push to `main`:
+
+**<https://physiquinator-web.herokuapp.com>** - open the link and hit **Try the demo** for instant access (or sign in as `demo` / `demo1234`, or create your own account).
+
+> The URL above is a placeholder for your app. Create the Heroku app, set the GitHub secrets, and update the link (see [Deploy the Web App to Heroku](#deploy-the-web-app-to-heroku)).
+
+What the web client includes: the full Blazor UI, an MCP agent API at `/mcp`, per-account data isolation, security headers, rate limiting, and a readiness probe at `/healthz`.
+
+---
+
 ## Features
 
 ### AI Assistant
 - **In-app chat** - Ask questions about your training in natural language, with streaming responses
 - **15 built-in tools** - Create and edit plans, log bodyweight, pull history stats and exercise progression, control rest-timer and app settings
-- **Two providers** - OpenAI (default `gpt-4o-mini`) or a fully local [Ollama](https://ollama.com) setup
+- **Five provider presets** - OpenAI, OpenRouter, OpenCode, a fully local [Ollama](https://ollama.com) setup, or any custom OpenAI-compatible API
 - **Agent API** - The same tools are exposed to external AI agents over MCP (see [Agent API](#agent-api-mcp-server))
 
 ### Workout Plans
@@ -132,14 +144,14 @@ Download: https://dotnet.microsoft.com/download/dotnet/11.0
 ### Smart Rest Timer
 - **Wall-clock countdown** - Accurate down to the second, driven by a single in-flight JS bridge call
 - **Android floating overlay** - A draggable picture-in-picture bubble stays visible when you switch to another app (e.g. YouTube or a browser); add time, reset, skip, or log a set without opening Physiquinator
-- **Alerts** - Optional sound, vibration, and local notifications when rest ends, plus exact alarms that survive Doze mode
-- **Full control** - Add time, reset, or skip rest periods
+- **Alerts (Android/iOS)** - Optional sound, vibration, and local notifications when rest ends, plus exact alarms that survive Doze mode. On desktop/web the countdown runs in-app only
+- **Full control** - Add time (with quick presets), reset, or skip rest periods
 
 ### Live Workout Tracking
 - **Real-time progress** - Completed vs. remaining sets with progress bars
 - **Set logging** - Granular rep count, weight, and metric editing mid-workout, with undo
 - **Mobile-optimized** - Upcoming exercises shown first on small screens
-- **Completion celebration** - Animated trophy with glow, victory sound, and haptic pattern
+- **Post-workout summary** - Duration, volume, and every personal record earned during the session
 
 ### History & Analytics
 - **Activity heatmap** - GitHub-style consistency grid over 53 weeks, marking missed scheduled days
@@ -159,8 +171,8 @@ Download: https://dotnet.microsoft.com/download/dotnet/11.0
 - **Demo data seeding** - Sample workouts and plans on first launch so you can explore immediately
 
 ### Other
-- **Automatic updates** - Checks GitHub Releases and installs new versions in-app
-- **Cross-platform UI** - Light and dark themes, phone and tablet friendly
+- **Automatic updates** - Checks GitHub Releases and installs new versions in-app (Android and Windows)
+- **Cross-platform UI** - Light and dark themes, phone-first layout that also runs on tablets and desktop
 
 ---
 
@@ -179,10 +191,12 @@ Configuration (`appsettings.json` or env vars):
 
 ```json
 "Mcp": {
-  "ApiKey": "",        // when set, requests must send X-Api-Key or Authorization: Bearer
+  "ApiKey": "",        // REQUIRED in production: requests must send X-Api-Key or Authorization: Bearer
   "CorsOrigins": ""    // comma-separated origins for browser-based clients (e.g. Copilot)
 }
 ```
+
+In production the MCP endpoint **rejects all requests unless `Mcp__ApiKey` is set** as a Heroku config var (or the `X-Api-Key` / `Authorization: Bearer` header matches). Without it you will see a warning in the logs and 401s on `/mcp`. The endpoint is rate limited per client IP.
 
 State is isolated per client: database connections, preferences, and session state are scoped per Blazor circuit, and MCP requests resolve those services in their own scope, so concurrent clients never share an in-memory workout or settings store. The server emits per-tool telemetry through `ILogger` and ships a `/healthz` probe:
 
@@ -204,8 +218,38 @@ Physiquinator.Core   Domain model, SQLite repositories, and all business logic
 Physiquinator.UI     Blazor Hybrid UI (Razor class library): pages, components, theming
 Physiquinator        Platform hosts: .NET MAUI shell for Android/iOS/Windows/macOS
 Physiquinator.Web    ASP.NET Core web host: same UI as a Blazor web app + MCP server
-Physiquinator.Tests  xUnit test suite (260 tests) covering repositories, services,
+Physiquinator.Tests  xUnit test suite (277 tests) covering repositories, services,
                      formatting, and the MCP surface
+```
+
+```mermaid
+flowchart TB
+    subgraph Clients
+        UI["Blazor UI (Razor)"]
+        Agent["AI agent (MCP client)"]
+    end
+
+    subgraph Web ["Physiquinator.Web (ASP.NET Core)"]
+        Gate["AuthGate (cookie auth)"]
+        Sync["DbSyncHost (IndexedDB sync)"]
+        Mcp["MCP server /mcp"]
+        Endpoints["/healthz · /api/auth/* · /api/db/restore"]
+    end
+
+    subgraph Storage ["Ephemeral dyno storage"]
+        DBs["SQLite per account"]
+        Users["Users (PBKDF2)"]
+    end
+
+    Browser["Browser IndexedDB"]
+
+    UI --> Gate --> Sync --> DBs
+    Gate --> Endpoints
+    Agent --> Mcp
+    Mcp --> DBs
+    Sync <--> Browser
+    Endpoints <--> Browser
+    Endpoints --> Users
 ```
 
 Key design points:
@@ -295,12 +339,54 @@ cd tools/screenshot-generator
 
 ---
 
+## Deploy the Web App to Heroku
+
+The web client (`Physiquinator.Web`, Blazor Server UI + MCP server) ships as a Docker container and deploys to Heroku with a GitHub Actions workflow (`.github/workflows/deploy-heroku.yml`), which runs the tests, builds the image, scans it with Trivy, and releases only if everything passes.
+
+**Prerequisites**: [GitHub Student Developer Pack](https://education.github.com/pack) (free Heroku credits), Heroku CLI, a GitHub repo of this project.
+
+1. **Create the app**: `heroku create physiquinator-web`
+2. **Set config vars** (replace with real values):
+   ```bash
+   heroku config:set ASPNETCORE_ENVIRONMENT=Production
+   heroku config:set Mcp__ApiKey=your-mcp-key          # REQUIRED - /mcp rejects everything without it
+   heroku config:set Mcp__CorsOrigins=                 # optional: browser-based MCP clients
+   heroku config:set AUTH_DEMO_USERNAME=demo           # optional: demo account login
+   heroku config:set AUTH_DEMO_PASSWORD=demo1234       # optional: demo account password
+   ```
+3. **Set GitHub secrets**: `HEROKU_API_KEY` (from `heroku authorizations:create`), `HEROKU_APP_NAME`, `HEROKU_EMAIL`. For best practice, store them in a GitHub Environment named `production` (repo secrets work too).
+4. **Push to `main`** — the workflow tests, builds, scans, and releases automatically. Deploy manually anytime from the Actions tab.
+
+Test the container locally:
+
+```bash
+docker build -t physiquinator-web .
+docker run -p 8080:8080 -e PORT=8080 physiquinator-web
+# open http://localhost:8080  ·  health probe: http://localhost:8080/healthz
+```
+
+> **Accounts & data**: every account gets its own SQLite database (`physiquinator_{userId}.db3`), and the databases are mirrored to the browser's IndexedDB every ~15 seconds while the page is open, so data survives dyno restarts. Registration is open; the demo account (`demo` / `demo1234`, overridable via `AUTH_DEMO_USERNAME` / `AUTH_DEMO_PASSWORD`) is seeded automatically and can be entered with one click from the login screen.
+
+> **Security baseline**: cookie auth (SameSite=Lax, HTTPS-only), security headers incl. CSP (same-origin scripts only), rate limiting on auth/MCP/restore endpoints, PBKDF2 password hashes, and an ephemeral-storage readiness probe at `/healthz`. Known limitation: auth cookies are encrypted with ephemeral DataProtection keys, so dyno restarts sign everyone out once (the data itself is safe); re-login is one click for demo visitors.
+
+---
+
 ## Testing & CI
 
-- **260 xUnit tests** covering repositories, workout/session/history services, stats and formatting, the AI tool registry, and the MCP surface
+- **277 xUnit tests** covering repositories, workout/session/history services, stats and formatting, the AI tool registry, and the MCP surface
 - **CI on every push/PR** - restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`)
 - **SonarCloud analysis** with coverage for Core, UI, Web, and Tests (`.github/workflows/sonarcloud.yml`)
 - **Tag-based releases** (`v*`) - signed Android APK and Windows package built and published automatically (`.github/workflows/release.yml`)
+- **Heroku deploys** - the deploy workflow re-runs the tests, builds the Docker image, scans it with Trivy, and releases when green (`.github/workflows/deploy-heroku.yml`)
+- **Dependabot** - weekly dependency updates for NuGet and GitHub Actions (`.github/dependabot.yml`)
+- **Web E2E (local)** - a Playwright suite in `tools/web-e2e` covers registration/login, seeded plans, and the IndexedDB sync roundtrip:
+
+  ```bash
+  cd tools/web-e2e
+  npm install
+  npx playwright install chromium
+  npm test    # requires the web app running on localhost:8080 (PLAYWRIGHT_BASE_URL overrides)
+  ```
 
 ---
 

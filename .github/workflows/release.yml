@@ -142,13 +142,13 @@ jobs:
         fetch-depth: 0
 
     - name: Download Android APK
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: android-apk
         path: ./release/android
 
     - name: Download Windows package
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: windows-package
         path: ./release/windows

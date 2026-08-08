@@ -202,6 +202,29 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         _completedSetLookup.Add(completion);
     }
 
+    /// <summary>
+    /// Re-indexes every completed set after the plan's exercise order changed
+    /// mid-session (old exercise index → new index). Used by mid-workout
+    /// reordering so completion state stays attached to the right exercise.
+    /// </summary>
+    public void RemapExerciseIndexes(IReadOnlyDictionary<int, int> mapping)
+    {
+        ArgumentNullException.ThrowIfNull(mapping);
+        if (mapping.Count == 0) return;
+
+        _completedSetLookup.Clear();
+        for (var i = 0; i < _completedSets.Count; i++)
+        {
+            var completion = _completedSets[i];
+            if (!mapping.TryGetValue(completion.ExerciseIndex, out var newIndex))
+                continue;
+
+            var remapped = new SetCompletion(newIndex, completion.SetIndex);
+            _completedSets[i] = remapped;
+            _completedSetLookup.Add(remapped);
+        }
+    }
+
     /// <summary>Removes the last completed set (chronological append order). Returns false when none.</summary>
     public bool TryUndoLastSet(out SetCompletion removed)
     {

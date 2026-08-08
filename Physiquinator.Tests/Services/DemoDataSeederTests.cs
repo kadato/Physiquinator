@@ -67,10 +67,8 @@ public class DemoDataSeederTests : IAsyncLifetime
         Assert.NotEmpty(parsed.Exercises);
         Assert.Contains(parsed.Exercises, e => e.Name == "Bench Press" && e.DefaultReps is not null);
 
-        WorkoutSessionLogEntity inProgress = recent.First(s => s.EndedAtUtc is null);
-        Assert.Equal("Push Day", inProgress.PlanName);
-        IReadOnlyList<WorkoutSetLogEntity> inProgressSets = await _historyRepo.GetSetsForSessionAsync(inProgress.Id);
-        Assert.True(inProgressSets.Count is >= 1 and <= 4);
+        // A fresh demo user must not find an unfinished workout on Home.
+        Assert.DoesNotContain(recent, s => s.EndedAtUtc is null);
 
         IReadOnlyList<ExerciseSessionProgressEntry> benchProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PushPlan, "Bench Press", 30);
         Assert.True(benchProgress.Count >= 18);

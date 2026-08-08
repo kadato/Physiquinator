@@ -387,4 +387,57 @@ public class WorkoutSessionServiceTests
         Assert.False(svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddSeconds(-1), 60));
         Assert.Equal(1, fired);
     }
+
+    [Fact]
+    public void RemapExerciseIndexes_moves_completed_sets_between_exercises()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0 },
+                new ExercisePlan { Name = "Bench Press", SetCount = 2, Order = 1 }
+            ]
+        };
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(plan);
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(1, 1);
+
+        // Swap the two exercises: old 0 -> 1, old 1 -> 0.
+        svc.RemapExerciseIndexes(new Dictionary<int, int> { [0] = 1, [1] = 0 });
+
+        Assert.False(svc.IsSetCompleted(0, 0));
+        Assert.True(svc.IsSetCompleted(1, 0));
+        Assert.True(svc.IsSetCompleted(0, 1));
+        Assert.False(svc.IsSetCompleted(1, 1));
+        Assert.Equal(2, svc.CompletedSets.Count);
+        Assert.Contains(new SetCompletion(1, 0), svc.CompletedSets);
+        Assert.Contains(new SetCompletion(0, 1), svc.CompletedSets);
+    }
+
+    [Fact]
+    public void RemapExerciseIndexes_is_noop_for_empty_or_identity_mapping()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0 },
+                new ExercisePlan { Name = "Bench Press", SetCount = 1, Order = 1 }
+            ]
+        };
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(plan);
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(1, 0);
+
+        svc.RemapExerciseIndexes(new Dictionary<int, int>());
+        Assert.True(svc.IsSetCompleted(0, 0));
+        Assert.True(svc.IsSetCompleted(1, 0));
+
+        svc.RemapExerciseIndexes(new Dictionary<int, int> { [0] = 0, [1] = 1 });
+        Assert.True(svc.IsSetCompleted(0, 0));
+        Assert.True(svc.IsSetCompleted(1, 0));
+    }
 }

@@ -327,13 +327,15 @@ public sealed class DemoDataSeeder(
                 TryAdd(specs, today, week, weekMonday.AddDays(OffsetFromMonday(DayOfWeek.Sunday)), DemoDataIds.FullBodyPlan, slotKey: 3, ref fbOrd);
         }
 
+        // A fresh demo user should not find an unfinished workout: seed today's
+        // push session as a normal completed session instead.
         specs.Add(new DemoSessionSpec(
             DaysAgo: 0,
             StartHourUtc: 10,
             StartMinuteUtc: 0,
             PlanId: DemoDataIds.PushPlan,
-            Ended: false,
-            DurationMinutes: 0,
+            Ended: true,
+            DurationMinutes: 45,
             PlanTypeOrdinal: pushOrd,
             IsDeload: false));
 

@@ -73,6 +73,35 @@ public sealed class BackupRestoreServiceTests : IAsyncLifetime
         Assert.Equal("Push A", restored[0].Name);
     }
 
+    [Fact]
+    public async Task PreviewImportAsync_counts_backup_contents_without_importing()
+    {
+        var plan = new WorkoutPlan { Id = Guid.NewGuid(), Name = "Push A", Exercises = [] };
+        await _planService.SavePlanAsync(plan);
+
+        var sessionId = await _historyRepo.BeginSessionAsync(plan.Id, "Push A", null);
+        await _historyRepo.LogSetAsync(sessionId, 0, "Press", 0, reps: 8, weightKg: 30);
+
+        var json = await _sut.ExportAllDataAsync();
+        await _planService.DeletePlanAsync(plan.Id);
+        await _historyRepo.DeleteSessionAsync(sessionId);
+
+        var preview = await BackupRestoreService.PreviewImportAsync(json);
+
+        Assert.Equal(1, preview.PlansImported);
+        Assert.Equal(1, preview.SessionsImported);
+        Assert.Equal(1, preview.SetsImported);
+        Assert.Empty(await _planService.GetAllPlansAsync());
+    }
+
+    [Fact]
+    public Task PreviewImportAsync_throws_for_unsupported_version()
+    {
+        const string json = """{"formatVersion":999}""";
+        return Assert.ThrowsAsync<InvalidOperationException>(
+            () => BackupRestoreService.PreviewImportAsync(json));
+    }
+
     // -------------------------------------------------------------------------
     //  Workout history round-trip
     // -------------------------------------------------------------------------

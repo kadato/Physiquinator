@@ -52,4 +52,32 @@ public class WorkoutHistoryServiceTests : IAsyncLifetime
         const string json = """{"formatVersion":999,"sessions":[]}""";
         return Assert.ThrowsAsync<InvalidOperationException>(() => _sut.ImportFromJsonAsync(json));
     }
+
+    [Fact]
+    public async Task PreviewImportAsync_counts_without_importing()
+    {
+        var sessionId = await _repo.BeginSessionAsync(Guid.NewGuid(), "Push", null);
+        await _repo.LogSetAsync(sessionId, 0, "Press", 0, reps: 8, weightKg: 30);
+        await _repo.LogSetAsync(sessionId, 0, "Press", 1, reps: 8, weightKg: 30);
+        await _repo.UpsertBodyweightLogAsync(DateOnly.FromDateTime(DateTime.Today), 80);
+
+        var json = await _sut.ExportToJsonAsync();
+        await _repo.DeleteSessionAsync(sessionId);
+        await _repo.DeleteBodyweightLogAsync(DateOnly.FromDateTime(DateTime.Today));
+
+        HistoryImportPreview preview = await WorkoutHistoryService.PreviewImportAsync(json);
+
+        Assert.Equal(1, preview.Sessions);
+        Assert.Equal(2, preview.Sets);
+        Assert.Equal(1, preview.BodyweightEntries);
+        Assert.Empty(await _repo.GetRecentSessionsAsync());
+    }
+
+    [Fact]
+    public Task PreviewImportAsync_throws_for_unsupported_version()
+    {
+        const string json = """{"formatVersion":999,"sessions":[]}""";
+        return Assert.ThrowsAsync<InvalidOperationException>(
+            () => WorkoutHistoryService.PreviewImportAsync(json));
+    }
 }

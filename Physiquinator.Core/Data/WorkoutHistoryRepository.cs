@@ -780,6 +780,33 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             .DeleteAsync();
     }
 
+    /// <summary>
+    /// Rewrites the exercise index of every set log of a session after the
+    /// exercise order changed mid-workout (old exercise index → new index).
+    /// </summary>
+    public async Task RemapSetLogExerciseIndexesAsync(string sessionId, IReadOnlyDictionary<int, int> mapping)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId) || mapping.Count == 0) return;
+        await _db.EnsureInitializedAsync();
+
+        List<WorkoutSetLogEntity> rows = await _db.Database.Table<WorkoutSetLogEntity>()
+            .Where(s => s.SessionId == sessionId)
+            .ToListAsync();
+        if (rows.Count == 0) return;
+
+        await _db.Database.RunInTransactionAsync(conn =>
+        {
+            foreach (WorkoutSetLogEntity row in rows)
+            {
+                if (mapping.TryGetValue(row.ExerciseIndex, out var newIndex))
+                {
+                    row.ExerciseIndex = newIndex;
+                    conn.Update(row);
+                }
+            }
+        });
+    }
+
     public static WorkoutPlan? TryParsePlanSnapshot(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return null;

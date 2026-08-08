@@ -170,4 +170,44 @@ public class WorkoutPlanServiceTests : IAsyncLifetime
         Assert.NotNull(await _service.GetPlanAsync(planB.Id));
         Assert.Single(await _service.GetAllPlansAsync());
     }
+
+    [Fact]
+    public async Task PreviewPlansImportAsync_splits_new_vs_overwritten()
+    {
+        WorkoutPlan existing = MakePlan("Existing");
+        await _service.SavePlanAsync(existing);
+
+        WorkoutPlan newPlan = MakePlan("New");
+        WorkoutPlan sameId = MakePlan("Same Id");
+        sameId.Id = existing.Id;
+
+        var json = JsonSerializer.Serialize(new[] { newPlan, sameId });
+
+        PlanImportPreview preview = await _service.PreviewPlansImportAsync(json);
+
+        Assert.Equal(2, preview.Total);
+        Assert.Equal(1, preview.New);
+        Assert.Equal(1, preview.Overwritten);
+        Assert.Single(await _service.GetAllPlansAsync()); // nothing imported yet
+    }
+
+    [Fact]
+    public async Task PreviewPlansImportAsync_accepts_single_plan_json()
+    {
+        WorkoutPlan plan = MakePlan("Single");
+        var json = JsonSerializer.Serialize(plan);
+
+        PlanImportPreview preview = await _service.PreviewPlansImportAsync(json);
+
+        Assert.Equal(1, preview.Total);
+        Assert.Equal(1, preview.New);
+        Assert.Equal(0, preview.Overwritten);
+    }
+
+    [Fact]
+    public async Task PreviewPlansImportAsync_rejects_empty_or_invalid_json()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.PreviewPlansImportAsync(""));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.PreviewPlansImportAsync("null"));
+    }
 }

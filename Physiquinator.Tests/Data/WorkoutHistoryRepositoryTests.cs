@@ -98,6 +98,35 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RemapSetLogExerciseIndexesAsync_swaps_exercise_indices_across_permutation()
+    {
+        var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);
+        await _sut.LogSetAsync(sessionId, 0, "Squat", 0);
+        await _sut.LogSetAsync(sessionId, 1, "Bench", 0);
+
+        // Swap old 0 <-> 1 (a permutation, not a one-way rename).
+        await _sut.RemapSetLogExerciseIndexesAsync(sessionId, new Dictionary<int, int> { [0] = 1, [1] = 0 });
+
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
+        Assert.Equal(2, sets.Count);
+        Assert.Contains(sets, s => s.ExerciseIndex == 1 && s.ExerciseName == "Squat");
+        Assert.Contains(sets, s => s.ExerciseIndex == 0 && s.ExerciseName == "Bench");
+    }
+
+    [Fact]
+    public async Task RemapSetLogExerciseIndexesAsync_is_noop_for_empty_mapping_or_unknown_session()
+    {
+        var sessionId = await _sut.BeginSessionAsync(Guid.NewGuid(), "X", null);
+        await _sut.LogSetAsync(sessionId, 0, "A", 0);
+
+        await _sut.RemapSetLogExerciseIndexesAsync(sessionId, new Dictionary<int, int>());
+        Assert.Equal(0, (await _sut.GetSetsForSessionAsync(sessionId))[0].ExerciseIndex);
+
+        await _sut.RemapSetLogExerciseIndexesAsync("nonexistent", new Dictionary<int, int> { [0] = 1 });
+        Assert.Equal(0, (await _sut.GetSetsForSessionAsync(sessionId))[0].ExerciseIndex);
+    }
+
+    [Fact]
     public async Task GetExerciseSetLogRowsAsync_ReturnsChronologicalRows_ScopedByPlanAndName()
     {
         var p1 = Guid.NewGuid();

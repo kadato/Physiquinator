@@ -85,6 +85,39 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
     }
 
     /// <summary>
+    /// Counts how many plans a JSON import file contains, split into new
+    /// plans (unknown IDs) and overwrites (IDs already present), without
+    /// touching the database.
+    /// </summary>
+    public async Task<PlanImportPreview> PreviewPlansImportAsync(string json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
+
+        var plans = new List<WorkoutPlan>();
+        try
+        {
+            List<WorkoutPlan>? list = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListWorkoutPlan);
+            if (list != null)
+                plans.AddRange(list);
+        }
+        catch (JsonException)
+        {
+            WorkoutPlan? single = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutPlan);
+            if (single != null)
+                plans.Add(single);
+        }
+
+        if (plans.Count == 0)
+            throw new InvalidOperationException("No workout plans found in the selected file.");
+
+        var existing = await GetAllPlansAsync();
+        var existingIds = existing.Select(p => p.Id).ToHashSet();
+        var newCount = plans.Count(p => !existingIds.Contains(p.Id));
+
+        return new PlanImportPreview(plans.Count, newCount, plans.Count - newCount);
+    }
+
+    /// <summary>
     /// Saves a workout plan to a JSON file.
     /// </summary>
     public async Task ExportPlanToFileAsync(Guid id, string filePath)
@@ -120,3 +153,6 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
         return await ImportPlansFromJsonAsync(json);
     }
 }
+
+/// <summary>What a plan import would do: totals split into new vs overwritten plans.</summary>
+public sealed record PlanImportPreview(int Total, int New, int Overwritten);

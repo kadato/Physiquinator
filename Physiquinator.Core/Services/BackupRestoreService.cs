@@ -154,6 +154,33 @@ public sealed class BackupRestoreService(
     /// </summary>
     public async Task<AllDataImportResult> ImportAllDataAsync(string json)
     {
+        AllDataBackup backup = ParseBackup(json);
+
+        var plansImported = await ImportPlansAsync(backup);
+        var (sessions, sets) = await ImportHistoryAsync(backup);
+        var schedulesImported = await ImportSchedulesAsync(backup);
+        var prefsImported = ImportPreferences(backup);
+
+        return new AllDataImportResult(plansImported, sessions, sets, schedulesImported, prefsImported);
+    }
+
+    /// <summary>
+    /// Counts what a full-backup JSON file contains, without importing anything.
+    /// </summary>
+    public static Task<AllDataImportResult> PreviewImportAsync(string json)
+    {
+        AllDataBackup backup = ParseBackup(json);
+
+        var plans = backup.Plans?.Count ?? 0;
+        var (sessions, sets) = CountHistory(backup.History);
+        var schedules = backup.Schedules?.Count ?? 0;
+        var prefs = CountPreferences(backup.Preferences);
+
+        return Task.FromResult(new AllDataImportResult(plans, sessions, sets, schedules, prefs));
+    }
+
+    private static AllDataBackup ParseBackup(string json)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         var backup = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.AllDataBackup)
@@ -163,12 +190,33 @@ public sealed class BackupRestoreService(
             throw new InvalidOperationException(
                 $"Unsupported full-data backup format version {backup.FormatVersion} (supported: 1).");
 
-        var plansImported = await ImportPlansAsync(backup);
-        var (sessions, sets) = await ImportHistoryAsync(backup);
-        var schedulesImported = await ImportSchedulesAsync(backup);
-        var prefsImported = ImportPreferences(backup);
+        return backup;
+    }
 
-        return new AllDataImportResult(plansImported, sessions, sets, schedulesImported, prefsImported);
+    private static (int Sessions, int Sets) CountHistory(WorkoutHistoryBackup? history)
+    {
+        if (history is null) return (0, 0);
+
+        var sessions = 0;
+        var sets = 0;
+        foreach (WorkoutHistoryBackupEntry? entry in history.Sessions ?? [])
+        {
+            if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
+                continue;
+            sessions++;
+            sets += (entry.Sets ?? []).Count(s => s is not null);
+        }
+
+        return (sessions, sets);
+    }
+
+    private static int CountPreferences(Dictionary<string, string>? preferences)
+    {
+        if (preferences is not { Count: > 0 })
+            return 0;
+
+        var knownSet = new HashSet<string>(KnownPreferenceBaseKeys, StringComparer.Ordinal);
+        return preferences.Count(kv => knownSet.Contains(kv.Key));
     }
 
     private async Task<int> ImportPlansAsync(AllDataBackup backup)

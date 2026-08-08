@@ -72,3 +72,41 @@ test('sign out returns to the login screen', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByLabel('Username')).toBeVisible({ timeout: 30_000 });
 });
+
+// Dismisses the seeded-data onboarding dialog when it is up; no-op otherwise.
+async function dismissOnboarding(page) {
+    try {
+        await page.getByRole('button', { name: 'Get Started' }).click({ timeout: 3000 });
+    } catch {
+        // No dialog; nothing to dismiss.
+    }
+}
+
+test('the rest timer resumes after leaving and returning to a workout', async ({ page }) => {
+    // Regression: navigating away from the active workout and back used to
+    // freeze the countdown (the page-disposed timer interop poisoned the
+    // shared JS module, so the tick chain never restarted).
+    await registerAndExpectHome(page);
+    await dismissOnboarding(page);
+
+    // Start the seeded plan and log a set to arm the rest timer.
+    await page.getByRole('button', { name: 'Start Push Day' }).click();
+    await page.getByRole('button', { name: 'Log set' }).click();
+
+    const digits = page.locator('.rest-timer-digits');
+    await expect(digits).toBeVisible({ timeout: 30_000 });
+
+    // Leave through the back guard, then resume the session from Home.
+    await page.goBack();
+    await page.getByRole('button', { name: 'Leave' }).click();
+    await dismissOnboarding(page);
+    await page.getByRole('button', { name: 'Continue workout' }).click();
+
+    // The countdown must be live again: the digits change across a ~2.5s window.
+    await expect(digits).toBeVisible({ timeout: 30_000 });
+    const readDigits = async () => (await digits.textContent()).replace(/\s+/g, '');
+    const before = await readDigits();
+    await page.waitForTimeout(2500);
+    const after = await readDigits();
+    expect(after).not.toBe(before);
+});

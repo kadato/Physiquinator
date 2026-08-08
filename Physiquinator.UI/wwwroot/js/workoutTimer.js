@@ -88,6 +88,12 @@ export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs,
             restTotalMs = activeMs;
             restStartTime = performance.now() - fraction * activeMs;
         }
+        // A leftover chain (e.g. the page was disposed without stopRestTimer
+        // being reached, then remounted) may still tick a stale dotNetRef.
+        // Bump the generation to kill it and always reschedule with the new
+        // reference, or the countdown freezes after navigation.
+        chainGeneration++;
+        scheduleTick(dotNetRef, intervalMs);
         return;
     }
 

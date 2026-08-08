@@ -91,6 +91,10 @@ else
                                      BodyweightKg="@_bodyweightKg"
                                      SetInputs="@_setInputs"
                                      SessionSets="@_sessionSets"
+                                     CanMoveUp="@(item.ExerciseIndex > 0)"
+                                     CanMoveDown="@(item.ExerciseIndex < ExerciseCount - 1)"
+                                     OnMoveUp="@(() => MoveExerciseAsync(item.ExerciseIndex, item.ExerciseIndex - 1))"
+                                     OnMoveDown="@(() => MoveExerciseAsync(item.ExerciseIndex, item.ExerciseIndex + 1))"
                                      OnToggle="ToggleAccordion"
                                      OnToggleSet="ToggleSetComplete"
                                      OnWeightChanged="HandleWeightStepperChanged"
@@ -159,7 +163,7 @@ else
     <MudIconButton Class="workout-undo-btn"
                    Icon="@Icons.Material.Filled.Restore"
                    OnClick="UndoLastSetCoreAsync"
-                   arialabel="Undo last set" />
+                   aria-label="Undo last set" />
 }
 
 @code {
@@ -597,6 +601,94 @@ else
         _activeExerciseIndex = _activeExerciseIndex == exerciseIndex ? -1 : exerciseIndex;
     }
 
+    private int ExerciseCount => SessionService.CurrentPlan?.Exercises.Count ?? 0;
+
+    /// <summary>
+    /// Moves an exercise to a different position for the rest of this session
+    /// only. The plan on disk stays untouched; the session snapshot and every
+    /// logged set index are remapped so history stays consistent.
+    /// </summary>
+    private async Task MoveExerciseAsync(int fromIndex, int toIndex)
+    {
+        if (_disposed || _isCompleting) return;
+
+        var plan = SessionService.CurrentPlan;
+        if (plan == null || fromIndex == toIndex) return;
+        if (fromIndex < 0 || toIndex < 0 || fromIndex >= plan.Exercises.Count || toIndex >= plan.Exercises.Count)
+            return;
+
+        var exercise = plan.Exercises[fromIndex];
+        plan.Exercises.RemoveAt(fromIndex);
+        plan.Exercises.Insert(toIndex, exercise);
+        for (var i = 0; i < plan.Exercises.Count; i++)
+            plan.Exercises[i].Order = i;
+
+        var mapping = new Dictionary<int, int>(plan.Exercises.Count);
+        for (var i = 0; i < plan.Exercises.Count; i++)
+        {
+            int newIndex;
+            if (i == fromIndex)
+                newIndex = toIndex;
+            else if (fromIndex < toIndex && i > fromIndex && i <= toIndex)
+                newIndex = i - 1;
+            else if (fromIndex > toIndex && i >= toIndex && i < fromIndex)
+                newIndex = i + 1;
+            else
+                newIndex = i;
+            mapping[i] = newIndex;
+        }
+
+        RemapSetDictionary(_setInputs, mapping);
+        RemapSetDictionary(_sessionSets, mapping);
+
+        var skipped = _skippedSets.Select(k => (mapping.GetValueOrDefault(k.Item1, k.Item1), k.Item2)).ToList();
+        _skippedSets.Clear();
+        foreach (var key in skipped)
+            _skippedSets.Add(key);
+
+        var actives = _activeSetIndices.Select(kv => (kv.Key, kv.Value)).ToList();
+        _activeSetIndices.Clear();
+        foreach (var (oldIndex, setIndex) in actives)
+            _activeSetIndices[mapping.GetValueOrDefault(oldIndex, oldIndex)] = setIndex;
+
+        _activeExerciseIndex = mapping.GetValueOrDefault(_activeExerciseIndex, _activeExerciseIndex);
+
+        SessionService.RemapExerciseIndexes(mapping);
+
+        try
+        {
+            if (_historySessionId != null)
+            {
+                await HistoryRepository.RemapSetLogExerciseIndexesAsync(_historySessionId, mapping);
+                await HistoryRepository.UpdateSessionSnapshotAsync(
+                    _historySessionId,
+                    WorkoutPlanService.SerializePlanToJson(plan));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Exercise reorder persistence error");
+        }
+
+        Snackbar.Add($"'{exercise.Name}' moved.", Severity.Info);
+        await SafeStateHasChangedAsync();
+    }
+
+    private static void RemapSetDictionary(
+        Dictionary<(int, int), (double? Weight, int? Reps)> target,
+        IReadOnlyDictionary<int, int> mapping)
+    {
+        var items = target
+            .Select(kv => (
+                Key: (Index: mapping.GetValueOrDefault(kv.Key.Item1, kv.Key.Item1), kv.Key.Item2),
+                kv.Value))
+            .ToList();
+
+        target.Clear();
+        foreach (var (key, value) in items)
+            target[key] = value;
+    }
+
     private void HandleWeightStepperChanged((int ExerciseIndex, int SetIndex, double? Weight) input)
     {
         var (exIdx, setIdx, weight) = input;
@@ -802,26 +894,7 @@ else
             var prior = rows.Where(r => r.SessionId != _historySessionId);
             PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg);
 
-            var setVolumeKg = PersonalRecordCalculator.ComputeVolume(reps, weightKg, exercise.LogType, _bodyweightKg);
-            string? message = null;
-            if (exercise.LogType == ExerciseLogType.Duration)
-            {
-                if (TryBeat(records, ExerciseRecordKind.LongestDuration, reps))
-                    message = $"New PR — {exercise.Name}: {reps}s set";
-            }
-            else if (TryBeat(records, ExerciseRecordKind.BestWeight, weightKg))
-            {
-                message = $"New PR — {exercise.Name}: {FormatPersonalWeight(exercise.LogType, weightKg)}";
-            }
-            else if (TryBeat(records, ExerciseRecordKind.MostReps, reps))
-            {
-                message = $"New PR — {exercise.Name}: {reps} reps";
-            }
-            else if (TryBeat(records, ExerciseRecordKind.BestVolume, setVolumeKg))
-            {
-                message = $"New PR — {exercise.Name}: {ExerciseWeightFormatter.FormatKg(setVolumeKg)} kg set volume";
-            }
-
+            var (_, message) = BuildPersonalRecordMessage(records, exercise, weightKg, reps);
             if (message != null)
                 Snackbar.Add(message, Severity.Success);
         }
@@ -829,6 +902,87 @@ else
         {
             Logger.LogDebug(ex, "Personal record check failed");
         }
+    }
+
+    /// <summary>
+    /// Builds the recap shown after the workout ends: session stats and every
+    /// personal record earned in this session (one per record kind and exercise).
+    /// Returns null when nothing was logged, so no dialog is shown.
+    /// </summary>
+    private async Task<IReadOnlyList<WorkoutSummaryPr>?> BuildWorkoutSummaryAsync()
+    {
+        var plan = SessionService.CurrentPlan;
+        if (plan == null || _sessionSets.Count == 0)
+            return null;
+
+        var prs = new List<WorkoutSummaryPr>();
+        foreach (var exercise in plan.Exercises)
+        {
+            var exIdx = plan.Exercises.IndexOf(exercise);
+
+            IReadOnlyList<ExerciseSetLogRow> rows;
+            try
+            {
+                rows = await HistoryRepository.GetExerciseSetLogRowsAsync(plan.Id, exercise.Name);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug(ex, "Personal record check failed");
+                continue;
+            }
+
+            var prior = rows.Where(r => r.SessionId != _historySessionId);
+            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg);
+
+            var claimed = new HashSet<ExerciseRecordKind>();
+            foreach (var (key, value) in _sessionSets)
+            {
+                if (key.Item1 != exIdx)
+                    continue;
+
+                var (kind, message) = BuildPersonalRecordMessage(records, exercise, value.Weight ?? 0, value.Reps ?? 0);
+                if (kind is not { } k || message == null || !claimed.Add(k))
+                    continue;
+
+                prs.Add(new WorkoutSummaryPr(exercise.Name, message));
+            }
+        }
+
+        return prs;
+    }
+
+    /// <summary>
+    /// Returns the record kind and human message when the given set beats the
+    /// best previous performance, otherwise nulls. Checks kinds in priority
+    /// order: duration, best weight, most reps, best volume.
+    /// </summary>
+    private (ExerciseRecordKind? Kind, string? Message) BuildPersonalRecordMessage(
+        PersonalRecords records,
+        ExercisePlan exercise,
+        double weightKg,
+        int reps)
+    {
+        var setVolumeKg = PersonalRecordCalculator.ComputeVolume(reps, weightKg, exercise.LogType, _bodyweightKg);
+
+        if (exercise.LogType == ExerciseLogType.Duration)
+        {
+            if (TryBeat(records, ExerciseRecordKind.LongestDuration, reps))
+                return (ExerciseRecordKind.LongestDuration, $"{reps}s set");
+        }
+        else if (TryBeat(records, ExerciseRecordKind.BestWeight, weightKg))
+        {
+            return (ExerciseRecordKind.BestWeight, FormatPersonalWeight(exercise.LogType, weightKg));
+        }
+        else if (TryBeat(records, ExerciseRecordKind.MostReps, reps))
+        {
+            return (ExerciseRecordKind.MostReps, $"{reps} reps");
+        }
+        else if (TryBeat(records, ExerciseRecordKind.BestVolume, setVolumeKg))
+        {
+            return (ExerciseRecordKind.BestVolume, $"{ExerciseWeightFormatter.FormatKg(setVolumeKg)} kg set volume");
+        }
+
+        return (null, null);
     }
 
     private static bool TryBeat(PersonalRecords records, ExerciseRecordKind kind, double value)
@@ -981,12 +1135,12 @@ else
 
     private async Task PlayRestCompleteAlertsAsync()
     {
-        if (!RestAlertSettings.Enabled)
+        // The knock is an in-app sound, so it follows the "Sound & vibration"
+        // setting only. Push notifications are a separate native concern and
+        // are gated by RestAlertSettings.Enabled elsewhere.
+        if (!RestAlertSettings.SoundVibrationEnabled)
             return;
 
-        // The only alert during a workout: a single deep knock when the rest
-        // time is done. No notification or vibration here - those are handled
-        // natively when the app is backgrounded.
         try
         {
             await TimerInterop.PlayRestCompleteSoundAsync();
@@ -1060,12 +1214,20 @@ else
     {
         if (_disposed) return;
 
+        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
+
         await TimerInterop.SetKeepScreenOnAsync(false);
         await TimerInterop.UnregisterBackHandlerAsync();
         await TimerInterop.StopTimerAsync();
 
+        IReadOnlyList<WorkoutSummaryPr>? summaryPrs = null;
+        var durationLabel = ElapsedLabel;
+        var volumeLabel = SessionVolumeLabel ?? "";
+        var setsLogged = _sessionSets.Count;
+
         try
         {
+            summaryPrs = await BuildWorkoutSummaryAsync();
             await HistoryRepository.EndSessionAsync(_historySessionId);
         }
         catch (Exception ex)
@@ -1075,6 +1237,29 @@ else
 
         _historySessionId = null;
         SessionService.EndWorkout();
+
+        if (summaryPrs != null)
+        {
+            var parameters = new DialogParameters<WorkoutSummaryDialog>
+            {
+                { x => x.PlanName, planName },
+                { x => x.DurationLabel, durationLabel },
+                { x => x.VolumeLabel, volumeLabel },
+                { x => x.SetsLogged, setsLogged },
+                { x => x.PersonalRecords, summaryPrs },
+            };
+
+            var options = new DialogOptions
+            {
+                CloseButton = false,
+                CloseOnEscapeKey = false,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            };
+
+            await DialogService.ShowAsync<WorkoutSummaryDialog>("Workout complete", parameters, options);
+        }
+
         Navigation.NavigateTo(AppRoutes.Home);
     }
 

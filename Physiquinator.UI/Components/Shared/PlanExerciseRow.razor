@@ -21,12 +21,31 @@
         </button>
     </div>
 
-    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                   Color="Color.Error"
-                   Size="Size.Small"
-                   Class="plan-exercise-row__delete"
-                   aria-label="@($"Remove {Exercise.Name}")"
-                   OnClick="OnDelete" />
+    <div class="plan-exercise-row__actions">
+        @if (CanMoveUp || CanMoveDown)
+        {
+            <MudStack Row="true" Spacing="0" Class="plan-exercise-row__moves">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                               Size="Size.Small"
+                               Class="plan-exercise-row__move"
+                               Disabled="!CanMoveUp"
+                               aria-label="@($"Move {Exercise.Name} up")"
+                               OnClick="MoveUp" />
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                               Size="Size.Small"
+                               Class="plan-exercise-row__move"
+                               Disabled="!CanMoveDown"
+                               aria-label="@($"Move {Exercise.Name} down")"
+                               OnClick="MoveDown" />
+            </MudStack>
+        }
+        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                       Color="Color.Error"
+                       Size="Size.Small"
+                       Class="plan-exercise-row__delete"
+                       aria-label="@($"Remove {Exercise.Name}")"
+                       OnClick="OnDelete" />
+    </div>
 </div>
 
 @code {
@@ -37,10 +56,26 @@
     public int Index { get; set; }
 
     [Parameter]
+    public bool CanMoveUp { get; set; }
+
+    [Parameter]
+    public bool CanMoveDown { get; set; }
+
+    [Parameter]
     public EventCallback OnEdit { get; set; }
 
     [Parameter]
     public EventCallback OnDelete { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveDown { get; set; }
+
+    private Task MoveUp() => OnMoveUp.InvokeAsync(Index);
+
+    private Task MoveDown() => OnMoveDown.InvokeAsync(Index);
 
     private int DisplayIndex => Index + 1;
 

@@ -48,6 +48,19 @@
             }
         </MudStack>
 
+        @if (GetPresetSeconds().Any())
+        {
+            <div class="rest-timer-presets" aria-label="Add quick rest presets">
+                @foreach (var preset in GetPresetSeconds())
+                {
+                    <button type="button"
+                            class="rest-timer-preset-btn"
+                            aria-label="@($"Add {preset} seconds of rest")"
+                            @onclick="() => OnAddTime.InvokeAsync(preset)">+@FormatSeconds(preset)</button>
+                }
+            </div>
+        }
+
         <div class="rest-timer-edge-track" aria-hidden="true">
             <div class="rest-timer-edge-fill @EdgeFillClass"></div>
         </div>
@@ -152,16 +165,19 @@
         }
     }
 
-    private string AddTimeLabel
+    private IReadOnlyList<int> GetPresetSeconds() => new[] { 15, 30, 60 }
+        .Where(candidate => candidate != AddRestSeconds)
+        .ToList();
+
+    private string AddTimeLabel => FormatSeconds(AddRestSeconds);
+
+    private static string FormatSeconds(int seconds)
     {
-        get
-        {
-            if (AddRestSeconds < 60)
-                return $"{AddRestSeconds}s";
-            var m = AddRestSeconds / 60;
-            var s = AddRestSeconds % 60;
-            return $"{m}:{s:D2}";
-        }
+        if (seconds < 60)
+            return $"{seconds}s";
+        var m = seconds / 60;
+        var s = seconds % 60;
+        return $"{m}:{s:D2}";
     }
 
     private static string FormatMinutes(int totalSeconds) => $"{totalSeconds / 60:D2}";

@@ -82,7 +82,9 @@
                                       SortableVersion="_sortableVersion"
                                       OnReordered="HandleReordered"
                                       OnEdit="EditExerciseAsync"
-                                      OnDelete="ConfirmRemoveExerciseAsync" />
+                                      OnDelete="ConfirmRemoveExerciseAsync"
+                                      OnMoveUp="MoveExerciseUp"
+                                      OnMoveDown="MoveExerciseDown" />
                 }
 
                 <form @onsubmit="AddExerciseAsync" @onsubmit:preventDefault class="plan-add-exercise">
@@ -224,9 +226,16 @@
         if (string.IsNullOrWhiteSpace(NewExerciseName))
             return;
 
+        var name = NewExerciseName.Trim();
+        if (Exercises.Any(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            Snackbar.Add($"'{name}' is already in this plan.", Severity.Warning);
+            return;
+        }
+
         var exercise = new ExercisePlan
         {
-            Name = NewExerciseName.Trim(),
+            Name = name,
             SetCount = DefaultSetCount,
             Order = Exercises.Count,
             RestIntervalSeconds = RestIntervalSeconds
@@ -278,6 +287,15 @@
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is ExercisePlan updated)
         {
+            var isDuplicate = Exercises.Any(e =>
+                e.Id != updated.Id
+                && string.Equals(e.Name, updated.Name, StringComparison.OrdinalIgnoreCase));
+            if (isDuplicate)
+            {
+                Snackbar.Add($"'{updated.Name}' is already in this plan.", Severity.Warning);
+                return;
+            }
+
             if (isNew && insertAtEnd)
                 Exercises.Add(updated);
             else
@@ -314,7 +332,8 @@
         if (index < 0 || index >= Exercises.Count)
             return;
 
-        var name = Exercises[index].Name;
+        var removed = Exercises[index];
+        var name = removed.Name;
         var confirmed = await DialogService.ConfirmAsync(
             "Remove exercise",
             $"Remove '{name}' from this plan?",
@@ -328,7 +347,32 @@
         RenumberExercises();
         BumpSortable();
         _dirty = true;
+
+        Snackbar.Add(
+            $"'{name}' removed.",
+            Severity.Success,
+            options =>
+            {
+                options.Action = "Undo";
+                options.ActionColor = Color.Primary;
+                options.RequireInteraction = true;
+                options.OnClick = _ => RestoreRemovedExerciseAsync(index, removed);
+            });
     }
+
+    private async Task RestoreRemovedExerciseAsync(int index, ExercisePlan exercise)
+    {
+        Exercises.Insert(Math.Min(index, Exercises.Count), exercise);
+        RenumberExercises();
+        BumpSortable();
+        _dirty = true;
+        Snackbar.Add($"'{exercise.Name}' restored.", Severity.Success);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void MoveExerciseUp(int index) => HandleReordered((index, index - 1));
+
+    private void MoveExerciseDown(int index) => HandleReordered((index, index + 1));
 
     private void RenumberExercises()
     {

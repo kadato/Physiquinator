@@ -1,6 +1,7 @@
 @page "/history/{SessionId}"
 @using System.Text
 @inject WorkoutHistoryRepository HistoryRepo
+@inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject UserProfileService UserProfileService
@@ -8,10 +9,12 @@
 @inject IFileTransferService FileTransfer
 @inject ISnackbar Snackbar
 @inject TimeProvider TimeProvider
+@inject IJSRuntime JS
 
 <PageHeader Title="Session" ShowBack="false">
     @if (_ready && _session != null)
     {
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">Copy</MudButton>
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">Share</MudButton>
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
     }
@@ -48,6 +51,21 @@ else
                 <MudButton Variant="Variant.Outlined" Class="mt-2 premium-btn premium-btn-outlined" OnClick="@(() => GoPlan(planId))">
                     Open plan
                 </MudButton>
+            }
+
+            @if (_sets.Count > 0)
+            {
+                <div class="history-stats mt-3">
+                    <StatCard Value="@TotalSetCount.ToString()" Label="Sets" />
+                    @if (TotalVolumeLabel is { } volume)
+                    {
+                        <StatCard Value="@volume" Label="Volume" />
+                    }
+                    @if (DurationLabel is { } duration)
+                    {
+                        <StatCard Value="@duration" Label="Duration" />
+                    }
+                </div>
             }
         </MudPaper>
 
@@ -100,9 +118,14 @@ else
                     {
                         @if (_editMode)
                         {
-                            <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="ToggleEditMode">
-                                Done
-                            </MudButton>
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Add" OnClick="AddSetAsync">
+                                    Add set
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="ToggleEditMode">
+                                    Done
+                                </MudButton>
+                            </MudStack>
                         }
                         else
                         {
@@ -206,7 +229,7 @@ else
     <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-2"
                    Icon="@Icons.Material.Filled.Delete"
                    OnClick="DeleteSessionClick"
-                   arialabel="Delete this workout" />
+                   aria-label="Delete this workout" />
 
     @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId2)
     {
@@ -214,7 +237,7 @@ else
         <MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
                        Icon="@Icons.Material.Filled.PlayArrow"
                        OnClick="@(() => ContinueWorkout(activePlanId2))"
-                       arialabel="Continue workout" />
+                       aria-label="Continue workout" />
     }
 }
 
@@ -371,6 +394,7 @@ else
     {
         if (_session == null) return;
 
+        var inProgress = _session.EndedAtUtc == null;
         var ok = await DialogService.ConfirmAsync(
             "Delete workout",
             "Remove this session and all logged sets? This cannot be undone.",
@@ -379,8 +403,151 @@ else
 
         if (!ok) return;
 
+        if (inProgress)
+            SessionService.EndWorkout();
+
         await HistoryRepo.DeleteSessionAsync(_session.Id);
         Navigation.NavigateTo(AppRoutes.History);
+        Snackbar.Add("Session deleted.", Severity.Success);
+    }
+
+    private async Task AddSetAsync()
+    {
+        if (_session == null) return;
+
+        if (_distinctExerciseNames.Count == 0)
+        {
+            Snackbar.Add("No exercises to add a set to.", Severity.Info);
+            return;
+        }
+
+        var parameters = new DialogParameters<AddSetDialog>
+        {
+            { x => x.ExerciseNames, _distinctExerciseNames },
+            { x => x.LogTypes, _logTypesByExercise },
+            { x => x.UnitSuffix, ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current) },
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<AddSetDialog>("Add set", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false } && result.Data is AddSetResult add)
+        {
+            var setIndex = _sets
+                .Where(s => string.Equals(s.ExerciseName, add.ExerciseName, StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.SetIndex)
+                .DefaultIfEmpty(-1)
+                .Max() + 1;
+
+            var exerciseIndex = _snapshot?.Exercises
+                .FirstOrDefault(e => string.Equals(e.Name, add.ExerciseName, StringComparison.OrdinalIgnoreCase))
+                ?.Order ?? 0;
+
+            double? weightKg = add.DisplayWeightKg is { } dw
+                ? ExerciseWeightFormatter.ToKg(dw, WeightUnitService.Current)
+                : null;
+
+            try
+            {
+                await HistoryRepo.LogSetAsync(_session.Id, exerciseIndex, add.ExerciseName, setIndex, add.Reps, weightKg);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not add set: {ex.Message}", Severity.Error);
+                return;
+            }
+
+            await ReloadAsync();
+            Snackbar.Add("Set added.", Severity.Success);
+        }
+    }
+
+    private async Task CopySessionAsync()
+    {
+        if (_session == null) return;
+
+        var text = BuildSessionText();
+        var copied = false;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("physiquinatorHelpers.copyText", text);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Copy failed: {ex.Message}", Severity.Error);
+            return;
+        }
+
+        if (copied)
+            Snackbar.Add("Session summary copied.", Severity.Success);
+        else
+            Snackbar.Add("Could not copy to clipboard.", Severity.Error);
+    }
+
+    /// <summary>Builds a readable text summary of the session for sharing or copying.</summary>
+    private string BuildSessionText()
+    {
+        if (_session == null) return "";
+
+        var sb = new StringBuilder();
+        sb.AppendLine(_session.PlanName);
+        sb.AppendLine($"Started: {UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)}");
+        if (_session.EndedAtUtc is { } ended)
+            sb.AppendLine($"Ended: {UiDateFormats.LocalDateTimeCompact(ended)}");
+        sb.AppendLine();
+
+        foreach (var group in _sets.GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase))
+        {
+            sb.AppendLine($"{group.Key}:");
+            foreach (var set in group)
+            {
+                sb.AppendLine($"  Set {set.SetIndex + 1}: {FormatSetForShare(set)}");
+            }
+            sb.AppendLine();
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private int TotalSetCount => _sets.Count;
+
+    private string? TotalVolumeLabel
+    {
+        get
+        {
+            if (_sets.Count == 0) return null;
+
+            double total = 0;
+            var any = false;
+            foreach (var set in _sets)
+            {
+                if (GetLogType(set.ExerciseName) == ExerciseLogType.Duration || set.Reps is not { } reps)
+                    continue;
+                total += PersonalRecordCalculator.ComputeVolume(reps, set.WeightKg, GetLogType(set.ExerciseName), _bodyweightKg);
+                any = true;
+            }
+
+            if (!any) return null;
+            var display = ExerciseWeightFormatter.ToDisplay(total, WeightUnitService.Current);
+            return $"{display.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+        }
+    }
+
+    private string? DurationLabel
+    {
+        get
+        {
+            if (_session?.EndedAtUtc is not { } ended || _session.StartedAtUtc == default)
+                return null;
+
+            var minutes = (int)(ended - _session.StartedAtUtc).TotalMinutes;
+            return minutes < 60 ? $"{minutes} min" : $"{minutes / 60}h {minutes % 60}m";
+        }
     }
 
     private ExerciseLogType GetLogType(string exerciseName) =>
@@ -409,24 +576,7 @@ else
     {
         if (_session == null) return;
 
-        var sb = new StringBuilder();
-        sb.AppendLine(_session.PlanName);
-        sb.AppendLine($"Started: {UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)}");
-        if (_session.EndedAtUtc is { } ended)
-            sb.AppendLine($"Ended: {UiDateFormats.LocalDateTimeCompact(ended)}");
-        sb.AppendLine();
-
-        foreach (var group in _sets.GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase))
-        {
-            sb.AppendLine($"{group.Key}:");
-            foreach (var set in group)
-            {
-                sb.AppendLine($"  Set {set.SetIndex + 1}: {FormatSetForShare(set)}");
-            }
-            sb.AppendLine();
-        }
-
-        var text = sb.ToString().TrimEnd();
+        var text = BuildSessionText();
         var fileName = FileTransferNames.TextFileName(
             FileTransferNames.SafeFileStem(_session.PlanName),
             TimeProvider.GetLocalNow());

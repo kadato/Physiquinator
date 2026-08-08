@@ -10,6 +10,10 @@
         var index = i;
         <PlanExerciseRow Exercise="Exercises[index]"
                          Index="index"
+                         CanMoveUp="@(index > 0)"
+                         CanMoveDown="@(index < Exercises.Count - 1)"
+                         OnMoveUp="@(() => OnMoveUp.InvokeAsync(index))"
+                         OnMoveDown="@(() => OnMoveDown.InvokeAsync(index))"
                          OnEdit="@(() => OnEdit.InvokeAsync(index))"
                          OnDelete="@(() => OnDelete.InvokeAsync(index))" />
     }
@@ -32,6 +36,12 @@
 
     [Parameter]
     public EventCallback<int> OnDelete { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveDown { get; set; }
 
     private DotNetObjectReference<PlanExerciseList>? _dotNetRef;
     private int _lastSortableCount = -1;

@@ -1,15 +1,28 @@
 @page "/history"
 @implements IAsyncDisposable
 @inject WorkoutHistoryRepository HistoryRepo
+@inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
 @inject WorkoutStatsService StatsService
 @inject WorkoutScheduleService ScheduleService
 @inject UserProfileService UserProfileService
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject WeightUnitService WeightUnitService
 @inject IJSRuntime JS
 <MudStack Spacing="3">
-    <PageHeader Title="Workout history" ShowBack="false" />
+    <PageHeader Title="Workout history" ShowBack="false">
+        @if (_sessions is { Count: > 0 })
+        {
+            <MudButton Variant="Variant.Text"
+                       Color="@(_selectMode ? Color.Primary : Color.Default)"
+                       StartIcon="@(_selectMode ? Icons.Material.Filled.Close : Icons.Material.Filled.Checklist)"
+                       OnClick="ToggleSelectMode"
+                       Class="history-select-toggle">
+                @(_selectMode ? "Done" : "Select")
+            </MudButton>
+        }
+    </PageHeader>
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
         Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday.
     </MudText>
@@ -94,10 +107,6 @@
                 <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
                     @UiDateFormats.DateOnlyCompact(selectedDay)
                 </MudChip>
-                @if (!_listSessions.Any())
-                {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">— none logged.</MudText>
-                }
             </MudStack>
         }
 
@@ -108,54 +117,102 @@
         }
         else if (!_listSessions.Any() && _selectedDay != null)
         {
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                Pick another day or clear the filter.
-            </MudText>
+            <EmptyState Message="No workouts logged on this day."
+                        Icon="@Icons.Material.Outlined.CalendarMonth">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearDayFilter">
+                    Clear filter
+                </MudButton>
+            </EmptyState>
         }
         else
         {
+            @if (_selectMode)
+            {
+                <div class="history-select-bar">
+                    <MudText Typo="Typo.body2" Class="history-select-bar__count">
+                        @_selectedSessionIds.Count selected
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               Disabled="_selectedSessionIds.Count == 0"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="DeleteSelectedAsync">
+                        Delete
+                    </MudButton>
+                </div>
+            }
+
             <div class="history-session-list">
                 @foreach (var s in _listSessions)
                 {
                     var sid = s.Id;
-                    <button @key="s.Id" type="button" class="history-session-card" @onclick="@(() => OpenSession(sid))">
-                        <div class="history-session-card__inner">
-                            <div class="history-session-card__left">
-                                <div class="history-session-card__info">
-                                    <span class="history-session-card__title">@s.PlanName</span>
-                                    <span class="history-session-card__subtitle">
-                                        @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
-                                        @if (s.EndedAtUtc != null)
-                                        {
-                                            <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="history-session-card__badge-inprogress">In progress</span>
-                                        }
-                                    </span>
+                    <div @key="s.Id" class="history-session-row">
+                        @if (_selectMode)
+                        {
+                            <button type="button"
+                                    class="history-session-check"
+                                    aria-label="@($"Select {s.PlanName}")"
+                                    @onclick="@(() => ToggleSelect(sid))">
+                                <MudIcon Icon="@(IsSelected(sid)
+                                                   ? Icons.Material.Filled.CheckCircle
+                                                   : Icons.Material.Filled.RadioButtonUnchecked)"
+                                         Color="@(IsSelected(sid) ? Color.Primary : Color.Default)" />
+                            </button>
+                        }
+                        <button @key="s.Id"
+                                type="button"
+                                class="history-session-card@(IsSelected(sid) ? " history-session-card--selected" : "")"
+                                @onclick="@(() => HandleSessionTap(sid))">
+                            <div class="history-session-card__inner">
+                                <div class="history-session-card__left">
+                                    <div class="history-session-card__info">
+                                        <span class="history-session-card__title">@s.PlanName</span>
+                                        <span class="history-session-card__subtitle">
+                                            @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
+                                            @if (s.EndedAtUtc != null)
+                                            {
+                                                <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="history-session-card__badge-inprogress">In progress</span>
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="history-session-card__right">
+                                    @if (_selectMode)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="history-session-card__chevron" />
+                                    }
+                                    else if (s.EndedAtUtc == null && s.TryGetPlanId() is { } continuePlanId)
+                                    {
+                                        <span @onclick:stopPropagation="true">
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Class="history-session-card__continue-btn"
+                                                       OnClick="@(() => ContinueWorkout(continuePlanId))">
+                                                Continue
+                                            </MudButton>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span @onclick:stopPropagation="true" Class="history-session-card__actions">
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                           Size="Size.Small"
+                                                           Class="history-session-card__delete-btn"
+                                                           aria-label="@($"Delete session {UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)}")"
+                                                           OnClick="@(() => DeleteSession(sid, s.PlanName, s.EndedAtUtc == null))" />
+                                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="history-session-card__chevron" />
+                                        </span>
+                                    }
                                 </div>
                             </div>
-                            <div class="history-session-card__right">
-                                @if (s.EndedAtUtc == null && s.TryGetPlanId() is { } continuePlanId)
-                                {
-                                    <span @onclick:stopPropagation="true">
-                                        <MudButton Variant="Variant.Filled"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Class="history-session-card__continue-btn"
-                                                   OnClick="@(() => ContinueWorkout(continuePlanId))">
-                                            Continue
-                                        </MudButton>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="history-session-card__chevron" />
-                                }
-                            </div>
-                        </div>
-                    </button>
+                        </button>
+                    </div>
                 }
             </div>
 
@@ -192,6 +249,8 @@
     private bool _isLoadingMore;
     private bool _sentinelObserved;
     private DotNetObjectReference<History>? _dotNetRef;
+    private bool _selectMode;
+    private readonly HashSet<string> _selectedSessionIds = new(StringComparer.Ordinal);
 
     private BodyweightEntry? _latestBodyweight;
     private double? _bodyweightInputKg;
@@ -208,6 +267,95 @@
 
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
+
+    private void HandleSessionTap(string sessionId)
+    {
+        if (_selectMode)
+            ToggleSelect(sessionId);
+        else
+            OpenSession(sessionId);
+    }
+
+    private void ToggleSelectMode()
+    {
+        _selectMode = !_selectMode;
+        if (!_selectMode)
+            _selectedSessionIds.Clear();
+    }
+
+    private bool IsSelected(string sessionId) => _selectedSessionIds.Contains(sessionId);
+
+    private void ToggleSelect(string sessionId)
+    {
+        if (!_selectedSessionIds.Add(sessionId))
+            _selectedSessionIds.Remove(sessionId);
+    }
+
+    private async Task DeleteSession(string sessionId, string planName, bool inProgress)
+    {
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete workout?",
+            $"Delete the '{(string.IsNullOrWhiteSpace(planName) ? "workout" : planName)}' session" +
+            (inProgress ? " (in progress)" : "") +
+            " and all its logged sets? This cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
+
+        if (!confirmed)
+            return;
+
+        if (inProgress)
+            SessionService.EndWorkout();
+
+        await HistoryRepo.DeleteSessionAsync(sessionId);
+        _selectedSessionIds.Remove(sessionId);
+        await ReloadAsync();
+        Snackbar.Add("Session deleted.", Severity.Success);
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        if (_selectedSessionIds.Count == 0)
+            return;
+
+        var confirmed = await DialogService.ConfirmAsync(
+            "Delete workouts?",
+            $"Delete {_selectedSessionIds.Count} session(s) and all their logged sets? This cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: Color.Error);
+
+        if (!confirmed)
+            return;
+
+        foreach (var sessionId in _selectedSessionIds)
+        {
+            var session = _sessions?.FirstOrDefault(s => s.Id == sessionId);
+            if (session?.EndedAtUtc == null)
+                SessionService.EndWorkout();
+
+            await HistoryRepo.DeleteSessionAsync(sessionId);
+        }
+
+        _selectedSessionIds.Clear();
+        await ReloadAsync();
+        Snackbar.Add("Sessions deleted.", Severity.Success);
+    }
+
+    private async Task ReloadAsync()
+    {
+        _sessions = [.. await HistoryRepo.GetRecentSessionsAsync(SessionPageSize)];
+        _loadedSessionCount = _sessions.Count;
+        _hasMoreSessions = _sessions.Count >= SessionPageSize;
+        _daySessions = null;
+
+        var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
+        var bodyweightTask = HistoryRepo.GetBodyweightLogsAsync(1);
+        await Task.WhenAll(statsTask, bodyweightTask);
+
+        (_summary, _activityByDay) = await statsTask;
+        MapLatestBodyweight(await bodyweightTask);
+        await UpdateSessionsListAsync();
+    }
 
     private void ContinueWorkout(Guid planId) =>
         Navigation.NavigateTo(AppRoutes.Workout(planId));

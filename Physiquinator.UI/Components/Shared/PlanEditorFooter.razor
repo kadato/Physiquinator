@@ -5,7 +5,7 @@
                Icon="@Icons.Material.Filled.Check"
                Disabled="@SaveDisabled"
                OnClick="OnSave"
-               arialabel="Save plan" />
+               aria-label="Save plan" />
 
 @if (!IsNew)
 {
@@ -13,14 +13,14 @@
     <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--br-2"
                    Icon="@Icons.Material.Filled.Upload"
                    OnClick="OnExport"
-                   arialabel="Export plan" />
+                   aria-label="Export plan" />
 }
 
 @* Cancel — bottom-left secondary mini FAB *@
-<MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--bl-1"
-               Icon="@Icons.Material.Filled.ArrowBack"
-               OnClick="OnCancel"
-               arialabel="Go back" />
+    <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--bl-1"
+                   Icon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="OnCancel"
+                   aria-label="Go back" />
 
 
 @code {

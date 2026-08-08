@@ -28,9 +28,29 @@
 else
 {
     <MudStack Spacing="3">
-        <MudText Typo="Typo.body2" Class="mud-text-secondary">
-            Logged performance on this plan — up to the last <strong>@MaxSessions</strong> sessions that include this exercise.
-        </MudText>
+        @if (_planMissing)
+        {
+            <MudAlert Severity="Severity.Warning">
+                This plan no longer exists, but its logged history is still shown here.
+            </MudAlert>
+        }
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+            <MudSelect T="ExerciseProgressRange"
+                       Label="Range"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Margin="Margin.Dense"
+                       Class="exercise-progress-range"
+                       Value="_range"
+                       ValueChanged="OnRangeChanged">
+                <MudSelectItem Value="ExerciseProgressRange.Last10">Last 10 sessions</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.Last30">Last 30 sessions</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.Last60">Last 60 sessions</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.All">All sessions</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@_rows.Count session(s) with this exercise</MudText>
+        </MudStack>
 
         @if (!_rows.Any())
         {
@@ -38,37 +58,50 @@ else
         }
         else
         {
-            @if (_showChart)
+            @if (MetricOptions.Count > 1)
             {
-                <MudPaper Class="pa-3 exercise-progress-chart" Elevation="0">
-                    <MudText Typo="Typo.h6" Class="mb-1">Progression</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-                        @GetChartCaption()
-                    </MudText>
-                    @if (_hasChartData)
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    @foreach (var metric in MetricOptions)
                     {
-                        <div class="exercise-progress-chart__plot">
-                            <MudChart T="double"
-                                      ChartType="ChartType.Line"
-                                      ChartSeries="@_chartSeries"
-                                      ChartLabels="@_chartLabels"
-                                      ChartOptions="@_chartOptions"
-                                      Width="100%"
-                                      Height="@_chartHeightPx" />
-                        </div>
+                        <MudChip T="string"
+                                 Variant="@(_metric == metric ? Variant.Filled : Variant.Outlined)"
+                                 Color="@(_metric == metric ? Color.Primary : Color.Default)"
+                                 OnClick="@(() => SetMetric(metric))">
+                            @MetricLabel(metric)
+                        </MudChip>
                     }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                            Log reps or weight on sets to see progression.
-                        </MudText>
-                    }
-                </MudPaper>
+                </MudStack>
             }
+
+            <MudPaper Class="pa-3 exercise-progress-chart" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-1">Progression</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
+                    @GetChartCaption()
+                </MudText>
+                @if (_hasChartData)
+                {
+                    <div class="exercise-progress-chart__plot">
+                        <MudChart T="double"
+                                  ChartType="ChartType.Line"
+                                  ChartSeries="@_chartSeries"
+                                  ChartLabels="@_chartLabels"
+                                  ChartOptions="@_chartOptions"
+                                  Width="100%"
+                                  Height="@_chartHeightPx" />
+                    </div>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        Log reps or weight on sets to see progression.
+                    </MudText>
+                }
+            </MudPaper>
 
             <MudPaper Class="premium-table" Elevation="0">
                 <MudTable Items="_rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
+                        <MudTh>Date</MudTh>
                         @if (_logType == ExerciseLogType.Duration)
                         {
                             <MudTh>Total Time</MudTh>
@@ -89,6 +122,7 @@ else
                         <MudTh Class="exercise-progress-table__action" />
                     </HeaderContent>
                     <RowTemplate>
+                        <MudTd>@UiDateFormats.LocalDateCompact(context.StartedAtUtc)</MudTd>
                         @if (_logType == ExerciseLogType.Duration)
                         {
                             <MudTd>@(context.TotalReps)s</MudTd>
@@ -116,20 +150,37 @@ else
 }
 
 @code {
+    private enum ExerciseProgressRange
+    {
+        Last10,
+        Last30,
+        Last60,
+        All
+    }
+
+    private enum ChartMetric
+    {
+        Volume,
+        BestWeight,
+        TotalReps,
+        TotalTime
+    }
+
     [Parameter]
     public Guid PlanId { get; set; }
 
     [Parameter]
     public string ExerciseName { get; set; } = "";
 
-    private const int MaxSessions = 30;
+    private const int AllTimeMaxSessions = 200;
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
 
     private bool _ready;
+    private bool _planMissing;
     private string _decodedExerciseName = "";
     private IReadOnlyList<ExerciseSessionProgressEntry> _rows = Array.Empty<ExerciseSessionProgressEntry>();
-    private bool _showChart;
-    private bool _hasChartData;
+    private ExerciseProgressRange _range = ExerciseProgressRange.Last30;
+    private ChartMetric _metric = ChartMetric.Volume;
     private string[] _chartLabels = Array.Empty<string>();
     private ChartSeriesList _chartSeries = [];
     private LineChartOptions _chartOptions = new();
@@ -138,6 +189,27 @@ else
     private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
 
+    private int ActiveMaxSessions => _range switch
+    {
+        ExerciseProgressRange.Last10 => 10,
+        ExerciseProgressRange.Last60 => 60,
+        ExerciseProgressRange.All => AllTimeMaxSessions,
+        _ => 30
+    };
+
+    private IReadOnlyList<ChartMetric> MetricOptions => _logType switch
+    {
+        ExerciseLogType.Duration => [ChartMetric.TotalTime],
+        _ => [ChartMetric.Volume, ChartMetric.BestWeight, ChartMetric.TotalReps]
+    };
+
+    private static string MetricLabel(ChartMetric metric) => metric switch
+    {
+        ChartMetric.Volume => "Volume",
+        ChartMetric.BestWeight => "Best weight",
+        ChartMetric.TotalReps => "Total reps",
+        _ => "Total time"
+    };
 
     private void GoSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
@@ -174,6 +246,7 @@ else
         if (string.IsNullOrWhiteSpace(_decodedExerciseName))
         {
             _rows = Array.Empty<ExerciseSessionProgressEntry>();
+            _planMissing = false;
             BuildChartData();
             _ready = true;
             return;
@@ -181,16 +254,36 @@ else
 
         var plan = await PlanService.GetPlanAsync(PlanId);
         var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
+        _planMissing = ex == null;
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
-        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(PlanId, _decodedExerciseName, MaxSessions, _bodyweightKg, _logType);
+        _metric = _logType == ExerciseLogType.Duration ? ChartMetric.TotalTime : ChartMetric.Volume;
+        await LoadRowsAsync();
         BuildChartData();
         _ready = true;
     }
 
+    private async Task LoadRowsAsync()
+    {
+        _rows = await HistoryRepo.GetExerciseSessionProgressAsync(
+            PlanId, _decodedExerciseName, ActiveMaxSessions, _bodyweightKg, _logType);
+    }
+
+    private async Task OnRangeChanged(ExerciseProgressRange range)
+    {
+        _range = range;
+        await LoadRowsAsync();
+        BuildChartData();
+    }
+
+    private void SetMetric(ChartMetric metric)
+    {
+        _metric = metric;
+        BuildChartData();
+    }
+
     private void BuildChartData()
     {
-        _showChart = _rows.Count >= 2;
-        if (!_showChart)
+        if (_rows.Count == 0)
         {
             _chartLabels = Array.Empty<string>();
             _chartSeries = [];
@@ -203,23 +296,17 @@ else
             chronological.Select(r => r.StartedAtUtc).ToList(),
             UiDateFormats.LocalDateChartAxis,
             MaxChartAxisLabels);
-        var isVolumePlot = _logType == ExerciseLogType.WeightAndReps || (_logType == ExerciseLogType.BodyweightReps && _bodyweightKg.HasValue);
-        var values = isVolumePlot
-            ? chronological.Select(r => ExerciseWeightFormatter.ToDisplay(r.TotalVolumeKg, WeightUnitService.Current)).ToArray()
-            : chronological.Select(r => (double)r.TotalReps).ToArray();
+        var values = chronological.Select(GetMetricValue).ToArray();
         _hasChartData = values.Any(v => v > 0);
 
-        string seriesName = _logType switch
-        {
-            ExerciseLogType.Duration => "Total Duration",
-            _ when isVolumePlot => "Progression",
-            _ => "Total Reps"
-        };
-        _chartSeries = [ new ChartSeries<double>
-        {
-            Name = seriesName,
-            Data = values
-        } ];
+        _chartSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = GetSeriesName(),
+                Data = values
+            }
+        ];
 
         var maxValue = values.DefaultIfEmpty(0).Max();
         var rotateXLabels = chronological.Count > 4;
@@ -235,20 +322,51 @@ else
         };
     }
 
+    private double GetMetricValue(ExerciseSessionProgressEntry row) => _metric switch
+    {
+        ChartMetric.BestWeight => row.BestWeightKg is { } kg
+            ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
+            : 0,
+        ChartMetric.TotalReps or ChartMetric.TotalTime => row.TotalReps,
+        _ => ExerciseWeightFormatter.ToDisplay(row.TotalVolumeKg, WeightUnitService.Current)
+    };
+
+    private string GetSeriesName()
+    {
+        var unitSuffix = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
+        return _metric switch
+        {
+            ChartMetric.BestWeight => $"Best weight ({unitSuffix})",
+            ChartMetric.TotalReps => "Total reps",
+            ChartMetric.TotalTime => "Total duration (s)",
+            _ => $"Volume ({unitSuffix})"
+        };
+    }
+
     private string GetChartCaption()
     {
         var unitSuffix = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
         if (_logType == ExerciseLogType.Duration)
         {
-            return "Per set: duration in seconds.";
+            return "Total exercise time per session, in seconds.";
         }
         if (_logType == ExerciseLogType.BodyweightReps)
         {
-            return _bodyweightKg.HasValue
-                ? $"Volume per set: reps × (bodyweight [{ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)}] + offset)."
-                : "Bodyweight is not set in Settings, so only total reps are plotted.";
+            return _metric switch
+            {
+                ChartMetric.BestWeight => "Best bodyweight offset per session.",
+                ChartMetric.TotalReps => "Total reps per session.",
+                _ when _bodyweightKg.HasValue =>
+                    $"Volume per set: reps × (bodyweight [{ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)}] + offset).",
+                _ => "Bodyweight is not set in Settings, so only total reps are plotted."
+            };
         }
-        return $"Volume per set: reps × {unitSuffix} (both must be logged).";
+        return _metric switch
+        {
+            ChartMetric.BestWeight => $"Best logged weight per session, in {unitSuffix}.",
+            ChartMetric.TotalReps => "Total reps per session.",
+            _ => $"Volume per set: reps × {unitSuffix} (both must be logged)."
+        };
     }
 
     private static string FormatYAxisTick(double value) =>
@@ -260,4 +378,6 @@ else
             return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
         return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "—";
     }
+
+    private bool _hasChartData;
 }

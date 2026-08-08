@@ -9,6 +9,7 @@
 @inject IAppUpdateService AppUpdateService
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject WorkoutSessionService SessionService
+@inject UserProfileService UserProfileService
 @inject ILogger<MainLayout> Logger
 @inject IJSRuntime JSRuntime
 
@@ -26,6 +27,16 @@
 @if (AppInit.IsReady)
 {
     <div class="@appShellClasses">
+        @if (_showBottomNav)
+        {
+            <button type="button"
+                    class="app-profile-chip"
+                    aria-label="@($"Active profile: {ActiveProfileName}. Open settings")"
+                    @onclick="GoToSettings">
+                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                <span class="app-profile-chip__name">@ActiveProfileName</span>
+            </button>
+        }
         <nav class="app-nav-pill" aria-label="Main navigation">
             <div class="app-nav-pill__inner">
                 <NavLink href="@AppRoutes.Home" class="app-nav-tab" Match="NavLinkMatch.All" ActiveClass="app-nav-tab--active">
@@ -54,7 +65,7 @@
             <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1 app-fab--back"
                            Icon="@Icons.Material.Filled.ArrowBack"
                            OnClick="GoBack"
-                           arialabel="Go back" />
+                           aria-label="Go back" />
         }
     </div>
 }
@@ -253,8 +264,19 @@ else
 
     private async Task GoBack()
     {
-        await JSRuntime.InvokeVoidAsync("history.back");
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
+        }
+        catch (JSDisconnectedException)
+        {
+            Navigation.NavigateTo(AppRoutes.Home);
+        }
     }
+
+    private string ActiveProfileName => UserProfileService.GetActiveProfile().Name;
+
+    private void GoToSettings() => Navigation.NavigateTo(AppRoutes.Settings);
 
     public void Dispose()
     {

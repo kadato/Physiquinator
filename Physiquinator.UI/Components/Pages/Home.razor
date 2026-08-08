@@ -11,6 +11,7 @@
 @inject ISnackbar Snackbar
 @inject UserProfileService UserProfileService
 @inject IDemoSeedPreferences DemoSeedPreferences
+@inject IAppPreferences Preferences
 @inject IJSRuntime JS
 @inject WorkoutStatsService StatsService
 @inject IFileTransferService FileTransfer
@@ -121,6 +122,23 @@
     <MudIcon Icon="@Icons.Material.Filled.Add" />
     <span class="app-fab__label">New plan</span>
 </button>
+
+@if (_aiNeedsKeyHint)
+{
+    <MudAlert Severity="Severity.Warning" Class="home-ai-hint">
+        <div class="d-flex align-items-center gap-2">
+            <div class="flex-grow-1">
+                The AI assistant is enabled, but no API key is set yet.
+            </div>
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Warning"
+                       Class="flex-shrink-0"
+                       OnClick="GoToAiSettings">
+                Open settings
+            </MudButton>
+        </div>
+    </MudAlert>
+}
 
 @if (AiAssistant.GetSettings().Enabled)
 {
@@ -271,9 +289,10 @@
 
     private async Task DeletePlan(Guid planId, string planName)
     {
+        var plan = _plans?.FirstOrDefault(p => p.Id == planId);
         var confirmed = await DialogService.ConfirmAsync(
             "Delete plan",
-            $"Delete '{planName}'? This cannot be undone.",
+            $"Delete '{planName}'? You can undo this for a short time after.",
             confirmText: "Delete",
             confirmColor: Color.Error);
 
@@ -282,7 +301,26 @@
 
         await PlanService.DeletePlanAsync(planId);
         _plans = await PlanService.GetAllPlansAsync();
-        Snackbar.Add("Plan deleted.", Severity.Success);
+        Snackbar.Add(
+            "Plan deleted.",
+            Severity.Success,
+            options =>
+            {
+                options.Action = "Undo";
+                options.ActionColor = Color.Primary;
+                options.RequireInteraction = true;
+                options.OnClick = _ => RestoreDeletedPlanAsync(plan);
+            });
+    }
+
+    private async Task RestoreDeletedPlanAsync(WorkoutPlan? plan)
+    {
+        if (plan == null)
+            return;
+
+        await PlanService.SavePlanAsync(plan);
+        _plans = await PlanService.GetAllPlansAsync();
+        Snackbar.Add($"'{plan.Name}' restored.", Severity.Success);
     }
 
     private async Task ExportSinglePlan(Guid planId, string planName)
@@ -313,6 +351,18 @@
 
                 var options = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
                 await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>("Welcome", options);
+            }
+            else if (!Preferences.Get(PreferenceKeys.OnboardingTourShown, false))
+            {
+                // Reset the flag immediately to prevent double opens
+                Preferences.Set(PreferenceKeys.OnboardingTourShown, true);
+
+                var tourOptions = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
+                var parameters = new DialogParameters<Shared.OnboardingTourDialog>
+                {
+                    { x => x.AiEnabled, AiAssistant.GetSettings().Enabled }
+                };
+                await DialogService.ShowAsync<Shared.OnboardingTourDialog>("Welcome", parameters, tourOptions);
             }
         }
 
@@ -398,6 +448,19 @@
         };
         await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
     }
+
+    private bool _aiNeedsKeyHint
+    {
+        get
+        {
+            var settings = AiAssistant.GetSettings();
+            return settings.Enabled
+                   && settings.Provider != AiProviderType.OllamaLocal
+                   && string.IsNullOrWhiteSpace(settings.ApiKey);
+        }
+    }
+
+    private void GoToAiSettings() => Navigation.NavigateTo(AppRoutes.Settings);
 
 
 

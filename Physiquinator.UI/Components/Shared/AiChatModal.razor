@@ -3,6 +3,8 @@
 @using Markdig
 @inject AiAssistantService AiAssistant
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 
@@ -48,7 +50,7 @@
             }
 
             <!-- Messages Area -->
-            <div class="ai-chat-messages">
+            <div class="ai-chat-messages" @ref="_messagesElement">
                 @if (AiAssistant.Messages.Count == 0)
                 {
                     <div class="ai-chat-empty">
@@ -99,7 +101,17 @@
                                         }
                                     </div>
                                 }
-                                <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                                <span class="ai-msg__actions">
+                                    @if (!string.IsNullOrWhiteSpace(msg.Content))
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                       Size="Size.Small"
+                                                       Class="ai-msg__copy"
+                                                       aria-label="Copy message"
+                                                       OnClick="@(() => CopyMessageAsync(msg.Content))" />
+                                    }
+                                    <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                                </span>
                             </div>
                         }
                     }
@@ -108,16 +120,16 @@
 
             <!-- Quick Action Chips -->
             <div class="ai-chat-quick-actions">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnProgressiveOverloadClick">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick">
                     ⚡ Progressive Overload
                 </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnPerformanceStatsClick">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick">
                     📊 Performance Stats
                 </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnLogBodyweightClick">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick">
                     ⚖️ Log Bodyweight
                 </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OnDeloadPlanClick">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick">
                     🔄 Deload Plan
                 </MudChip>
             </div>
@@ -131,18 +143,30 @@
                                   Immediate="true"
                                   @bind-Value="_inputText"
                                   OnKeyDown="HandleKeyDown"
-                                  Disabled="_isSending"
+                                  Disabled="@(_isSending || IsApiKeyMissing)"
                                   Margin="Margin.Dense"
                                   Class="ai-chat-textfield" />
                 </div>
 
-                <MudIconButton Icon="@Icons.Material.Filled.Send"
-                               Color="Color.Primary"
-                               Variant="Variant.Filled"
-                               aria-label="Send Message"
-                               Disabled="@(string.IsNullOrWhiteSpace(_inputText) || _isSending)"
-                               OnClick="SendMessageAsync"
-                               Class="ai-chat-send-button" />
+                @if (_isSending)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                   Color="Color.Error"
+                                   Variant="Variant.Filled"
+                                   aria-label="Stop generating"
+                                   OnClick="StopGeneration"
+                                   Class="ai-chat-send-button" />
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   aria-label="Send Message"
+                                   Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
+                                   OnClick="SendMessageAsync"
+                                   Class="ai-chat-send-button" />
+                }
             </div>
         </div>
     </DialogContent>
@@ -153,6 +177,7 @@
 
     private string _inputText = string.Empty;
     private bool _isSending = false;
+    private ElementReference _messagesElement;
 
     private bool IsApiKeyMissing
     {
@@ -183,7 +208,53 @@
 
     private void HandleMessagesChanged()
     {
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await ScrollToBottomAsync();
+        });
+    }
+
+    private async Task ScrollToBottomAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("physiquinatorHelpers.scrollToBottom", _messagesElement);
+        }
+        catch (Exception)
+        {
+            // Element not rendered yet or JS unavailable
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await ScrollToBottomAsync();
+    }
+
+    private void StopGeneration()
+    {
+        AiAssistant.CancelCurrentTurn();
+    }
+
+    private async Task CopyMessageAsync(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return;
+
+        var copied = false;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("physiquinatorHelpers.copyText", content);
+        }
+        catch (Exception)
+        {
+            copied = false;
+        }
+
+        if (copied)
+            Snackbar.Add("Message copied.", Severity.Success);
+        else
+            Snackbar.Add("Could not copy to clipboard.", Severity.Error);
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)

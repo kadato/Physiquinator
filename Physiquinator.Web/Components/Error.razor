@@ -1,0 +1,33 @@
+@page "/Error"
+@using Microsoft.AspNetCore.Components.Web
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var requestId = System.Diagnostics.Activity.Current?.Id ?? HttpContextAccessor.HttpContext?.TraceIdentifier;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Something went wrong - Physiquinator</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0B0C10; color: #F3F4F6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .error-page { text-align: center; padding: 2rem; max-width: 34rem; }
+        .error-page h1 { font-size: 1.5rem; margin: 0 0 0.75rem; }
+        .error-page p { color: #9CA3AF; line-height: 1.6; margin: 0 0 1.5rem; }
+        .error-page a { display: inline-block; color: #10B981; text-decoration: none; font-weight: 600; padding: 0.6rem 1.4rem; border: 1px solid #10B981; border-radius: 0.75rem; }
+        .error-page code { font-size: 0.75rem; color: #6B7280; }
+    </style>
+</head>
+<body>
+    <div class="error-page">
+        <h1>Something went wrong</h1>
+        <p>An unexpected error occurred while processing your request. Your data is safe - try again, and if the problem persists, reload the page.</p>
+        <a href="/">Back to home</a>
+        <br />
+        <br />
+        <code>@requestId</code>
+    </div>
+</body>
+</html>

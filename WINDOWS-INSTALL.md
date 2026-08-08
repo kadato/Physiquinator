@@ -76,7 +76,7 @@ dotnet run --framework net11.0-windows10.0.19041.0
 ## Features
 
 - 🏋️ Custom workout plan creation
-- ⏱️ Smart rest timer with audio/vibration
+- ⏱️ Smart rest timer (in-app; background notifications are Android/iOS only)
 - 📊 Real-time progress tracking
 - 💾 Local SQLite storage (offline-first)
 - 📤 Export/Import workout plans (JSON)

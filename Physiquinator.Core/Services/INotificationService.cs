@@ -8,6 +8,13 @@ public interface INotificationService
     Task EnsurePermissionAsync();
 
     /// <summary>
+    /// True when the platform can show native rest-alert notifications
+    /// (sound + vibration while backgrounded). False on desktop/web, where the
+    /// rest timer still runs inside the app.
+    /// </summary>
+    bool SupportsNotifications { get; }
+
+    /// <summary>
     /// True when the platform hosts a floating rest-timer overlay at all
     /// (Android only today). The overlay permission UI must be hidden on
     /// platforms where this is false.

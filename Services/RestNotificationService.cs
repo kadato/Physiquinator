@@ -48,6 +48,8 @@ public sealed class RestNotificationService(
     // The floating rest-timer bubble is Android-only; Android registers
     // AndroidRestNotificationService, so this implementation only reports the
     // overlay as available on platforms that could host one.
+    public bool SupportsNotifications => IsSupportedPlatform;
+
     public bool SupportsOverlay => false;
 
     public bool HasOverlayPermission() => IsSupportedPlatform;

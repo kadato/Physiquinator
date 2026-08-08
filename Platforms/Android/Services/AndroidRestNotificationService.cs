@@ -59,6 +59,8 @@ public sealed class AndroidRestNotificationService(
     }
 
     /// <summary>The floating rest-timer bubble is hosted on Android.</summary>
+    public bool SupportsNotifications => true;
+
     public bool SupportsOverlay => true;
 
     /// <summary>

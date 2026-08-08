@@ -11,6 +11,10 @@ on:
         required: true
         default: '1.0.0'
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   test:
     uses: ./.github/workflows/test.yml

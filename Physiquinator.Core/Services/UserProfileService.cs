@@ -96,6 +96,8 @@ public sealed class UserProfileService(
         if (string.IsNullOrWhiteSpace(name)) return;
 
         List<UserProfile> profiles = GetProfiles();
+        EnsureUniqueName(profiles, name);
+
         var newProfile = new UserProfile
         {
             Id = Guid.NewGuid(),
@@ -150,8 +152,20 @@ public sealed class UserProfileService(
         UserProfile? profile = profiles.FirstOrDefault(p => p.Id == profileId);
         if (profile == null) return;
 
+        EnsureUniqueName(profiles, newName, excludeId: profileId);
+
         profile.Name = newName.Trim();
         SaveProfiles(profiles);
+    }
+
+    private static void EnsureUniqueName(List<UserProfile> profiles, string name, Guid? excludeId = null)
+    {
+        if (profiles.Any(p =>
+                p.Id != excludeId
+                && string.Equals(p.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"A profile named '{name.Trim()}' already exists.");
+        }
     }
 
     public void UpdateBodyweight(Guid profileId, double? bodyweightKg)

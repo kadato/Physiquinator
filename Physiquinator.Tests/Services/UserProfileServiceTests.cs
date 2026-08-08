@@ -132,4 +132,35 @@ public class UserProfileServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _service.DeleteProfileAsync(UserProfileService.DemoProfileId));
     }
+
+    [Fact]
+    public void CreateProfile_DuplicateName_Throws()
+    {
+        _service.CreateProfile("Alice");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => _service.CreateProfile("alice"));
+        Assert.Contains("already exists", ex.Message);
+        Assert.Equal(2, _service.GetProfiles().Count);
+    }
+
+    [Fact]
+    public void RenameProfile_DuplicateName_Throws_AndKeepsOriginal()
+    {
+        Guid aliceId = CreateProfile("Alice");
+        _service.CreateProfile("Bob");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => _service.RenameProfile(aliceId, "BOB"));
+        Assert.Contains("already exists", ex.Message);
+        Assert.Equal("Alice", _service.GetProfiles().First(p => p.Id == aliceId).Name);
+    }
+
+    [Fact]
+    public void RenameProfile_SameNameAsItself_IsAllowed()
+    {
+        Guid aliceId = CreateProfile("Alice");
+
+        _service.RenameProfile(aliceId, "Alice");
+
+        Assert.Equal("Alice", _service.GetProfiles().First(p => p.Id == aliceId).Name);
+    }
 }

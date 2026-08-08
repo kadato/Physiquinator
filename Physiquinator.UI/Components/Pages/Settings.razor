@@ -328,26 +328,25 @@
                                  </div>
                              }
 
+                             <MudTextField T="string"
+                                           Label="Model Name"
+                                           Variant="Variant.Filled"
+                                           @bind-Value="_aiSettings.ModelName"
+                                           HelperText="e.g. gpt-4o-mini, deepseek-v4-flash, kimi-k3. Free text always works." />
+
                              @if (_availableModels.Count > 0)
                              {
-                                 <MudAutocomplete T="string"
-                                                  @bind-Value="_aiSettings.ModelName"
-                                                  Label="Model Name"
-                                                  Variant="Variant.Filled"
-                                                  SearchFunc="SearchAiModelsAsync"
-                                                  CoerceValue="false"
-                                                  ResetValueOnEmptyText="false"
-                                                  MaxItems="50"
-                                                  HelperText="Type to filter fetched models, or enter any model name">
-                                 </MudAutocomplete>
-                             }
-                             else
-                             {
-                                 <MudTextField T="string"
-                                               Label="Model Name"
-                                               Variant="Variant.Filled"
-                                               @bind-Value="_aiSettings.ModelName"
-                                               HelperText="e.g. gpt-4o-mini, anthropic/claude-3.5-sonnet, deepseek/deepseek-r1" />
+                                 <MudSelect T="string"
+                                            Label="Fetched models"
+                                            Variant="Variant.Filled"
+                                            Placeholder="Pick from the models the provider returned"
+                                            Value="@_pickedFetchedModel"
+                                            ValueChanged="OnFetchedModelPicked">
+                                     @foreach (var model in _availableModels)
+                                     {
+                                         <MudSelectItem T="string" Value="model">@model</MudSelectItem>
+                                     }
+                                 </MudSelect>
                              }
 
                             <MudTextField T="string"
@@ -723,16 +722,16 @@
     private bool _testingAiConnection;
     private bool _fetchingModels;
     private List<string> _availableModels = [];
+    private string? _pickedFetchedModel;
 
-    /// <summary>Filters the fetched model list for the autocomplete, keeping it case-insensitive.</summary>
-    private Task<IEnumerable<string>> SearchAiModelsAsync(string? text, CancellationToken token)
+    /// <summary>Copies a picked fetched model into the free-text model field.</summary>
+    private void OnFetchedModelPicked(string? model)
     {
-        if (string.IsNullOrWhiteSpace(text))
-            return Task.FromResult<IEnumerable<string>>(_availableModels);
-
-        var query = text.Trim();
-        return Task.FromResult<IEnumerable<string>>(
-            _availableModels.Where(m => m.Contains(query, StringComparison.OrdinalIgnoreCase)));
+        _pickedFetchedModel = model;
+        if (!string.IsNullOrWhiteSpace(model))
+        {
+            _aiSettings.ModelName = model;
+        }
     }
 
     private async Task FetchModelsAsync()

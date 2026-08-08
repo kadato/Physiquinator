@@ -13,31 +13,14 @@ on:
 
 jobs:
   test:
-    name: Run unit tests
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '11.0.100-preview.6.26359.118'
-        dotnet-quality: 'preview'
-
-    - name: Restore dependencies
-      run: dotnet restore Physiquinator.Tests/Physiquinator.Tests.csproj
-
-    - name: Build
-      run: dotnet build Physiquinator.Tests/Physiquinator.Tests.csproj --no-restore --configuration Release
-
-    - name: Test
-      run: dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+    uses: ./.github/workflows/test.yml
 
   build-android:
     runs-on: windows-latest
-    needs: [test]
+    needs: test
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      version_code: ${{ steps.version_code.outputs.code }}
 
     steps:
     - name: Checkout code
@@ -54,16 +37,10 @@ jobs:
         fi
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '11.0.100-preview.6.26359.118'
         dotnet-quality: 'preview'
-
-    - name: Verify .NET installation
-      run: |
-        dotnet --version
-        dotnet --list-sdks
-        dotnet --info
 
     - name: Install MAUI workload
       run: dotnet workload install maui
@@ -107,40 +84,24 @@ jobs:
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
     - name: Upload Android APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: android-apk
         path: ./artifacts/android/*-Signed.apk
 
   build-windows:
     runs-on: windows-latest
-    needs: [test]
+    needs: [test, build-android]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Get version
-      id: get_version
-      shell: bash
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-        else
-          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-        fi
-
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '11.0.100-preview.6.26359.118'
         dotnet-quality: 'preview'
-
-    - name: Verify .NET installation
-      run: |
-        dotnet --version
-        dotnet --list-sdks
-        dotnet --info
 
     - name: Install MAUI workload
       run: dotnet workload install maui
@@ -148,28 +109,18 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Physiquinator.csproj
 
-    - name: Compute Android versionCode
-      id: version_code
-      shell: bash
-      run: |
-        IFS='.' read -ra PARTS <<< "${{ steps.get_version.outputs.version }}"
-        MAJOR="${PARTS[0]}"
-        MINOR="${PARTS[1]:-0}"
-        PATCH="${PARTS[2]:-0}"
-        echo "code=$((MAJOR * 10000 + MINOR * 100 + PATCH))" >> $GITHUB_OUTPUT
-
     - name: Build Windows Package
       run: |
         dotnet publish Physiquinator.csproj `
           -f net11.0-windows10.0.19041.0 `
           -c Release `
-          -p:ApplicationDisplayVersion=${{ steps.get_version.outputs.version }} `
-          -p:ApplicationVersion=${{ steps.version_code.outputs.code }} `
+          -p:ApplicationDisplayVersion=${{ needs.build-android.outputs.version }} `
+          -p:ApplicationVersion=${{ needs.build-android.outputs.version_code }} `
           -p:WindowsPackageType=None `
           -o ./artifacts/windows
 
     - name: Upload Windows build
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: windows-package
         path: ./artifacts/windows/**/*
@@ -211,20 +162,10 @@ jobs:
         zip -r ../Physiquinator-Windows.zip .
         cd ..
 
-    - name: Get version
-      id: get_version
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-        else
-          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-        fi
-
     - name: Generate What's new notes
-      id: notes
       shell: bash
       run: |
-        VERSION="${{ steps.get_version.outputs.version }}"
+        VERSION="${{ needs.build-android.outputs.version }}"
         PREV=$(git tag --sort=-version:refname | grep -vx "v${VERSION}" | head -1 || true)
         echo "Previous tag: ${PREV:-<none>}"
         RANGE="${PREV:+${PREV}..}HEAD"
@@ -251,10 +192,10 @@ jobs:
         cat RELEASE_NOTES.md
 
     - name: Create Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
-        tag_name: v${{ steps.get_version.outputs.version }}
-        name: Physiquinator v${{ steps.get_version.outputs.version }}
+        tag_name: v${{ needs.build-android.outputs.version }}
+        name: Physiquinator v${{ needs.build-android.outputs.version }}
         body_path: RELEASE_NOTES.md
         files: |
           release/android/Physiquinator-Android.apk

@@ -1,0 +1,46 @@
+name: Unit tests
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '11.0.100-preview.6.26359.118'
+        dotnet-quality: 'preview'
+
+    - name: Restore dependencies
+      run: dotnet restore Physiquinator.Tests/Physiquinator.Tests.csproj
+
+    - name: Build
+      run: dotnet build Physiquinator.Tests/Physiquinator.Tests.csproj --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+    - name: Format check (Core, UI, Web + Tests)
+      run: |
+        dotnet format Physiquinator.Core/Physiquinator.Core.csproj --verify-no-changes --severity warn
+        dotnet format Physiquinator.UI/Physiquinator.UI.csproj --verify-no-changes --severity warn
+        dotnet format Physiquinator.Web/Physiquinator.Web.csproj --verify-no-changes --severity warn
+        dotnet format Physiquinator.Tests/Physiquinator.Tests.csproj --verify-no-changes --severity warn
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v3
+      if: always()
+      with:
+        name: xUnit Tests
+        path: '**/test-results.trx'
+        reporter: dotnet-trx

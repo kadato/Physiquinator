@@ -8,17 +8,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Physiquinator</title>
+    <title>Physiquinator - Workout Tracking, AI Assistant & Agent API</title>
+    <meta name="description" content="Cross-platform workout tracking with a smart rest timer, progress analytics, an on-device AI assistant, and an MCP agent API." />
+    <meta property="og:title" content="Physiquinator" />
+    <meta property="og:description" content="Workout tracking with a smart rest timer, progress analytics, and an AI assistant. Try the live demo." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0B0C10" />
     <base href="/" />
-    <script>
-        (function () {
-            var key = "physiquinator-theme-preference";
-            var preference = localStorage.getItem(key) || "system";
-            var isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-            var theme = preference === "system" ? (isDark ? "dark" : "light") : preference;
-            document.documentElement.setAttribute("data-theme", theme);
-        })();
-    </script>
+    <script src="js/app-boot.js"></script>
     <style>
         html[data-theme="dark"] body {
             background-color: #0B0C10 !important;
@@ -32,6 +29,7 @@
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
+    <link rel="stylesheet" href="css/web.css" />
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; box-sizing: border-box; }
         body { display: flex; flex-direction: column; }
@@ -46,7 +44,7 @@
 <body>
 
     <div id="app">
-        <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+        <AuthGate @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     </div>
 
     <div id="blazor-error-ui">
@@ -58,8 +56,11 @@
     <script src="_content/Physiquinator.UI/js/sortable.min.js"></script>
     <script src="_content/Physiquinator.UI/js/theme.js"></script>
     <script src="_content/Physiquinator.UI/js/stepperDrag.js"></script>
+    <script src="_content/Physiquinator.UI/js/appHelpers.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="_framework/blazor.web.js"></script>
+    <script src="js/dbSync.js"></script>
+    <script src="_framework/blazor.web.js" autostart="false"></script>
+    <script src="js/dbSyncBootstrap.js"></script>
 
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 

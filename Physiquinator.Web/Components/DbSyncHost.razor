@@ -1,0 +1,52 @@
+@implements IDisposable
+@using Microsoft.Extensions.Logging
+@using Physiquinator.Core.Services
+@using Physiquinator.Web.Services
+@inject AppInitializationService AppInit
+@inject WebDbSyncService DbSync
+@inject ILogger<DbSyncHost> Logger
+
+@code {
+    private const int SyncIntervalSeconds = 15;
+    private CancellationTokenSource? _syncCts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await AppInit.EnsureInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            // Never export a partially seeded database: it would overwrite the
+            // browser's good copy. The splash screen offers a retry instead.
+            Logger.LogError(ex, "App initialization failed; browser database sync disabled");
+            return;
+        }
+
+        _syncCts = new CancellationTokenSource();
+        _ = RunSyncLoopAsync(_syncCts.Token);
+    }
+
+    private async Task RunSyncLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await DbSync.SaveAllAsync(cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(SyncIntervalSeconds), cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Circuit shutting down.
+        }
+    }
+
+    public void Dispose()
+    {
+        _syncCts?.Cancel();
+        _syncCts?.Dispose();
+    }
+}

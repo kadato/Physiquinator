@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
 using MudBlazor;
 using MudBlazor.Services;
 using Physiquinator.Core.Services;
@@ -53,6 +54,14 @@ public static class MauiProgram
         builder.Services.AddPhysiquinatorServices(
             new AppPreferences(),
             new DatabasePathProvider());
+
+        // The MAUI shell (app theme, resource colors, system bars) must follow
+        // the Blazor UI theme. Override the base registration with the MAUI
+        // implementation so Apply*/Sync* hooks reach the native layer.
+        builder.Services.AddScoped<Physiquinator.Core.Services.ThemeService>(sp => new MauiThemeService(
+            sp.GetRequiredService<IJSRuntime>(),
+            sp.GetRequiredService<Physiquinator.Core.Services.UserProfileService>(),
+            sp.GetRequiredService<Physiquinator.Core.Services.IAppPreferences>()));
 
 #if ANDROID
         builder.Services.AddSingleton<Physiquinator.Core.Services.INotificationService, AndroidRestNotificationService>();

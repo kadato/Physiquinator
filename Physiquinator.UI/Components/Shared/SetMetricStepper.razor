@@ -34,7 +34,7 @@
             <button @ref="_valueButtonRef"
                     type="button"
                     class="set-metric-stepper__value set-metric-stepper__value--compact"
-                    aria-label="@($"Edit {Label}")"
+                    aria-label="@ValueButtonAriaLabel"
                     @onclick="StartEdit"
                     data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
                     data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
@@ -91,7 +91,7 @@ else
                 <button @ref="_valueButtonRef"
                         type="button"
                         class="set-metric-stepper__value"
-                        aria-label="@($"Edit {Label}")"
+                        aria-label="@ValueButtonAriaLabel"
                         @onclick="StartEdit"
                         data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
                         data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
@@ -162,6 +162,20 @@ else
 
     private string EditInputAriaLabel =>
         string.IsNullOrWhiteSpace(Label) ? "Edit" : $"Edit {Label}";
+
+    /// <summary>
+    /// The visible button text (value + unit) must be part of the accessible
+    /// name so screen-reader users hear the same value they see.
+    /// </summary>
+    private string ValueButtonAriaLabel
+    {
+        get
+        {
+            var label = string.IsNullOrWhiteSpace(Label) ? "value" : Label;
+            var unit = string.IsNullOrWhiteSpace(Unit) ? "" : $" {Unit}";
+            return $"Edit {label}: {DisplayText}{unit}";
+        }
+    }
 
     private string EditText
     {

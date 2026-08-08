@@ -14,7 +14,9 @@
         <MudStack Spacing="3" Class="py-2">
             <MudText Typo="Typo.h6">@CurrentStep.Title</MudText>
             <MudText Typo="Typo.body1" Class="mud-text-secondary">@CurrentStep.Body</MudText>
-            <MudProgressLinear Value="@ProgressPercent" Color="Color.Primary" />
+            <MudProgressLinear Value="@ProgressPercent"
+                               Color="Color.Primary"
+                               aria-label="@($"Onboarding progress: step {_step + 1} of {StepCount}")" />
         </MudStack>
     </DialogContent>
     <DialogActions>

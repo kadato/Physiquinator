@@ -1,0 +1,15 @@
+**/bin
+**/obj
+.git
+.github
+.vs
+.vscode
+.agents
+.opencode
+artifacts
+docs
+tools
+*.user
+Dockerfile
+Dockerfile.android
+DOCKER.md

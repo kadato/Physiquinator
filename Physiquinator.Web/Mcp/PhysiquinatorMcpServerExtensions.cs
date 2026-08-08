@@ -54,6 +54,7 @@ public static class PhysiquinatorMcpServerExtensions
         IConfiguration configuration)
     {
         IEndpointConventionBuilder endpoint = endpoints.MapMcp(McpPathPrefix);
+        endpoint.RequireRateLimiting("mcp");
 
         if (!string.IsNullOrWhiteSpace(configuration["Mcp:CorsOrigins"]))
         {
@@ -64,15 +65,18 @@ public static class PhysiquinatorMcpServerExtensions
     }
 
     /// <summary>
-    /// When Mcp:ApiKey is configured, requires it on every request to the MCP endpoint
-    /// via the X-Api-Key header or the Authorization: Bearer scheme.
+    /// Requires Mcp:ApiKey on every request to the MCP endpoint via the X-Api-Key
+    /// header or the Authorization: Bearer scheme. In production the key is mandatory
+    /// and requests are rejected when it is not configured.
     /// </summary>
     public static void UsePhysiquinatorMcpApiKey(this IApplicationBuilder app)
     {
         IConfiguration configuration = app.ApplicationServices.GetRequiredService<IConfiguration>();
         var apiKey = configuration["Mcp:ApiKey"];
+        var requireApiKey = !string.IsNullOrWhiteSpace(apiKey)
+            || app.ApplicationServices.GetRequiredService<IHostEnvironment>().IsProduction();
 
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (!requireApiKey)
         {
             return;
         }
@@ -80,9 +84,10 @@ public static class PhysiquinatorMcpServerExtensions
         app.Use(async (httpContext, next) =>
         {
             if (httpContext.Request.Path.StartsWithSegments(McpPathPrefix) &&
-                !IsValidApiKey(httpContext, apiKey))
+                !IsValidApiKey(httpContext, apiKey ?? string.Empty))
             {
                 httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await httpContext.Response.WriteAsync("A valid Mcp:ApiKey is required for the agent API.");
                 return;
             }
 

@@ -272,7 +272,7 @@ async function run() {
 
             // Home screen
             await blazorNavigate(app.page, '/');
-            await app.page.waitForSelector('.home-hero', { timeout: 5000 });
+            await app.page.waitForSelector('.home-page', { timeout: 5000 });
             await delay(500);
             await capture(app.page, `home-${theme}.png`);
 
@@ -340,9 +340,9 @@ async function run() {
 
             // AI Chat modal while in use
             await blazorNavigate(app.page, '/');
-            await app.page.waitForSelector('.home-hero', { timeout: 5000 });
+            await app.page.waitForSelector('.home-page', { timeout: 5000 });
             await delay(500);
-            await app.page.click('button[arialabel="AI Assistant"]');
+            await app.page.click('button[aria-label="AI Assistant"]');
             await app.page.waitForSelector('.ai-chat-container', { timeout: 5000 });
             await delay(500);
             // Click "Progressive Overload" chip

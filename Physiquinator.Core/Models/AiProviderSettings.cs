@@ -58,7 +58,7 @@ public class AiProviderSettings
         {
             AiProviderType.OpenAI => "gpt-4o-mini",
             AiProviderType.OpenRouter => "anthropic/claude-3.5-sonnet",
-            AiProviderType.OpenCode => "deepseek/deepseek-r1",
+            AiProviderType.OpenCode => "deepseek-v4-flash",
             AiProviderType.OllamaLocal => "llama3.2",
             _ => "gpt-4o-mini"
         };

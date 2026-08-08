@@ -6,13 +6,13 @@
     border-radius: 0;
     background: transparent;
     border: none;
-    --heatmap-cell-size: 11px;
+    --heatmap-cell-size: 24px;
     --heatmap-gap: 3px;
 }
 
 .heatmap-labels {
     display: grid;
-    grid-template-rows: repeat(7, var(--heatmap-cell-size, 11px));
+    grid-template-rows: repeat(7, var(--heatmap-cell-size, 24px));
     gap: var(--heatmap-gap, 3px);
     align-items: center;
     padding: 2px 0;
@@ -41,11 +41,11 @@
 .heatmap-day-label {
     font-size: 0.65rem;
     font-weight: 600;
-    line-height: var(--heatmap-cell-size, 11px);
+    line-height: var(--heatmap-cell-size, 24px);
     text-align: end;
     color: var(--mud-palette-text-secondary);
     letter-spacing: 0.02em;
-    height: var(--heatmap-cell-size, 11px);
+    height: var(--heatmap-cell-size, 24px);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -53,66 +53,77 @@
 }
 
 button.heatmap-cell {
-    width: var(--heatmap-cell-size, 11px);
-    height: var(--heatmap-cell-size, 11px);
-    border-radius: 2px;
+    width: var(--heatmap-cell-size, 24px);
+    height: var(--heatmap-cell-size, 24px);
+    border: none;
+    background: transparent;
+    border-radius: 6px;
     box-sizing: border-box;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
     padding: 0;
     margin: 0;
     display: block;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+/* The visible "dot": the button provides the full 24px touch target, the
+   pseudo-element draws the compact cell visual inside it. */
+button.heatmap-cell::before {
+    content: '';
+    position: absolute;
+    inset: 20%;
+    border-radius: 3px;
+    box-sizing: border-box;
+    background-color: var(--mud-palette-background-gray);
+    opacity: 0.62;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
+    transition: transform 0.12s ease;
 }
 
 button.heatmap-cell:disabled {
     cursor: default;
-    opacity: 1;
 }
 
-.heatmap-selected.heatmap-on,
-.heatmap-selected.heatmap-off {
-    box-shadow: 0 0 0 2px var(--mud-palette-primary);
-    border-radius: 2px;
+button.heatmap-cell:hover::before {
+    transform: scale(1.25);
 }
 
-.heatmap-today {
-    border: 1.5px solid var(--mud-palette-text-primary) !important;
+button.heatmap-cell:active::before {
+    transform: scale(1.4);
 }
 
-.heatmap-off {
+button.heatmap-cell.heatmap-off::before {
     background-color: var(--mud-palette-background-gray);
     opacity: 0.62;
 }
 
-.heatmap-on {
+button.heatmap-cell.heatmap-on::before {
     background-color: var(--mud-palette-primary);
     opacity: 0.9;
 }
 
-button.heatmap-cell.heatmap-missed {
+button.heatmap-cell.heatmap-missed::before {
     border: 1.5px dashed var(--mud-palette-warning);
+    background-color: transparent;
     opacity: 0.9;
 }
 
-button.heatmap-cell.heatmap-scheduled {
+button.heatmap-cell.heatmap-scheduled::before {
     border-radius: 50%;
 }
 
-.heatmap-grid .heatmap-cell {
-    position: relative;
-    touch-action: manipulation;
+button.heatmap-cell.heatmap-today::before {
+    border: 1.5px solid var(--mud-palette-text-primary);
 }
 
-.heatmap-cell::after {
-    content: '';
-    position: absolute;
-    inset: -6.5px;
+button.heatmap-cell.heatmap-selected::before {
+    box-shadow: 0 0 0 2px var(--mud-palette-primary);
 }
 
 @media (max-width: 576px) {
     .activity-heatmap {
-        --heatmap-cell-size: 12px;
+        --heatmap-cell-size: 24px;
         --heatmap-gap: 4px;
         gap: 6px;
     }

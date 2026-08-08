@@ -33,56 +33,63 @@
     }
     else
     {
-    @if (_inProgressSession != null && _inProgressPlanId is { } heroPlanId)
+    @if (_inProgressSession != null || _summary != null)
     {
-        <MudPaper Class="home-hero" Elevation="0">
-            <MudStack Spacing="2">
-                <div class="home-hero__header">
-                    <MudText Typo="Typo.caption" Color="Color.Primary" Class="home-hero__label">
-                        In progress
-                    </MudText>
+        var hasHero = _inProgressSession != null && _inProgressPlanId != null;
+        <section class="home-overview @(hasHero ? "home-overview--with-hero" : "")" aria-label="Overview">
+            @if (_inProgressSession != null && _inProgressPlanId is { } heroPlanId)
+            {
+                <MudPaper Class="home-hero" Elevation="0">
+                    <MudStack Spacing="2" Class="home-hero__stack">
+                        <div class="home-hero__header">
+                            <span class="home-hero__label">
+                                <span class="home-hero__dot" aria-hidden="true"></span>
+                                In progress
+                            </span>
+                        </div>
+                        <MudText Typo="Typo.h2" Class="home-hero__title">@_inProgressSession.PlanName</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   Class="home-hero__continue"
+                                   StartIcon="@Icons.Material.Filled.PlayArrow"
+                                   OnClick="@(() => Navigation.NavigateTo(AppRoutes.Workout(heroPlanId)))">
+                            Continue workout
+                        </MudButton>
+                    </MudStack>
                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                    Size="Size.Small"
                                    Color="Color.Error"
                                    Class="home-hero__discard"
                                    aria-label="Discard workout"
                                    OnClick="DeleteInProgressWorkoutAsync" />
+                </MudPaper>
+            }
+
+            @if (_summary != null)
+            {
+                <div class="home-stats">
+                    <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="Streak" />
+                    <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="This week" />
+                    <StatCard Value="@LastSessionLabel" Label="Last workout" ValueClass="stat-card__value--date" />
                 </div>
-                <MudText Typo="Typo.h6">@_inProgressSession.PlanName</MudText>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           FullWidth="true"
-                           Class="home-hero__continue"
-                           StartIcon="@Icons.Material.Filled.PlayArrow"
-                           OnClick="@(() => Navigation.NavigateTo(AppRoutes.Workout(heroPlanId)))">
-                    Continue workout
-                </MudButton>
-            </MudStack>
-        </MudPaper>
+            }
+        </section>
     }
 
     @if (_summary != null)
     {
-        <section class="home-stats-section" aria-label="Quick stats">
-            <div class="home-stats">
-                <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="Streak" />
-                <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="This week" />
-                <StatCard Value="@LastSessionLabel" Label="Last workout" ValueClass="stat-card__value--date" />
-            </div>
-
-            <MudPaper Class="pa-4 home-heatmap-panel" Elevation="1">
-                <ActivityHeatmap CountsByDay="_activityByDay"
-                                 Weeks="@HomeStatsWeeks"
-                                 EndLocal="@_homeHeatmapEndLocal"
-                                 GetScheduleForDate="ScheduleService.GetScheduleForDate" />
-            </MudPaper>
-
-        </section>
+        <MudPaper Class="pa-4 home-heatmap-panel" Elevation="1">
+            <ActivityHeatmap CountsByDay="_activityByDay"
+                             Weeks="@HomeStatsWeeks"
+                             EndLocal="@_homeHeatmapEndLocal"
+                             GetScheduleForDate="ScheduleService.GetScheduleForDate" />
+        </MudPaper>
     }
 
     <section aria-label="Your plans">
         <div class="home-plans-header">
-            <MudText Typo="Typo.h6">Your plans</MudText>
+            <MudText Typo="Typo.h2" Class="home-plans-header__title">Your plans</MudText>
             @if (_plans != null && _plans.Count > 0)
             {
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
@@ -170,8 +177,9 @@
 
     private string LastSessionLabel =>
         _lastSession == null
-            ? "—"
-            : UiDateFormats.LocalDateCompact(_lastSession.StartedAtUtc);
+            ? "/"
+            : UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime()))
+                .Replace('-', '/');
 
     private string LastDoneLabelFor(Guid planId) =>
         _lastSessionByPlan.TryGetValue(planId.ToString(), out var lastUtc)

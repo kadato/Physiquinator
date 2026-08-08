@@ -39,7 +39,7 @@
     }
 
     ::deep .app-page-container {
-        max-width: 1120px !important;
+        max-width: 1000px !important;
         padding-left: 32px !important;
         padding-right: 32px !important;
         padding-top: 2rem !important;

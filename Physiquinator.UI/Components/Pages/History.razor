@@ -61,7 +61,7 @@
 
         <MudPaper Class="pa-3 bodyweight-panel" Elevation="1">
             <div class="bodyweight-panel__header">
-                <MudText Typo="Typo.h6">Bodyweight</MudText>
+                <MudText Typo="Typo.h2" Class="bodyweight-panel__title">Bodyweight</MudText>
                 <span class="bodyweight-panel__right">
                     @if (_latestBodyweight is { } latest)
                     {
@@ -95,7 +95,7 @@
                         class="bodyweight-log-row__log-btn"
                         @onclick="LogBodyweightAsync"
                         disabled="@CannotLogBodyweight">
-                    <MudIcon Icon="@Icons.Material.Filled.MonitorWeight" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Scale" Size="Size.Small" />
                     Log
                 </button>
             </div>

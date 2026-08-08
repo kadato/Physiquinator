@@ -371,12 +371,12 @@ textarea.auto-size,
 }
 
 .app-nav-tab--active {
-    background: color-mix(in srgb, var(--mud-palette-primary) 20%, transparent);
-    color: var(--mud-palette-primary);
+    background: #CFE3E2;
+    color: #0B5A53;
 }
 
 .app-nav-tab--active .mud-icon-root {
-    color: var(--mud-palette-primary) !important;
+    color: #0B5A53 !important;
     transform: scale(1.1);
 }
 
@@ -391,7 +391,7 @@ textarea.auto-size,
 }
 
 .app-nav-tab--active .app-nav-tab__label {
-    color: var(--mud-palette-primary);
+    color: #0B5A53;
 }
 
 /* Main scroll area padding accounts for the floating nav pill */
@@ -691,6 +691,7 @@ textarea.auto-size,
 }
 
 .home-hero {
+    position: relative;
     padding: 1rem 1.125rem !important;
     border-radius: 16px !important;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 24%, transparent) !important;
@@ -702,29 +703,109 @@ textarea.auto-size,
     box-shadow: none !important;
 }
 
-
 .home-hero__header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 0.25rem;
 }
 
+/* Discard action pinned to the card's top-right corner on every breakpoint */
 .home-hero__discard {
+    position: absolute;
+    top: 6px;
+    right: 6px;
     flex-shrink: 0;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    margin: -0.375rem -0.5rem -0.375rem 0;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    opacity: 0.7;
+    border-radius: 999px;
+    transition: opacity 120ms ease, background-color 120ms ease;
 }
+
+.home-hero__discard:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent);
+}
+
 .home-hero__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.65rem;
-    font-weight: 600;
+    letter-spacing: 0.07em;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+.home-hero__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mud-palette-primary);
+    animation: home-hero-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes home-hero-pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+    }
+    50% {
+        opacity: 0.55;
+        box-shadow: 0 0 0 4px transparent;
+    }
+}
+
+.home-hero__title {
+    font-weight: 650;
+    margin: 0;
 }
 
 .home-hero__continue {
     min-height: 48px;
+}
+
+/* Home overview: the in-progress workout and the quick stats share a row on
+   desktop; stacked on mobile. */
+.home-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.home-overview .home-stats {
+    margin-bottom: 0;
+    align-content: stretch;
+}
+
+@media (min-width: 960px) {
+    .home-overview--with-hero {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    /* Slightly taller stat cards so the row reads as one band */
+    .home-overview .stat-card.mud-paper,
+    .home-overview .home-stat.mud-paper {
+        min-height: 6.25rem;
+        border-color: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+    }
+
+    /* The 1000px container can't fit three comfortable plan cards until the
+       viewport is much wider; keep two columns in the 1400-1599 range. */
+    @media (min-width: 1400px) and (max-width: 1599.98px) {
+        .home-plan-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
 }
 
 .home-plans-header {
@@ -1204,7 +1285,7 @@ input[type="number"] {
     gap: 6px;
     padding: 0.25rem 0;
     background: transparent;
-    --heatmap-cell-size: 11px;
+    --heatmap-cell-size: 24px;
     --heatmap-gap: 3px;
 }
 
@@ -1252,45 +1333,72 @@ input[type="number"] {
 }
 
 button.heatmap-cell {
-    width: var(--heatmap-cell-size, 11px);
-    height: var(--heatmap-cell-size, 11px);
-    border-radius: 3px;
+    width: var(--heatmap-cell-size, 24px);
+    height: var(--heatmap-cell-size, 24px);
+    border: none;
+    background: transparent;
+    border-radius: 6px;
     box-sizing: border-box;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
     padding: 0;
     margin: 0;
     display: block;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
 }
+
+/* The visible "dot": the button provides the full 24px touch target, the
+   pseudo-element draws the compact cell visual inside it. */
+button.heatmap-cell::before {
+    content: '';
+    position: absolute;
+    inset: 20%;
+    border-radius: 3px;
+    box-sizing: border-box;
+    background-color: var(--mud-palette-background-gray);
+    opacity: 0.62;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
+    transition: transform 0.12s ease;
+}
+
 button.heatmap-cell:disabled {
     cursor: default;
-    opacity: 1;
 }
 
-.heatmap-selected.heatmap-on,
-.heatmap-selected.heatmap-off {
-    box-shadow: none !important;
-    border-radius: 2px;
+button.heatmap-cell:hover::before {
+    transform: scale(1.25);
 }
 
-.heatmap-today {
-    box-shadow: none !important;
-    border: 1px solid var(--mud-palette-surface) !important;
+button.heatmap-cell:active::before {
+    transform: scale(1.4);
 }
 
-.heatmap-off {
+button.heatmap-cell.heatmap-off::before {
     background-color: var(--mud-palette-background-gray);
     opacity: 0.62;
 }
 
-.heatmap-on {
+button.heatmap-cell.heatmap-on::before {
     background-color: var(--mud-palette-primary);
     opacity: 0.9;
 }
 
-button.heatmap-cell.heatmap-scheduled {
-    border-radius: 50% !important;
+button.heatmap-cell.heatmap-missed::before {
+    border: 1.5px dashed var(--mud-palette-warning);
+    background-color: transparent;
+    opacity: 0.9;
+}
+
+button.heatmap-cell.heatmap-scheduled::before {
+    border-radius: 50%;
+}
+
+button.heatmap-cell.heatmap-today::before {
+    border: 1.5px solid var(--mud-palette-text-primary);
+}
+
+button.heatmap-cell.heatmap-selected::before {
+    box-shadow: 0 0 0 2px var(--mud-palette-primary);
 }
 
 .history-heatmap-panel {
@@ -1308,9 +1416,20 @@ button.heatmap-cell.heatmap-scheduled {
     max-width: 100%;
 }
 
+/* Desktop: the heatmap hugs its grid instead of stretching across the page,
+   centered so the narrower panel reads as intentional */
+@media (min-width: 960px) {
+    .home-heatmap-panel,
+    .home-heatmap-panel.mud-paper {
+        width: fit-content;
+        margin-inline: auto;
+        padding: 1rem 1.25rem !important;
+    }
+}
+
 @media (max-width: 576px) {
     .activity-heatmap {
-        --heatmap-cell-size: 13px;
+        --heatmap-cell-size: 24px;
         --heatmap-gap: 4px;
         gap: 6px;
     }
@@ -2144,7 +2263,7 @@ button.history-session-card.history-session-card--selected {
 .bodyweight-log-row .set-metric-stepper__value-unit {
     font-size: 0.875rem;
     font-weight: 600;
-    opacity: 0.6;
+    opacity: 1;
     margin-left: 0.35rem;
 }
 
@@ -2254,22 +2373,25 @@ button.history-session-card.history-session-card--selected {
 }
 
 .bodyweight-table.mud-paper .bodyweight-table__action {
-    width: 3rem;
-    max-width: 3rem;
+    width: 6.25rem;
+    max-width: 6.25rem;
     padding-left: 0 !important;
-    padding-right: 0.75rem !important;
+    padding-right: 0.5rem !important;
     text-align: center;
+    white-space: nowrap;
 }
 
+.bodyweight-table.mud-paper .bodyweight-table__edit,
 .bodyweight-table.mud-paper .bodyweight-table__delete {
     width: 44px;
     height: 44px;
     min-width: 44px;
     min-height: 44px;
     padding: 0;
-    margin: 0 auto;
-    display: grid;
+    margin: 0 2px;
+    display: inline-grid;
     place-items: center;
+    vertical-align: middle;
 }
 
 .bodyweight-table .mud-table-body .mud-table-row {
@@ -3451,18 +3573,19 @@ html[data-theme="dark"] .app-splash__retry {
     margin: 0.75rem 0;
 }
 
-/* AI Assistant Chat Modal Styling */
-
+/* AI Assistant chat dialog chrome. The dialog internals (header, messages,
+   bubbles, composer) are styled by AiChatModal.razor.css; only the MudDialog
+   chrome lives here because the dialog root and its content wrapper are
+   outside the component's CSS scope. */
 .mud-dialog-container .mud-dialog.ai-chat-dialog,
 .mud-dialog.ai-chat-dialog,
-.ai-chat-dialog,
-.mud-dialog-container .mud-dialog {
+.ai-chat-dialog {
     border-radius: 20px !important;
     overflow: hidden !important;
     max-width: 600px !important;
     width: min(600px, calc(100vw - 32px)) !important;
     background: var(--mud-palette-surface) !important;
-    box-shadow: none !important;
+    box-shadow: 0 8px 40px color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent) !important;
     border: 1px solid var(--mud-palette-lines-default) !important;
     margin: 16px auto !important;
 }
@@ -3470,88 +3593,12 @@ html[data-theme="dark"] .app-splash__retry {
 .mud-dialog-container .mud-dialog.ai-chat-dialog .mud-dialog-content,
 .mud-dialog.ai-chat-dialog .mud-dialog-content,
 .ai-chat-dialog .mud-dialog-content {
-    padding: 12px 16px 16px 16px !important;
+    /* The component container owns all spacing; the composer runs edge to
+       edge so the send button sits at the dialog's right side. */
+    padding: 0 !important;
 }
 
-
-.ai-chat-container {
-    display: flex;
-    flex-direction: column;
-    height: min(600px, 75dvh);
-    width: 100%;
-}
-
-.ai-chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--mud-palette-lines-default);
-}
-
-.ai-chat-header__title {
-    display: flex;
-    align-items: center;
-}
-
-.ai-chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.ai-chat-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-    padding: 24px;
-    opacity: 0.85;
-}
-
-.ai-msg {
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
-}
-
-.ai-msg--user {
-    align-self: flex-end;
-}
-
-.ai-msg--assistant {
-    align-self: flex-start;
-}
-
-.ai-msg__bubble {
-    padding: 10px 14px;
-    border-radius: 16px;
-    font-size: 0.925rem;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-    box-shadow: none !important;
-}
-
-.ai-msg--user .ai-msg__bubble {
-    background: var(--mud-palette-primary) !important;
-    color: var(--mud-palette-primary-text) !important;
-    border-bottom-right-radius: 4px;
-    white-space: pre-wrap;
-}
-
-.ai-msg--assistant .ai-msg__bubble {
-    background: var(--mud-palette-background-grey, rgba(255, 255, 255, 0.08)) !important;
-    color: var(--mud-palette-text-primary) !important;
-    border-bottom-left-radius: 4px;
-    border: 1px solid var(--mud-palette-lines-default) !important;
-    white-space: normal;
-}
-
+/* Markdown rendered inside assistant bubbles */
 .ai-msg__content.markdown-body table {
     width: 100%;
     border-collapse: collapse;
@@ -3587,77 +3634,6 @@ html[data-theme="dark"] .app-splash__retry {
 
 .ai-msg__content.markdown-body li {
     margin-bottom: 4px;
-}
-
-.ai-msg--error .ai-msg__bubble {
-    background: var(--mud-palette-error-hover, rgba(244, 67, 54, 0.15)) !important;
-    border: 1px solid var(--mud-palette-error) !important;
-    color: var(--mud-palette-error-text, #ffffff) !important;
-}
-
-.ai-msg__thinking {
-
-    display: flex;
-    align-items: center;
-    opacity: 0.9;
-    font-style: italic;
-}
-
-.ai-msg__tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-}
-
-.ai-msg__time {
-    font-size: 0.7rem;
-    opacity: 0.6;
-    margin-top: 4px;
-    padding: 0 4px;
-}
-
-.ai-msg--user .ai-msg__time {
-    text-align: right;
-}
-
-.ai-msg__actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    margin-top: 4px;
-}
-
-.ai-msg__copy {
-    opacity: 0.55;
-}
-
-.ai-msg__copy:hover {
-    opacity: 1;
-}
-
-.ai-msg__copy .mud-icon-root {
-    font-size: 1rem;
-}
-
-.ai-chat-quick-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 0;
-    overflow-x: auto;
-}
-
-.ai-chat-input {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--mud-palette-lines-default);
-}
-
-.ai-chat-textfield {
-    flex: 1;
 }
 
 .plan-exercise-sheet__form {
@@ -3772,17 +3748,46 @@ html[data-theme="dark"] .app-splash__retry {
     .app-nav-pill__inner {
         flex-direction: row;
         height: 64px;
-        gap: 4px;
+        gap: 6px;
         padding: 0 0.75rem;
         border-radius: 20px;
-        justify-content: space-around;
+        justify-content: center;
     }
 
     .app-nav-tab {
-        width: auto;
+        flex-direction: row;
+        gap: 8px;
+        min-width: 136px;
         height: 52px;
         margin: 6px 4px;
-        flex: 1 1 0;
+        padding: 0 1.25rem;
+        flex: 0 1 auto;
+    }
+
+    .app-nav-tab__label {
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+    }
+
+    /* Active page: solid primary pill with white icon + label */
+    .app-nav-tab--active {
+        background: var(--mud-palette-primary);
+        color: #fff !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
+    }
+
+    .app-nav-tab--active .mud-icon-root {
+        color: #fff !important;
+        transform: scale(1.05);
+    }
+
+    .app-nav-tab--active .app-nav-tab__label {
+        color: #fff !important;
+    }
+
+    /* Subtle hover on inactive tabs only */
+    .app-nav-tab:not(.app-nav-tab--active):hover {
+        background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
     }
 
     /* --- FABs: anchored to the screen corner --- */
@@ -3863,7 +3868,7 @@ html[data-theme="dark"] .app-splash__retry {
     }
 
     .activity-heatmap {
-        --heatmap-cell-size: 14px;
+        --heatmap-cell-size: 24px;
         --heatmap-gap: 4px;
     }
 
@@ -3940,11 +3945,6 @@ html[data-theme="dark"] .app-splash__retry {
 
 /* Hover feedback for cards — fine pointers only (desktop/laptop) */
 @media (hover: hover) and (pointer: fine) {
-    .plan-card.mud-card:hover {
-        border-color: color-mix(in srgb, var(--mud-palette-primary) 40%, transparent);
-        transform: translateY(-2px);
-    }
-
     .history-session-card:hover {
         border-color: color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
     }
@@ -3962,4 +3962,508 @@ html[data-theme="dark"] .app-splash__retry {
     .home-hero:hover {
         border-color: color-mix(in srgb, var(--mud-palette-primary) 45%, transparent) !important;
     }
+}
+
+/* ============================================================
+   Accessibility contrast fixes (Lighthouse WCAG AA)
+   ============================================================ */
+
+/* Active nav tab label: dark teal primary on the 20% primary pill fails
+   4.5:1 in the light theme; use a darker teal for text only. */
+html[data-theme="light"] .app-nav-tab--active .app-nav-tab__label {
+    color: #0B5A53;
+}
+
+/* AI assistant hint alert (MudBlazor warning severity): amber on the
+   pale amber surface is 2.7:1; darken the message and button text. */
+.home-ai-hint.mud-alert-warning .mud-alert-message {
+    color: #92400E;
+}
+html[data-theme="dark"] .home-ai-hint.mud-alert-warning .mud-alert-message {
+    color: #FBBF24;
+}
+.home-ai-hint .mud-button-root .mud-button-label {
+    color: #92400E !important;
+}
+html[data-theme="dark"] .home-ai-hint .mud-button-root .mud-button-label {
+    color: #FBBF24 !important;
+}
+
+/* "In progress" badge on session cards: secondary blue at 15% mix fails
+   4.5:1 in light theme; use a darker blue. */
+html[data-theme="light"] .history-session-card__badge-inprogress {
+    color: #1D4ED8;
+}
+
+/* Set value unit ("kg"): the 0.65 opacity on top of the tinted surface
+   drops below 4.5:1; render it at full opacity in the text color. */
+.set-metric-stepper__value-unit {
+    opacity: 1;
+}
+
+/* Danger titles ("Remove all data"): error red fails 4.5:1 on the light
+   background; use a darker red in the light theme. */
+html[data-theme="light"] .settings-panel--danger .settings-panel__title,
+html[data-theme="light"] .settings-card--danger .settings-card__title,
+html[data-theme="light"] .settings-card--danger .mud-card-content {
+    color: #B91C1C;
+}
+
+/* Section headings use h2 semantics for correct heading order after an h1,
+   but keep the compact h6 visual size. */
+.home-hero__title.mud-typography-h2,
+.home-plans-header .mud-typography-h2,
+.bodyweight-panel__header .mud-typography-h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* ============================================================
+   Dark theme contrast fixes (Lighthouse WCAG AA)
+   White on the volt-green primary fails WCAG AA (2.5:1). The dark palette's
+   PrimaryContrastText (#0B0C10) handles the steady state; explicit hex
+   overrides below also cover the brief pre-hydration moment when the
+   MudThemeProvider variables have not been applied yet (during which the
+   custom rules would otherwise resolve to MudBlazor's default white).
+   ============================================================ */
+
+/* Active nav tab: explicit colors (no variable resolution) so the active
+   pill keeps AA contrast in every render state. Derived from the dark
+   palette: 20% #10B981 over #151821 surface, and #10B981 text on it. */
+html[data-theme="dark"] .app-nav-tab--active {
+    background: #143834;
+    color: #10B981;
+}
+
+html[data-theme="dark"] .app-nav-tab--active .mud-icon-root,
+html[data-theme="dark"] .app-nav-tab--active .app-nav-tab__label {
+    color: #10B981 !important;
+}
+
+/* Primary FAB and filled primary controls: near-black text on the green. */
+html[data-theme="dark"] .app-fab--primary,
+html[data-theme="dark"] .app-fab--primary:hover,
+html[data-theme="dark"] .mud-button-filled-primary .mud-button-label,
+html[data-theme="dark"] .mud-icon-button-filled-primary,
+html[data-theme="dark"] .bodyweight-log-row__log-btn {
+    color: #0B0C10 !important;
+}
+
+/* "In progress" badge: cobalt blue on the 15% tint drops to 4.05:1 in the
+   dark theme; use a lighter blue. */
+html[data-theme="dark"] .history-session-card__badge-inprogress {
+    color: #60A5FA;
+}
+
+/* ============================================================
+   AI chat modal - global (MAUI WebView may not apply the scoped
+   AiChatModal bundle, so every chat style is mirrored here with
+   plain selectors).
+   ============================================================ */
+
+.ai-chat-dialog {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.ai-chat-container {
+    display: flex;
+    flex-direction: column;
+    height: min(580px, 75dvh);
+    max-height: 80vh;
+    padding: 8px;
+    width: 100%;
+}
+
+/* ---- Header ---- */
+
+.ai-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 4px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 70%, transparent);
+    width: 100%;
+}
+
+.ai-chat-header__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.ai-chat-header__badge {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+    color: var(--mud-palette-primary);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
+    margin-top: -2px;
+}
+
+.ai-chat-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.ai-chat-header__actions .mud-icon-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    transition: background-color 120ms ease, transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ai-chat-header__actions .mud-icon-button:hover {
+    background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
+}
+
+.ai-chat-header__actions .mud-icon-button:active {
+    transform: scale(0.9);
+}
+
+/* ---- API key banner ---- */
+
+.ai-api-key-banner {
+    background: color-mix(in srgb, var(--mud-palette-warning) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 45%, transparent);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-api-key-banner__content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* ---- Messages surface ---- */
+
+.ai-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: color-mix(in srgb, var(--mud-palette-background) 65%, transparent);
+    border-radius: 16px;
+    margin: 10px 0 0;
+}
+
+.ai-chat-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 150px;
+    text-align: center;
+    padding: 20px;
+    gap: 6px;
+}
+
+.ai-chat-empty .mud-typography-h6 {
+    font-weight: 600;
+    margin: 4px 0 0;
+}
+
+.ai-chat-empty__hint {
+    margin-top: 2px;
+    max-width: 360px;
+}
+
+/* ---- Messages ---- */
+
+.ai-msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 82%;
+}
+
+.ai-msg--user {
+    align-self: flex-end;
+    max-width: 74%;
+}
+
+.ai-msg--assistant {
+    align-self: flex-start;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 86%;
+}
+
+.ai-msg__avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+    color: var(--mud-palette-primary);
+    margin-top: 10px;
+}
+
+.ai-msg__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ai-msg__bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.925rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.ai-msg--user .ai-msg__bubble {
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 28%, transparent);
+}
+
+.ai-msg--assistant .ai-msg__bubble {
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 55%, transparent);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--mud-palette-text-primary) 5%, transparent);
+}
+
+.ai-msg--error .ai-msg__bubble {
+    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 50%, transparent);
+    color: var(--mud-palette-error-text, var(--mud-palette-text-primary));
+}
+
+.ai-msg__thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.85;
+    font-style: italic;
+}
+
+.ai-msg__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.ai-msg__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.ai-msg--assistant:hover .ai-msg__actions,
+.ai-msg--user:hover .ai-msg__actions {
+    opacity: 1;
+}
+
+.ai-msg__time {
+    font-size: 0.68rem;
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.75;
+}
+
+.ai-msg--user .ai-msg__time {
+    text-align: right;
+}
+
+/* ---- Quick actions ---- */
+
+.ai-chat-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 2px 2px;
+    overflow-x: auto;
+}
+
+.ai-chat-quick-chip {
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 22%, transparent) !important;
+    color: var(--mud-palette-primary) !important;
+    font-weight: 600;
+    padding: 0 12px;
+}
+
+.ai-chat-quick-chip .mud-chip-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-chat-quick-chip:not(.mud-disabled):hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent) !important;
+}
+
+.ai-chat-quick-chip:not(.mud-disabled):active {
+    transform: scale(0.95);
+}
+
+/* ---- Composer ---- */
+
+.ai-chat-input {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+    width: 100%;
+}
+
+.ai-chat-composer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 7px 7px 16px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 88%, var(--mud-palette-primary) 5%);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 90%, transparent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-text-primary) 7%, transparent);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.ai-chat-composer:focus-within {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 55%, transparent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.ai-chat-input__field {
+    flex: 1;
+    min-width: 0;
+}
+
+.ai-chat-textfield {
+    width: 100%;
+}
+
+.ai-chat-textfield.mud-input,
+.ai-chat-textfield .mud-input {
+    font-size: 0.925rem;
+}
+
+.ai-chat-textfield input::placeholder {
+    color: var(--mud-palette-text-secondary);
+    opacity: 0.75;
+}
+
+/* Variant.Text underline hidden: the composer pill owns the border.
+   MudBlazor 9 draws the underline with :before/:after ON the input element
+   itself (the mud-input-underline class), so hide those pseudo-elements
+   rather than the input. */
+.ai-chat-textfield .mud-input-underline::before,
+.ai-chat-textfield .mud-input-underline::after {
+    display: none !important;
+}
+
+.ai-chat-send-button {
+    height: 42px !important;
+    min-width: 42px !important;
+    width: 42px !important;
+    border-radius: 999px !important;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent),
+                inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
+    transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.ai-chat-send-button:not(.mud-disabled):hover {
+    transform: scale(1.06);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+}
+
+.ai-chat-send-button:not(.mud-disabled):active {
+    transform: scale(0.94);
+}
+
+.ai-chat-send-button.mud-disabled {
+    opacity: 0.45;
+    box-shadow: none;
+}
+
+/* ---- Desktop & big screens: roomier header and composer ---- */
+
+@media (min-width: 960px) {
+    .ai-chat-container {
+        padding: 10px 12px 12px;
+    }
+
+    .ai-chat-header {
+        padding: 8px 4px 14px;
+    }
+
+    .ai-chat-header__badge {
+        width: 38px;
+        height: 38px;
+    }
+
+    .ai-chat-header__actions .mud-icon-button {
+        width: 38px;
+        height: 38px;
+    }
+
+    .ai-chat-composer {
+        padding: 8px 8px 8px 18px;
+        gap: 10px;
+    }
+
+    .ai-chat-textfield.mud-input,
+    .ai-chat-textfield .mud-input {
+        font-size: 0.95rem;
+    }
+
+    .ai-chat-send-button {
+        height: 44px !important;
+        min-width: 44px !important;
+        width: 44px !important;
+    }
+}
+
+/* ---- Misc ---- */
+
+.ai-chat-title {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.ai-chat-subtitle {
+    margin: 0;
+}
+
+.ai-banner-title {
+    line-height: 1.2;
+}
+
+.ai-banner-button {
+    flex-shrink: 0;
+    font-weight: 600;
 }

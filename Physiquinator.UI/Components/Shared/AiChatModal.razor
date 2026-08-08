@@ -14,7 +14,9 @@
             <!-- Header -->
             <div class="ai-chat-header">
                 <div class="ai-chat-header__title">
-                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Color="Color.Primary" />
+                    <div class="ai-chat-header__badge" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+                    </div>
                     <div>
                         <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">Physiquinator AI</MudText>
                         <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">Fitness Assistant & Plan Engine</MudText>
@@ -77,96 +79,106 @@
                         else if (msg.Role == AiMessageRole.Assistant)
                         {
                             <div class="@GetAssistantClass(msg)">
-                                <div class="ai-msg__bubble">
-                                    @if (msg.IsThinking)
-                                    {
-                                        <div class="ai-msg__thinking">
-                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                            <span>Thinking & executing actions...</span>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="ai-msg__content markdown-body">@((MarkupString)RenderMarkdown(msg.Content))</div>
-                                    }
+                                <div class="ai-msg__avatar" aria-hidden="true">
+                                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
                                 </div>
-                                @if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
-                                {
-                                    <div class="ai-msg__tools">
-                                        @foreach (var tc in msg.ToolCalls)
+                                <div class="ai-msg__body">
+                                    <div class="ai-msg__bubble">
+                                        @if (msg.IsThinking)
                                         {
-                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
-                                                Executed @tc.Name
-                                            </MudChip>
+                                            <div class="ai-msg__thinking">
+                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                                <span>Thinking & executing actions...</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="ai-msg__content markdown-body">@((MarkupString)RenderMarkdown(msg.Content))</div>
                                         }
                                     </div>
-                                }
-                                <span class="ai-msg__actions">
-                                    @if (!string.IsNullOrWhiteSpace(msg.Content))
+                                    @if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
                                     {
-                                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                                       Size="Size.Small"
-                                                       Class="ai-msg__copy"
-                                                       aria-label="Copy message"
-                                                       OnClick="@(() => CopyMessageAsync(msg.Content))" />
+                                        <div class="ai-msg__tools">
+                                            @foreach (var tc in msg.ToolCalls)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
+                                                    Executed @tc.Name
+                                                </MudChip>
+                                            }
+                                        </div>
                                     }
-                                    <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
-                                </span>
+                                    <span class="ai-msg__actions">
+                                        @if (!string.IsNullOrWhiteSpace(msg.Content))
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                           Size="Size.Small"
+                                                           Class="ai-msg__copy"
+                                                           aria-label="Copy message"
+                                                           OnClick="@(() => CopyMessageAsync(msg.Content))" />
+                                        }
+                                        <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                                    </span>
+                                </div>
                             </div>
                         }
                     }
                 }
             </div>
 
-            <!-- Quick Action Chips -->
-            <div class="ai-chat-quick-actions">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick">
-                    ⚡ Progressive Overload
-                </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick">
-                    📊 Performance Stats
-                </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick">
-                    ⚖️ Log Bodyweight
-                </MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick">
-                    🔄 Deload Plan
-                </MudChip>
-            </div>
+            <!-- Quick Action Chips — only while the chat is still empty -->
+            @if (AiAssistant.Messages.Count == 0)
+            {
+                <div class="ai-chat-quick-actions">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick" Class="ai-chat-quick-chip">
+                        ⚡ Progressive Overload
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick" Class="ai-chat-quick-chip">
+                        📊 Performance Stats
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick" Class="ai-chat-quick-chip">
+                        ⚖️ Log Bodyweight
+                    </MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick" Class="ai-chat-quick-chip">
+                        🔄 Deload Plan
+                    </MudChip>
+                </div>
+            }
 
             <!-- Input Bar -->
             <div class="ai-chat-input">
-                <div class="ai-chat-input__field">
-                    <MudTextField T="string"
-                                  Variant="Variant.Outlined"
-                                  Placeholder="Ask Physiquinator AI..."
-                                  Immediate="true"
-                                  @bind-Value="_inputText"
-                                  OnKeyDown="HandleKeyDown"
-                                  Disabled="@(_isSending || IsApiKeyMissing)"
-                                  Margin="Margin.Dense"
-                                  Class="ai-chat-textfield" />
-                </div>
+                <div class="ai-chat-composer">
+                    <div class="ai-chat-input__field">
+                        <MudTextField T="string"
+                                      Variant="Variant.Text"
+                                      Placeholder="Ask Physiquinator AI..."
+                                      Immediate="true"
+                                      @bind-Value="_inputText"
+                                      OnKeyDown="HandleKeyDown"
+                                      Disabled="@(_isSending || IsApiKeyMissing)"
+                                      Margin="Margin.Dense"
+                                      Class="ai-chat-textfield" />
+                    </div>
 
-                @if (_isSending)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Stop"
-                                   Color="Color.Error"
-                                   Variant="Variant.Filled"
-                                   aria-label="Stop generating"
-                                   OnClick="StopGeneration"
-                                   Class="ai-chat-send-button" />
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Send"
-                                   Color="Color.Primary"
-                                   Variant="Variant.Filled"
-                                   aria-label="Send Message"
-                                   Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
-                                   OnClick="SendMessageAsync"
-                                   Class="ai-chat-send-button" />
-                }
+                    @if (_isSending)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                       Color="Color.Error"
+                                       Variant="Variant.Filled"
+                                       aria-label="Stop generating"
+                                       OnClick="StopGeneration"
+                                       Class="ai-chat-send-button" />
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                       Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       aria-label="Send Message"
+                                       Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
+                                       OnClick="SendMessageAsync"
+                                       Class="ai-chat-send-button" />
+                    }
+                </div>
             </div>
         </div>
     </DialogContent>

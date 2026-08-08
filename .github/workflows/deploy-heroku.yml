@@ -42,7 +42,7 @@ jobs:
         dotnet format Physiquinator.Tests/Physiquinator.Tests.csproj --verify-no-changes --severity warn
 
     - name: Publish test results
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v3
       if: always()
       with:
         name: xUnit Tests

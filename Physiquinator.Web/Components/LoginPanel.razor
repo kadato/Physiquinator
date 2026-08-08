@@ -1,10 +1,15 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using MudBlazor
+@using Physiquinator.Core.Services
+@using Physiquinator.UI
+@implements IDisposable
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@inject ThemeService ThemeService
 
-<div class="auth-shell">
+<MudThemeProvider Theme="PhysiquinatorThemes.Default" IsDarkMode="_isDark" />
+<main class="auth-shell">
     <MudPaper Elevation="6" Class="auth-card">
         <div class="auth-brand">Physiquinator</div>
         <p class="auth-tagline">Workout tracking, an AI assistant, and an agent API - now with your own account.</p>
@@ -58,7 +63,7 @@
             @(_mode == AuthMode.Login ? "New here? Create an account" : "Already registered? Sign in")
         </MudButton>
     </MudPaper>
-</div>
+</main>
 
 @code {
     private enum AuthMode { Login, Register }
@@ -68,6 +73,35 @@
     private string _password = string.Empty;
     private string? _error;
     private bool _busy;
+    private bool _isDark;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // The login page renders outside the app shell, so resolve the
+            // browser/system theme here instead of relying on the shell init.
+            await ThemeService.EnsureInitializedAsync();
+        }
+        catch
+        {
+            // Theme stays at the service default when JS interop is unavailable.
+        }
+
+        _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged()
+    {
+        _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
 
     private void ToggleModeAsync()
     {

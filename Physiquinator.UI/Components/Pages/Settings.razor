@@ -29,18 +29,32 @@
 <MudStack Spacing="3">
     <PageHeader Title="Settings" ShowBack="false" />
 
-    <MudText Typo="Typo.caption" Class="settings-group-label">General</MudText>
+    <MudTextField T="string"
+                  @bind-Value="_settingsSearch"
+                  Placeholder="Search settings…"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Clearable="true"
+                  Immediate="true"
+                  Variant="Variant.Outlined" />
+
+    @if (GeneralGroupVisible)
+    {
+        <MudText Typo="Typo.caption" Class="settings-group-label">General</MudText>
+    }
     <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Appearance</span>
-                        <span class="settings-panel__subtitle">Light or dark mode</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(AppearanceKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Appearance</span>
+                            <span class="settings-panel__subtitle">Light or dark mode</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSelect T="string"
@@ -58,17 +72,20 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
 
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Units</span>
-                        <span class="settings-panel__subtitle">How weights are displayed</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(UnitsKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Units</span>
+                            <span class="settings-panel__subtitle">How weights are displayed</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSelect T="WeightUnit"
@@ -85,21 +102,31 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
 
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Rest timer</span>
-                        <span class="settings-panel__subtitle">Notifications and rest time</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(RestTimerKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Rest timer</span>
+                            <span class="settings-panel__subtitle">Notifications and rest time</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
+                    @if (!RestNotifications.SupportsNotifications)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-3">
+                            Notifications are not supported on this platform. The rest timer still runs inside the app.
+                        </MudAlert>
+                    }
                     <MudSwitch T="bool"
                                Label="Notify when rest ends"
+                               Disabled="!RestNotifications.SupportsNotifications"
                                Value="_restAlertsEnabled"
                                ValueChanged="OnRestAlertsEnabledChanged" />
                     <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
@@ -109,7 +136,7 @@
                     <MudSwitch T="bool"
                                Class="mt-3"
                                Label="Sound &amp; vibration"
-                               Disabled="!_restAlertsEnabled"
+                               Disabled="!_restAlertsEnabled || !RestNotifications.SupportsNotifications"
                                Value="_restSoundVibrationEnabled"
                                ValueChanged="OnRestSoundVibrationChanged" />
                     <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
@@ -163,34 +190,40 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
 
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">User profiles</span>
-                        <span class="settings-panel__subtitle">Create, switch, and manage profiles</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(ProfilesKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">User profiles</span>
+                            <span class="settings-panel__subtitle">Create, switch, and manage profiles</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <UserProfilesPanel />
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
 
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Workout schedule</span>
-                        <span class="settings-panel__subtitle">Keep your streak alive on rest days</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(ScheduleKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Workout schedule</span>
+                            <span class="settings-panel__subtitle">Keep your streak alive on rest days</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudText Typo="Typo.body2" Class="mb-2">
@@ -227,23 +260,34 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
 
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">AI Assistant</span>
-                        <span class="settings-panel__subtitle">Configure OpenAI / OpenRouter / Ollama API</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(AiKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">AI Assistant</span>
+                            <span class="settings-panel__subtitle">Configure OpenAI / OpenRouter / Ollama API</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSwitch T="bool"
                                Label="Enable AI Assistant"
                                Value="_aiSettings.Enabled"
                                ValueChanged="OnAiEnabledChanged" />
+
+                    @if (_aiSettings.Enabled && _aiSettings.Provider != AiProviderType.OllamaLocal
+                         && string.IsNullOrWhiteSpace(_aiSettings.ApiKey))
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mt-3">
+                            No API key set yet. The assistant needs one to answer.
+                        </MudAlert>
+                    }
 
                     @if (_aiSettings.Enabled)
                     {
@@ -274,7 +318,7 @@
                                           AdornmentIcon="@(_showApiKey ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
                                           OnAdornmentClick="@(() => _showApiKey = !_showApiKey)"
                                           @bind-Value="_aiSettings.ApiKey"
-                                          HelperText="Stored securely on-device" />
+                                          HelperText="Stored on-device in plaintext preferences" />
 
                              @if (_fetchingModels)
                              {
@@ -348,6 +392,12 @@
                                         <span>Test Connection</span>
                                     }
                                 </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Secondary"
+                                           OnClick="OpenAiChat"
+                                           StartIcon="@Icons.Material.Filled.SmartToy">
+                                    Open assistant
+                                </MudButton>
                             </div>
                         </MudStack>
                     }
@@ -355,24 +405,36 @@
 
             </ChildContent>
         </MudExpansionPanel>
+        }
     </MudExpansionPanels>
 
 
-    <MudText Typo="Typo.caption" Class="settings-group-label">Data</MudText>
+    @if (DataGroupVisible)
+    {
+        <MudText Typo="Typo.caption" Class="settings-group-label">Data</MudText>
+    }
     <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
-        <MudExpansionPanel Class="settings-panel">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Backup</span>
-                        <span class="settings-panel__subtitle">Export or import plans and history</span>
-                    </span>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <div class="settings-panel__content">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+        @if (PanelMatches(BackupKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Backup</span>
+                            <span class="settings-panel__subtitle">Export or import plans and history</span>
+                        </span>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <div class="settings-panel__content">
+                        <MudAlert Severity="Severity.Info" Class="mb-3 settings-local-banner">
+                            <div class="d-flex align-items-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                                <span>All data stays on this device — no accounts, no cloud sync. Use export to back it up.</span>
+                            </div>
+                        </MudAlert>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                         Export <strong>everything</strong> — plans, workout history, bodyweight log,
                         training schedule, and all settings — into one file. Import it to restore
                         everything at once.
@@ -430,13 +492,17 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
     </MudExpansionPanels>
 
-    <MudText Typo="Typo.caption" Class="settings-group-label">About</MudText>
+    @if (AboutGroupVisible)
+    {
+        <MudText Typo="Typo.caption" Class="settings-group-label">About</MudText>
+    }
     <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
-        @if (AppUpdateService.IsSupported)
+        @if (AppUpdateService.IsSupported && PanelMatches(UpdatesKeywords))
         {
-            <MudExpansionPanel Class="settings-panel">
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
@@ -502,16 +568,18 @@
             </MudExpansionPanel>
         }
 
-        <MudExpansionPanel Class="settings-panel settings-panel--danger">
-            <TitleContent>
-                <div class="settings-panel__header">
-                    <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
-                    <span class="settings-panel__text">
-                        <span class="settings-panel__title">Remove all data</span>
-                        <span class="settings-panel__subtitle">Permanently deletes everything on this device</span>
-                    </span>
-                </div>
-            </TitleContent>
+        @if (PanelMatches(RemoveDataKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel settings-panel--danger" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">Remove all data</span>
+                            <span class="settings-panel__subtitle">Permanently deletes everything on this device</span>
+                        </span>
+                    </div>
+                </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
@@ -527,6 +595,7 @@
                 </div>
             </ChildContent>
         </MudExpansionPanel>
+        }
     </MudExpansionPanels>
 </MudStack>
 
@@ -540,6 +609,41 @@
     private int _planCount;
     private int _historySessionCount;
     private int _addTimeSeconds = 30;
+
+    private string _settingsSearch = "";
+
+    private bool SearchActive => !string.IsNullOrWhiteSpace(_settingsSearch);
+
+    private bool PanelMatches(string[] keywords)
+    {
+        if (!SearchActive)
+            return true;
+
+        var query = _settingsSearch.Trim();
+        return keywords.Any(k => k.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static readonly string[] AppearanceKeywords = ["appearance", "theme", "dark", "light", "mode"];
+    private static readonly string[] UnitsKeywords = ["units", "kg", "lb", "weight"];
+    private static readonly string[] RestTimerKeywords = ["rest", "timer", "notification", "sound", "vibration", "overlay"];
+    private static readonly string[] ProfilesKeywords = ["profiles", "profile", "user", "multi"];
+    private static readonly string[] ScheduleKeywords = ["schedule", "streak", "days", "training"];
+    private static readonly string[] AiKeywords = ["ai", "assistant", "chat", "openai", "openrouter", "ollama", "model", "api"];
+    private static readonly string[] BackupKeywords = ["backup", "export", "import", "data", "restore"];
+    private static readonly string[] UpdatesKeywords = ["updates", "update", "version", "release"];
+    private static readonly string[] RemoveDataKeywords = ["remove", "delete", "reset", "wipe"];
+
+    private bool GeneralGroupVisible => PanelMatches(AppearanceKeywords)
+        || PanelMatches(UnitsKeywords)
+        || PanelMatches(RestTimerKeywords)
+        || PanelMatches(ProfilesKeywords)
+        || PanelMatches(ScheduleKeywords)
+        || PanelMatches(AiKeywords);
+
+    private bool DataGroupVisible => PanelMatches(BackupKeywords);
+
+    private bool AboutGroupVisible => (AppUpdateService.IsSupported && PanelMatches(UpdatesKeywords))
+        || PanelMatches(RemoveDataKeywords);
 
     private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
 
@@ -727,6 +831,19 @@
         }
     }
 
+    private async Task OpenAiChat()
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = false,
+            CloseOnEscapeKey = true,
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+        await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
+    }
+
 
     private void ToggleScheduleDay(DayOfWeek day)
     {
@@ -798,6 +915,29 @@
             if (json == null)
                 return;
 
+            PlanImportPreview preview;
+            try
+            {
+                preview = await PlanService.PreviewPlansImportAsync(json);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+                return;
+            }
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import plans",
+                [
+                    ("Plans in file", preview.Total.ToString()),
+                    ("New plans", preview.New.ToString()),
+                    ("Will overwrite", preview.Overwritten.ToString()),
+                ],
+                "Plans with the same ID replace the existing one. Everything else is added.");
+
+            if (!proceed)
+                return;
+
             var importedCount = 0;
             try
             {
@@ -845,6 +985,20 @@
             if (json == null)
                 return;
 
+            var preview = await WorkoutHistoryService.PreviewImportAsync(json);
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import history",
+                [
+                    ("Workouts in file", preview.Sessions.ToString()),
+                    ("Set logs", preview.Sets.ToString()),
+                    ("Bodyweight entries", preview.BodyweightEntries.ToString()),
+                ],
+                "Import merges by session and set id. Existing matching entries are replaced.");
+
+            if (!proceed)
+                return;
+
             var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
             await RefreshHistoryCountAsync();
             Snackbar.Add($"Imported {sessions} workout(s) and {sets} set log(s).", Severity.Success);
@@ -880,6 +1034,22 @@
             if (json == null)
                 return;
 
+            var preview = await BackupRestoreService.PreviewImportAsync(json);
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import all data",
+                [
+                    ("Plans", preview.PlansImported.ToString()),
+                    ("Workouts", preview.SessionsImported.ToString()),
+                    ("Set logs", preview.SetsImported.ToString()),
+                    ("Schedule entries", preview.SchedulesImported.ToString()),
+                    ("Settings", preview.PreferencesImported.ToString()),
+                ],
+                "Everything in the backup is merged into this device. Existing matching entries are replaced.");
+
+            if (!proceed)
+                return;
+
             var result = await BackupRestore.ImportAllDataAsync(json);
             SyncFromService();
             await RefreshPlanCountAsync();
@@ -895,6 +1065,30 @@
         {
             Snackbar.Add($"Import failed: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task<bool> ShowImportPreviewAsync(
+        string title,
+        IReadOnlyList<(string Label, string Value)> rows,
+        string note)
+    {
+        var parameters = new DialogParameters<ImportPreviewDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Rows, rows },
+            { x => x.Note, note },
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<ImportPreviewDialog>("Import", parameters, options);
+        var result = await dialog.Result;
+        return result is { Canceled: false };
     }
 
     private async Task RemoveAllDataAsync()

@@ -3,7 +3,6 @@
 @using System.Linq
 @using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
-@inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject WeightUnitService WeightUnitService
@@ -93,6 +92,12 @@ else
                         <MudTd>@UiDateFormats.DateOnlyCompact(context.DateOnly)</MudTd>
                         <MudTd>@FormatWeightWithUnit(context.BodyweightKg)</MudTd>
                         <MudTd Class="bodyweight-table__action">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Size="Size.Small"
+                                           Color="Color.Info"
+                                           Class="bodyweight-table__edit"
+                                           aria-label="@($"Edit entry for {UiDateFormats.DateOnlyCompact(context.DateOnly)}")"
+                                           OnClick="@(() => EditEntryAsync(context))" />
                             <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                            Size="Size.Small"
                                            Color="Color.Error"
@@ -176,11 +181,6 @@ else
     protected override async Task OnInitializedAsync()
     {
         _allEntries = await LoadEntriesAsync();
-        if (_allEntries.Count == 0)
-        {
-            Navigation.NavigateTo(AppRoutes.History);
-            return;
-        }
         ApplyRangeAndRebuild();
         _ready = true;
     }
@@ -267,6 +267,42 @@ else
         return NiceYAxisUnits.FirstOrDefault(unit => range / unit <= maxLines, NiceYAxisUnits[^1]);
     }
 
+    private async Task EditEntryAsync(BodyweightEntry entry)
+    {
+        var parameters = new DialogParameters<BodyweightEditDialog>
+        {
+            { x => x.DateLabel, UiDateFormats.DateOnlyCompact(entry.DateOnly) },
+            { x => x.UnitSuffix, ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current) },
+            { x => x.CurrentValue, ExerciseWeightFormatter.ToDisplay(entry.BodyweightKg, WeightUnitService.Current) },
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<BodyweightEditDialog>("Edit entry", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false } && result.Data is double displayWeight)
+        {
+            var kg = ExerciseWeightFormatter.ToKg(displayWeight, WeightUnitService.Current);
+            try
+            {
+                await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, kg);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not update entry: {ex.Message}", Severity.Error);
+                return;
+            }
+
+            _allEntries = await LoadEntriesAsync();
+            ApplyRangeAndRebuild();
+            Snackbar.Add("Entry updated.", Severity.Success);
+        }
+    }
+
     private async Task DeleteEntryAsync(BodyweightEntry entry)
     {
         var confirmed = await DialogService.ConfirmAsync(
@@ -277,14 +313,17 @@ else
 
         if (!confirmed) return;
 
-        await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
-        _allEntries = await LoadEntriesAsync();
-        if (_allEntries.Count == 0)
+        try
         {
-            Navigation.NavigateTo(AppRoutes.History);
-            Snackbar.Add("Entry removed.", Severity.Info);
+            await HistoryRepo.DeleteBodyweightLogAsync(entry.DateOnly);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Could not delete entry: {ex.Message}", Severity.Error);
             return;
         }
+
+        _allEntries = await LoadEntriesAsync();
         ApplyRangeAndRebuild();
         Snackbar.Add("Entry removed.", Severity.Info);
     }

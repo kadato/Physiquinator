@@ -108,9 +108,17 @@
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {
-            UserProfileService.CreateProfile(name);
+            try
+            {
+                UserProfileService.CreateProfile(name);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+                return;
+            }
             _profiles = UserProfileService.GetProfiles();
-            Snackbar.Add($"Profile '{name}' created.", Severity.Success);
+            Snackbar.Add($"Profile '{name.Trim()}' created.", Severity.Success);
         }
     }
 
@@ -122,21 +130,32 @@
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {
-            UserProfileService.RenameProfile(id, name);
+            try
+            {
+                UserProfileService.RenameProfile(id, name);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+                return;
+            }
             _profiles = UserProfileService.GetProfiles();
             if (_activeProfile.Id == id)
             {
-                _activeProfile.Name = name;
+                _activeProfile.Name = name.Trim();
             }
-            Snackbar.Add($"Profile renamed to '{name}'.", Severity.Success);
+            Snackbar.Add($"Profile renamed to '{name.Trim()}'.", Severity.Success);
         }
     }
 
     private async Task DeleteProfileAsync(Guid id, string name)
     {
+        var isActive = id == _activeProfile.Id;
         var confirmed = await DialogService.ConfirmAsync(
             "Delete profile?",
-            $"Are you sure you want to delete profile '{name}'? This will permanently delete its workout history, plans, and database file.",
+            isActive
+                ? $"'{name}' is your current profile. Deleting it permanently erases its history, plans, and database file, and switches you to the Demo User profile."
+                : $"Are you sure you want to delete profile '{name}'? This will permanently delete its workout history, plans, and database file.",
             confirmText: "Delete",
             confirmColor: Color.Error);
 

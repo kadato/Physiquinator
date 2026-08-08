@@ -1112,6 +1112,30 @@ input[type="number"] {
     flex-shrink: 0;
 }
 
+.plan-exercise-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.plan-exercise-row__moves {
+    display: flex;
+    flex-direction: column;
+}
+
+.plan-exercise-row__move {
+    opacity: 0.7;
+}
+
+.plan-exercise-row__move:hover {
+    opacity: 1;
+}
+
+.plan-exercise-row__move .mud-icon-root {
+    font-size: 1.05rem;
+}
+
 .plan-editor-footer__actions {
     display: flex;
     align-items: stretch;
@@ -1890,6 +1914,143 @@ button.history-session-card:focus-visible {
     transition: opacity 150ms ease;
 }
 
+.history-session-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.history-session-check {
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.75rem;
+    border: none;
+    border-radius: 16px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--mud-palette-text-secondary);
+}
+
+.history-session-check .mud-icon-root {
+    font-size: 1.5rem;
+}
+
+button.history-session-card.history-session-card--selected {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+}
+
+.history-session-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.history-session-card__delete-btn .mud-icon-root {
+    font-size: 1.15rem;
+    color: var(--mud-palette-text-secondary);
+    transition: color 150ms ease;
+}
+
+.history-session-card__delete-btn:hover .mud-icon-root,
+.history-session-card__delete-btn:focus-visible .mud-icon-root {
+    color: var(--mud-palette-error);
+}
+
+.history-select-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.625rem 1rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 25%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-primary) 6%, var(--mud-palette-surface));
+    margin-bottom: 0.75rem;
+}
+
+.history-select-bar__count {
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+}
+
+.history-select-toggle {
+    text-transform: none;
+}
+
+.import-preview-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.import-preview-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 10px;
+    background: var(--mud-palette-background-grey);
+}
+
+.import-preview-row__label {
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.import-preview-row__value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+}
+
+.workout-summary-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+}
+
+.workout-summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+}
+
+.workout-summary-stat__value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+}
+
+.workout-summary-stat__label {
+    font-size: 0.7rem;
+    color: var(--mud-palette-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.workout-summary-pr {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--mud-palette-warning) 8%, var(--mud-palette-surface));
+}
+
 /* Bodyweight tracking panel */
 .bodyweight-panel.mud-paper {
     display: flex;
@@ -2451,6 +2612,25 @@ button.history-session-card:focus-visible {
     color: var(--mud-palette-success);
 }
 
+/* Mid-workout exercise reorder controls */
+.exercise-move-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.exercise-move-btn {
+    opacity: 0.75;
+}
+
+.exercise-move-btn:hover {
+    opacity: 1;
+}
+
+.exercise-move-btn .mud-icon-root {
+    font-size: 1.1rem;
+}
+
 /* Set Rows styling */
 .set-logging-rows {
     display: flex;
@@ -2813,6 +2993,44 @@ a,
 .rest-timer-add-btn:active {
     background: color-mix(in srgb, var(--mud-palette-primary) 18%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+}
+
+.rest-timer-presets {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+}
+
+.rest-timer-preset-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3125rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 25%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.rest-timer-preset-btn:hover {
+    color: var(--mud-palette-primary);
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 40%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent);
+}
+
+.rest-timer-preset-btn:active {
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
 }
 
 /* Compact, refined snackbar toasts */
@@ -3403,6 +3621,25 @@ html[data-theme="dark"] .app-splash__retry {
     text-align: right;
 }
 
+.ai-msg__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.ai-msg__copy {
+    opacity: 0.55;
+}
+
+.ai-msg__copy:hover {
+    opacity: 1;
+}
+
+.ai-msg__copy .mud-icon-root {
+    font-size: 1rem;
+}
+
 .ai-chat-quick-actions {
     display: flex;
     flex-wrap: wrap;
@@ -3657,6 +3894,36 @@ html[data-theme="dark"] .app-splash__retry {
 /* Labeled FAB text: icon-only on mobile, label visible on desktop */
 .app-fab__label {
     display: none;
+}
+
+/* Active-profile chip: fixed top-right on top-level pages */
+.app-profile-chip {
+    appearance: none;
+    -webkit-appearance: none;
+    position: fixed;
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: 1rem;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3125rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--mud-palette-text-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 40vw;
+}
+
+.app-profile-chip__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 @media (min-width: 960px) {

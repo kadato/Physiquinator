@@ -30,6 +30,23 @@
         </div>
         <div class="header-right">
             <span class="@PillClass">@CompletedSetsCount/@Exercise.SetCount</span>
+            @if (CanMoveUp || CanMoveDown)
+            {
+                <div @onclick:stopPropagation="true" class="exercise-move-controls">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                   Size="Size.Small"
+                                   Class="exercise-move-btn"
+                                   Disabled="!CanMoveUp"
+                                   aria-label="@($"Move {Exercise.Name} up")"
+                                   OnClick="MoveUp" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                                   Size="Size.Small"
+                                   Class="exercise-move-btn"
+                                   Disabled="!CanMoveDown"
+                                   aria-label="@($"Move {Exercise.Name} down")"
+                                   OnClick="MoveDown" />
+                </div>
+            }
             @if (!IsCompleted)
             {
                 <div @onclick:stopPropagation="true">
@@ -198,6 +215,18 @@
     [Parameter]
     public EventCallback<(int ExerciseIndex, string ExerciseName)> OnSkipExercise { get; set; }
 
+    [Parameter]
+    public bool CanMoveUp { get; set; }
+
+    [Parameter]
+    public bool CanMoveDown { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveUp { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnMoveDown { get; set; }
+
     private WeightUnit Unit => WeightUnitService.Current;
 
     private string UnitSuffix => ExerciseWeightFormatter.UnitSuffix(Unit);
@@ -234,6 +263,10 @@
     private Task OnHeaderClick() => OnToggle.InvokeAsync(ExerciseIndex);
 
     private Task SkipExercise() => OnSkipExercise.InvokeAsync((ExerciseIndex, Exercise.Name));
+
+    private Task MoveUp() => OnMoveUp.InvokeAsync(ExerciseIndex);
+
+    private Task MoveDown() => OnMoveDown.InvokeAsync(ExerciseIndex);
 
     private string PillClass =>
         IsCompleted

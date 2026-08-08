@@ -1,0 +1,49 @@
+@* Preview of what an import will do before anything is merged. *@
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.Download" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="fw-bold">@Title</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2" Class="py-2">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @Note
+            </MudText>
+            <div class="import-preview-rows">
+                @foreach (var row in Rows)
+                {
+                    <div class="import-preview-row">
+                        <span class="import-preview-row__label">@row.Label</span>
+                        <span class="import-preview-row__value">@row.Value</span>
+                    </div>
+                }
+            </div>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="Confirm">
+            Import
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Import";
+
+    [Parameter]
+    public string Note { get; set; } = "The imported data is merged into this device. Existing matching entries are replaced.";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<(string Label, string Value)> Rows { get; set; } = [];
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm() => MudDialog.Close();
+}

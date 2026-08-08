@@ -1,0 +1,66 @@
+@* Edit a bodyweight entry (upserts the value for the entry's date). *@
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.MonitorWeight" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Edit entry</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2" Class="py-2">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @DateLabel — @UnitSuffix
+            </MudText>
+            <MudTextField T="string"
+                          Label="Bodyweight"
+                          Variant="Variant.Filled"
+                          InputMode="@((InputMode)2)"
+                          @bind-Value="_valueText"
+                          Placeholder="e.g. 80.5" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!double.TryParse(_valueText, out var v) || v <= 0)"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="Confirm">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public string DateLabel { get; set; } = "";
+
+    [Parameter]
+    public string UnitSuffix { get; set; } = "kg";
+
+    [Parameter]
+    public double? CurrentValue { get; set; }
+
+    private string _valueText = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        _valueText = CurrentValue is { } v
+            ? v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)
+            : "";
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        if (double.TryParse(_valueText, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var value) && value > 0)
+        {
+            MudDialog.Close(DialogResult.Ok(value));
+        }
+    }
+}

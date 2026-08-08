@@ -1,0 +1,111 @@
+@* Add a set that was missed during the workout. *@
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Add set</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Class="py-2">
+            <MudSelect T="string"
+                       Label="Exercise"
+                       Variant="Variant.Filled"
+                       Value="_exerciseName"
+                       ValueChanged="OnExerciseChanged">
+                @foreach (var name in ExerciseNames)
+                {
+                    <MudSelectItem Value="@name">@name</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (GetLogType(_exerciseName) != ExerciseLogType.Duration)
+            {
+                <MudTextField T="string"
+                              Label="Weight"
+                              Variant="Variant.Filled"
+                              InputMode="@((InputMode)2)"
+                              @bind-Value="_weightText"
+                              Placeholder="0"
+                              HelperText="@($"Weight in {UnitSuffix} (optional)")" />
+            }
+
+            <MudTextField T="string"
+                          Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "Duration (seconds)" : "Reps")"
+                          Variant="Variant.Filled"
+                          InputMode="InputMode.numeric"
+                          @bind-Value="_repsText"
+                          Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "e.g. 60" : "e.g. 10")" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@CannotAdd"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="Confirm">
+            Add set
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> ExerciseNames { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<string, ExerciseLogType> LogTypes { get; set; } =
+        new Dictionary<string, ExerciseLogType>(StringComparer.OrdinalIgnoreCase);
+
+    [Parameter]
+    public string UnitSuffix { get; set; } = "kg";
+
+    private string _exerciseName = "";
+    private string _weightText = "";
+    private string _repsText = "";
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private ExerciseLogType GetLogType(string name) =>
+        LogTypes.TryGetValue(name, out var type) ? type : ExerciseLogType.WeightAndReps;
+
+    private bool CannotAdd =>
+        string.IsNullOrWhiteSpace(_exerciseName)
+        || (GetLogType(_exerciseName) == ExerciseLogType.Duration
+            ? !int.TryParse(_repsText, out var d) || d <= 0
+            : !int.TryParse(_repsText, out var r) || r <= 0);
+
+    protected override void OnInitialized()
+    {
+        if (ExerciseNames.Count > 0)
+            _exerciseName = ExerciseNames[0];
+    }
+
+    private void OnExerciseChanged(string name) => _exerciseName = name;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        var logType = GetLogType(_exerciseName);
+        int? reps = null;
+        double? weightKg = null;
+
+        if (logType == ExerciseLogType.Duration)
+        {
+            if (int.TryParse(_repsText, out var seconds) && seconds > 0)
+                reps = seconds;
+        }
+        else
+        {
+            if (int.TryParse(_repsText, out var parsedReps) && parsedReps > 0)
+                reps = parsedReps;
+            if (double.TryParse(_weightText, out var weight))
+                weightKg = weight > 0 ? weight : null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new AddSetResult(_exerciseName, reps, weightKg)));
+    }
+}

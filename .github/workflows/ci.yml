@@ -28,11 +28,11 @@ jobs:
         dotnet-version: '11.0.100-preview.6.26359.118'
         dotnet-quality: 'preview'
 
-    - name: Install MAUI Windows workload
-      run: dotnet workload install maui-windows
+    - name: Install MAUI workload
+      run: dotnet workload install maui
 
-    - name: Restore
-      run: dotnet restore Physiquinator.csproj -p:TargetFrameworks=net11.0-windows10.0.19041.0
+    - name: Restore dependencies
+      run: dotnet restore Physiquinator.csproj
 
     - name: Build MAUI Windows host
-      run: dotnet build Physiquinator.csproj -f net11.0-windows10.0.19041.0 -p:TargetFrameworks=net11.0-windows10.0.19041.0 --no-restore --configuration Release
+      run: dotnet publish Physiquinator.csproj -f net11.0-windows10.0.19041.0 --configuration Release -p:WindowsPackageType=None -o ./artifacts/windows-ci

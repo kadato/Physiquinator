@@ -168,7 +168,7 @@ Four projects sharing one domain model and service layer:
 | `Physiquinator.UI` | Blazor Hybrid UI (Razor class library): pages, components, theming |
 | `Physiquinator` | .NET MAUI shell for Android, iOS, macOS, Windows |
 | `Physiquinator.Web` | ASP.NET Core web host: the same UI plus the MCP server |
-| `Physiquinator.Tests` | 281 xUnit tests across repositories, services, and the MCP surface |
+| `Physiquinator.Tests` | xUnit suite covering repositories, services, and the MCP surface |
 
 Key design points:
 
@@ -218,7 +218,7 @@ To build a release APK without an Android SDK, see [DOCKER.md](DOCKER.md). To re
 
 ## Testing & CI
 
-- **281 xUnit tests** covering repositories, workout/session/history services, stats, formatting, the AI tool registry, and the MCP surface
+- **xUnit tests** covering repositories, workout/session/history services, stats, formatting, the AI tool registry, and the MCP surface
 - **CI on every push/PR** - restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`)
 - **SonarCloud** analysis with coverage (`.github/workflows/sonarcloud.yml`)
 - **Tag-based releases** (`v*`) - signed Android APK and Windows package published automatically (`.github/workflows/release.yml`)

@@ -360,18 +360,6 @@
                 var options = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
                 await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>("Welcome", options);
             }
-            else if (!Preferences.Get(PreferenceKeys.OnboardingTourShown, false))
-            {
-                // Reset the flag immediately to prevent double opens
-                Preferences.Set(PreferenceKeys.OnboardingTourShown, true);
-
-                var tourOptions = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
-                var parameters = new DialogParameters<Shared.OnboardingTourDialog>
-                {
-                    { x => x.AiEnabled, AiAssistant.GetSettings().Enabled }
-                };
-                await DialogService.ShowAsync<Shared.OnboardingTourDialog>("Welcome", parameters, tourOptions);
-            }
         }
 
         if (_plans == null || _plans.Count <= 1)

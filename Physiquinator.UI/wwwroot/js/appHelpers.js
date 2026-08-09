@@ -2,6 +2,16 @@
 (function () {
     'use strict';
 
+    // Selects the full value when a stepper edit input gains focus.
+    window.physiquinator = window.physiquinator || {};
+    window.physiquinator.selectInput = function (element) {
+        try {
+            if (element && typeof element.select === 'function') element.select();
+        } catch {
+            /* ignore */
+        }
+    };
+
     window.physiquinatorHelpers = {
         goBackOrHome: function () {
             if (window.history.length > 1) {

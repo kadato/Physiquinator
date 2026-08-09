@@ -6,17 +6,6 @@ let restStartTime = 0;
 let restTotalMs = 0;
 let chainGeneration = 0;
 
-// Selects the full value when a stepper edit input gains focus (moved out of
-// the inline onfocus attribute for CSP hygiene). Loaded with this module.
-window.physiquinator = window.physiquinator || {};
-window.physiquinator.selectInput = (element) => {
-    try {
-        if (element && typeof element.select === 'function') element.select();
-    } catch {
-        /* ignore */
-    }
-};
-
 // ---- Keep-screen-on (wake lock) ------------------------------------------
 let wakeLockSentinel = null;
 let keepScreenOnWanted = false;

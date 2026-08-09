@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Physiquinator.Core.Formatting;
 
-/// <summary>Short date strings for dense mobile layouts (Y-M-D when year is shown).</summary>
+/// <summary>Short date strings for dense mobile layouts (M/D when year is shown).</summary>
 public static class UiDateFormats
 {
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
@@ -32,11 +32,11 @@ public static class UiDateFormats
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (date.Year == today.Year)
-            return date.ToString("MM-dd", Invariant);
-        return date.ToString("yyyy-MM-dd", Invariant);
+            return date.ToString("MM/dd", Invariant);
+        return date.ToString("yyyy/MM/dd", Invariant);
     }
 
     /// <summary>Minimal date for chart X-axis (only month and day).</summary>
     public static string LocalDateChartAxis(DateTime utc) =>
-        utc.ToLocalTime().ToString("MM-dd", Invariant);
+        utc.ToLocalTime().ToString("MM/dd", Invariant);
 }

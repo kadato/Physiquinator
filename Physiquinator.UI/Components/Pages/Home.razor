@@ -179,8 +179,7 @@
     private string LastSessionLabel =>
         _lastSession == null
             ? "/"
-            : UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime()))
-                .Replace('-', '/');
+            : UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime()));
 
     private string LastDoneLabelFor(Guid planId) =>
         _lastSessionByPlan.TryGetValue(planId.ToString(), out var lastUtc)

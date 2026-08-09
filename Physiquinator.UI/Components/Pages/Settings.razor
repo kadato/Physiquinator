@@ -539,7 +539,7 @@
                                     @Loc["Latest release:"] <strong>@_latestRelease.Tag</strong>
                                     @if (_latestRelease.PublishedAt is { } published)
                                     {
-                                        <span class="mud-text-secondary">(@published.ToLocalTime():d)</span>
+                                        <span class="mud-text-secondary">(@UiDateFormats.LocalDateCompact(published.DateTime))</span>
                                     }
                                 </MudText>
                                 @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))

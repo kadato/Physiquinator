@@ -28,7 +28,7 @@
                             }
                         </MudStack>
                         <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
-                            @Loc["Created:"] @profile.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            @Loc["Created:"] @UiDateFormats.LocalDateTimeCompact(profile.CreatedAt)
                         </MudText>
                     </MudStack>
                 </MudStack>

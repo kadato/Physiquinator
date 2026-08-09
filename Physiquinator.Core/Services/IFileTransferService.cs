@@ -5,8 +5,6 @@ public interface IFileTransferService
 {
     Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan");
 
-    Task ExportTextAsync(string fileName, string text, string shareTitle = "Export");
-
     /// <summary>Writes PNG bytes (e.g. a shared workout card) and opens the platform share sheet.</summary>
     Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share");
 

@@ -48,22 +48,6 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
     public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
 
-    /// <summary>Continuous progress fraction [0, 1] based on wall clock, for smooth progress bar animation.</summary>
-    public double RestProgressFraction
-    {
-        get
-        {
-            if (!_isResting || _activeRestDurationSeconds <= 0) return 0;
-            if (_restEndsAtUtc.HasValue)
-            {
-                var remaining = (_restEndsAtUtc.Value - UtcNow).TotalSeconds;
-                var elapsed = _activeRestDurationSeconds - Math.Max(0, remaining);
-                return Math.Clamp(elapsed / _activeRestDurationSeconds, 0, 1);
-            }
-            return 0;
-        }
-    }
-
     /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
     public event EventHandler? RestCompletedWhileBackground;
 
@@ -234,15 +218,6 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         removed = _completedSets[i];
         _completedSets.RemoveAt(i);
         _completedSetLookup.Remove(removed);
-        return true;
-    }
-
-    public bool TryRemoveSet(int exerciseIndex, int setIndex)
-    {
-        var target = new SetCompletion(exerciseIndex, setIndex);
-        if (!_completedSetLookup.Remove(target))
-            return false;
-        _completedSets.Remove(target);
         return true;
     }
 

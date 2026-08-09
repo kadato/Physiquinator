@@ -116,42 +116,6 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 
         return new PlanImportPreview(plans.Count, newCount, plans.Count - newCount);
     }
-
-    /// <summary>
-    /// Saves a workout plan to a JSON file.
-    /// </summary>
-    public async Task ExportPlanToFileAsync(Guid id, string filePath)
-    {
-        var json = await ExportPlanToJsonAsync(id);
-        await File.WriteAllTextAsync(filePath, json);
-    }
-
-    /// <summary>
-    /// Saves all workout plans to a JSON file.
-    /// </summary>
-    public async Task ExportAllPlansToFileAsync(string filePath)
-    {
-        var json = await ExportAllPlansToJsonAsync();
-        await File.WriteAllTextAsync(filePath, json);
-    }
-
-    /// <summary>
-    /// Loads a workout plan from a JSON file.
-    /// </summary>
-    public async Task<WorkoutPlan> ImportPlanFromFileAsync(string filePath)
-    {
-        var json = await File.ReadAllTextAsync(filePath);
-        return await ImportPlanFromJsonAsync(json);
-    }
-
-    /// <summary>
-    /// Loads multiple workout plans from a JSON file.
-    /// </summary>
-    public async Task<List<WorkoutPlan>> ImportPlansFromFileAsync(string filePath)
-    {
-        var json = await File.ReadAllTextAsync(filePath);
-        return await ImportPlansFromJsonAsync(json);
-    }
 }
 
 /// <summary>What a plan import would do: totals split into new vs overwritten plans.</summary>

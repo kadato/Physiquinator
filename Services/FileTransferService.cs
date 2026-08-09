@@ -27,20 +27,6 @@ public sealed class FileTransferService : IFileTransferService
         });
     }
 
-    /// <summary>Writes plain text to the app cache directory and opens the platform share sheet.</summary>
-    public async Task ExportTextAsync(string fileName, string text, string shareTitle = "Export")
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
-
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllTextAsync(filePath, text);
-        await Share.RequestAsync(new ShareFileRequest
-        {
-            Title = shareTitle,
-            File = new ShareFile(filePath)
-        });
-    }
-
     /// <summary>Writes PNG bytes to the app cache directory and opens the platform share sheet.</summary>
     public async Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share")
     {

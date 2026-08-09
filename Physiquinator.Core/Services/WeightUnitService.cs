@@ -27,9 +27,5 @@ public sealed class WeightUnitService(IAppPreferences preferences, UserProfileSe
     public void Set(WeightUnit unit)
     {
         _preferences.Set(PreferenceKeys.WeightUnitPreference + Suffix, unit.ToString());
-        Changed?.Invoke();
     }
-
-    /// <summary>Fired when the display unit changes so open pages can re-render.</summary>
-    public event Action? Changed;
 }

@@ -133,17 +133,6 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
     }
 
     [JSInvokable]
-    public void OnThemePreferenceChangedFromScript(string preference, string effective)
-    {
-        Preference = preference;
-        EffectiveTheme = effective;
-        _preferences.Set(PreferenceKeys.ThemePreference + GetSuffix(), preference);
-        ApplyAppThemeOverride();
-
-        ThemeChanged?.Invoke();
-    }
-
-    [JSInvokable]
     public void OnSystemThemeChanged(string effectiveTheme)
     {
         EffectiveTheme = effectiveTheme;

@@ -88,17 +88,4 @@ public static class MauiProgram
 
         return builder.Build();
     }
-
-    public static MauiApp? CreateMauiAppSafe()
-    {
-        try
-        {
-            return CreateMauiApp();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"FATAL: MauiProgram.CreateMauiApp failed: {ex}");
-            throw;
-        }
-    }
 }

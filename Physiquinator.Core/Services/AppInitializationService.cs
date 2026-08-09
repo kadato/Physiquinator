@@ -16,8 +16,6 @@ public sealed class AppInitializationService(
 
     public bool ShowSetupOverlay { get; private set; }
 
-    public event Action? InitializationCompleted;
-
     public event Action? ProgressChanged;
 
     public Task EnsureInitializedAsync() =>
@@ -61,7 +59,6 @@ public sealed class AppInitializationService(
             }
 
             IsReady = true;
-            InitializationCompleted?.Invoke();
             NotifyProgress();
         }
         finally

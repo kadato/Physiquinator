@@ -56,8 +56,6 @@ public class ServiceContainerTests
     {
         public Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan") => Task.CompletedTask;
 
-        public Task ExportTextAsync(string fileName, string text, string shareTitle = "Export") => Task.CompletedTask;
-
         public Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share") => Task.CompletedTask;
 
         public Task<string?> PickJsonAsync(string pickerTitle) => Task.FromResult<string?>(null);

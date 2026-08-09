@@ -17,7 +17,6 @@ public class AiToolCallInfo
 
 public class AiChatMessage
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public AiMessageRole Role { get; set; } = AiMessageRole.User;
     public string Content { get; set; } = string.Empty;
     public List<AiToolCallInfo>? ToolCalls { get; set; }

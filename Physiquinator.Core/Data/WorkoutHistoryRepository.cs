@@ -497,15 +497,6 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     private static string ToDateKey(DateOnly localDate) =>
         localDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    /// <summary>All sessions, newest first (same ordering as recent list, without a cap).</summary>
-    public async Task<IReadOnlyList<WorkoutSessionLogEntity>> GetAllSessionsAsync()
-    {
-        await _db.EnsureInitializedAsync();
-        return await _db.Database.Table<WorkoutSessionLogEntity>()
-            .OrderByDescending(s => s.StartedAtUtc)
-            .ToListAsync();
-    }
-
     public async Task<WorkoutHistoryBackup> CreateBackupSnapshotAsync()
     {
         await _db.EnsureInitializedAsync();

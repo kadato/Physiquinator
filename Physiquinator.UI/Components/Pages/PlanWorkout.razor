@@ -10,6 +10,9 @@
 @inject TimeProvider TimeProvider
 @inject ILogger<PlanWorkout> Logger
 @inject IJSRuntime JS
+@inject IStringLocalizer<UiText> Loc
+
+<PageTitle>@PageTitleText</PageTitle>
 
 <div class="plan-page app-fab-page-padding">
     <PageHeader Title="@PageTitleText" ShowBack="false" />
@@ -20,26 +23,26 @@
     }
 
     <MudForm @bind-IsValid="_formValid">
-        <MudStack Spacing="3">
+        <MudStack Spacing="3" Class="plan-editor-stack">
             <section class="plan-section">
-                <MudText Typo="Typo.overline" Class="plan-section__label">Plan details</MudText>
+                <MudText Typo="Typo.overline" Class="plan-section__label">@Loc["Plan details"]</MudText>
                 <MudPaper Class="plan-details-card plan-section__card pa-3" Elevation="0">
                     <MudStack Spacing="2">
                         <MudTextField T="string"
                                       Value="PlanName"
                                       ValueChanged="OnPlanNameChanged"
                                       Variant="Variant.Filled"
-                                      Label="Plan name"
-                                      Placeholder="e.g. Push day"
+                                      Label="@Loc["Plan name"]"
+                                      Placeholder="@Loc["e.g. Push day"]"
                                       Required="true"
-                                      RequiredError="Plan name is required"
+                                      RequiredError="@Loc["Plan name is required"]"
                                       Immediate="true"
                                       autocapitalize="words"
                                       autocomplete="off"
                                       enterkeyhint="done" />
                         <MudGrid Spacing="2" Class="plan-details-card__grid">
                             <MudItem xs="6">
-                                <SetMetricStepper Label="Default sets"
+                                <SetMetricStepper Label="@Loc["Default sets"]"
                                                   @bind-Value="DefaultSetCountValue"
                                                   Step="1"
                                                   Min="1"
@@ -48,7 +51,7 @@
                                                   InputMode="numeric" />
                             </MudItem>
                             <MudItem xs="6">
-                                <SetMetricStepper Label="Default rest (s)"
+                                <SetMetricStepper Label="@Loc["Default rest (s)"]"
                                                   @bind-Value="RestIntervalSecondsValue"
                                                   Step="5"
                                                   Min="0"
@@ -62,17 +65,17 @@
             </section>
 
             <section class="plan-section">
-                <MudText Typo="Typo.overline" Class="plan-section__label">Exercises</MudText>
+                <MudText Typo="Typo.overline" Class="plan-section__label">@Loc["Exercises"]</MudText>
 
                 @if (!Exercises.Any())
                 {
-                    <EmptyState Message="Add your first exercise to build this plan."
+                    <EmptyState Message="@Loc["Add your first exercise to build this plan."]"
                                 Icon="@Icons.Material.Outlined.FitnessCenter">
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="FocusAddExercise">
-                            Add exercise
+                            @Loc["Add exercise"]
                         </MudButton>
                     </EmptyState>
                 }
@@ -93,7 +96,7 @@
                                   id="new-exercise-input"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
-                                  Placeholder="Add exercise…"
+                                  Placeholder="@Loc["Add exercise…"]"
                                   Class="plan-add-exercise__input"
                                   Immediate="true"
                                   autocapitalize="words"
@@ -106,7 +109,7 @@
                                Class="plan-add-exercise__btn"
                                ButtonType="ButtonType.Submit"
                                Disabled="@string.IsNullOrWhiteSpace(NewExerciseName)">
-                        Add
+                        @Loc["Add"]
                     </MudButton>
                 </form>
             </section>
@@ -134,7 +137,7 @@
     private string NewExerciseName { get; set; } = "";
     private int _sortableVersion;
     private bool IsNew => PlanId == null;
-    private string PageTitleText => IsNew ? "New plan" : "Edit plan";
+    private string PageTitleText => IsNew ? Loc["New plan"] : Loc["Edit plan"];
 
     private bool CanSave => !string.IsNullOrWhiteSpace(PlanName)
         && Exercises.Any()
@@ -205,9 +208,9 @@
         if (_dirty)
         {
             var confirmed = await DialogService.ConfirmAsync(
-                "Discard changes?",
-                "You have unsaved changes to this plan. Leave without saving?",
-                confirmText: "Discard",
+                Loc["Discard changes?"],
+                Loc["You have unsaved changes to this plan. Leave without saving?"],
+                confirmText: Loc["Discard"],
                 confirmColor: Color.Error);
             if (!confirmed) return;
         }
@@ -229,7 +232,7 @@
         var name = NewExerciseName.Trim();
         if (Exercises.Any(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
-            Snackbar.Add($"'{name}' is already in this plan.", Severity.Warning);
+            Snackbar.Add(Loc["'{0}' is already in this plan.", name], Severity.Warning);
             return;
         }
 
@@ -281,7 +284,7 @@
         };
 
         var dialog = await DialogService.ShowAsync<PlanExerciseSheet>(
-            isNew ? "Add exercise" : "Edit exercise",
+            isNew ? Loc["Add exercise"] : Loc["Edit exercise"],
             parameters,
             options);
         var result = await dialog.Result;
@@ -292,7 +295,7 @@
                 && string.Equals(e.Name, updated.Name, StringComparison.OrdinalIgnoreCase));
             if (isDuplicate)
             {
-                Snackbar.Add($"'{updated.Name}' is already in this plan.", Severity.Warning);
+                Snackbar.Add(Loc["'{0}' is already in this plan.", updated.Name], Severity.Warning);
                 return;
             }
 
@@ -320,6 +323,8 @@
         Id = source.Id,
         Name = source.Name,
         SetCount = source.SetCount,
+        WarmupSetCount = source.WarmupSetCount,
+        SupersetGroupId = source.SupersetGroupId,
         Order = source.Order,
         RestIntervalSeconds = source.RestIntervalSeconds,
         DefaultReps = source.DefaultReps,
@@ -335,9 +340,9 @@
         var removed = Exercises[index];
         var name = removed.Name;
         var confirmed = await DialogService.ConfirmAsync(
-            "Remove exercise",
-            $"Remove '{name}' from this plan?",
-            confirmText: "Remove",
+            Loc["Remove exercise"],
+            Loc["Remove '{0}' from this plan?", name],
+            confirmText: Loc["Remove"],
             confirmColor: Color.Error);
 
         if (!confirmed)
@@ -349,11 +354,11 @@
         _dirty = true;
 
         Snackbar.Add(
-            $"'{name}' removed.",
+            Loc["'{0}' removed.", name],
             Severity.Success,
             options =>
             {
-                options.Action = "Undo";
+                options.Action = Loc["Undo"];
                 options.ActionColor = Color.Primary;
                 options.RequireInteraction = true;
                 options.OnClick = _ => RestoreRemovedExerciseAsync(index, removed);
@@ -366,7 +371,7 @@
         RenumberExercises();
         BumpSortable();
         _dirty = true;
-        Snackbar.Add($"'{exercise.Name}' restored.", Severity.Success);
+        Snackbar.Add(Loc["'{0}' restored.", exercise.Name], Severity.Success);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -396,6 +401,8 @@
                 Id = e.Id,
                 Name = e.Name.Trim(),
                 SetCount = e.SetCount,
+                WarmupSetCount = e.WarmupSetCount,
+                SupersetGroupId = e.SupersetGroupId,
                 Order = i,
                 RestIntervalSeconds = e.RestIntervalSeconds,
                 DefaultReps = e.DefaultReps,
@@ -413,7 +420,7 @@
             await HistoryRepository.UpdateSessionSnapshotAsync(openSession.Id, newSnapshot);
         }
 
-        Snackbar.Add("Plan saved.", Severity.Success);
+        Snackbar.Add(Loc["Plan saved."], Severity.Success);
         _dirty = false;
         Navigation.NavigateTo(AppRoutes.Home);
     }
@@ -429,11 +436,11 @@
             await FileTransfer.ExportJsonAsync(
                 FileTransferNames.JsonFileName(FileTransferNames.SafeFileStem(PlanName), TimeProvider.GetLocalNow()),
                 json);
-            Snackbar.Add("Plan exported.", Severity.Success);
+            Snackbar.Add(Loc["Plan exported."], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Export failed: {0}", ex.Message], Severity.Error);
         }
     }
 }

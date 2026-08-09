@@ -1,11 +1,12 @@
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Models
+@inject IStringLocalizer<UiText> Loc
 
 <div class="plan-exercise-row mud-paper mud-elevation-1" @key="Exercise.Id">
     <div class="plan-exercise-row__main">
         <button type="button"
                 class="plan-exercise-handle"
-                aria-label="Drag to reorder @Exercise.Name">
+                aria-label="@Loc["Drag to reorder {0}", Exercise.Name]">
             <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Medium" />
         </button>
 
@@ -14,7 +15,14 @@
                 @onclick="OnEdit">
             <span class="plan-exercise-row__index" aria-hidden="true">@DisplayIndex</span>
             <span class="plan-exercise-row__text">
-                <span class="plan-exercise-row__name">@Exercise.Name</span>
+                <span class="plan-exercise-row__name">
+                    @Exercise.Name
+                    @if (!string.IsNullOrEmpty(Exercise.SupersetGroupId))
+                    {
+                        <span class="plan-exercise-row__chip plan-exercise-row__chip--superset"
+                              aria-label="@Loc["Superset group {0}", Exercise.SupersetGroupId]">@Exercise.SupersetGroupId</span>
+                    }
+                </span>
                 <span class="plan-exercise-row__summary mud-text-secondary">@Summary</span>
             </span>
             <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="plan-exercise-row__chevron" />
@@ -29,13 +37,13 @@
                                Size="Size.Small"
                                Class="plan-exercise-row__move"
                                Disabled="!CanMoveUp"
-                               aria-label="@($"Move {Exercise.Name} up")"
+                               aria-label="@Loc["Move {0} up", Exercise.Name]"
                                OnClick="MoveUp" />
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
                                Size="Size.Small"
                                Class="plan-exercise-row__move"
                                Disabled="!CanMoveDown"
-                               aria-label="@($"Move {Exercise.Name} down")"
+                               aria-label="@Loc["Move {0} down", Exercise.Name]"
                                OnClick="MoveDown" />
             </MudStack>
         }
@@ -43,7 +51,7 @@
                        Color="Color.Error"
                        Size="Size.Small"
                        Class="plan-exercise-row__delete"
-                       aria-label="@($"Remove {Exercise.Name}")"
+                       aria-label="@Loc["Remove {0}", Exercise.Name]"
                        OnClick="OnDelete" />
     </div>
 </div>
@@ -79,21 +87,25 @@
 
     private int DisplayIndex => Index + 1;
 
-    private string Summary => FormatSummary(Exercise);
+    private string Summary => FormatSummary(Exercise, Loc);
 
-    internal static string FormatSummary(ExercisePlan exercise)
+    internal static string FormatSummary(ExercisePlan exercise, IStringLocalizer<UiText> loc)
     {
         var parts = new List<string>
         {
-            $"{exercise.SetCount} sets",
-            $"{exercise.RestIntervalSeconds}s rest"
+            loc["{0} sets", exercise.TotalSetCount]
         };
 
+        if (exercise.WarmupSetCount > 0)
+            parts.Add(loc["{0} warm-up", exercise.WarmupSetCount]);
+
+        parts.Add(loc["{0}s rest", exercise.RestIntervalSeconds]);
+
         if (exercise.DefaultReps.HasValue)
-            parts.Add($"{exercise.DefaultReps} reps");
+            parts.Add(loc["{0} reps", exercise.DefaultReps]);
 
         if (exercise.DefaultWeightKg.HasValue)
-            parts.Add($"{ExerciseWeightFormatter.FormatKg(exercise.DefaultWeightKg.Value)} kg");
+            parts.Add(loc["{0} kg", ExerciseWeightFormatter.FormatKg(exercise.DefaultWeightKg.Value)]);
 
         return string.Join(" · ", parts);
     }

@@ -15,68 +15,73 @@
 @inject ILogger<Workout> Logger
 @inject TimeProvider TimeProvider
 @inject WeightUnitService WeightUnitService
+@inject IStringLocalizer<UiText> Loc
 @implements IAsyncDisposable
 
-<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? "Workout")" ShowBack="false" />
+<PageTitle>@Loc["Workout"]</PageTitle>
+
+<PageHeader Title="@(SessionService.CurrentPlan?.Name ?? Loc["Workout"])" ShowBack="false" />
 
 @if (_isLoading)
 {
-    <LoadingCenter Label="Loading workout..." />
+    <WorkoutSkeleton />
 }
 else if (SessionService.CurrentPlan == null)
 {
-    <EmptyState Message="No active workout. Start a plan from home."
+    <EmptyState Message="@Loc["No active workout. Start a plan from home."]"
                 Icon="@Icons.Material.Outlined.Warning">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">Go home</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">@Loc["Go home"]</MudButton>
     </EmptyState>
 }
 else
 {
     <MudStack Spacing="3">
-        @if (_sessionStartedAtUtc != default)
-        {
-            <div class="workout-session-stats">
-                <div class="workout-session-stat">
-                    <span class="workout-session-stat__value">@ElapsedLabel</span>
-                    <span class="workout-session-stat__label">Elapsed</span>
-                </div>
-                @if (SessionVolumeLabel is { } volume)
-                {
-                    <div class="workout-session-stat-divider" aria-hidden="true"></div>
-                    <div class="workout-session-stat">
-                        <span class="workout-session-stat__value">@volume</span>
-                        <span class="workout-session-stat__label">Volume</span>
-                    </div>
-                }
-            </div>
-        }
-
         @if (_overlayPermissionMissing)
         {
             <MudAlert Severity="Severity.Warning" Class="mt-2">
                 <div class="d-flex align-center gap-2">
                     <div class="flex-grow-1">
-                        Enable "Display over other apps" so the floating rest timer shows when you leave the app.
+                        @Loc["Enable \"Display over other apps\" so the floating rest timer shows when you leave the app."]
                     </div>
                     <MudButton Variant="Variant.Text"
                                Color="Color.Warning"
                                Class="flex-shrink-0"
                                OnClick="OpenOverlaySettingsAsync">
-                        Grant
+                        @Loc["Grant"]
                     </MudButton>
                 </div>
             </MudAlert>
         }
 
-        @if (SessionService.IsResting || _isRestComplete)
-        {
-            <RestTimerPanel @ref="_restPanel"
-                            IsRestComplete="_isRestComplete"
-                            AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
-                            OnReset="ResetRest"
-                            OnSkip="SkipRest"
-                            OnAddTime="AddRestTime" />
-        }
+        <div class="workout-top">
+            @if (_sessionStartedAtUtc != default)
+            {
+                <div class="workout-session-stats">
+                    <div class="workout-session-stat">
+                        <span class="workout-session-stat__value">@ElapsedLabel</span>
+                        <span class="workout-session-stat__label">@Loc["Elapsed"]</span>
+                    </div>
+                    @if (SessionVolumeLabel is { } volume)
+                    {
+                        <div class="workout-session-stat-divider" aria-hidden="true"></div>
+                        <div class="workout-session-stat">
+                            <span class="workout-session-stat__value">@volume</span>
+                            <span class="workout-session-stat__label">@Loc["Volume"]</span>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (SessionService.IsResting || _isRestComplete)
+            {
+                <RestTimerPanel @ref="_restPanel"
+                                IsRestComplete="_isRestComplete"
+                                AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
+                                OnReset="ResetRest"
+                                OnSkip="SkipRest"
+                                OnAddTime="AddRestTime" />
+            }
+        </div>
 
         <div class="workout-exercise-layout">
             @foreach (var item in UpcomingExercises)
@@ -107,7 +112,7 @@ else
             @if (DoneExercises.Any())
             {
                 <div class="workout-completed-divider-title mt-4 mb-2">
-                    <MudText Typo="Typo.overline" Color="Color.Success" Class="font-weight-bold">Completed</MudText>
+                    <MudText Typo="Typo.overline" Color="Color.Success" Class="font-weight-bold">@Loc["Completed"]</MudText>
                 </div>
 
                 @foreach (var item in DoneExercises)
@@ -135,7 +140,7 @@ else
 
             @if (!UpcomingExercises.Any() && DoneExercises.Any())
             {
-                <MudAlert Severity="Severity.Success" Class="mt-2">Workout complete!</MudAlert>
+                <MudAlert Severity="Severity.Success" Class="mt-2">@Loc["Workout complete!"]</MudAlert>
             }
             <MudStack Row="true" Spacing="3" Class="mt-4 w-100 workout-actions-row" Justify="Justify.Center">
                 <MudButton Variant="Variant.Outlined"
@@ -143,14 +148,14 @@ else
                            StartIcon="@Icons.Material.Filled.Delete"
                            Class="premium-btn premium-btn-lg premium-btn-error-outlined"
                            OnClick="DiscardWorkoutClick">
-                    Discard
+                    @Loc["Discard"]
                 </MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Check"
                            Class="premium-btn premium-btn-lg premium-btn-filled"
                            OnClick="EndWorkoutClick">
-                    Done
+                    @Loc["Done"]
                 </MudButton>
             </MudStack>
         </div>
@@ -163,7 +168,7 @@ else
     <MudIconButton Class="workout-undo-btn"
                    Icon="@Icons.Material.Filled.Restore"
                    OnClick="UndoLastSetCoreAsync"
-                   aria-label="Undo last set" />
+                   aria-label="@Loc["Undo last set"]" />
 }
 
 @code {
@@ -208,7 +213,7 @@ else
         {
             var elapsedMinutes = (TimeProvider.GetUtcNow().UtcDateTime - _sessionStartedAtUtc).TotalMinutes;
             var mins = (int)Math.Max(0, elapsedMinutes);
-            return mins < 60 ? $"{mins} min" : $"{mins / 60}h {mins % 60}m";
+            return mins < 60 ? Loc["{0} min", mins] : Loc["{0}h {1}m", mins / 60, mins % 60];
         }
     }
 
@@ -232,10 +237,11 @@ else
         var any = false;
         foreach (var (key, value) in _sessionSets)
         {
-            var (exerciseIndex, _) = key;
+            var (exerciseIndex, setIndex) = key;
             if (exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) continue;
             var exercise = plan.Exercises[exerciseIndex];
             if (exercise.LogType == ExerciseLogType.Duration) continue;
+            if (setIndex < exercise.WarmupSetCount) continue;
             total += PersonalRecordCalculator.ComputeVolume(value.Reps, value.Weight, exercise.LogType, _bodyweightKg);
             any = true;
         }
@@ -441,7 +447,7 @@ else
             var initialReps = lastMetrics?.Reps ?? exercise.DefaultReps ?? DefaultReps;
             var initialWeight = lastMetrics?.WeightKg ?? exercise.DefaultWeightKg ?? 0;
 
-            for (int s = 0; s < exercise.SetCount; s++)
+            for (int s = 0; s < exercise.TotalSetCount; s++)
             {
                 _setInputs[(e, s)] = (initialWeight, initialReps);
             }
@@ -480,7 +486,7 @@ else
                     var lastWeight = lastCompletedSet.WeightKg ?? 0;
                     var lastReps = lastCompletedSet.Reps ?? 0;
 
-                    for (int s = 0; s < exercise.SetCount; s++)
+                    for (int s = 0; s < exercise.TotalSetCount; s++)
                     {
                         if (!SessionService.IsSetCompleted(e, s))
                         {
@@ -522,17 +528,17 @@ else
             var ex = plan.Exercises[ei];
             var completedSets = 0;
 
-            for (var si = 0; si < ex.SetCount; si++)
+            for (var si = 0; si < ex.TotalSetCount; si++)
             {
                 if (SessionService.IsSetCompleted(ei, si))
                     completedSets++;
             }
 
             if (completedSets > 0)
-                done.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
+                done.Add(new ExerciseProgress(ex, ei, completedSets, ex.TotalSetCount));
 
-            if (completedSets < ex.SetCount)
-                upcoming.Add(new ExerciseProgress(ex, ei, completedSets, ex.SetCount));
+            if (completedSets < ex.TotalSetCount)
+                upcoming.Add(new ExerciseProgress(ex, ei, completedSets, ex.TotalSetCount));
         }
 
         _doneExercises = done;
@@ -550,9 +556,9 @@ else
         }
 
         var confirmed = await DialogService.ConfirmAsync(
-            "End workout?",
-            "Save this session and return home?",
-            confirmText: "End",
+            Loc["End workout?"],
+            Loc["Save this session and return home?"],
+            confirmText: Loc["End"],
             confirmColor: Color.Primary);
         if (confirmed)
             await EndWorkout();
@@ -560,12 +566,12 @@ else
 
     private async Task DiscardWorkoutClick()
     {
-        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
+        var planName = SessionService.CurrentPlan?.Name ?? Loc["Workout"];
         var confirmed = await DialogService.ConfirmAsync(
-            "Discard workout?",
-            ConfirmDialogService.DiscardWorkoutMessage(planName),
-            confirmText: "Discard",
-            cancelText: "Cancel",
+            Loc["Discard workout?"],
+            ConfirmDialogService.DiscardWorkoutMessage(planName, Loc),
+            confirmText: Loc["Discard"],
+            cancelText: Loc["Cancel"],
             confirmColor: Color.Error);
         if (confirmed)
             await DiscardWorkout();
@@ -602,6 +608,34 @@ else
     }
 
     private int ExerciseCount => SessionService.CurrentPlan?.Exercises.Count ?? 0;
+
+    /// <summary>
+    /// First exercise after <paramref name="exerciseIndex"/> that shares its
+    /// superset group and still has uncompleted sets, or -1 when the group
+    /// round is finished or the exercise is not in a group.
+    /// </summary>
+    private int GetNextUncompletedExerciseInSameGroup(int exerciseIndex)
+    {
+        var plan = SessionService.CurrentPlan;
+        if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count)
+            return -1;
+
+        var groupId = plan.Exercises[exerciseIndex].SupersetGroupId;
+        if (string.IsNullOrEmpty(groupId))
+            return -1;
+
+        for (var i = exerciseIndex + 1; i < plan.Exercises.Count; i++)
+        {
+            var candidate = plan.Exercises[i];
+            if (!string.Equals(candidate.SupersetGroupId, groupId, StringComparison.Ordinal))
+                continue;
+
+            if (!SessionService.IsExerciseDone(i))
+                return i;
+        }
+
+        return -1;
+    }
 
     /// <summary>
     /// Moves an exercise to a different position for the rest of this session
@@ -651,9 +685,10 @@ else
         foreach (var (oldIndex, setIndex) in actives)
             _activeSetIndices[mapping.GetValueOrDefault(oldIndex, oldIndex)] = setIndex;
 
-        _activeExerciseIndex = mapping.GetValueOrDefault(_activeExerciseIndex, _activeExerciseIndex);
-
         SessionService.RemapExerciseIndexes(mapping);
+
+        // Expand the moved exercise so the user lands on it ready to log.
+        _activeExerciseIndex = toIndex;
 
         try
         {
@@ -670,7 +705,7 @@ else
             Logger.LogError(ex, "Exercise reorder persistence error");
         }
 
-        Snackbar.Add($"'{exercise.Name}' moved.", Severity.Info);
+        Snackbar.Add(Loc["'{0}' moved.", exercise.Name], Severity.Info);
         await SafeStateHasChangedAsync();
     }
 
@@ -755,15 +790,15 @@ else
         if (plan == null || exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) return;
 
         var confirmed = await DialogService.ConfirmAsync(
-            "Skip exercise?",
-            $"Mark the remaining sets of '{exerciseName}' as done for this session? Skipped sets are not logged to history.",
-            confirmText: "Skip",
+            Loc["Skip exercise?"],
+            Loc["Mark the remaining sets of '{0}' as done for this session? Skipped sets are not logged to history.", exerciseName],
+            confirmText: Loc["Skip"],
             confirmColor: Color.Primary,
-            cancelText: "Cancel");
+            cancelText: Loc["Cancel"]);
         if (!confirmed) return;
 
         var exercise = plan.Exercises[exerciseIndex];
-        for (var s = 0; s < exercise.SetCount; s++)
+        for (var s = 0; s < exercise.TotalSetCount; s++)
         {
             if (!SessionService.IsSetCompleted(exerciseIndex, s))
             {
@@ -777,7 +812,7 @@ else
 
         _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
         await SafeStateHasChangedAsync();
-        Snackbar.Add($"'{exerciseName}' skipped.", Severity.Info);
+        Snackbar.Add(Loc["'{0}' skipped.", exerciseName], Severity.Info);
     }
 
     private async Task ToggleSetComplete((int ExerciseIndex, int SetIndex) set)
@@ -816,10 +851,12 @@ else
             var firstUncompletedSetIdx = SessionService.GetFirstUncompletedSetIndex(exerciseIndex);
             _activeSetIndices[exerciseIndex] = firstUncompletedSetIdx == -1 ? 0 : firstUncompletedSetIdx;
 
+            var isWarmupSet = setIndex < exercise.WarmupSetCount;
+
             if (_historySessionId != null)
             {
                 var loggedWeight = exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight;
-                await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight);
+                await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight, isWarmup: isWarmupSet);
             }
 
             _sessionSets[inputKey] = (
@@ -828,7 +865,7 @@ else
             _setInputs[inputKey] = (finalWeight, finalReps);
 
             // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
-            for (int s = 0; s < exercise.SetCount; s++)
+            for (int s = 0; s < exercise.TotalSetCount; s++)
             {
                 if (!SessionService.IsSetCompleted(exerciseIndex, s))
                 {
@@ -836,13 +873,27 @@ else
                 }
             }
 
-            await TryShowPersonalRecordToastAsync(plan, exercise, finalWeight, finalReps);
+            if (!isWarmupSet)
+                await TryShowPersonalRecordToastAsync(plan, exercise, finalWeight, finalReps);
 
             ShowUndoToast();
 
             if (willBeLastSetOfWorkout)
             {
                 _activeExerciseIndex = -1;
+                await SafeStateHasChangedAsync();
+                return;
+            }
+
+            // Superset / circuit: skip the rest and move to the next exercise
+            // of the same group when it still has sets left.
+            var nextInGroup = GetNextUncompletedExerciseInSameGroup(exerciseIndex);
+            if (nextInGroup >= 0)
+            {
+                await TimerInterop.StopTimerAsync();
+                SessionService.SkipRest();
+                _activeExerciseIndex = nextInGroup;
+                Snackbar.Add(Loc["Next: {0}", plan.Exercises[nextInGroup].Name], Severity.Info);
                 await SafeStateHasChangedAsync();
                 return;
             }
@@ -940,6 +991,9 @@ else
                 if (key.Item1 != exIdx)
                     continue;
 
+                if (key.Item2 < exercise.WarmupSetCount)
+                    continue;
+
                 var (kind, message) = BuildPersonalRecordMessage(records, exercise, value.Weight ?? 0, value.Reps ?? 0);
                 if (kind is not { } k || message == null || !claimed.Add(k))
                     continue;
@@ -967,7 +1021,7 @@ else
         if (exercise.LogType == ExerciseLogType.Duration)
         {
             if (TryBeat(records, ExerciseRecordKind.LongestDuration, reps))
-                return (ExerciseRecordKind.LongestDuration, $"{reps}s set");
+                return (ExerciseRecordKind.LongestDuration, Loc["{0}s set", reps]);
         }
         else if (TryBeat(records, ExerciseRecordKind.BestWeight, weightKg))
         {
@@ -975,11 +1029,11 @@ else
         }
         else if (TryBeat(records, ExerciseRecordKind.MostReps, reps))
         {
-            return (ExerciseRecordKind.MostReps, $"{reps} reps");
+            return (ExerciseRecordKind.MostReps, Loc["{0} reps", reps]);
         }
         else if (TryBeat(records, ExerciseRecordKind.BestVolume, setVolumeKg))
         {
-            return (ExerciseRecordKind.BestVolume, $"{ExerciseWeightFormatter.FormatKg(setVolumeKg)} kg set volume");
+            return (ExerciseRecordKind.BestVolume, Loc["{0} kg set volume", ExerciseWeightFormatter.FormatKg(setVolumeKg)]);
         }
 
         return (null, null);
@@ -994,7 +1048,7 @@ else
     private string FormatPersonalWeight(ExerciseLogType logType, double weightKg) =>
         logType == ExerciseLogType.BodyweightReps
             ? ExerciseWeightFormatter.FormatBodyweightOffset(weightKg, _bodyweightKg)
-            : $"{ExerciseWeightFormatter.FormatKg(weightKg)} kg";
+            : Loc["{0} kg", ExerciseWeightFormatter.FormatKg(weightKg)];
 
     private void HideUndoToast()
     {
@@ -1032,10 +1086,10 @@ else
             return true;
 
         var confirmed = await DialogService.ConfirmAsync(
-            "Leave workout?",
-            "Your session is still in progress. You can resume it from Home.",
-            confirmText: "Leave",
-            cancelText: "Stay",
+            Loc["Leave workout?"],
+            Loc["Your session is still in progress. You can resume it from Home."],
+            confirmText: Loc["Leave"],
+            cancelText: Loc["Stay"],
             confirmColor: Color.Warning);
         if (!confirmed)
             return false;
@@ -1214,7 +1268,7 @@ else
     {
         if (_disposed) return;
 
-        var planName = SessionService.CurrentPlan?.Name ?? "Workout";
+        var planName = SessionService.CurrentPlan?.Name ?? Loc["Workout"];
 
         await TimerInterop.SetKeepScreenOnAsync(false);
         await TimerInterop.UnregisterBackHandlerAsync();
@@ -1257,7 +1311,7 @@ else
                 FullWidth = true,
             };
 
-            await DialogService.ShowAsync<WorkoutSummaryDialog>("Workout complete", parameters, options);
+            await DialogService.ShowAsync<WorkoutSummaryDialog>(Loc["Workout complete"], parameters, options);
         }
 
         Navigation.NavigateTo(AppRoutes.Home);

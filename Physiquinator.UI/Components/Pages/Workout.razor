@@ -223,7 +223,7 @@ else
         {
             var kg = ComputeSessionVolumeKg();
             if (kg is not { } v || v <= 0) return null;
-            return $"{ExerciseWeightFormatter.FormatWeight(v, WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+            return ExerciseWeightFormatter.FormatVolumeWithUnit(v, WeightUnitService.Current);
         }
     }
 

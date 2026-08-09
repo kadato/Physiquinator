@@ -571,7 +571,18 @@ input, select, textarea {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.1;
+    /* Never let the unit (glued via non-breaking space) or the number wrap
+       onto its own row inside the narrow card. */
+    white-space: nowrap;
     color: var(--mud-palette-primary);
+}
+
+/* Long KPI numbers (e.g. session volume) shrink to fit the card instead of
+   overflowing. The stat card is a size container, so cqi tracks its width. */
+@supports (font-size: 1cqi) {
+    .stat-card__value {
+        font-size: clamp(0.85rem, 10.5cqi, 1.5rem);
+    }
 }
 
 .stat-card__value--date {
@@ -1937,6 +1948,8 @@ button.history-session-card.history-session-card--selected {
     border-radius: 16px;
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
     background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+    /* Size container so long values (e.g. grouped volume) can scale to fit. */
+    container-type: inline-size;
 }
 
 .workout-summary-stat {
@@ -1950,7 +1963,27 @@ button.history-session-card.history-session-card--selected {
 .workout-summary-stat__value {
     font-size: 1.125rem;
     font-weight: 700;
+    white-space: nowrap;
     color: var(--mud-palette-text-primary);
+}
+
+@supports (font-size: 1cqi) {
+    .workout-summary-stat__value {
+        font-size: clamp(0.8rem, 4.2cqi, 1.125rem);
+    }
+}
+
+/* Desktop: the summary dialog is wider, so the values may render larger. */
+@media (min-width: 960px) {
+    .workout-summary-stat__value {
+        font-size: 1.3rem;
+    }
+
+    @supports (font-size: 1cqi) {
+        .workout-summary-stat__value {
+            font-size: clamp(0.95rem, 4.2cqi, 1.3rem);
+        }
+    }
 }
 
 .workout-summary-stat__label {
@@ -3304,6 +3337,8 @@ html[data-theme="dark"] .app-splash__retry {
     border-radius: 16px;
     background-color: var(--mud-palette-surface);
     border: 1px solid var(--mud-palette-divider);
+    /* Size container so long values (e.g. grouped volume) can scale to fit. */
+    container-type: inline-size;
 }
 
 .workout-session-stat {
@@ -3322,6 +3357,26 @@ html[data-theme="dark"] .app-splash__retry {
     line-height: 1.2;
     white-space: nowrap;
     color: var(--mud-palette-text-primary);
+}
+
+@supports (font-size: 1cqi) {
+    .workout-session-stat__value {
+        font-size: clamp(0.85rem, 4.5cqi, 1.3rem);
+    }
+}
+
+/* Desktop: the session stats row spans the full page width, so the values
+   may render larger than the phone cap without risking overflow. */
+@media (min-width: 960px) {
+    .workout-session-stat__value {
+        font-size: 1.5rem;
+    }
+
+    @supports (font-size: 1cqi) {
+        .workout-session-stat__value {
+            font-size: clamp(1.05rem, 4.5cqi, 1.5rem);
+        }
+    }
 }
 
 .workout-session-stat__label {
@@ -3474,6 +3529,14 @@ html[data-theme="dark"] .app-splash__retry {
         font-size: 1.75rem;
     }
 
+    /* Desktop keeps the big KPI numbers, but long values (grouped volume)
+       still shrink to fit the card instead of clipping on the sides. */
+    @supports (font-size: 1cqi) {
+        .stat-card__value {
+            font-size: clamp(1.15rem, 12cqi, 1.75rem);
+        }
+    }
+
     .activity-heatmap {
         --heatmap-cell-size: 24px;
         --heatmap-gap: 4px;
@@ -3486,7 +3549,10 @@ html[data-theme="dark"] .app-splash__retry {
         gap: 1rem;
     }
 
+    /* Three columns instead of four so each stat card is wide enough for
+       long KPI values at the desktop font scale. */
     .history-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
     }
 
@@ -4218,6 +4284,7 @@ html[data-theme="dark"] .share-card__stat {
 .share-card__stat-value {
     font-size: 18px;
     font-weight: 700;
+    white-space: nowrap;
     color: #0F766E;
 }
 

@@ -34,6 +34,19 @@ public static class ExerciseWeightFormatter
     public static string FormatWeightWithUnit(double kg, WeightUnit unit) =>
         $"{FormatWeight(kg, unit)} {UnitSuffix(unit)}";
 
+    /// <summary>Formats a stored kilogram value with thousands grouping, e.g. "12,345.5".</summary>
+    public static string FormatWeightGrouped(double kg, WeightUnit unit) =>
+        ToDisplay(kg, unit).ToString(unit == WeightUnit.Pounds ? "#,##0.#" : "#,##0.##", s_invariant);
+
+    /// <summary>
+    /// Formats a stored kilogram total with grouping and a non-breaking unit
+    /// suffix, e.g. "12,345.5 kg" or "27,215.7 lb". The non-breaking space
+    /// keeps the unit glued to the number so it never wraps onto its own row
+    /// inside a narrow stat card.
+    /// </summary>
+    public static string FormatVolumeWithUnit(double kg, WeightUnit unit) =>
+        $"{FormatWeightGrouped(kg, unit)}\u00A0{UnitSuffix(unit)}";
+
     /// <summary>
     /// Formats a bodyweight-relative offset for a set summary, e.g.
     /// "BW", "BW (85 kg)", "BW + 5 kg (90 kg) × 8 reps", "BW - 5 kg (80 kg) × 8 reps".

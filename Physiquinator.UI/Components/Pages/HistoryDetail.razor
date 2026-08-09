@@ -551,7 +551,7 @@ else
             }
 
             if (!any) return null;
-            return $"{ExerciseWeightFormatter.FormatWeight(total, WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+            return ExerciseWeightFormatter.FormatVolumeWithUnit(total, WeightUnitService.Current);
         }
     }
 

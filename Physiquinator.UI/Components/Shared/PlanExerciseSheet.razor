@@ -34,7 +34,7 @@
                        T="ExerciseLogType">
                 <MudSelectItem Value="ExerciseLogType.WeightAndReps">@Loc["Weight & Reps"]</MudSelectItem>
                 <MudSelectItem Value="ExerciseLogType.BodyweightReps">@Loc["Bodyweight (Reps)"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.Duration">@Loc["Duration (Time)"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.Duration">@Loc["Duration (seconds)"]</MudSelectItem>
             </MudSelect>
 
             <SetMetricStepper Label="@Loc["Sets"]"
@@ -95,17 +95,17 @@
             }
 
                 <div class="plan-exercise-sheet__footer">
+                    <MudButton Variant="Variant.Text"
+                               FullWidth="true"
+                               OnClick="Cancel">
+                        @Loc["Cancel"]
+                    </MudButton>
                     <MudButton Color="Color.Primary"
                                Variant="Variant.Filled"
                                FullWidth="true"
                                ButtonType="ButtonType.Submit"
                                Disabled="@ConfirmDisabled">
                         @Loc["Save exercise"]
-                    </MudButton>
-                    <MudButton Variant="Variant.Text"
-                               FullWidth="true"
-                               OnClick="Cancel">
-                        @Loc["Cancel"]
                     </MudButton>
                 </div>
             </MudStack>

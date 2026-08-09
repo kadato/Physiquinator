@@ -52,7 +52,9 @@ else
                 <MudSelectItem Value="ExerciseProgressRange.Last60">@Loc["Last 60 sessions"]</MudSelectItem>
                 <MudSelectItem Value="ExerciseProgressRange.All">@Loc["All sessions"]</MudSelectItem>
             </MudSelect>
-            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["{0} session(s) with this exercise", _rows.Count]</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                @(_rows.Count == 1 ? Loc["1 session with this exercise"] : Loc["{0} sessions with this exercise", _rows.Count])
+            </MudText>
         </MudStack>
 
         @if (!_rows.Any())
@@ -235,6 +237,7 @@ else
         };
         var options = new DialogOptions
         {
+            CloseButton = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };

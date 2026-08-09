@@ -277,7 +277,7 @@ else
         var options = new DialogOptions
         {
             CloseButton = true,
-            MaxWidth = MaxWidth.ExtraSmall,
+            MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };
 
@@ -306,7 +306,7 @@ else
     {
         var confirmed = await DialogService.ConfirmAsync(
             Loc["Delete entry"],
-            Loc["Remove the {0} bodyweight entry ({1})? This cannot be undone.",
+            Loc["Delete the {0} bodyweight entry ({1})? This cannot be undone.",
                 UiDateFormats.DateOnlyCompact(entry.DateOnly), FormatWeightWithUnit(entry.BodyweightKg)],
             confirmText: Loc["Delete"],
             confirmColor: Color.Error);
@@ -325,6 +325,6 @@ else
 
         _allEntries = await LoadEntriesAsync();
         ApplyRangeAndRebuild();
-        Snackbar.Add(Loc["Entry removed."], Severity.Info);
+        Snackbar.Add(Loc["Entry deleted."], Severity.Success);
     }
 }

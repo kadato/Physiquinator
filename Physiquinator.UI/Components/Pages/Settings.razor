@@ -23,7 +23,6 @@
 @inject TimeProvider TimeProvider
 @inject BackupRestoreService BackupRestore
 @inject WeightUnitService WeightUnitService
-@inject CultureService Culture
 @inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
@@ -75,33 +74,6 @@
                     <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
                         @Loc["Active mode:"] <strong>@_effectiveThemeLabel</strong>
                     </MudText>
-                </div>
-            </ChildContent>
-        </MudExpansionPanel>
-        }
-
-        @if (PanelMatches(LanguageKeywords))
-        {
-            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
-                <TitleContent>
-                    <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Translate" Size="Size.Small" /></span>
-                        <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Language"]</span>
-                            <span class="settings-panel__subtitle">@Loc["App language"]</span>
-                        </span>
-                    </div>
-                </TitleContent>
-            <ChildContent>
-                <div class="settings-panel__content">
-                    <MudSelect T="string"
-                               Variant="Variant.Filled"
-                               Label="@Loc["Language"]"
-                               Value="@Culture.Current.TwoLetterISOLanguageName"
-                               ValueChanged="OnLanguageChanged">
-                        <MudSelectItem Value="@("en")">English</MudSelectItem>
-                        <MudSelectItem Value="@("hu")">Magyar</MudSelectItem>
-                    </MudSelect>
                 </div>
             </ChildContent>
         </MudExpansionPanel>
@@ -398,10 +370,9 @@
                                            Color="Color.Primary"
                                            OnClick="SaveAiSettings"
                                            StartIcon="@Icons.Material.Filled.Save">
-                                    @Loc["Save Settings"]
+                                    @Loc["Save settings"]
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
-                                           Color="Color.Info"
                                            Disabled="_fetchingModels"
                                            OnClick="FetchModelsAsync"
                                            StartIcon="@Icons.Material.Filled.CloudDownload">
@@ -411,11 +382,10 @@
                                     }
                                     else
                                     {
-                                        <span>@Loc["Fetch Models"]</span>
+                                        <span>@Loc["Fetch models"]</span>
                                     }
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
-                                           Color="Color.Secondary"
                                            Disabled="_testingAiConnection"
                                            OnClick="TestAiConnectionAsync"
                                            StartIcon="@Icons.Material.Filled.CheckCircle">
@@ -425,11 +395,10 @@
                                     }
                                     else
                                     {
-                                        <span>@Loc["Test Connection"]</span>
+                                        <span>@Loc["Test connection"]</span>
                                     }
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
-                                           Color="Color.Secondary"
                                            OnClick="OpenAiChat"
                                            StartIcon="@Icons.Material.Filled.SmartToy">
                                     @Loc["Open assistant"]
@@ -673,7 +642,6 @@
     }
 
     private static readonly string[] AppearanceKeywords = ["appearance", "theme", "dark", "light", "mode"];
-    private static readonly string[] LanguageKeywords = ["language", "lang", "magyar", "english", "hungarian"];
     private static readonly string[] UnitsKeywords = ["units", "kg", "lb", "weight"];
     private static readonly string[] RestTimerKeywords = ["rest", "timer", "notification", "sound", "vibration", "overlay"];
     private static readonly string[] ProfilesKeywords = ["profiles", "profile", "user", "multi"];
@@ -684,7 +652,6 @@
     private static readonly string[] RemoveDataKeywords = ["remove", "delete", "reset", "wipe"];
 
     private bool GeneralTabVisible => PanelMatches(AppearanceKeywords)
-        || PanelMatches(LanguageKeywords)
         || PanelMatches(UnitsKeywords)
         || PanelMatches(RestTimerKeywords)
         || PanelMatches(ProfilesKeywords)
@@ -939,12 +906,6 @@
     private async Task OnThemePreferenceChanged(string preference)
     {
         await ThemeService.SetPreferenceAsync(preference);
-    }
-
-    private void OnLanguageChanged(string language)
-    {
-        Culture.SetCulture(language);
-        Snackbar.Add(Loc["Language changed."], Severity.Success);
     }
 
     private async Task RefreshPlanCountAsync()

@@ -14,7 +14,17 @@
 
 <PageTitle>@PageTitleText</PageTitle>
 
-<div class="plan-page app-fab-page-padding">
+@if (_loading)
+{
+    <DetailSkeleton />
+}
+else if (_planNotFound)
+{
+    <MudAlert Severity="Severity.Error">@Loc["This workout plan was not found."]</MudAlert>
+}
+else
+{
+    <div class="plan-page app-fab-page-padding">
     <PageHeader Title="@PageTitleText" ShowBack="false" />
 
     @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
@@ -121,7 +131,8 @@
                   OnSave="Save"
                   OnCancel="GoHome"
                   OnExport="ExportCurrentPlan" />
-</div>
+    </div>
+}
 
 @code {
     [Parameter]
@@ -130,6 +141,9 @@
     private MudTextField<string>? _newExerciseField;
     private bool _formValid;
     private bool _dirty;
+    private bool _planLoadComplete;
+    private bool _planNotFound;
+    private bool _loading => PlanId.HasValue && !_planLoadComplete;
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
     private int DefaultSetCount { get; set; } = 4;
@@ -183,6 +197,11 @@
                 DefaultSetCount = plan.DefaultSetCount;
                 Exercises = plan.Exercises.OrderBy(e => e.Order).Select(CloneExercise).ToList();
             }
+            else
+            {
+                _planNotFound = true;
+            }
+            _planLoadComplete = true;
         }
         _dirty = false;
     }
@@ -340,9 +359,9 @@
         var removed = Exercises[index];
         var name = removed.Name;
         var confirmed = await DialogService.ConfirmAsync(
-            Loc["Remove exercise"],
-            Loc["Remove '{0}' from this plan?", name],
-            confirmText: Loc["Remove"],
+            Loc["Delete exercise"],
+            Loc["Delete '{0}' from this plan?", name],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!confirmed)

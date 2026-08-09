@@ -1,6 +1,8 @@
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Models
+@using Physiquinator.Core.Services
 @inject IStringLocalizer<UiText> Loc
+@inject WeightUnitService WeightUnit
 
 <div class="plan-exercise-row mud-paper mud-elevation-1" @key="Exercise.Id">
     <div class="plan-exercise-row__main">
@@ -51,7 +53,7 @@
                        Color="Color.Error"
                        Size="Size.Small"
                        Class="plan-exercise-row__delete"
-                       aria-label="@Loc["Remove {0}", Exercise.Name]"
+                       aria-label="@Loc["Delete {0}", Exercise.Name]"
                        OnClick="OnDelete" />
     </div>
 </div>
@@ -87,9 +89,9 @@
 
     private int DisplayIndex => Index + 1;
 
-    private string Summary => FormatSummary(Exercise, Loc);
+    private string Summary => FormatSummary(Exercise, WeightUnit.Current, Loc);
 
-    internal static string FormatSummary(ExercisePlan exercise, IStringLocalizer<UiText> loc)
+    internal static string FormatSummary(ExercisePlan exercise, WeightUnit unit, IStringLocalizer<UiText> loc)
     {
         var parts = new List<string>
         {
@@ -105,7 +107,7 @@
             parts.Add(loc["{0} reps", exercise.DefaultReps]);
 
         if (exercise.DefaultWeightKg.HasValue)
-            parts.Add(loc["{0} kg", ExerciseWeightFormatter.FormatKg(exercise.DefaultWeightKg.Value)]);
+            parts.Add(loc["{0}", ExerciseWeightFormatter.FormatWeightWithUnit(exercise.DefaultWeightKg.Value, unit)]);
 
         return string.Join(" · ", parts);
     }

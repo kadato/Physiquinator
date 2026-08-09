@@ -155,7 +155,7 @@ else
                            StartIcon="@Icons.Material.Filled.Check"
                            Class="premium-btn premium-btn-lg premium-btn-filled"
                            OnClick="EndWorkoutClick">
-                    @Loc["Done"]
+                    @Loc["End"]
                 </MudButton>
             </MudStack>
         </div>
@@ -223,8 +223,7 @@ else
         {
             var kg = ComputeSessionVolumeKg();
             if (kg is not { } v || v <= 0) return null;
-            var display = ExerciseWeightFormatter.ToDisplay(v, WeightUnitService.Current);
-            return $"{display.ToString("N0", CultureInfo.InvariantCulture)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+            return $"{ExerciseWeightFormatter.FormatWeight(v, WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
         }
     }
 

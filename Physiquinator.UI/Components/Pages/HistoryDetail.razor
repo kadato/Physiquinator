@@ -182,7 +182,7 @@ else
                                            class="history-detail-table__input"
                                            inputmode="decimal"
                                            min="0"
-                                           step="0.5"
+                                           step="@WeightStep"
                                            value="@_editWeightText"
                                            aria-label="@Loc["Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]"
                                            @onchange="OnEditWeightChanged" />
@@ -388,7 +388,7 @@ else
 
         var ok = await DialogService.ConfirmAsync(
             Loc["Delete set"],
-            Loc["Remove set {0} of '{1}'? This cannot be undone.", set.SetIndex + 1, set.ExerciseName],
+            Loc["Delete set {0} of '{1}'? This cannot be undone.", set.SetIndex + 1, set.ExerciseName],
             confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
@@ -406,7 +406,7 @@ else
 
         _editingSetId = null;
         await ReloadAsync();
-        Snackbar.Add(Loc["Set removed."], Severity.Success);
+        Snackbar.Add(Loc["Set deleted."], Severity.Success);
     }
 
     private async Task DeleteSessionClick()
@@ -416,7 +416,7 @@ else
         var inProgress = _session.EndedAtUtc == null;
         var ok = await DialogService.ConfirmAsync(
             Loc["Delete workout"],
-            Loc["Remove this session and all logged sets? This cannot be undone."],
+            Loc["Delete this session and all logged sets? This cannot be undone."],
             confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
@@ -535,6 +535,8 @@ else
 
     private int TotalSetCount => _sets.Count;
 
+    private double WeightStep => WeightUnitService.Current == WeightUnit.Pounds ? 5 : 2.5;
+
     private string? TotalVolumeLabel
     {
         get
@@ -552,8 +554,7 @@ else
             }
 
             if (!any) return null;
-            var display = ExerciseWeightFormatter.ToDisplay(total, WeightUnitService.Current);
-            return $"{display.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+            return $"{ExerciseWeightFormatter.FormatWeight(total, WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
         }
     }
 
@@ -565,7 +566,7 @@ else
                 return null;
 
             var minutes = (int)(ended - _session.StartedAtUtc).TotalMinutes;
-            return minutes < 60 ? $"{minutes} min" : $"{minutes / 60}h {minutes % 60}m";
+            return minutes < 60 ? Loc["{0} min", minutes] : Loc["{0}h {1}m", minutes / 60, minutes % 60];
         }
     }
 

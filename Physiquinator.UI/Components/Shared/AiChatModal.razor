@@ -74,7 +74,7 @@
                                 <div class="ai-msg__bubble">
                                     @msg.Content
                                 </div>
-                                <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                                <span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
                             </div>
                         }
                         else if (msg.Role == AiMessageRole.Assistant)
@@ -117,7 +117,7 @@
                                                            aria-label="@Loc["Copy message"]"
                                                            OnClick="@(() => CopyMessageAsync(msg.Content))" />
                                         }
-                                        <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
+                                        <span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
                                     </span>
                                 </div>
                             </div>
@@ -215,6 +215,9 @@
 
     private static string GetAssistantClass(AiChatMessage msg) =>
         msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error" : "ai-msg ai-msg--assistant";
+
+    private static string FormatTime(DateTime timestamp) =>
+        timestamp.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
 
     protected override void OnInitialized()

@@ -4,7 +4,7 @@
 <MudPaper Class="pa-4 settings-card" Elevation="0">
     <div class="settings-card__header">
         <MudIcon Icon="@Icons.Material.Outlined.People" Class="settings-card__icon" />
-        <MudText Typo="Typo.h6" Class="settings-card__title">@Loc["User Profiles"]</MudText>
+        <MudText Typo="Typo.h6" Class="settings-card__title">@Loc["User profiles"]</MudText>
     </div>
     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
         @Loc["Create, switch, or manage isolated user profiles. Each profile stores its own plans and history."]
@@ -104,7 +104,7 @@
     private async Task CreateProfileAsync()
     {
         var parameters = new DialogParameters { ["Name"] = "" };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
         var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Create Profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
@@ -126,7 +126,7 @@
     private async Task RenameProfileAsync(Guid id, string currentName)
     {
         var parameters = new DialogParameters { ["Name"] = currentName };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
         var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Rename Profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)

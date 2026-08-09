@@ -40,7 +40,8 @@
                   AdornmentIcon="@Icons.Material.Filled.Search"
                   Clearable="true"
                   Immediate="true"
-                  Variant="Variant.Outlined" />
+                  Variant="Variant.Outlined"
+                  Class="mb-2" />
 
     <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
              Class="settings-tabs"
@@ -300,9 +301,10 @@
 
                     @if (_aiSettings.Enabled)
                     {
+                        <form @onsubmit="SaveAiSettings" @onsubmit:preventDefault>
                         <MudStack Spacing="3" Class="mt-3">
                             <MudSelect T="AiProviderType"
-                                       Label="@Loc["Provider Preset"]"
+                                       Label="@Loc["Provider preset"]"
                                        Variant="Variant.Filled"
                                        Value="_aiSettings.Provider"
                                        ValueChanged="OnAiProviderChanged">
@@ -333,7 +335,7 @@
                              {
                                  <div class="d-flex align-center gap-2 py-1">
                                      <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
-                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Fetching models from endpoint..."]</MudText>
+                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Fetching models from endpoint…"]</MudText>
                                  </div>
                              }
 
@@ -359,7 +361,7 @@
                              }
 
                             <MudTextField T="string"
-                                          Label="@Loc["Custom Instructions / Prompt (Optional)"]"
+                                          Label="@Loc["Custom instructions / prompt (optional)"]"
                                           Variant="Variant.Filled"
                                           Lines="2"
                                           @bind-Value="_aiSettings.CustomSystemPrompt"
@@ -368,7 +370,7 @@
                             <div class="settings-btn-group mt-2">
                                 <MudButton Variant="Variant.Filled"
                                            Color="Color.Primary"
-                                           OnClick="SaveAiSettings"
+                                           ButtonType="ButtonType.Submit"
                                            StartIcon="@Icons.Material.Filled.Save">
                                     @Loc["Save settings"]
                                 </MudButton>
@@ -378,7 +380,7 @@
                                            StartIcon="@Icons.Material.Filled.CloudDownload">
                                     @if (_fetchingModels)
                                     {
-                                        <span>@Loc["Fetching..."]</span>
+                                        <span>@Loc["Fetching…"]</span>
                                     }
                                     else
                                     {
@@ -391,7 +393,7 @@
                                            StartIcon="@Icons.Material.Filled.CheckCircle">
                                     @if (_testingAiConnection)
                                     {
-                                        <span>@Loc["Testing..."]</span>
+                                        <span>@Loc["Testing…"]</span>
                                     }
                                     else
                                     {
@@ -405,6 +407,7 @@
                                 </MudButton>
                             </div>
                         </MudStack>
+                        </form>
                     }
                 </div>
 

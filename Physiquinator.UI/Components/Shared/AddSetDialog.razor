@@ -9,47 +9,51 @@
         </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3" Class="py-2">
-            <MudSelect T="string"
-                       Label="@Loc["Exercise"]"
-                       Variant="Variant.Filled"
-                       Value="_exerciseName"
-                       ValueChanged="OnExerciseChanged">
-                @foreach (var name in ExerciseNames)
+        <form @onsubmit="Confirm" @onsubmit:preventDefault>
+            <MudStack Spacing="3" Class="py-2">
+                <MudSelect T="string"
+                           Label="@Loc["Exercise"]"
+                           Variant="Variant.Filled"
+                           Value="_exerciseName"
+                           ValueChanged="OnExerciseChanged">
+                    @foreach (var name in ExerciseNames)
+                    {
+                        <MudSelectItem Value="@name">@name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (GetLogType(_exerciseName) != ExerciseLogType.Duration)
                 {
-                    <MudSelectItem Value="@name">@name</MudSelectItem>
+                    <MudTextField T="string"
+                                  Label="@Loc["Weight"]"
+                                  Variant="Variant.Filled"
+                                  InputMode="@((InputMode)2)"
+                                  @bind-Value="_weightText"
+                                  Placeholder="0"
+                                  enterkeyhint="next"
+                                  HelperText="@Loc["Weight in {0} (optional)", UnitSuffix]" />
                 }
-            </MudSelect>
 
-            @if (GetLogType(_exerciseName) != ExerciseLogType.Duration)
-            {
                 <MudTextField T="string"
-                              Label="@Loc["Weight"]"
+                              Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["Duration (s)"] : Loc["Reps"])"
                               Variant="Variant.Filled"
-                              InputMode="@((InputMode)2)"
-                              @bind-Value="_weightText"
-                              Placeholder="0"
-                              HelperText="@Loc["Weight in {0} (optional)", UnitSuffix]" />
-            }
-
-            <MudTextField T="string"
-                          Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["Duration (seconds)"] : Loc["Reps"])"
-                          Variant="Variant.Filled"
-                          InputMode="InputMode.numeric"
-                          @bind-Value="_repsText"
-                          Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["e.g. 60"] : Loc["e.g. 10"])" />
-        </MudStack>
+                              InputMode="InputMode.numeric"
+                              @bind-Value="_repsText"
+                              Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["e.g. 60"] : Loc["e.g. 10"])"
+                              enterkeyhint="done" />
+            </MudStack>
+            <div class="mud-dialog-actions">
+                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@Loc["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@CannotAdd"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           ButtonType="ButtonType.Submit">
+                    @Loc["Add set"]
+                </MudButton>
+            </div>
+        </form>
     </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">@Loc["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Disabled="@CannotAdd"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="Confirm">
-            @Loc["Add set"]
-        </MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {

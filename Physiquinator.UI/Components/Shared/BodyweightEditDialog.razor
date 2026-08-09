@@ -9,28 +9,31 @@
         </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2" Class="py-2">
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                @DateLabel — @UnitSuffix
-            </MudText>
-            <MudTextField T="string"
-                          Label="@Loc["Bodyweight"]"
-                          Variant="Variant.Filled"
-                          InputMode="@((InputMode)2)"
-                          @bind-Value="_valueText"
-                          Placeholder="@Loc["e.g. 80.5"]" />
-        </MudStack>
+        <form @onsubmit="Confirm" @onsubmit:preventDefault>
+            <MudStack Spacing="2" Class="py-2">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @DateLabel — @UnitSuffix
+                </MudText>
+                <MudTextField T="string"
+                              Label="@Loc["Bodyweight"]"
+                              Variant="Variant.Filled"
+                              InputMode="@((InputMode)2)"
+                              @bind-Value="_valueText"
+                              Placeholder="@Loc["e.g. 80.5"]"
+                              enterkeyhint="done" />
+            </MudStack>
+            <div class="mud-dialog-actions">
+                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@Loc["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@(!double.TryParse(_valueText, out var v) || v <= 0)"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           ButtonType="ButtonType.Submit">
+                    @Loc["Save"]
+                </MudButton>
+            </div>
+        </form>
     </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">@Loc["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Disabled="@(!double.TryParse(_valueText, out var v) || v <= 0)"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   OnClick="Confirm">
-            @Loc["Save"]
-        </MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {

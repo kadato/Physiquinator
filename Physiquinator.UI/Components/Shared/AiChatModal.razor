@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
+@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 
@@ -18,17 +19,17 @@
                         <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">Physiquinator AI</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">Fitness Assistant & Plan Engine</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">@Loc["Physiquinator AI"]</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">@Loc["Fitness Assistant & Plan Engine"]</MudText>
                     </div>
                 </div>
                 <div class="ai-chat-header__actions">
                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteSweep"
-                                   aria-label="Clear History"
+                                   aria-label="@Loc["Clear History"]"
                                    Size="Size.Small"
                                    OnClick="ClearHistory" />
                     <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   aria-label="Close"
+                                   aria-label="@Loc["Close"]"
                                    Size="Size.Small"
                                    OnClick="Close" />
                 </div>
@@ -41,12 +42,12 @@
                     <div class="ai-api-key-banner__content">
                         <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Medium" />
                         <div>
-                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">API Key Required</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI.</MudText>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@Loc["API Key Required"]</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI."]</MudText>
                         </div>
                     </div>
                     <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" OnClick="NavigateToSettings" Class="ai-banner-button">
-                        Setup Key
+                        @Loc["Setup Key"]
                     </MudButton>
                 </div>
             }
@@ -57,9 +58,9 @@
                 {
                     <div class="ai-chat-empty">
                         <MudIcon Icon="@Icons.Material.Outlined.FitnessCenter" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
-                        <MudText Typo="Typo.h6" Class="font-weight-semibold">How can I help you train?</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-semibold">@Loc["How can I help you train?"]</MudText>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary align-center max-w-400 ai-chat-empty__hint">
-                            Ask me to create workout plans, log bodyweight, analyze your personal records, tweak app settings, or generate progressive overload recommendations!
+                            @Loc["Ask me to create workout plans, log bodyweight, analyze your personal records, tweak app settings, or generate progressive overload recommendations!"]
                         </MudText>
                     </div>
                 }
@@ -88,7 +89,7 @@
                                         {
                                             <div class="ai-msg__thinking">
                                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                                <span>Thinking & executing actions...</span>
+                                                <span>@Loc["Thinking & executing actions..."]</span>
                                             </div>
                                         }
                                         else
@@ -102,7 +103,7 @@
                                             @foreach (var tc in msg.ToolCalls)
                                             {
                                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
-                                                    Executed @tc.Name
+                                                    @Loc["Executed {0}", tc.Name]
                                                 </MudChip>
                                             }
                                         </div>
@@ -113,7 +114,7 @@
                                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                            Size="Size.Small"
                                                            Class="ai-msg__copy"
-                                                           aria-label="Copy message"
+                                                           aria-label="@Loc["Copy message"]"
                                                            OnClick="@(() => CopyMessageAsync(msg.Content))" />
                                         }
                                         <span class="ai-msg__time">@msg.Timestamp.ToString("t")</span>
@@ -130,16 +131,16 @@
             {
                 <div class="ai-chat-quick-actions">
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick" Class="ai-chat-quick-chip">
-                        ⚡ Progressive Overload
+                        ⚡ @Loc["Progressive Overload"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick" Class="ai-chat-quick-chip">
-                        📊 Performance Stats
+                        📊 @Loc["Performance Stats"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick" Class="ai-chat-quick-chip">
-                        ⚖️ Log Bodyweight
+                        ⚖️ @Loc["Log Bodyweight"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick" Class="ai-chat-quick-chip">
-                        🔄 Deload Plan
+                        🔄 @Loc["Deload Plan"]
                     </MudChip>
                 </div>
             }
@@ -150,12 +151,13 @@
                     <div class="ai-chat-input__field">
                         <MudTextField T="string"
                                       Variant="Variant.Text"
-                                      Placeholder="Ask Physiquinator AI..."
+                                       Placeholder="@Loc["Ask Physiquinator AI..."]"
                                       Immediate="true"
                                       @bind-Value="_inputText"
                                       OnKeyDown="HandleKeyDown"
                                       Disabled="@(_isSending || IsApiKeyMissing)"
                                       Margin="Margin.Dense"
+                                      enterkeyhint="send"
                                       Class="ai-chat-textfield" />
                     </div>
 
@@ -164,7 +166,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Stop"
                                        Color="Color.Error"
                                        Variant="Variant.Filled"
-                                       aria-label="Stop generating"
+                                       aria-label="@Loc["Stop generating"]"
+                                       title="@Loc["Stop generating"]"
                                        OnClick="StopGeneration"
                                        Class="ai-chat-send-button" />
                     }
@@ -173,7 +176,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Send"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       aria-label="Send Message"
+                                       aria-label="@Loc["Send Message"]"
+                                       title="@Loc["Send Message"]"
                                        Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
                                        OnClick="SendMessageAsync"
                                        Class="ai-chat-send-button" />
@@ -264,9 +268,9 @@
         }
 
         if (copied)
-            Snackbar.Add("Message copied.", Severity.Success);
+            Snackbar.Add(Loc["Message copied."], Severity.Success);
         else
-            Snackbar.Add("Could not copy to clipboard.", Severity.Error);
+            Snackbar.Add(Loc["Could not copy to clipboard."], Severity.Error);
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
@@ -278,16 +282,16 @@
     }
 
     private async Task OnProgressiveOverloadClick() =>
-        await SendPrompt("Suggest progressive overload recommendations for my active workout plans.");
+        await SendPrompt(Loc["Suggest progressive overload recommendations for my active workout plans."]);
 
     private async Task OnPerformanceStatsClick() =>
-        await SendPrompt("Show my current workout stats and recent performance.");
+        await SendPrompt(Loc["Show my current workout stats and recent performance."]);
 
     private async Task OnLogBodyweightClick() =>
-        await SendPrompt("Log my bodyweight for today and show my recent trends.");
+        await SendPrompt(Loc["Log my bodyweight for today and show my recent trends."]);
 
     private async Task OnDeloadPlanClick() =>
-        await SendPrompt("Create a deload version of my primary workout plan.");
+        await SendPrompt(Loc["Create a deload version of my primary workout plan."]);
 
     private async Task SendPrompt(string prompt)
     {

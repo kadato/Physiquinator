@@ -381,7 +381,7 @@ textarea.auto-size,
 }
 
 .app-nav-tab__label {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     font-weight: 600;
     line-height: 1;
     text-align: center;
@@ -422,12 +422,17 @@ textarea.auto-size,
     -webkit-tap-highlight-color: transparent;
     box-shadow: none !important;
     background-color: var(--mud-palette-primary) !important;
-    color: #ffffff !important;
+    color: var(--mud-palette-primary-contrasttext) !important;
     transition: box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease;
     outline: none;
     overflow: hidden;
     animation: fab-enter 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
     padding: 0 !important;
+}
+
+.app-fab:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
 }
 
 .app-fab::after {
@@ -681,7 +686,7 @@ textarea.auto-size,
 .stat-card__label,
 .home-stat__label,
 .history-stat__label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 500;
     line-height: 1.2;
     text-align: center;
@@ -735,7 +740,7 @@ textarea.auto-size,
     gap: 6px;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    font-size: 0.62rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--mud-palette-primary);
     background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
@@ -798,14 +803,6 @@ textarea.auto-size,
         min-height: 6.25rem;
         border-color: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
     }
-
-    /* The 1000px container can't fit three comfortable plan cards until the
-       viewport is much wider; keep two columns in the 1400-1599 range. */
-    @media (min-width: 1400px) and (max-width: 1599.98px) {
-        .home-plan-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        }
-    }
 }
 
 .home-plans-header {
@@ -820,6 +817,27 @@ textarea.auto-size,
     display: flex;
     flex-direction: column;
     gap: 0.875rem;
+}
+
+/* ============================================================
+   Adaptive layout — desktop & tablet (container stays phone-width
+   below 960px; wide screens get multi-column grids)
+   ============================================================ */
+
+@media (min-width: 960px) {
+    /* Workout: elapsed/volume stats above the rest timer, which gets the
+       full row to itself. */
+    .workout-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .workout-top > .rest-timer-panel {
+        width: 100%;
+        max-width: none;
+    }
 }
 
 /* Cards & elevated surfaces (MAUI WebView — scoped *.razor.css is not shipped) */
@@ -1319,7 +1337,7 @@ input[type="number"] {
 }
 
 .heatmap-day-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 600;
     line-height: var(--heatmap-cell-size, 11px);
     text-align: end;
@@ -2015,7 +2033,7 @@ button.history-session-card:focus-visible {
     background: color-mix(in srgb, var(--mud-palette-secondary) 15%, transparent);
     padding: 1px 6px;
     border-radius: 4px;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -2459,7 +2477,7 @@ button.history-session-card.history-session-card--selected {
 
 .exercise-progress-chart__plot .mud-chart-text {
     fill: var(--mud-palette-text-secondary) !important;
-    font-size: 0.72rem !important;
+    font-size: 0.75rem !important;
     font-weight: 500 !important;
     font-family: 'Outfit', sans-serif !important;
 }
@@ -2533,7 +2551,7 @@ button.history-session-card.history-session-card--selected {
 
 .premium-table .mud-table-head .mud-table-cell {
     font-weight: 700 !important;
-    font-size: 0.72rem !important;
+    font-size: 0.75rem !important;
     letter-spacing: 0.06em !important;
     text-transform: uppercase !important;
     color: var(--mud-palette-text-secondary) !important;
@@ -3117,44 +3135,6 @@ a,
     border-color: color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
 }
 
-.rest-timer-presets {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.625rem;
-}
-
-.rest-timer-preset-btn {
-    appearance: none;
-    -webkit-appearance: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.3125rem 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-secondary) 25%, transparent);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--mud-palette-text-secondary);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
-}
-
-.rest-timer-preset-btn:hover {
-    color: var(--mud-palette-primary);
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 40%, transparent);
-    background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent);
-}
-
-.rest-timer-preset-btn:active {
-    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
-}
-
 /* Compact, refined snackbar toasts */
 
 
@@ -3585,7 +3565,7 @@ html[data-theme="dark"] .app-splash__retry {
     max-width: 600px !important;
     width: min(600px, calc(100vw - 32px)) !important;
     background: var(--mud-palette-surface) !important;
-    box-shadow: 0 8px 40px color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent) !important;
+    box-shadow: none !important;
     border: 1px solid var(--mud-palette-lines-default) !important;
     margin: 16px auto !important;
 }
@@ -3687,7 +3667,7 @@ html[data-theme="dark"] .app-splash__retry {
 }
 
 .workout-session-stat__label {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--mud-palette-text-secondary);
@@ -3765,7 +3745,7 @@ html[data-theme="dark"] .app-splash__retry {
     }
 
     .app-nav-tab__label {
-        font-size: 0.72rem;
+        font-size: 0.75rem;
         letter-spacing: 0.05em;
     }
 
@@ -4288,7 +4268,7 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 }
 
 .ai-msg__time {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     color: var(--mud-palette-text-secondary);
     opacity: 0.75;
 }
@@ -4335,7 +4315,7 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 .ai-chat-input {
     display: flex;
     align-items: center;
-    padding-top: 10px;
+    padding-top: 12px;
     width: 100%;
 }
 
@@ -4343,18 +4323,20 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 7px 7px 16px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--mud-palette-surface) 88%, var(--mud-palette-primary) 5%);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 90%, transparent);
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-text-primary) 7%, transparent);
-    transition: border-color 150ms ease, box-shadow 150ms ease;
+    gap: 10px;
+    padding: 8px 8px 8px 12px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 92%, var(--mud-palette-primary) 4%);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 85%, transparent);
+    box-shadow: 0 3px 14px color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent);
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .ai-chat-composer:focus-within {
-    border-color: color-mix(in srgb, var(--mud-palette-primary) 55%, transparent);
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 60%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 96%, var(--mud-palette-primary) 5%);
+    box-shadow: 0 3px 14px color-mix(in srgb, var(--mud-palette-primary) 14%, transparent),
+                0 0 0 3px color-mix(in srgb, var(--mud-palette-primary) 16%, transparent);
 }
 
 .ai-chat-input__field {
@@ -4368,12 +4350,19 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 
 .ai-chat-textfield.mud-input,
 .ai-chat-textfield .mud-input {
-    font-size: 0.925rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+}
+
+.ai-chat-textfield input {
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .ai-chat-textfield input::placeholder {
     color: var(--mud-palette-text-secondary);
-    opacity: 0.75;
+    opacity: 0.8;
 }
 
 /* Variant.Text underline hidden: the composer pill owns the border.
@@ -4391,23 +4380,24 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     width: 42px !important;
     border-radius: 999px !important;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent),
-                inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 22%, transparent);
-    transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 120ms ease, opacity 120ms ease;
+    background: var(--mud-palette-primary) !important;
+    box-shadow: none !important;
+    transition: none !important;
 }
 
-.ai-chat-send-button:not(.mud-disabled):hover {
-    transform: scale(1.06);
-    box-shadow: 0 3px 12px color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+/* Disabled (nothing typed yet): keep the solid send button look, no fade. */
+.ai-chat-send-button.mud-disabled,
+.ai-chat-send-button:disabled {
+    background: var(--mud-palette-primary) !important;
+    color: var(--mud-palette-primary-text) !important;
+    box-shadow: none !important;
+    opacity: 1;
 }
 
-.ai-chat-send-button:not(.mud-disabled):active {
-    transform: scale(0.94);
-}
-
-.ai-chat-send-button.mud-disabled {
-    opacity: 0.45;
-    box-shadow: none;
+/* Stop button while the assistant is answering */
+.ai-chat-send-button.mud-button-filled-error {
+    background: var(--mud-palette-error) !important;
+    box-shadow: none !important;
 }
 
 /* ---- Desktop & big screens: roomier header and composer ---- */
@@ -4432,7 +4422,7 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     }
 
     .ai-chat-composer {
-        padding: 8px 8px 8px 18px;
+        padding: 8px 8px 8px 16px;
         gap: 10px;
     }
 
@@ -4466,4 +4456,485 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 .ai-banner-button {
     flex-shrink: 0;
     font-weight: 600;
+}
+
+/* ---- Supersets, circuits and warm-up sets ---- */
+
+.plan-exercise-row__chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    margin-left: 0.5rem;
+    padding: 0 0.3rem;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+}
+
+.plan-exercise-row__chip--superset {
+    color: var(--mud-palette-primary-contrasttext);
+    background: color-mix(in srgb, var(--mud-palette-primary) 85%, transparent);
+}
+
+.workout-superset-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    margin-right: 0.5rem;
+    padding: 0 0.3rem;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--mud-palette-primary-contrasttext);
+    background: color-mix(in srgb, var(--mud-palette-primary) 85%, transparent);
+}
+
+.warmup-chip {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--mud-palette-warning) 85%, var(--mud-palette-text-primary));
+    background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 45%, transparent);
+}
+
+.warmup-chip--row {
+    padding: 0.05rem 0.45rem;
+}
+
+.set-completed-row--warmup .set-stepper-rows {
+    opacity: 0.85;
+}
+
+.history-detail-warmup-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.4rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    color: color-mix(in srgb, var(--mud-palette-warning) 85%, var(--mud-palette-text-primary));
+    background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 45%, transparent);
+}
+
+/* ---- Share workout image card ----
+   Rendered off-screen; captured to PNG via html2canvas. Explicit hex colors
+   only: html2canvas does not resolve color-mix() or CSS variables. */
+
+.share-card-wrap {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    z-index: -1;
+    pointer-events: none;
+    width: 620px;
+}
+
+.share-card {
+    width: 620px;
+    box-sizing: border-box;
+    padding: 28px;
+    font-family: "Outfit", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #FFFFFF;
+    color: #111827;
+}
+
+html[data-theme="dark"] .share-card {
+    background: #151821;
+    color: #F3F4F6;
+}
+
+.share-card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.share-card__logo {
+    width: 30px;
+    height: 30px;
+    fill: #0F766E;
+}
+
+html[data-theme="dark"] .share-card__logo {
+    fill: #10B981;
+}
+
+.share-card__brand {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+html[data-theme="dark"] .share-card__brand {
+    color: #9CA3AF;
+}
+
+.share-card__plan {
+    margin: 0;
+    font-size: 27px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.share-card__date {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #6B7280;
+}
+
+html[data-theme="dark"] .share-card__date {
+    color: #9CA3AF;
+}
+
+.share-card__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 22px 0;
+}
+
+.share-card__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 12px;
+    border-radius: 14px;
+    background: #F1F5F9;
+    text-align: center;
+}
+
+html[data-theme="dark"] .share-card__stat {
+    background: #1E2330;
+}
+
+.share-card__stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0F766E;
+}
+
+html[data-theme="dark"] .share-card__stat-value {
+    color: #10B981;
+}
+
+.share-card__stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+html[data-theme="dark"] .share-card__stat-label {
+    color: #9CA3AF;
+}
+
+.share-card__exercise {
+    padding: 14px 0;
+    border-top: 1px solid #E5E7EB;
+}
+
+html[data-theme="dark"] .share-card__exercise {
+    border-top-color: #2A3040;
+}
+
+.share-card__exercise-name {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.share-card__set {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    font-size: 13.5px;
+}
+
+.share-card__set-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+html[data-theme="dark"] .share-card__set-label {
+    color: #D1D5DB;
+}
+
+.share-card__set-metrics {
+    color: #111827;
+}
+
+html[data-theme="dark"] .share-card__set-metrics {
+    color: #F3F4F6;
+}
+
+.share-card__set--warmup .share-card__set-metrics {
+    color: #9CA3AF;
+}
+
+html[data-theme="dark"] .share-card__set--warmup .share-card__set-metrics {
+    color: #6B7280;
+}
+
+.share-card__warmup {
+    display: inline-flex;
+    margin-right: 6px;
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #B45309;
+    background: #FEF3C7;
+}
+
+html[data-theme="dark"] .share-card__warmup {
+    color: #FBBF24;
+    background: #3B2F10;
+}
+
+.share-card__footer {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid #E5E7EB;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.04em;
+    color: #9CA3AF;
+}
+
+html[data-theme="dark"] .share-card__footer {
+    border-top-color: #2A3040;
+    color: #6B7280;
+}
+
+/* ---- Skeleton loading screens ---- */
+
+.skeleton-block {
+    display: block;
+    background: linear-gradient(
+        90deg,
+        var(--mud-palette-background-gray) 25%,
+        color-mix(in srgb, var(--mud-palette-background-gray) 55%, var(--mud-palette-surface)) 37%,
+        var(--mud-palette-background-gray) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-block {
+        animation: none;
+    }
+}
+
+.home-skeleton,
+.history-skeleton,
+.detail-skeleton,
+.workout-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.home-skeleton__overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.875rem;
+}
+
+.home-skeleton__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+}
+
+.home-skeleton__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.home-skeleton__heatmap,
+.history-skeleton__heatmap {
+    border-radius: 16px;
+}
+
+.home-skeleton__section-title {
+    margin-top: 0.5rem;
+}
+
+.home-skeleton__plans,
+.history-skeleton__rows,
+.detail-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.history-skeleton__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.detail-skeleton__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+}
+
+.detail-skeleton__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.workout-skeleton__top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.workout-skeleton__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+@media (min-width: 960px) {
+    .home-skeleton__overview {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        align-items: stretch;
+    }
+
+    .home-skeleton__plans {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .history-skeleton__stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .history-skeleton__rows {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .workout-skeleton__top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+/* ============================================================
+   Accessibility — keyboard focus rings and high contrast
+   ============================================================ */
+
+.workout-undo-btn:focus-visible,
+.set-metric-stepper__value:focus-visible,
+.set-metric-stepper__btn:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+.inline-set-input:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+.heatmap-cell:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+.plan-exercise-row__body:focus-visible,
+.history-session-check:focus-visible,
+.home-hero__discard:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+/* Windows high contrast / forced colors: keep focus and card boundaries visible */
+@media (forced-colors: active) {
+    .app-fab,
+    .app-nav-tab,
+    .heatmap-cell,
+    .stat-card,
+    .plan-card,
+    .history-session-card,
+    .exercise-accordion-card {
+        border: 1px solid ButtonText !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .mud-text-secondary,
+    .stat-card__label,
+    .home-stat__label,
+    .history-stat__label {
+        color: var(--mud-palette-text-primary) !important;
+    }
+}
+
+/* ---- Settings tabs ---- */
+
+.settings-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--mud-palette-background) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 14px;
+    margin-bottom: 0.5rem;
+}
+
+.settings-tabs .mud-tabs-panels {
+    padding-top: 0.875rem;
 }

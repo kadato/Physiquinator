@@ -25,7 +25,7 @@
     --app-page-top: 2rem;
     /* FAB & nav pill system */
     --app-nav-pill-height: 64px;
-    --app-nav-pill-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    --app-nav-pill-bottom: calc(12px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px));
     --app-fab-size: 56px;
     --app-fab-mini-size: 44px;
     --app-fab-bottom: calc(var(--app-nav-pill-height) + var(--app-nav-pill-bottom) + 16px);
@@ -33,6 +33,11 @@
     --app-fab-left: 20px;
     --app-fab-shadow: none !important;
     --app-fab-shadow-hover: none !important;
+    /* Height of the on-screen keyboard covering the app (set from JS via
+       visualViewport; 0 when the WebView is resized normally). Fixed chrome
+       and dialogs add it to their bottom offsets so inputs and actions stay
+       visible above the keyboard. */
+    --app-ime-inset: 0px;
 
 }
 html, body {
@@ -457,13 +462,13 @@ input, select, textarea {
 /* Immersive mode (workout/plan): FAB sits lower since no nav pill */
 .app-shell--immersive .app-fab--br-1,
 .app-shell--immersive .app-fab--bl-1 {
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px));
 }
 
 .app-shell--immersive .app-fab--br-2,
 .app-shell--immersive .app-fab--bl-2 {
     animation-delay: 0.04s;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-fab-size) + 12px);
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px) + var(--app-fab-size) + 12px);
 }
 
 /* Wide screen handling for FABs: keep them aligned inside the centered 600px layout container */
@@ -1256,6 +1261,10 @@ button.heatmap-cell.heatmap-selected::before {
 .history-heatmap-panel {
     overflow: visible;
     max-width: 100%;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+    box-shadow: none !important;
 }
 
 .history-heatmap-panel.mud-paper {
@@ -1266,6 +1275,10 @@ button.heatmap-cell.heatmap-selected::before {
 .home-heatmap-panel.mud-paper {
     overflow: visible;
     max-width: 100%;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-surface) 94%, var(--mud-palette-background));
+    box-shadow: none !important;
 }
 
 /* Desktop: the heatmap hugs its grid instead of stretching across the page,
@@ -1293,6 +1306,7 @@ button.heatmap-cell.heatmap-selected::before {
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
     border-radius: 16px;
     background: var(--mud-palette-surface);
+    box-shadow: none !important;
     overscroll-behavior: contain;
     transition:
         background 0.4s ease,
@@ -1569,9 +1583,18 @@ button.heatmap-cell.heatmap-selected::before {
         transition: none;
     }
 }
-/* Set-log dialog: respect mobile keyboard / dynamic viewport */
+/* Dialogs may use the full dynamic viewport so the mobile keyboard never
+   covers them, but must not exceed it once the container's own padding is
+   applied, or the top edge of a bottom-center sheet clips above the window.
+   --app-ime-inset shrinks the allowance when the WebView is not resized. */
 .mud-dialog-container .mud-dialog {
-    max-height: 100dvh;
+    max-height: calc(100dvh - 48px - var(--app-ime-inset, 0px));
+}
+
+/* Larger screens: while the keyboard is open and the WebView is not resized,
+   the extra bottom padding recenters the dialog into the space above it. */
+html.app-ime-open .mud-dialog-container {
+    padding-bottom: var(--app-ime-inset, 0px);
 }
 
 
@@ -2100,16 +2123,25 @@ button.history-session-card.history-session-card--selected {
 .pr-dialog-row {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    padding: 0.75rem 0.5rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent);
+    gap: 12px;
+    padding: 10px 4px;
+    border: none;
     border-radius: 12px;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
     transition: background-color 120ms ease;
 }
 
-.pr-dialog-row:last-child {
-    border-bottom: none;
+.pr-dialog-row:hover {
+    background: rgba(127, 127, 127, 0.08);
+}
+
+.pr-dialog-row + .pr-dialog-row {
+    border-top: 1px solid rgba(127, 127, 127, 0.14);
 }
 
 .pr-dialog-row__icon {
@@ -2767,7 +2799,7 @@ a,
 /* Undo FAB — circular icon button, same size as the back FAB, bottom-right */
 .workout-undo-btn {
     position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px));
     right: var(--app-fab-right);
     z-index: 1000;
     display: inline-flex;
@@ -2776,11 +2808,11 @@ a,
     width: var(--app-fab-size) !important;
     height: var(--app-fab-size) !important;
     padding: 0 !important;
-    background-color: #d32f2f !important;
+    background-color: var(--mud-palette-error) !important;
     color: #fff !important;
     border: none !important;
     border-radius: 50% !important;
-    box-shadow: 0 4px 16px rgba(211, 47, 47, 0.35) !important;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--mud-palette-error) 35%, transparent) !important;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
     animation: undo-fab-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -2983,6 +3015,18 @@ a,
     background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent);
 }
 
+/* Onboarding dialog tips — accent-tinted cards matching the app's corner language */
+.onboarding-tip {
+    padding: 1rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--mud-palette-primary);
+    background-color: var(--mud-palette-background-grey);
+}
+
+.onboarding-tip--warning {
+    border-left-color: var(--mud-palette-warning);
+}
+
 .settings-panels .mud-expand-panel .mud-expand-panel-icon {
     color: var(--mud-palette-text-secondary);
 }
@@ -3173,7 +3217,7 @@ html[data-theme="dark"] .app-splash__retry {
 .mud-dialog-container .mud-dialog.ai-chat-dialog,
 .mud-dialog.ai-chat-dialog,
 .ai-chat-dialog {
-    border-radius: 20px !important;
+    border-radius: 16px !important;
     overflow: hidden !important;
     max-width: 600px !important;
     width: min(600px, calc(100vw - 32px)) !important;
@@ -3238,7 +3282,9 @@ html[data-theme="dark"] .app-splash__retry {
 @media (max-width: 600px) {
     .mud-dialog-container {
         align-items: flex-start !important;
-        padding: 16px 8px 120px 8px !important;
+        /* The --app-ime-inset tail keeps the dialog bottom above the keyboard
+           when the WebView is not resized (edge-to-edge Android). */
+        padding: 16px 8px calc(120px + var(--app-ime-inset, 0px)) 8px !important;
         overflow-y: auto !important;
         display: flex !important;
         flex-direction: column !important;
@@ -3258,7 +3304,6 @@ html[data-theme="dark"] .app-splash__retry {
     border-radius: 16px;
     background-color: var(--mud-palette-surface);
     border: 1px solid var(--mud-palette-divider);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .workout-session-stat {
@@ -3317,6 +3362,11 @@ html[data-theme="dark"] .app-splash__retry {
 }
 
 @media (min-width: 960px) {
+    /* The pill sits at the top on desktop, so no bottom clearance is needed */
+    .app-shell .app-main-scroll {
+        padding-bottom: 0;
+    }
+
     /* --- Top navigation bar: the bottom pill becomes a horizontal bar --- */
     .app-nav-pill {
         position: static;
@@ -3357,22 +3407,6 @@ html[data-theme="dark"] .app-splash__retry {
         letter-spacing: 0.05em;
     }
 
-    /* Active page: solid primary pill with white icon + label */
-    .app-nav-tab--active {
-        background: var(--mud-palette-primary);
-        color: #fff !important;
-        box-shadow: 0 4px 14px color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
-    }
-
-    .app-nav-tab--active .mud-icon-root {
-        color: #fff !important;
-        transform: scale(1.05);
-    }
-
-    .app-nav-tab--active .app-nav-tab__label {
-        color: #fff !important;
-    }
-
     /* Subtle hover on inactive tabs only */
     .app-nav-tab:not(.app-nav-tab--active):hover {
         background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
@@ -3393,25 +3427,19 @@ html[data-theme="dark"] .app-splash__retry {
     .app-shell--immersive .app-fab--br-1,
     .app-fab--bl-1,
     .app-shell--immersive .app-fab--bl-1 {
-        bottom: 32px;
+        bottom: calc(32px + var(--app-ime-inset, 0px));
     }
 
     .app-fab--br-2,
     .app-shell--immersive .app-fab--br-2,
     .app-fab--bl-2,
     .app-shell--immersive .app-fab--bl-2 {
-        bottom: calc(32px + var(--app-fab-size) + 14px);
+        bottom: calc(32px + var(--app-ime-inset, 0px) + var(--app-fab-size) + 14px);
     }
 
     .workout-undo-btn {
         right: 32px;
-        bottom: 32px;
-    }
-
-    /* The top nav provides navigation on desktop; the floating back button
-       (bottom-left, rendered by MainLayout on detail pages) is redundant. */
-    .app-fab--back {
-        display: none;
+        bottom: calc(32px + var(--app-ime-inset, 0px));
     }
 
     /* --- Labeled FABs: pill-shaped CTAs with a visible label --- */
@@ -3514,12 +3542,6 @@ html[data-theme="dark"] .app-splash__retry {
 /* ============================================================
    Accessibility contrast fixes (Lighthouse WCAG AA)
    ============================================================ */
-
-/* Active nav tab label: dark teal primary on the 20% primary pill fails
-   4.5:1 in the light theme; use a darker teal for text only. */
-html[data-theme="light"] .app-nav-tab--active .app-nav-tab__label {
-    color: #0B5A53;
-}
 
 /* AI assistant hint alert (MudBlazor warning severity): amber on the
    pale amber surface is 2.7:1; darken the message and button text. */

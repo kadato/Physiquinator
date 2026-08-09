@@ -860,4 +860,52 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
             CompletedAtUtc = completedAtUtc,
             Reps = 5
         });
+
+    [Fact]
+    public async Task WarmupSets_AreExcludedFromLatestMetricsAndPersonalRecordRows()
+    {
+        var planId = Guid.NewGuid();
+        var sessionId = await _sut.BeginSessionAsync(planId, "Push day", null);
+
+        // Warm-up sets first (set index 0-1), then working sets.
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 0, reps: 8, weightKg: 60, isWarmup: true);
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 1, reps: 8, weightKg: 60, isWarmup: true);
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 2, reps: 8, weightKg: 80);
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 3, reps: 8, weightKg: 80);
+
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _sut.GetSetsForSessionAsync(sessionId);
+        Assert.Equal(4, sets.Count);
+        Assert.Equal([true, true, false, false], sets.Select(s => s.IsWarmup));
+
+        LastSetMetrics? latest = await _sut.GetLatestSetMetricsForExerciseAsync(planId, "Bench Press");
+        Assert.NotNull(latest);
+        Assert.Equal(80, latest.WeightKg);
+        Assert.Equal(8, latest.Reps);
+
+        IReadOnlyList<ExerciseSetLogRow> rows = await _sut.GetExerciseSetLogRowsAsync(planId, "Bench Press");
+        Assert.Equal(2, rows.Count);
+        Assert.All(rows, r => Assert.Equal(80, r.WeightKg));
+
+        IReadOnlyDictionary<string, LastSetMetrics> byExercise = await _sut.GetLatestSetMetricsByExerciseAsync(planId);
+        Assert.Equal(80, byExercise["Bench Press"].WeightKg);
+    }
+
+    [Fact]
+    public async Task WarmupSets_AreExcludedFromSessionProgressVolume()
+    {
+        var planId = Guid.NewGuid();
+        var sessionId = await _sut.BeginSessionAsync(planId, "Push day", null);
+
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 0, reps: 8, weightKg: 60, isWarmup: true);
+        await _sut.LogSetAsync(sessionId, 0, "Bench Press", 1, reps: 8, weightKg: 80);
+
+        IReadOnlyList<ExerciseSessionProgressEntry> progress =
+            await _sut.GetExerciseSessionProgressAsync(planId, "Bench Press", bodyweightKg: null);
+
+        var entry = Assert.Single(progress);
+        Assert.Equal(640, entry.TotalVolumeKg);
+        Assert.Equal(1, entry.SetCount);
+        Assert.Equal(8, entry.TotalReps);
+        Assert.Equal(80, entry.BestWeightKg);
+    }
 }

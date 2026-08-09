@@ -23,4 +23,7 @@ public class WorkoutSetLogEntity
     public int? Reps { get; set; }
 
     public double? WeightKg { get; set; }
+
+    /// <summary>True when this set was logged as a warm-up set.</summary>
+    public bool IsWarmup { get; set; }
 }

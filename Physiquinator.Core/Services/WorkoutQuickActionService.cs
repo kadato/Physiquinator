@@ -69,7 +69,7 @@ public sealed class WorkoutQuickActionService(
 
         WorkoutSessionLogEntity? open = await history.GetAnyInProgressSessionAsync();
         if (open != null)
-            await history.LogSetAsync(open.Id, exerciseIndex, exercise.Name, setIndex, loggedReps, loggedWeight);
+            await history.LogSetAsync(open.Id, exerciseIndex, exercise.Name, setIndex, loggedReps, loggedWeight, isWarmup: setIndex < exercise.WarmupSetCount);
 
         QuickActionStatus status = session.GetFirstUncompletedExerciseIndex() == -1
             ? QuickActionStatus.WorkoutCompleted
@@ -78,7 +78,7 @@ public sealed class WorkoutQuickActionService(
         if (status != QuickActionStatus.WorkoutCompleted && exercise.RestIntervalSeconds > 0)
             session.StartRest(exercise.RestIntervalSeconds);
 
-        return new QuickActionResult(status, exercise.Name, setIndex + 1, exercise.SetCount);
+        return new QuickActionResult(status, exercise.Name, setIndex + 1, exercise.TotalSetCount);
     }
 
     /// <summary>

@@ -110,6 +110,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public DateTime SetCompletedAtUtc { get; set; }
         public int? SetReps { get; set; }
         public double? SetWeightKg { get; set; }
+        public bool SetIsWarmup { get; set; }
     }
 #pragma warning restore S1144
 #pragma warning restore S3459
@@ -132,7 +133,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         return id;
     }
 
-    public async Task LogSetAsync(string sessionId, int exerciseIndex, string exerciseName, int setIndex, int? reps = null, double? weightKg = null)
+    public async Task LogSetAsync(string sessionId, int exerciseIndex, string exerciseName, int setIndex, int? reps = null, double? weightKg = null, bool isWarmup = false)
     {
         await _db.EnsureInitializedAsync();
         await _db.Database.InsertAsync(new WorkoutSetLogEntity
@@ -144,7 +145,8 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             SetIndex = setIndex,
             CompletedAtUtc = _time.GetUtcNow().UtcDateTime,
             Reps = reps,
-            WeightKg = weightKg
+            WeightKg = weightKg,
+            IsWarmup = isWarmup
         });
     }
 
@@ -299,7 +301,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                          ROW_NUMBER() OVER (PARTITION BY s.ExerciseName ORDER BY sess.StartedAtUtc DESC) AS rn
                   FROM WorkoutSessionLogs sess
                   INNER JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
-                  WHERE sess.WorkoutPlanId = ?
+                  WHERE sess.WorkoutPlanId = ? AND s.IsWarmup = 0
                   GROUP BY sess.Id, s.ExerciseName
               ) ranked
               WHERE rn <= ?
@@ -344,8 +346,8 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     private static string BuildVolumeSelect(bool useBodyweight) =>
         useBodyweight
-            ? "SUM(CASE WHEN s.Reps IS NOT NULL THEN s.Reps * (? + IFNULL(s.WeightKg, 0)) ELSE 0 END)"
-            : "SUM(CASE WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL THEN s.Reps * s.WeightKg ELSE 0 END)";
+            ? "SUM(CASE WHEN s.Reps IS NOT NULL AND s.IsWarmup = 0 THEN s.Reps * (? + IFNULL(s.WeightKg, 0)) ELSE 0 END)"
+            : "SUM(CASE WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL AND s.IsWarmup = 0 THEN s.Reps * s.WeightKg ELSE 0 END)";
 
     private static (string Query, object[] Args) BuildSessionProgressQuery(
         string? workoutPlanIdFilter,
@@ -357,6 +359,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         var whereClauses = new List<string>();
         var args = new List<object>();
         if (useBodyweight) args.Add(bodyweightForQuery);
+        whereClauses.Add("s.IsWarmup = 0");
         if (!string.IsNullOrEmpty(workoutPlanIdFilter))
         {
             whereClauses.Add("sess.WorkoutPlanId = ?");
@@ -521,7 +524,8 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                      s.SetIndex AS SetSetIndex,
                      s.CompletedAtUtc AS SetCompletedAtUtc,
                      s.Reps AS SetReps,
-                     s.WeightKg AS SetWeightKg
+                     s.WeightKg AS SetWeightKg,
+                     s.IsWarmup AS SetIsWarmup
               FROM WorkoutSessionLogs sess
               LEFT JOIN WorkoutSetLogs s ON s.SessionId = sess.Id
               ORDER BY sess.StartedAtUtc DESC, s.CompletedAtUtc, s.ExerciseIndex, s.SetIndex");
@@ -558,7 +562,8 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                     SetIndex = row.SetSetIndex,
                     CompletedAtUtc = row.SetCompletedAtUtc,
                     Reps = row.SetReps,
-                    WeightKg = row.SetWeightKg
+                    WeightKg = row.SetWeightKg,
+                    IsWarmup = row.SetIsWarmup
                 });
             }
         }
@@ -652,11 +657,11 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                   SELECT s.ExerciseName AS ExerciseName,
                          s.Reps AS Reps,
                          s.WeightKg AS WeightKg,
-                         ROW_NUMBER() OVER (PARTITION BY s.ExerciseName
+                          ROW_NUMBER() OVER (PARTITION BY s.ExerciseName
                                             ORDER BY s.CompletedAtUtc DESC, s.ExerciseIndex DESC, s.SetIndex DESC) AS rn
                   FROM WorkoutSetLogs s
                   INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
-                  WHERE sess.WorkoutPlanId = ?
+                  WHERE sess.WorkoutPlanId = ? AND s.IsWarmup = 0
               ) ranked
               WHERE rn = 1",
             planIdStr);
@@ -680,7 +685,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             @"SELECT s.Reps AS Reps, s.WeightKg AS WeightKg
               FROM WorkoutSetLogs s
               INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
-              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ? AND s.IsWarmup = 0
               ORDER BY s.CompletedAtUtc DESC, s.ExerciseIndex DESC, s.SetIndex DESC
               LIMIT 1",
             planIdStr, exerciseName);
@@ -712,7 +717,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
                      s.WeightKg AS WeightKg
               FROM WorkoutSetLogs s
               INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
-              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ?
+              WHERE sess.WorkoutPlanId = ? AND s.ExerciseName = ? AND s.IsWarmup = 0
               ORDER BY s.CompletedAtUtc, s.ExerciseIndex, s.SetIndex
               LIMIT ?",
             planIdStr, exerciseName, maxSets);

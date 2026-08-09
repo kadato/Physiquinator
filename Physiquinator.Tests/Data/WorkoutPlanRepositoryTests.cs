@@ -307,4 +307,32 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         List<WorkoutPlan> result = await _sut.GetAllPlansAsync();
         Assert.Single(result);
     }
+
+    [Fact]
+    public async Task SaveAndLoad_RoundTripsWarmupSetsAndSupersetGroup()
+    {
+        var plan = new WorkoutPlan
+        {
+            Name = "Superset day",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Bench Press", SetCount = 4, WarmupSetCount = 2, SupersetGroupId = "A", Order = 0 },
+                new ExercisePlan { Name = "Barbell Row", SetCount = 4, WarmupSetCount = 1, SupersetGroupId = "A", Order = 1 },
+                new ExercisePlan { Name = "Plank", SetCount = 3, LogType = ExerciseLogType.Duration, Order = 2 }
+            ]
+        };
+
+        await _sut.SavePlanAsync(plan);
+
+        WorkoutPlan? loaded = await _sut.GetPlanAsync(plan.Id);
+        Assert.NotNull(loaded);
+        Assert.Equal(3, loaded.Exercises.Count);
+        Assert.Equal(2, loaded.Exercises[0].WarmupSetCount);
+        Assert.Equal("A", loaded.Exercises[0].SupersetGroupId);
+        Assert.Equal(1, loaded.Exercises[1].WarmupSetCount);
+        Assert.Equal("A", loaded.Exercises[1].SupersetGroupId);
+        Assert.Equal(0, loaded.Exercises[2].WarmupSetCount);
+        Assert.Null(loaded.Exercises[2].SupersetGroupId);
+        Assert.Equal(6, loaded.Exercises[0].TotalSetCount);
+    }
 }

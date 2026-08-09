@@ -15,6 +15,10 @@ public class ExercisePlanEntity
 
     public int SetCount { get; set; }
 
+    public int WarmupSetCount { get; set; }
+
+    public string? SupersetGroupId { get; set; }
+
     public int Order { get; set; }
 
     public int RestIntervalSeconds { get; set; }

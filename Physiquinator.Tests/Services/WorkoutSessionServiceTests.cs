@@ -17,6 +17,52 @@ public class WorkoutSessionServiceTests
     };
 
     [Fact]
+    public void GetFirstUncompletedSetIndex_CountsWarmupSetsInFront()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(new WorkoutPlan
+        {
+            Name = "Warm",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Bench", SetCount = 3, WarmupSetCount = 2, Order = 0 }
+            ]
+        });
+
+        // Total set span is 0..4 (2 warm-ups + 3 working).
+        Assert.Equal(0, svc.GetFirstUncompletedSetIndex(0));
+
+        svc.CompleteSet(0, 0);
+        svc.CompleteSet(0, 1);
+        Assert.Equal(2, svc.GetFirstUncompletedSetIndex(0));
+        Assert.False(svc.IsExerciseDone(0));
+
+        svc.CompleteSet(0, 2);
+        svc.CompleteSet(0, 3);
+        svc.CompleteSet(0, 4);
+        Assert.True(svc.IsExerciseDone(0));
+        Assert.Equal(-1, svc.GetFirstUncompletedSetIndex(0));
+    }
+
+    [Fact]
+    public void WouldCompleteWorkout_CountsWarmupSetsInFront()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(new WorkoutPlan
+        {
+            Name = "Warm",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Bench", SetCount = 1, WarmupSetCount = 1, Order = 0 }
+            ]
+        });
+
+        Assert.False(svc.WouldCompleteWorkout(0, 0));
+        svc.CompleteSet(0, 0);
+        Assert.True(svc.WouldCompleteWorkout(0, 1));
+    }
+
+    [Fact]
     public void StartRest_sets_remaining_from_wall_clock()
     {
         var clock = new ManualTimeProvider();

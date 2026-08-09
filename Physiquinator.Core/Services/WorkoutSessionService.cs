@@ -141,7 +141,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
             return -1;
 
         ExercisePlan exercise = CurrentPlan.Exercises[exerciseIndex];
-        for (var s = 0; s < exercise.SetCount; s++)
+        for (var s = 0; s < exercise.TotalSetCount; s++)
         {
             if (!IsSetCompleted(exerciseIndex, s))
                 return s;
@@ -177,7 +177,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         for (var ei = 0; ei < CurrentPlan.Exercises.Count; ei++)
         {
             ExercisePlan ex = CurrentPlan.Exercises[ei];
-            for (var si = 0; si < ex.SetCount; si++)
+            for (var si = 0; si < ex.TotalSetCount; si++)
             {
                 if (ei == exerciseIndex && si == setIndex)
                     continue;
@@ -195,7 +195,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         if (CurrentPlan == null) return;
         if (exerciseIndex < 0 || exerciseIndex >= CurrentPlan.Exercises.Count) return;
         ExercisePlan ex = CurrentPlan.Exercises[exerciseIndex];
-        if (setIndex < 0 || setIndex >= ex.SetCount) return;
+        if (setIndex < 0 || setIndex >= ex.TotalSetCount) return;
 
         var completion = new SetCompletion(exerciseIndex, setIndex);
         _completedSets.Add(completion);

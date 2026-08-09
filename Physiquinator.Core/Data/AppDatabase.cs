@@ -92,6 +92,18 @@ public sealed class AppDatabase
                 "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'") == 0)
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0");
 
+        if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='WarmupSetCount'") == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN WarmupSetCount INTEGER NOT NULL DEFAULT 0");
+
+        if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='SupersetGroupId'") == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN SupersetGroupId TEXT");
+
+        if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSetLogs') WHERE name='IsWarmup'") == 0)
+            await db.ExecuteAsync("ALTER TABLE WorkoutSetLogs ADD COLUMN IsWarmup INTEGER NOT NULL DEFAULT 0");
+
         // sqlite-net only creates indexed-column indexes on a freshly created
         // table, so pre-existing installs get their indexes here instead.
         // Aggregate queries (progress chart, heatmap, latest-metrics) rely on them.

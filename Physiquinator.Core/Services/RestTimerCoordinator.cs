@@ -240,7 +240,7 @@ public sealed class RestTimerCoordinator : IDisposable
         {
             ExercisePlan exercise = plan.Exercises[exerciseIndex];
             nextExerciseName = exercise.Name;
-            nextSetTotal = exercise.SetCount;
+            nextSetTotal = exercise.TotalSetCount;
             var setIndex = _session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
         }
@@ -264,7 +264,7 @@ public sealed class RestTimerCoordinator : IDisposable
         {
             ExercisePlan exercise = plan.Exercises[exerciseIndex];
             var setIndex = _session.GetFirstUncompletedSetIndex(exerciseIndex);
-            var setLabel = setIndex >= 0 ? $" · Set {setIndex + 1}/{exercise.SetCount}" : string.Empty;
+            var setLabel = setIndex >= 0 ? $" · Set {setIndex + 1}/{exercise.TotalSetCount}" : string.Empty;
             return $"Next up: {exercise.Name}{setLabel}";
         }
 

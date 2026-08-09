@@ -59,6 +59,7 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<IThemeInitialization>(sp => sp.GetRequiredService<ThemeService>());
         services.AddScoped<AppInitializationService>();
         services.AddScoped<WorkoutTimerInterop>();
+        services.AddScoped<ShareCardInterop>();
         AddStatefulService<UserProfileService>();
         AddStatefulService<WeightUnitService>();
 

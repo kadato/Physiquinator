@@ -41,6 +41,21 @@ public sealed class FileTransferService : IFileTransferService
         });
     }
 
+    /// <summary>Writes PNG bytes to the app cache directory and opens the platform share sheet.</summary>
+    public async Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share")
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        ArgumentNullException.ThrowIfNull(pngBytes);
+
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+        await File.WriteAllBytesAsync(filePath, pngBytes);
+        await Share.RequestAsync(new ShareFileRequest
+        {
+            Title = shareTitle,
+            File = new ShareFile(filePath)
+        });
+    }
+
     /// <summary>Lets the user pick a .json file and returns its text content, or null when cancelled.</summary>
     public async Task<string?> PickJsonAsync(string pickerTitle)
     {

@@ -1,5 +1,6 @@
 @page "/history/{SessionId}"
 @using System.Text
+@using Physiquinator.UI.Components.Shared
 @inject WorkoutHistoryRepository HistoryRepo
 @inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
@@ -10,23 +11,27 @@
 @inject ISnackbar Snackbar
 @inject TimeProvider TimeProvider
 @inject IJSRuntime JS
+@inject ShareCardInterop ShareCard
+@inject IStringLocalizer<UiText> Loc
 
-<PageHeader Title="Session" ShowBack="false">
+<PageTitle>@Loc["Session"]</PageTitle>
+
+<PageHeader Title="@Loc["Session"]" ShowBack="false">
     @if (_ready && _session != null)
     {
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">Copy</MudButton>
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">Share</MudButton>
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">Home</MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">@Loc["Copy"]</MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">@Loc["Share"]</MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">@Loc["Home"]</MudButton>
     }
 </PageHeader>
 
 @if (!_ready)
 {
-    <LoadingCenter />
+    <DetailSkeleton />
 }
 else if (_session == null)
 {
-    <MudAlert Severity="Severity.Error">This workout session was not found.</MudAlert>
+    <MudAlert Severity="Severity.Error">@Loc["This workout session was not found."]</MudAlert>
 }
 else
 {
@@ -34,36 +39,36 @@ else
         <MudPaper Class="pa-4 settings-card" Elevation="0">
             <MudText Typo="Typo.h5" Class="settings-card__title">@_session.PlanName</MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                Started @UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)
+                @Loc["Started {0}", UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)]
             </MudText>
             @if (_session.EndedAtUtc != null)
             {
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                    Ended @UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)
+                    @Loc["Ended {0}", UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)]
                 </MudText>
             }
             else
             {
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">In progress</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@Loc["In progress"]</MudText>
             }
             @if (_planGuid is { } planId)
             {
                 <MudButton Variant="Variant.Outlined" Class="mt-2 premium-btn premium-btn-outlined" OnClick="@(() => GoPlan(planId))">
-                    Open plan
+                    @Loc["Open plan"]
                 </MudButton>
             }
 
             @if (_sets.Count > 0)
             {
                 <div class="history-stats mt-3">
-                    <StatCard Value="@TotalSetCount.ToString()" Label="Sets" />
+                    <StatCard Value="@TotalSetCount.ToString()" Label="@Loc["Sets"]" />
                     @if (TotalVolumeLabel is { } volume)
                     {
-                        <StatCard Value="@volume" Label="Volume" />
+                        <StatCard Value="@volume" Label="@Loc["Volume"]" />
                     }
                     @if (DurationLabel is { } duration)
                     {
-                        <StatCard Value="@duration" Label="Duration" />
+                        <StatCard Value="@duration" Label="@Loc["Duration"]" />
                     }
                 </div>
             }
@@ -74,7 +79,7 @@ else
             <MudPaper Class="pa-4 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h6" Class="settings-card__title">Progress by exercise</MudText>
+                    <MudText Typo="Typo.h6" Class="settings-card__title">@Loc["Progress by exercise"]</MudText>
                 </div>
                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
                     @foreach (var name in _distinctExerciseNames)
@@ -93,13 +98,13 @@ else
             <MudPaper Class="pa-4 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h6" Class="settings-card__title">Plan when you trained</MudText>
+                    <MudText Typo="Typo.h6" Class="settings-card__title">@Loc["Plan when you trained"]</MudText>
                 </div>
                 @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
                 {
                     <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
                         <MudText Typo="Typo.body2">@ex.Name</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@ex.SetCount sets · @ex.RestIntervalSeconds s rest</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["{0} sets · {1} s rest", ex.SetCount, ex.RestIntervalSeconds]</MudText>
                     </MudStack>
                 }
             </MudPaper>
@@ -107,47 +112,53 @@ else
 
         @if (!_sets.Any())
         {
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">No sets logged for this session.</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Loc["No sets logged for this session."]</MudText>
         }
         else
         {
             <MudPaper Elevation="0" Class="premium-table">
                 <div class="pa-4 pb-1 d-flex align-center justify-space-between">
-                    <MudText Typo="Typo.h6">Sets</MudText>
+                    <MudText Typo="Typo.h6">@Loc["Sets"]</MudText>
                     @if (_sets.Any())
                     {
                         @if (_editMode)
                         {
                             <MudStack Row="true" Spacing="1">
                                 <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Add" OnClick="AddSetAsync">
-                                    Add set
+                                    @Loc["Add set"]
                                 </MudButton>
                                 <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="ToggleEditMode">
-                                    Done
+                                    @Loc["Done"]
                                 </MudButton>
                             </MudStack>
                         }
                         else
                         {
                             <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEditMode">
-                                Edit
+                                @Loc["Edit"]
                             </MudButton>
                         }
                     }
                 </div>
                 <MudTable Items="_sets" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
-                        <MudTh>Exercise</MudTh>
-                        <MudTh>Reps</MudTh>
+                        <MudTh>@Loc["Exercise"]</MudTh>
+                        <MudTh>@Loc["Reps"]</MudTh>
                         <MudTh>@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</MudTh>
-                        <MudTh>Time</MudTh>
+                        <MudTh>@Loc["Time"]</MudTh>
                         @if (_editMode)
                         {
                             <MudTh Class="history-detail-table__action" />
                         }
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.ExerciseName</MudTd>
+                        <MudTd>
+                            @if (context.IsWarmup)
+                            {
+                                <span class="history-detail-warmup-badge">@Loc["Warm-up"]</span>
+                            }
+                            @context.ExerciseName
+                        </MudTd>
                         @if (_editingSetId == context.Id)
                         {
                             <MudTd>
@@ -157,7 +168,7 @@ else
                                        min="0"
                                        step="1"
                                        value="@_editRepsText"
-                                       aria-label="Reps"
+                                       aria-label="@Loc["Reps"]"
                                        @onchange="OnEditRepsChanged" />
                             </MudTd>
                             <MudTd>
@@ -173,7 +184,7 @@ else
                                            min="0"
                                            step="0.5"
                                            value="@_editWeightText"
-                                           aria-label="@($"Weight ({ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)})")"
+                                           aria-label="@Loc["Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]"
                                            @onchange="OnEditWeightChanged" />
                                 }
                             </MudTd>
@@ -192,28 +203,28 @@ else
                                     <MudIconButton Icon="@Icons.Material.Filled.Check"
                                                    Size="Size.Small"
                                                    Color="Color.Primary"
-                                                   Class="history-detail-table__btn"
-                                                   aria-label="Save set"
-                                                   OnClick="@(() => SaveSetAsync(context))" />
+                                                    Class="history-detail-table__btn"
+                                                    aria-label="@Loc["Save set"]"
+                                                    OnClick="@(() => SaveSetAsync(context))" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                    Size="Size.Small"
-                                                   Class="history-detail-table__btn"
-                                                   aria-label="Cancel edit"
-                                                   OnClick="CancelEditSet" />
+                                                    Class="history-detail-table__btn"
+                                                    aria-label="@Loc["Cancel edit"]"
+                                                    OnClick="CancelEditSet" />
                                 }
                                 else
                                 {
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                    Size="Size.Small"
-                                                   Class="history-detail-table__btn"
-                                                   aria-label="Edit set"
-                                                   OnClick="@(() => StartEditSet(context))" />
+                                                    Class="history-detail-table__btn"
+                                                    aria-label="@Loc["Edit set"]"
+                                                    OnClick="@(() => StartEditSet(context))" />
                                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                                    Size="Size.Small"
                                                    Color="Color.Error"
-                                                   Class="history-detail-table__btn"
-                                                   aria-label="Delete set"
-                                                   OnClick="@(() => DeleteSetAsync(context))" />
+                                                    Class="history-detail-table__btn"
+                                                    aria-label="@Loc["Delete set"]"
+                                                    OnClick="@(() => DeleteSetAsync(context))" />
                                 }
                             </MudTd>
                         }
@@ -229,7 +240,7 @@ else
     <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-2"
                    Icon="@Icons.Material.Filled.Delete"
                    OnClick="DeleteSessionClick"
-                   aria-label="Delete this workout" />
+                   aria-label="@Loc["Delete this workout"]" />
 
     @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId2)
     {
@@ -237,8 +248,16 @@ else
         <MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
                        Icon="@Icons.Material.Filled.PlayArrow"
                        OnClick="@(() => ContinueWorkout(activePlanId2))"
-                       aria-label="Continue workout" />
+                       aria-label="@Loc["Continue workout"]" />
     }
+
+    @* Off-screen share card, captured to PNG by the Share button. *@
+    <WorkoutShareCard PlanName="@_session.PlanName"
+                      DateLabel="@ShareDateLabel"
+                      DurationLabel="@(DurationLabel ?? "—")"
+                      VolumeLabel="@TotalVolumeLabel"
+                      SetsLogged="@TotalSetCount"
+                      Exercises="@ShareCardExercises" />
 }
 
 
@@ -354,13 +373,13 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Could not update set: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Could not update set: {0}", ex.Message], Severity.Error);
             return;
         }
 
         _editingSetId = null;
         await ReloadAsync();
-        Snackbar.Add("Set updated.", Severity.Success);
+        Snackbar.Add(Loc["Set updated."], Severity.Success);
     }
 
     private async Task DeleteSetAsync(WorkoutSetLogEntity set)
@@ -368,9 +387,9 @@ else
         if (_session == null) return;
 
         var ok = await DialogService.ConfirmAsync(
-            "Delete set",
-            $"Remove set {set.SetIndex + 1} of '{set.ExerciseName}'? This cannot be undone.",
-            confirmText: "Delete",
+            Loc["Delete set"],
+            Loc["Remove set {0} of '{1}'? This cannot be undone.", set.SetIndex + 1, set.ExerciseName],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!ok) return;
@@ -381,13 +400,13 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Could not delete set: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Could not delete set: {0}", ex.Message], Severity.Error);
             return;
         }
 
         _editingSetId = null;
         await ReloadAsync();
-        Snackbar.Add("Set removed.", Severity.Success);
+        Snackbar.Add(Loc["Set removed."], Severity.Success);
     }
 
     private async Task DeleteSessionClick()
@@ -396,9 +415,9 @@ else
 
         var inProgress = _session.EndedAtUtc == null;
         var ok = await DialogService.ConfirmAsync(
-            "Delete workout",
-            "Remove this session and all logged sets? This cannot be undone.",
-            confirmText: "Delete",
+            Loc["Delete workout"],
+            Loc["Remove this session and all logged sets? This cannot be undone."],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!ok) return;
@@ -408,7 +427,7 @@ else
 
         await HistoryRepo.DeleteSessionAsync(_session.Id);
         Navigation.NavigateTo(AppRoutes.History);
-        Snackbar.Add("Session deleted.", Severity.Success);
+        Snackbar.Add(Loc["Session deleted."], Severity.Success);
     }
 
     private async Task AddSetAsync()
@@ -417,7 +436,7 @@ else
 
         if (_distinctExerciseNames.Count == 0)
         {
-            Snackbar.Add("No exercises to add a set to.", Severity.Info);
+            Snackbar.Add(Loc["No exercises to add a set to."], Severity.Info);
             return;
         }
 
@@ -434,7 +453,7 @@ else
             FullWidth = true,
         };
 
-        var dialog = await DialogService.ShowAsync<AddSetDialog>("Add set", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddSetDialog>(Loc["Add set"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is AddSetResult add)
         {
@@ -458,12 +477,12 @@ else
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Could not add set: {ex.Message}", Severity.Error);
+                Snackbar.Add(Loc["Could not add set: {0}", ex.Message], Severity.Error);
                 return;
             }
 
             await ReloadAsync();
-            Snackbar.Add("Set added.", Severity.Success);
+            Snackbar.Add(Loc["Set added."], Severity.Success);
         }
     }
 
@@ -479,14 +498,14 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Copy failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Copy failed: {0}", ex.Message], Severity.Error);
             return;
         }
 
         if (copied)
-            Snackbar.Add("Session summary copied.", Severity.Success);
+            Snackbar.Add(Loc["Session summary copied."], Severity.Success);
         else
-            Snackbar.Add("Could not copy to clipboard.", Severity.Error);
+            Snackbar.Add(Loc["Could not copy to clipboard."], Severity.Error);
     }
 
     /// <summary>Builds a readable text summary of the session for sharing or copying.</summary>
@@ -496,9 +515,9 @@ else
 
         var sb = new StringBuilder();
         sb.AppendLine(_session.PlanName);
-        sb.AppendLine($"Started: {UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)}");
+        sb.AppendLine(Loc["Started: {0}", UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)]);
         if (_session.EndedAtUtc is { } ended)
-            sb.AppendLine($"Ended: {UiDateFormats.LocalDateTimeCompact(ended)}");
+            sb.AppendLine(Loc["Ended: {0}", UiDateFormats.LocalDateTimeCompact(ended)]);
         sb.AppendLine();
 
         foreach (var group in _sets.GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase))
@@ -506,7 +525,7 @@ else
             sb.AppendLine($"{group.Key}:");
             foreach (var set in group)
             {
-                sb.AppendLine($"  Set {set.SetIndex + 1}: {FormatSetForShare(set)}");
+                sb.AppendLine(Loc["Set {0}: {1}", set.SetIndex + 1, FormatSetForShare(set)]);
             }
             sb.AppendLine();
         }
@@ -576,19 +595,72 @@ else
     {
         if (_session == null) return;
 
-        var text = BuildSessionText();
-        var fileName = FileTransferNames.TextFileName(
+        var fileName = FileTransferNames.PngFileName(
             FileTransferNames.SafeFileStem(_session.PlanName),
             TimeProvider.GetLocalNow());
         try
         {
-            await FileTransfer.ExportTextAsync(fileName, text, "Share session");
-            Snackbar.Add("Session summary shared.", Severity.Success);
+            byte[]? png = await ShareCard.CaptureElementAsPngAsync("[data-share-card]");
+            if (png == null)
+            {
+                Snackbar.Add(Loc["Could not create the share image."], Severity.Error);
+                return;
+            }
+
+            await FileTransfer.ExportImageAsync(fileName, png, Loc["Share workout"]);
+            Snackbar.Add(Loc["Workout card shared."], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Share failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Share failed: {0}", ex.Message], Severity.Error);
         }
+    }
+
+    private string ShareDateLabel => _session == null
+        ? ""
+        : UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc);
+
+    private IReadOnlyList<WorkoutShareCard.ShareCardExercise> ShareCardExercises =>
+        [.. _sets
+            .GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new WorkoutShareCard.ShareCardExercise(
+                g.Key,
+                [.. g
+                    .OrderBy(s => s.SetIndex)
+                    .Select(s => new WorkoutShareCard.ShareCardSet(
+                        g.Key,
+                        s.SetIndex,
+                        FormatShareSetMetrics(s),
+                        s.IsWarmup))]))];
+
+    private string FormatShareSetMetrics(WorkoutSetLogEntity set)
+    {
+        var type = GetLogType(set.ExerciseName);
+        string weight;
+        if (type == ExerciseLogType.Duration)
+        {
+            weight = "";
+        }
+        else if (type == ExerciseLogType.BodyweightReps)
+        {
+            weight = ExerciseWeightFormatter.FormatBodyweightOffset(set.WeightKg, _bodyweightKg, WeightUnitService.Current);
+        }
+        else
+        {
+            weight = set.WeightKg is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "";
+        }
+
+        string reps;
+        if (set.Reps is { } r)
+        {
+            reps = type == ExerciseLogType.Duration ? $"{r}s" : $"{r} reps";
+        }
+        else
+        {
+            reps = "";
+        }
+
+        return $"{weight} × {reps}".Trim(' ', '×');
     }
 
     private string FormatSetForShare(WorkoutSetLogEntity set)

@@ -1,0 +1,91 @@
+@* Rendered off-screen and captured to PNG via html2canvas for sharing.
+   Uses explicit hex colors only (html2canvas does not resolve color-mix). *@
+@namespace Physiquinator.UI.Components.Shared
+
+<div class="share-card-wrap" aria-hidden="true">
+    <div class="share-card" data-share-card>
+        <header class="share-card__header">
+            <svg class="share-card__logo" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <g transform="translate(60,60) scale(10.5)">
+                    <circle cx="16" cy="6" r="4" />
+                    <path d="M16,11 L2,16 L12,29 L20,29 L30,16 Z" />
+                </g>
+            </svg>
+            <span class="share-card__brand">Physiquinator</span>
+        </header>
+
+        <h2 class="share-card__plan">@PlanName</h2>
+        <p class="share-card__date">@DateLabel</p>
+
+        <div class="share-card__stats">
+            <div class="share-card__stat">
+                <span class="share-card__stat-value">@DurationLabel</span>
+                <span class="share-card__stat-label">Duration</span>
+            </div>
+            @if (!string.IsNullOrEmpty(VolumeLabel))
+            {
+                <div class="share-card__stat">
+                    <span class="share-card__stat-value">@VolumeLabel</span>
+                    <span class="share-card__stat-label">Volume</span>
+                </div>
+            }
+            <div class="share-card__stat">
+                <span class="share-card__stat-value">@SetsLogged</span>
+                <span class="share-card__stat-label">Sets</span>
+            </div>
+        </div>
+
+        @if (Exercises.Any())
+        {
+            <div class="share-card__exercises">
+                @foreach (var group in Exercises)
+                {
+                    <section class="share-card__exercise">
+                        <h3 class="share-card__exercise-name">@group.ExerciseName</h3>
+                        @foreach (var set in group.Sets)
+                        {
+                            <div class="share-card__set @(set.IsWarmup ? "share-card__set--warmup" : "")">
+                                <span class="share-card__set-label">
+                                    @if (set.IsWarmup)
+                                    {
+                                        <span class="share-card__warmup">Warm-up</span>
+                                    }
+                                    Set @(set.SetIndex + 1)
+                                </span>
+                                <span class="share-card__set-metrics">@set.MetricsLabel</span>
+                            </div>
+                        }
+                    </section>
+                }
+            </div>
+        }
+
+        <footer class="share-card__footer">Tracked with Physiquinator</footer>
+    </div>
+</div>
+
+@code {
+    /// <summary>One logged set rendered on the card.</summary>
+    public sealed record ShareCardSet(string ExerciseName, int SetIndex, string MetricsLabel, bool IsWarmup);
+
+    /// <summary>All logged sets of one exercise, in log order.</summary>
+    public sealed record ShareCardExercise(string ExerciseName, IReadOnlyList<ShareCardSet> Sets);
+
+    [Parameter]
+    public string PlanName { get; set; } = "Workout";
+
+    [Parameter]
+    public string DateLabel { get; set; } = "";
+
+    [Parameter]
+    public string DurationLabel { get; set; } = "";
+
+    [Parameter]
+    public string? VolumeLabel { get; set; }
+
+    [Parameter]
+    public int SetsLogged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ShareCardExercise> Exercises { get; set; } = [];
+}

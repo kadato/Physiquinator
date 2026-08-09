@@ -1,11 +1,12 @@
 @* Plan Editor FABs *@
+@inject IStringLocalizer<UiText> Loc
 
 @* Save — bottom-right primary FAB *@
 <MudIconButton Class="@SaveFabClasses"
                Icon="@Icons.Material.Filled.Check"
                Disabled="@SaveDisabled"
                OnClick="OnSave"
-               aria-label="Save plan" />
+               aria-label="@Loc["Save plan"]" />
 
 @if (!IsNew)
 {
@@ -13,14 +14,14 @@
     <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--br-2"
                    Icon="@Icons.Material.Filled.Upload"
                    OnClick="OnExport"
-                   aria-label="Export plan" />
+                   aria-label="@Loc["Export plan"]" />
 }
 
 @* Cancel — bottom-left secondary mini FAB *@
     <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--bl-1"
                    Icon="@Icons.Material.Filled.ArrowBack"
                    OnClick="OnCancel"
-                   aria-label="Go back" />
+                   aria-label="@Loc["Go back"]" />
 
 
 @code {

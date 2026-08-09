@@ -55,6 +55,8 @@ public static class MauiProgram
             new AppPreferences(),
             new DatabasePathProvider());
 
+        builder.Services.AddLocalization();
+
         // The MAUI shell (app theme, resource colors, system bars) must follow
         // the Blazor UI theme. Override the base registration with the MAUI
         // implementation so Apply*/Sync* hooks reach the native layer.

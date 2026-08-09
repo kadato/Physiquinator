@@ -1,4 +1,5 @@
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 @if (Compact)
@@ -7,7 +8,7 @@
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(-1))"
-                aria-label="@($"Decrease {Label}")">&#x2212;</button>
+                aria-label="@Loc["Decrease {0}", Label]">&#x2212;</button>
         @if (_editing)
         {
             <form @onsubmit="CommitEdit" @onsubmit:preventDefault class="set-metric-stepper__edit-form">
@@ -50,7 +51,7 @@
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(1))"
-                aria-label="@($"Increase {Label}")">&#x2B;</button>
+                aria-label="@Loc["Increase {0}", Label]">&#x2B;</button>
     </div>
 }
 else
@@ -62,7 +63,7 @@ else
                        Color="Color.Primary"
                        Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
                        OnClick="@(() => Adjust(-1))"
-                       aria-label="@($"Decrease {Label}")">
+                       aria-label="@Loc["Decrease {0}", Label]">
                 &#x2212;
             </MudButton>
             @if (_editing)
@@ -104,7 +105,7 @@ else
                        Color="Color.Primary"
                        Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
                        OnClick="@(() => Adjust(1))"
-                       aria-label="@($"Increase {Label}")">
+                       aria-label="@Loc["Increase {0}", Label]">
                 +
             </MudButton>
         </div>
@@ -161,7 +162,7 @@ else
     private bool _jsInitialized;
 
     private string EditInputAriaLabel =>
-        string.IsNullOrWhiteSpace(Label) ? "Edit" : $"Edit {Label}";
+        string.IsNullOrWhiteSpace(Label) ? Loc["Edit"] : Loc["Edit {0}", Label];
 
     /// <summary>
     /// The visible button text (value + unit) must be part of the accessible
@@ -171,9 +172,9 @@ else
     {
         get
         {
-            var label = string.IsNullOrWhiteSpace(Label) ? "value" : Label;
+            var label = string.IsNullOrWhiteSpace(Label) ? Loc["value"] : Label;
             var unit = string.IsNullOrWhiteSpace(Unit) ? "" : $" {Unit}";
-            return $"Edit {label}: {DisplayText}{unit}";
+            return $"{Loc["Edit {0}", label]}: {DisplayText}{unit}";
         }
     }
 

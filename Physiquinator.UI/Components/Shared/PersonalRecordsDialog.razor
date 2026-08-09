@@ -1,16 +1,17 @@
 @inject NavigationManager Navigation
 @inject WeightUnitService WeightUnitService
+@inject IStringLocalizer<UiText> Loc
 
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-            All-time bests for @ExerciseName on this plan.
+            @Loc["All-time bests for {0} on this plan.", ExerciseName]
         </MudText>
 
         @if (!Records.Entries.Any())
         {
             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                No records yet — log sets for this exercise to start building them.
+                @Loc["No records yet — log sets for this exercise to start building them."]
             </MudText>
         }
         else
@@ -36,7 +37,7 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Close">Close</MudButton>
+        <MudButton OnClick="Close">@Loc["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -64,12 +65,12 @@
         Navigation.NavigateTo(AppRoutes.HistorySession(entry.SessionId));
     }
 
-    private static string GetLabel(ExerciseRecordKind kind) => kind switch
+    private string GetLabel(ExerciseRecordKind kind) => kind switch
     {
-        ExerciseRecordKind.BestWeight => "Best weight",
-        ExerciseRecordKind.MostReps => "Most reps in a set",
-        ExerciseRecordKind.BestVolume => "Best set volume",
-        ExerciseRecordKind.LongestDuration => "Longest set",
+        ExerciseRecordKind.BestWeight => Loc["Best weight"],
+        ExerciseRecordKind.MostReps => Loc["Most reps in a set"],
+        ExerciseRecordKind.BestVolume => Loc["Best set volume"],
+        ExerciseRecordKind.LongestDuration => Loc["Longest set"],
         _ => ""
     };
 
@@ -89,7 +90,7 @@
         ExerciseRecordKind.BestWeight =>
             ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.MostReps =>
-            $"{ExerciseWeightFormatter.FormatKg(entry.Value)} reps",
+            Loc["{0} reps", ExerciseWeightFormatter.FormatKg(entry.Value)],
         ExerciseRecordKind.BestVolume =>
             ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.LongestDuration =>

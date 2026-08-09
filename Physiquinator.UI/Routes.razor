@@ -1,4 +1,6 @@
-﻿<Router AppAssembly="@typeof(Routes).Assembly">
+﻿@inject IStringLocalizer<UiText> Loc
+
+<Router AppAssembly="@typeof(Routes).Assembly">
     <Found Context="routeData">
         <Microsoft.AspNetCore.Components.Web.ErrorBoundary>
             <ChildContent>
@@ -7,17 +9,17 @@
             </ChildContent>
             <ErrorContent>
                 <MudAlert Severity="Severity.Error" Class="ma-3">
-                    Something went wrong while showing this page. Please try again.
+                    @Loc["Something went wrong while showing this page. Please try again."]
                 </MudAlert>
             </ErrorContent>
         </Microsoft.AspNetCore.Components.Web.ErrorBoundary>
     </Found>
     <NotFound>
-        <PageTitle>Not found</PageTitle>
+        <PageTitle>@Loc["Not found"]</PageTitle>
         <LayoutView Layout="@typeof(Components.Layout.MainLayout)">
-            <EmptyState Message="Sorry, there's nothing at this address."
+            <EmptyState Message="@Loc["Sorry, there's nothing at this address."]"
                         Icon="@Icons.Material.Outlined.SearchOff">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">Go home</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">@Loc["Go home"]</MudButton>
             </EmptyState>
         </LayoutView>
     </NotFound>

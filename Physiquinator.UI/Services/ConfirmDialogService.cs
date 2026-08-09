@@ -1,13 +1,15 @@
+using Microsoft.Extensions.Localization;
 using MudBlazor;
 using Physiquinator.UI.Components.Shared;
+using Physiquinator.UI.Localization;
 
 namespace Physiquinator.UI.Services;
 
 public static class ConfirmDialogService
 {
     /// <summary>Shared wording for discarding an in-progress workout (Home and Workout page).</summary>
-    public static string DiscardWorkoutMessage(string planName) =>
-        $"Remove the in-progress session for '{planName}' and all logged sets? This cannot be undone.";
+    public static string DiscardWorkoutMessage(string planName, IStringLocalizer<UiText> loc) =>
+        loc["Remove the in-progress session for '{0}' and all logged sets? This cannot be undone.", planName];
 
     public static async Task<bool> ConfirmAsync(
         this IDialogService dialogService,

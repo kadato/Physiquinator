@@ -1,3 +1,5 @@
+@inject IStringLocalizer<UiText> Loc
+
 <div class="app-splash" role="status" aria-live="polite" aria-busy="@(ErrorMessage is null ? "true" : "false")">
     <div class="app-splash__logo" aria-hidden="true">
         <svg viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
@@ -11,7 +13,7 @@
     @if (ErrorMessage is not null)
     {
         <p class="app-splash__status app-splash__status--error">@ErrorMessage</p>
-        <button type="button" class="app-splash__retry" @onclick="OnRetryAsync">Try again</button>
+        <button type="button" class="app-splash__retry" @onclick="OnRetryAsync">@Loc["Try again"]</button>
     }
 </div>
 

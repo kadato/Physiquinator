@@ -1,5 +1,6 @@
 @* Rest countdown panel with add / reset / skip controls. *@
 @inject WorkoutSessionService SessionService
+@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 <MudPaper Class="@PanelClass" Elevation="2">
@@ -31,35 +32,22 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2" Class="rest-timer-controls">
             <button type="button"
                     class="rest-timer-add-btn"
-                    aria-label="@($"Add {AddRestSeconds} seconds of rest")"
+                    aria-label="@Loc["Add {0} seconds of rest", AddRestSeconds]"
                     @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
             <MudIconButton Icon="@Icons.Material.Filled.Replay"
                            Color="Color.Default"
-                           aria-label="Reset rest"
+                           aria-label="@Loc["Reset rest"]"
                            OnClick="OnReset"
                            Size="Size.Large" />
             @if (!IsRestComplete)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
                                Color="Color.Default"
-                               aria-label="Skip rest"
+                               aria-label="@Loc["Skip rest"]"
                                OnClick="OnSkip"
                                Size="Size.Large" />
             }
         </MudStack>
-
-        @if (GetPresetSeconds().Any())
-        {
-            <div class="rest-timer-presets" aria-label="Add quick rest presets">
-                @foreach (var preset in GetPresetSeconds())
-                {
-                    <button type="button"
-                            class="rest-timer-preset-btn"
-                            aria-label="@($"Add {preset} seconds of rest")"
-                            @onclick="() => OnAddTime.InvokeAsync(preset)">+@FormatSeconds(preset)</button>
-                }
-            </div>
-        }
 
         <div class="rest-timer-edge-track" aria-hidden="true">
             <div class="rest-timer-edge-fill @EdgeFillClass"></div>
@@ -124,11 +112,11 @@
         _ = InvokeAsync(() =>
         {
             if (!SessionService.IsResting)
-                _liveStatus = "Rest ended";
+                _liveStatus = Loc["Rest ended"];
             else if (SessionService.ActiveRestDurationSeconds != _lastActiveDurationSeconds)
-                _liveStatus = "Rest started";
+                _liveStatus = Loc["Rest started"];
             else
-                _liveStatus = "Rest time added";
+                _liveStatus = Loc["Rest time added"];
             _lastActiveDurationSeconds = SessionService.ActiveRestDurationSeconds;
             StateHasChanged();
         });
@@ -164,10 +152,6 @@
             return "";
         }
     }
-
-    private IReadOnlyList<int> GetPresetSeconds() => new[] { 15, 30, 60 }
-        .Where(candidate => candidate != AddRestSeconds)
-        .ToList();
 
     private string AddTimeLabel => FormatSeconds(AddRestSeconds);
 

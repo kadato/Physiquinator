@@ -1,10 +1,12 @@
 @* Post-workout recap: session stats plus any personal records set this session. *@
+@inject IStringLocalizer<UiText> Loc
+
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
             <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Primary" Size="Size.Large" />
             <div>
-                <MudText Typo="Typo.h6" Class="fw-bold">Workout complete!</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold">@Loc["Workout complete!"]</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@PlanName</MudText>
             </div>
         </div>
@@ -14,25 +16,25 @@
             <div class="workout-summary-stats">
                 <div class="workout-summary-stat">
                     <span class="workout-summary-stat__value">@DurationLabel</span>
-                    <span class="workout-summary-stat__label">Duration</span>
+                    <span class="workout-summary-stat__label">@Loc["Duration"]</span>
                 </div>
                 @if (!string.IsNullOrEmpty(VolumeLabel))
                 {
                     <div class="workout-summary-stat">
                         <span class="workout-summary-stat__value">@VolumeLabel</span>
-                        <span class="workout-summary-stat__label">Volume</span>
+                        <span class="workout-summary-stat__label">@Loc["Volume"]</span>
                     </div>
                 }
                 <div class="workout-summary-stat">
                     <span class="workout-summary-stat__value">@SetsLogged</span>
-                    <span class="workout-summary-stat__label">Sets logged</span>
+                    <span class="workout-summary-stat__label">@Loc["Sets logged"]</span>
                 </div>
             </div>
 
             @if (PersonalRecords.Any())
             {
                 <div>
-                    <MudText Typo="Typo.overline" Class="mud-text-secondary">New personal records</MudText>
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary">@Loc["New personal records"]</MudText>
                     <MudStack Spacing="1" Class="mt-2">
                         @foreach (var pr in PersonalRecords)
                         {
@@ -50,7 +52,7 @@
             else
             {
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                    No personal records this time. Keep pushing — they are shown here whenever you beat your best.
+                    @Loc["No personal records this time. Keep pushing — they are shown here whenever you beat your best."]
                 </MudText>
             }
         </MudStack>
@@ -62,7 +64,7 @@
                    Class="py-2"
                    Style="border-radius: 12px; font-weight: 600; text-transform: none;"
                    OnClick="Close">
-            Back to home
+            @Loc["Back to home"]
         </MudButton>
     </DialogActions>
 </MudDialog>

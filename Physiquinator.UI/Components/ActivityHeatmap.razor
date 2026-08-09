@@ -1,4 +1,5 @@
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<UiText> Loc
 
 <div class="activity-heatmap mb-0">
     <div class="heatmap-labels" aria-hidden="true">
@@ -139,21 +140,21 @@
         if (cellDate > _endLocal)
         {
             return isScheduled
-                ? $"{UiDateFormats.DateOnlyCompact(cellDate)} (future) · scheduled"
-                : $"{UiDateFormats.DateOnlyCompact(cellDate)} (future)";
+                ? $"{UiDateFormats.DateOnlyCompact(cellDate)} {Loc["(future)"]} · {Loc["scheduled"]}"
+                : $"{UiDateFormats.DateOnlyCompact(cellDate)} {Loc["(future)"]}";
         }
         var dayLabel = UiDateFormats.DateOnlyCompact(cellDate);
         var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
-        var todaySuffix = isToday ? " (today)" : "";
+        var todaySuffix = isToday ? $" {Loc["(today)"]}" : "";
         if (missed)
-            return $"{dayLabel}{todaySuffix} · scheduled, missed";
+            return $"{dayLabel}{todaySuffix} · {Loc["scheduled"]}, {Loc["missed"]}";
         if (workedOut)
         {
             return isScheduled
-                ? $"{dayLabel}{todaySuffix} · scheduled, workout"
-                : $"{dayLabel}{todaySuffix} · workout";
+                ? $"{dayLabel}{todaySuffix} · {Loc["scheduled"]}, {Loc["workout"]}"
+                : $"{dayLabel}{todaySuffix} · {Loc["workout"]}";
         }
-        return $"{dayLabel}{todaySuffix} · off";
+        return $"{dayLabel}{todaySuffix} · {Loc["off"]}";
     }
 
     private async Task OnCellClickAsync(DateOnly cellDate)

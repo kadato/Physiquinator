@@ -1,10 +1,11 @@
 @inject NavigationManager Navigation
+@inject IStringLocalizer<UiText> Loc
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="page-header mb-3">
     @if (ShowBack)
     {
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                       aria-label="Back"
+                       aria-label="@Loc["Back"]"
                        OnClick="OnBackClick" />
     }
     <MudText Typo="Typo.h1" Class="flex-grow-1">@Title</MudText>

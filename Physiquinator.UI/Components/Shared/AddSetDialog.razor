@@ -1,15 +1,17 @@
 @* Add a set that was missed during the workout. *@
+@inject IStringLocalizer<UiText> Loc
+
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
             <MudIcon Icon="@Icons.Material.Filled.AddCircle" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">Add set</MudText>
+            <MudText Typo="Typo.h6" Class="fw-bold">@Loc["Add set"]</MudText>
         </div>
     </TitleContent>
     <DialogContent>
         <MudStack Spacing="3" Class="py-2">
             <MudSelect T="string"
-                       Label="Exercise"
+                       Label="@Loc["Exercise"]"
                        Variant="Variant.Filled"
                        Value="_exerciseName"
                        ValueChanged="OnExerciseChanged">
@@ -22,30 +24,30 @@
             @if (GetLogType(_exerciseName) != ExerciseLogType.Duration)
             {
                 <MudTextField T="string"
-                              Label="Weight"
+                              Label="@Loc["Weight"]"
                               Variant="Variant.Filled"
                               InputMode="@((InputMode)2)"
                               @bind-Value="_weightText"
                               Placeholder="0"
-                              HelperText="@($"Weight in {UnitSuffix} (optional)")" />
+                              HelperText="@Loc["Weight in {0} (optional)", UnitSuffix]" />
             }
 
             <MudTextField T="string"
-                          Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "Duration (seconds)" : "Reps")"
+                          Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["Duration (seconds)"] : Loc["Reps"])"
                           Variant="Variant.Filled"
                           InputMode="InputMode.numeric"
                           @bind-Value="_repsText"
-                          Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "e.g. 60" : "e.g. 10")" />
+                          Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["e.g. 60"] : Loc["e.g. 10"])" />
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">@Loc["Cancel"]</MudButton>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    Disabled="@CannotAdd"
                    StartIcon="@Icons.Material.Filled.Add"
                    OnClick="Confirm">
-            Add set
+            @Loc["Add set"]
         </MudButton>
     </DialogActions>
 </MudDialog>

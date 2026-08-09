@@ -1,9 +1,11 @@
+@inject IStringLocalizer<UiText> Loc
+
 <MudCard Class="plan-card" Elevation="1">
     <MudCardContent Class="plan-card__content">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
             <button type="button"
                     class="plan-card-handle"
-                    aria-label="Drag to reorder @PlanName">
+                    aria-label="@Loc["Drag to reorder {0}", PlanName]">
                 <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Medium" />
             </button>
             <MudStack Spacing="0" Class="plan-card__info">
@@ -15,15 +17,15 @@
                                Variant="Variant.Filled"
                                Color="Color.Primary"
                                Class="plan-card-icon-btn"
-                               aria-label="@($"Start {PlanName}")"
+                               aria-label="@Loc["Start {0}", PlanName]"
                                OnClick="OnStart" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Class="plan-card-icon-btn"
-                               aria-label="@($"Edit {PlanName}")"
+                               aria-label="@Loc["Edit {0}", PlanName]"
                                OnClick="OnEdit" />
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="plan-card-icon-btn" Dense="true" AriaLabel="Plan options">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">Export</MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="OnDelete">Delete</MudMenuItem>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="plan-card-icon-btn" Dense="true" AriaLabel="@Loc["Plan options"]">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">@Loc["Export"]</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="OnDelete">@Loc["Delete"]</MudMenuItem>
                 </MudMenu>
             </MudStack>
         </MudStack>
@@ -40,7 +42,7 @@
     [Parameter] public EventCallback OnDelete { get; set; }
 
     private string ExerciseCountLabel =>
-        ExerciseCount == 1 ? "1 exercise" : $"{ExerciseCount} exercises";
+        ExerciseCount == 1 ? Loc["1 exercise"] : Loc["{0} exercises", ExerciseCount];
 
     private string LastDoneSuffix =>
         string.IsNullOrEmpty(LastDoneLabel) ? "" : $" · {LastDoneLabel}";

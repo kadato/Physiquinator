@@ -28,6 +28,8 @@ Batteries_V2.Init();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddLocalization();
+
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomLeft;

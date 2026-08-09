@@ -1,12 +1,13 @@
 @* User profile management: create, switch, rename, and delete isolated profiles. *@
+@inject IStringLocalizer<UiText> Loc
 
 <MudPaper Class="pa-4 settings-card" Elevation="0">
     <div class="settings-card__header">
         <MudIcon Icon="@Icons.Material.Outlined.People" Class="settings-card__icon" />
-        <MudText Typo="Typo.h6" Class="settings-card__title">User Profiles</MudText>
+        <MudText Typo="Typo.h6" Class="settings-card__title">@Loc["User Profiles"]</MudText>
     </div>
     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-        Create, switch, or manage isolated user profiles. Each profile stores its own plans and history.
+        @Loc["Create, switch, or manage isolated user profiles. Each profile stores its own plans and history."]
     </MudText>
 
     <MudStack Spacing="2" Class="mb-3">
@@ -23,11 +24,11 @@
                             <MudText Typo="Typo.body1" Class="fw-semibold">@profile.Name</MudText>
                             @if (isActive)
                             {
-                                <span class="active-badge">Active</span>
+                                <span class="active-badge">@Loc["Active"]</span>
                             }
                         </MudStack>
                         <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
-                            Created: @profile.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            @Loc["Created:"] @profile.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                         </MudText>
                     </MudStack>
                 </MudStack>
@@ -39,9 +40,9 @@
                                        Variant="Variant.Filled"
                                        Color="Color.Primary"
                                        Size="Size.Medium"
-                                       OnClick="@(() => SwitchProfileAsync(profile.Id))"
-                                       title="Switch Profile"
-                                       aria-label="@($"Switch to profile {profile.Name}")"
+                                        OnClick="@(() => SwitchProfileAsync(profile.Id))"
+                                        title="@Loc["Switch Profile"]"
+                                        aria-label="@Loc["Switch to profile {0}", profile.Name]"
                                        Class="icon-btn-square" />
                     }
 
@@ -50,8 +51,8 @@
                                    Color="Color.Info"
                                    Size="Size.Medium"
                                    OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
-                                   title="Rename Profile"
-                                   aria-label="@($"Rename profile {profile.Name}")"
+                                   title="@Loc["Rename Profile"]"
+                                   aria-label="@Loc["Rename profile {0}", profile.Name]"
                                    Class="icon-btn-square" />
 
                     @if (profile.Id != UserProfileService.DemoProfileId)
@@ -61,8 +62,8 @@
                                        Color="Color.Error"
                                        Size="Size.Medium"
                                        OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
-                                       title="Delete Profile"
-                                       aria-label="@($"Delete profile {profile.Name}")"
+                                       title="@Loc["Delete Profile"]"
+                                       aria-label="@Loc["Delete profile {0}", profile.Name]"
                                        Class="icon-btn-square" />
                     }
                 </MudStack>
@@ -71,7 +72,7 @@
     </MudStack>
 
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateProfileAsync" Class="btn-premium-ghost">
-        Add Profile
+        @Loc["Add Profile"]
     </MudButton>
 </MudPaper>
 
@@ -104,7 +105,7 @@
     {
         var parameters = new DialogParameters { ["Name"] = "" };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ProfileInputDialog>("Create Profile", parameters, options);
+        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Create Profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {
@@ -118,7 +119,7 @@
                 return;
             }
             _profiles = UserProfileService.GetProfiles();
-            Snackbar.Add($"Profile '{name.Trim()}' created.", Severity.Success);
+            Snackbar.Add(Loc["Profile '{0}' created.", name.Trim()], Severity.Success);
         }
     }
 
@@ -126,7 +127,7 @@
     {
         var parameters = new DialogParameters { ["Name"] = currentName };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ProfileInputDialog>("Rename Profile", parameters, options);
+        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Rename Profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {
@@ -144,7 +145,7 @@
             {
                 _activeProfile.Name = name.Trim();
             }
-            Snackbar.Add($"Profile renamed to '{name.Trim()}'.", Severity.Success);
+            Snackbar.Add(Loc["Profile renamed to '{0}'.", name.Trim()], Severity.Success);
         }
     }
 
@@ -152,11 +153,11 @@
     {
         var isActive = id == _activeProfile.Id;
         var confirmed = await DialogService.ConfirmAsync(
-            "Delete profile?",
+            Loc["Delete profile?"],
             isActive
-                ? $"'{name}' is your current profile. Deleting it permanently erases its history, plans, and database file, and switches you to the Demo User profile."
-                : $"Are you sure you want to delete profile '{name}'? This will permanently delete its workout history, plans, and database file.",
-            confirmText: "Delete",
+                ? Loc["'{0}' is your current profile. Deleting it permanently erases its history, plans, and database file, and switches you to the Demo User profile.", name]
+                : Loc["Are you sure you want to delete profile '{0}'? This will permanently delete its workout history, plans, and database file.", name],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!confirmed) return;
@@ -164,12 +165,12 @@
         try
         {
             await UserProfileService.DeleteProfileAsync(id);
-            Snackbar.Add($"Profile '{name}' deleted.", Severity.Success);
+            Snackbar.Add(Loc["Profile '{0}' deleted.", name], Severity.Success);
             Navigation.NavigateTo(AppRoutes.Settings, forceLoad: true);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Could not delete profile: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Could not delete profile: {0}", ex.Message], Severity.Error);
         }
     }
 
@@ -178,9 +179,9 @@
         if (SessionService.CurrentPlan != null)
         {
             var confirmed = await DialogService.ConfirmAsync(
-                "Workout in progress",
-                "Switching profiles ends your current workout. Switch anyway?",
-                confirmText: "Switch",
+                Loc["Workout in progress"],
+                Loc["Switching profiles ends your current workout. Switch anyway?"],
+                confirmText: Loc["Switch"],
                 confirmColor: Color.Primary);
             if (!confirmed) return;
         }
@@ -188,12 +189,12 @@
         try
         {
             await UserProfileService.SwitchProfileAsync(id);
-            Snackbar.Add("Switched profile.", Severity.Success);
+            Snackbar.Add(Loc["Switched profile."], Severity.Success);
             Navigation.NavigateTo(AppRoutes.Settings, forceLoad: true);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to switch profile: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Failed to switch profile: {0}", ex.Message], Severity.Error);
         }
     }
 }

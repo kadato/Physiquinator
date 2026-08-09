@@ -7,8 +7,7 @@ on:
     branches: [ main ]
 
 permissions:
-  checks: write
-  pull-requests: write
+  contents: read
 
 jobs:
   test:
@@ -24,15 +23,9 @@ jobs:
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
-      with:
-        dotnet-version: '11.0.100-preview.6.26359.118'
-        dotnet-quality: 'preview'
 
     - name: Install MAUI workload
       run: dotnet workload install maui
-
-    - name: Restore dependencies
-      run: dotnet restore Physiquinator.csproj
 
     - name: Build MAUI Windows host
       run: dotnet publish Physiquinator.csproj -f net11.0-windows10.0.19041.0 --configuration Release -p:WindowsPackageType=None -o ./artifacts/windows-ci

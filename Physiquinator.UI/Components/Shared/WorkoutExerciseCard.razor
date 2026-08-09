@@ -106,7 +106,7 @@
                                               IsInteger="true"
                                               Format="0"
                                               Compact="true"
-                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
+                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "s" : "reps")'
                                               Placeholder="@((double)defaultReps)" />
                         </div>
                         <button type="button"
@@ -161,7 +161,7 @@
                                               IsInteger="true"
                                               Format="0"
                                               Compact="true"
-                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "sec" : "reps")'
+                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "s" : "reps")'
                                               Placeholder="@((double?)row.Reps)" />
                         </div>
                     </div>

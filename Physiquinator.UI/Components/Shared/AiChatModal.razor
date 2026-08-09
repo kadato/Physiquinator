@@ -20,12 +20,12 @@
                     </div>
                     <div>
                         <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">@Loc["Physiquinator AI"]</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">@Loc["Fitness Assistant & Plan Engine"]</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">@Loc["Fitness assistant & plan engine"]</MudText>
                     </div>
                 </div>
                 <div class="ai-chat-header__actions">
                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteSweep"
-                                   aria-label="@Loc["Clear History"]"
+                                   aria-label="@Loc["Clear history"]"
                                    Size="Size.Small"
                                    OnClick="ClearHistory" />
                     <MudIconButton Icon="@Icons.Material.Filled.Close"
@@ -42,12 +42,12 @@
                     <div class="ai-api-key-banner__content">
                         <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Medium" />
                         <div>
-                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@Loc["API Key Required"]</MudText>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@Loc["API key required"]</MudText>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI."]</MudText>
                         </div>
                     </div>
                     <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" OnClick="NavigateToSettings" Class="ai-banner-button">
-                        @Loc["Setup Key"]
+                        @Loc["Set up key"]
                     </MudButton>
                 </div>
             }
@@ -89,7 +89,7 @@
                                         {
                                             <div class="ai-msg__thinking">
                                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                                <span>@Loc["Thinking & executing actions..."]</span>
+                                                <span>@Loc["Thinking & executing actions…"]</span>
                                             </div>
                                         }
                                         else
@@ -131,16 +131,16 @@
             {
                 <div class="ai-chat-quick-actions">
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick" Class="ai-chat-quick-chip">
-                        ⚡ @Loc["Progressive Overload"]
+                        @Loc["Progressive overload"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick" Class="ai-chat-quick-chip">
-                        📊 @Loc["Performance Stats"]
+                        @Loc["Performance stats"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick" Class="ai-chat-quick-chip">
-                        ⚖️ @Loc["Log Bodyweight"]
+                        @Loc["Log bodyweight"]
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick" Class="ai-chat-quick-chip">
-                        🔄 @Loc["Deload Plan"]
+                        @Loc["Deload plan"]
                     </MudChip>
                 </div>
             }
@@ -151,7 +151,7 @@
                     <div class="ai-chat-input__field">
                         <MudTextField T="string"
                                       Variant="Variant.Text"
-                                       Placeholder="@Loc["Ask Physiquinator AI..."]"
+                                       Placeholder="@Loc["Ask Physiquinator AI…"]"
                                       Immediate="true"
                                       @bind-Value="_inputText"
                                       OnKeyDown="HandleKeyDown"
@@ -176,8 +176,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Send"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                       aria-label="@Loc["Send Message"]"
-                                       title="@Loc["Send Message"]"
+                                        aria-label="@Loc["Send message"]"
+                                        title="@Loc["Send message"]"
                                        Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
                                        OnClick="SendMessageAsync"
                                        Class="ai-chat-send-button" />

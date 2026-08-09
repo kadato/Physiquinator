@@ -110,19 +110,19 @@ else
                         <MudTh>@Loc["Date"]</MudTh>
                         @if (_logType == ExerciseLogType.Duration)
                         {
-                            <MudTh>@Loc["Total Time"]</MudTh>
+                            <MudTh>@Loc["Total time"]</MudTh>
                             <MudTh>@Loc["Sets"]</MudTh>
                         }
                         else if (_logType == ExerciseLogType.BodyweightReps)
                         {
-                            <MudTh>@Loc["Best Offset"]</MudTh>
-                            <MudTh>@Loc["Reps (Total)"]</MudTh>
+                            <MudTh>@Loc["Best offset"]</MudTh>
+                            <MudTh>@Loc["Reps (total)"]</MudTh>
                             <MudTh>@Loc["Sets"]</MudTh>
                         }
                         else
                         {
-                            <MudTh>@Loc["{0} (Best)", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]</MudTh>
-                            <MudTh>@Loc["Reps (Total)"]</MudTh>
+                            <MudTh>@Loc["{0} (best)", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]</MudTh>
+                            <MudTh>@Loc["Reps (total)"]</MudTh>
                             <MudTh>@Loc["Sets"]</MudTh>
                         }
                         <MudTh Class="exercise-progress-table__action" />

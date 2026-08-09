@@ -1,6 +1,6 @@
 @inject IStringLocalizer<UiText> Loc
 
-<MudCard Class="plan-card" Elevation="1">
+<MudCard Class="plan-card" Elevation="0">
     <MudCardContent Class="plan-card__content">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
             <button type="button"
@@ -25,7 +25,7 @@
                                OnClick="OnEdit" />
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="plan-card-icon-btn" Dense="true" AriaLabel="@Loc["Plan options"]">
                     <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">@Loc["Export"]</MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="OnDelete">@Loc["Delete"]</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Outlined.DeleteOutline" IconColor="Color.Error" OnClick="OnDelete">@Loc["Delete"]</MudMenuItem>
                 </MudMenu>
             </MudStack>
         </MudStack>

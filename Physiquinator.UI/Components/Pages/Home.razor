@@ -80,7 +80,7 @@
 
     @if (_summary != null)
     {
-        <MudPaper Class="pa-4 home-heatmap-panel" Elevation="1">
+        <MudPaper Class="pa-4 home-heatmap-panel" Elevation="0">
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HomeStatsWeeks"
                              EndLocal="@_homeHeatmapEndLocal"
@@ -358,7 +358,7 @@
                 DemoSeedPreferences.Set(UserProfileService.ShowFirstTimeSeedModalKey, false);
 
                 var options = new DialogOptions { CloseOnEscapeKey = false, CloseButton = false, MaxWidth = MaxWidth.Small, FullWidth = true };
-                await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>("Welcome", options);
+                await DialogService.ShowAsync<Shared.DemoSeededOnboardingDialog>(Loc["Welcome to Physiquinator!"], options);
             }
         }
 

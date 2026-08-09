@@ -1032,7 +1032,7 @@ else
         }
         else if (TryBeat(records, ExerciseRecordKind.BestVolume, setVolumeKg))
         {
-            return (ExerciseRecordKind.BestVolume, Loc["{0} kg set volume", ExerciseWeightFormatter.FormatKg(setVolumeKg)]);
+            return (ExerciseRecordKind.BestVolume, Loc["{0} set volume", ExerciseWeightFormatter.FormatWeightWithUnit(setVolumeKg, WeightUnitService.Current)]);
         }
 
         return (null, null);
@@ -1047,7 +1047,7 @@ else
     private string FormatPersonalWeight(ExerciseLogType logType, double weightKg) =>
         logType == ExerciseLogType.BodyweightReps
             ? ExerciseWeightFormatter.FormatBodyweightOffset(weightKg, _bodyweightKg)
-            : Loc["{0} kg", ExerciseWeightFormatter.FormatKg(weightKg)];
+            : ExerciseWeightFormatter.FormatWeightWithUnit(weightKg, WeightUnitService.Current);
 
     private void HideUndoToast()
     {

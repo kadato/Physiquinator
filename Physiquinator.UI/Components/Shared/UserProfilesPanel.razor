@@ -41,28 +41,27 @@
                                        Color="Color.Primary"
                                        Size="Size.Medium"
                                         OnClick="@(() => SwitchProfileAsync(profile.Id))"
-                                        title="@Loc["Switch Profile"]"
+                                        title="@Loc["Switch profile"]"
                                         aria-label="@Loc["Switch to profile {0}", profile.Name]"
                                        Class="icon-btn-square" />
                     }
 
                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                    Variant="Variant.Outlined"
-                                   Color="Color.Info"
                                    Size="Size.Medium"
                                    OnClick="@(() => RenameProfileAsync(profile.Id, profile.Name))"
-                                   title="@Loc["Rename Profile"]"
+                                   title="@Loc["Rename profile"]"
                                    aria-label="@Loc["Rename profile {0}", profile.Name]"
                                    Class="icon-btn-square" />
 
                     @if (profile.Id != UserProfileService.DemoProfileId)
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                        <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                        Variant="Variant.Outlined"
                                        Color="Color.Error"
                                        Size="Size.Medium"
                                        OnClick="@(() => DeleteProfileAsync(profile.Id, profile.Name))"
-                                       title="@Loc["Delete Profile"]"
+                                       title="@Loc["Delete profile"]"
                                        aria-label="@Loc["Delete profile {0}", profile.Name]"
                                        Class="icon-btn-square" />
                     }
@@ -72,7 +71,7 @@
     </MudStack>
 
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateProfileAsync" Class="btn-premium-ghost">
-        @Loc["Add Profile"]
+        @Loc["Add profile"]
     </MudButton>
 </MudPaper>
 
@@ -105,7 +104,7 @@
     {
         var parameters = new DialogParameters { ["Name"] = "" };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Create Profile"], parameters, options);
+        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Create profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {
@@ -127,7 +126,7 @@
     {
         var parameters = new DialogParameters { ["Name"] = currentName };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Rename Profile"], parameters, options);
+        var dialog = await DialogService.ShowAsync<ProfileInputDialog>(Loc["Rename profile"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is string name)
         {

@@ -32,9 +32,9 @@
                        Label="@Loc["Exercise type"]"
                        Class="mb-2"
                        T="ExerciseLogType">
-                <MudSelectItem Value="ExerciseLogType.WeightAndReps">@Loc["Weight & Reps"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.BodyweightReps">@Loc["Bodyweight (Reps)"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.Duration">@Loc["Duration (seconds)"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.WeightAndReps">@Loc["Weight and reps"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.BodyweightReps">@Loc["Bodyweight (reps)"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.Duration">@Loc["Duration (s)"]</MudSelectItem>
             </MudSelect>
 
             <SetMetricStepper Label="@Loc["Sets"]"
@@ -52,7 +52,7 @@
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="@Loc["Rest (seconds)"]"
+            <SetMetricStepper Label="@Loc["Rest (s)"]"
                               @bind-Value="_restSeconds"
                               Step="5"
                               Min="0"
@@ -74,7 +74,7 @@
                 <MudSelectItem Value="@("D")">D</MudSelectItem>
             </MudSelect>
             <SetMetricStepper @key="@($"reps-stepper-{_logType}")"
-                              Label="@(_logType == ExerciseLogType.Duration ? Loc["Default duration (seconds)"] : Loc["Default reps"])"
+                              Label="@(_logType == ExerciseLogType.Duration ? Loc["Default duration (s)"] : Loc["Default reps"])"
                               @bind-Value="_defaultReps"
                               Step="1"
                               Min="0"

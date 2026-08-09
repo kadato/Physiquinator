@@ -18,6 +18,9 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Page container values match app-overrides.css so the web build and the
+   MAUI WebView render the same layout. Desktop keeps the phone-width
+   container; FABs are aligned to it in app-overrides.css. */
 ::deep .app-page-container {
     padding-left: var(--app-page-x) !important;
     padding-right: var(--app-page-x) !important;
@@ -30,20 +33,10 @@
 }
 
 /* Desktop & big screens: the nav pill moves to the top as a horizontal bar
-   (styled in app-overrides.css) and the page container widens so the extra
-   screen real estate is actually used. Mobile (<960px) keeps the bottom-pill
-   layout; immersive pages keep their pill hidden there. */
+   (styled in app-overrides.css). The main scroll area needs no bottom
+   clearance there; app-overrides.css mirrors this. */
 @media (min-width: 960px) {
     .app-shell .app-main-scroll {
         padding-bottom: 0;
     }
-
-    ::deep .app-page-container {
-        max-width: 1000px !important;
-        padding-left: 32px !important;
-        padding-right: 32px !important;
-        padding-top: 2rem !important;
-        padding-bottom: 4rem !important;
-    }
 }
-

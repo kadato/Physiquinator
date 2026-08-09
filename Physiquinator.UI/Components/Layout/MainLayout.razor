@@ -183,7 +183,9 @@ else
         var relativeUri = Navigation.ToBaseRelativePath(Navigation.Uri);
         var path = relativeUri.Split('?')[0].TrimEnd('/');
         _showBottomNav = ShouldShowBottomNav(path);
-        _useFixedDockPadding = !_showBottomNav && !path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal);
+        _useFixedDockPadding = !_showBottomNav
+            ? !path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal)
+            : ShouldShowBackFab(path);
     }
 
     private static bool ShouldShowBottomNav(string path)
@@ -194,12 +196,14 @@ else
         return true;
     }
 
-    private bool ShouldShowBackFab()
-    {
-        if (_showBottomNav) return false;
+    private bool ShouldShowBackFab() =>
+        ShouldShowBackFab(Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0].TrimEnd('/'));
 
-        var relativeUri = Navigation.ToBaseRelativePath(Navigation.Uri);
-        var path = relativeUri.Split('?')[0].TrimEnd('/');
+    private static bool ShouldShowBackFab(string path)
+    {
+        // Root page: nothing to go back to; the nav pill already anchors the app.
+        if (path.Length == 0)
+            return false;
 
         // Exclude plan editor route which has its own Close/Cancel and Save FABs
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))

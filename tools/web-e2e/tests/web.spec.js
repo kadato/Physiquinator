@@ -63,7 +63,7 @@ test('sign out returns to the login screen', async ({ page }) => {
 
     // Dismiss the seeded-data onboarding dialog if it appears.
     try {
-        await page.getByRole('button', { name: 'Get Started' }).click({ timeout: 5000 });
+        await page.getByRole('button', { name: 'Get started' }).click({ timeout: 5000 });
     } catch {
         // No dialog; nothing to dismiss.
     }
@@ -76,7 +76,7 @@ test('sign out returns to the login screen', async ({ page }) => {
 // Dismisses the seeded-data onboarding dialog when it is up; no-op otherwise.
 async function dismissOnboarding(page) {
     try {
-        await page.getByRole('button', { name: 'Get Started' }).click({ timeout: 3000 });
+        await page.getByRole('button', { name: 'Get started' }).click({ timeout: 3000 });
     } catch {
         // No dialog; nothing to dismiss.
     }

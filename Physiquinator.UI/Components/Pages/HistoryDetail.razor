@@ -21,7 +21,6 @@
     {
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">@Loc["Copy"]</MudButton>
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">@Loc["Share"]</MudButton>
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" OnClick="GoHome">@Loc["Home"]</MudButton>
     }
 </PageHeader>
 
@@ -104,7 +103,7 @@ else
                 {
                     <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
                         <MudText Typo="Typo.body2">@ex.Name</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["{0} sets · {1} s rest", ex.SetCount, ex.RestIntervalSeconds]</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["{0} sets · {1}s rest", ex.SetCount, ex.RestIntervalSeconds]</MudText>
                     </MudStack>
                 }
             </MudPaper>
@@ -278,8 +277,6 @@ else
     private string _editRepsText = "";
     private string _editWeightText = "";
 
-
-    private void GoHome() => Navigation.NavigateTo(AppRoutes.Home);
 
     private void GoPlan(Guid planId) => Navigation.NavigateTo(AppRoutes.Plan(planId));
 

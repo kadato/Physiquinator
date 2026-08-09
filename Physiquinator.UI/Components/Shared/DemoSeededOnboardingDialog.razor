@@ -13,11 +13,11 @@
                 @Loc["To help you get started right away, we have seeded a"] <strong>Demo User</strong> @Loc["profile with sample workout plans (Push, Pull, Legs) and 1 year of mock workout history."]
             </MudText>
 
-            <MudPaper Class="pa-4" Elevation="0" Style="border-left: 4px solid var(--mud-palette-primary); background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+            <MudPaper Class="pa-4 onboarding-tip" Elevation="0">
                 <MudStack Spacing="2">
                     <div class="d-flex align-items-center gap-2">
                         <MudIcon Icon="@Icons.Material.Filled.GroupAdd" Color="Color.Primary" Size="Size.Medium" />
-                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">@Loc["Multi-User Profiles"]</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">@Loc["Multi-user profiles"]</MudText>
                     </div>
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
                         @Loc["You can create your own clean profile in"] <strong>@Loc["Settings"]</strong>. @Loc["Each profile operates in its own isolated database with separate plans, progress, and history."]
@@ -25,11 +25,11 @@
                 </MudStack>
             </MudPaper>
 
-            <MudPaper Class="pa-4" Elevation="0" Style="border-left: 4px solid var(--mud-palette-warning); background-color: var(--mud-palette-background-grey); border-radius: 4px;">
+            <MudPaper Class="pa-4 onboarding-tip onboarding-tip--warning" Elevation="0">
                 <MudStack Spacing="2">
                     <div class="d-flex align-items-center gap-2">
                         <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Warning" Size="Size.Medium" />
-                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">@Loc["Removing Demo Data"]</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="fw-semibold">@Loc["Removing demo data"]</MudText>
                     </div>
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
                         @Loc["When you are ready to start fresh, simply go to"] <strong>@Loc["Settings"]</strong>, @Loc["switch to your new profile, and delete the"] <strong>Demo User</strong>.
@@ -39,8 +39,8 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" FullWidth="true" Class="py-2 mt-2" Style="border-radius: 12px; font-weight: 600; text-transform: none;">
-            @Loc["Get Started"]
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" FullWidth="true" Class="py-2 mt-2">
+            @Loc["Get started"]
         </MudButton>
     </DialogActions>
 </MudDialog>

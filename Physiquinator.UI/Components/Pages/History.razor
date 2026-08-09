@@ -20,7 +20,7 @@
                        Color="@(_selectMode ? Color.Primary : Color.Default)"
                        StartIcon="@(_selectMode ? Icons.Material.Filled.Close : Icons.Material.Filled.Checklist)"
                        OnClick="ToggleSelectMode"
-                       Class="history-select-toggle">
+                       Class="history-select-toggle premium-btn">
                 @(_selectMode ? Loc["Done"] : Loc["Select"])
             </MudButton>
         }
@@ -38,14 +38,14 @@
         <MudTextField T="string"
                       Value="_searchText"
                       ValueChanged="OnSearchTextChanged"
-                       Placeholder="@Loc["Search by plan or exercise name..."]"
+                       Placeholder="@Loc["Search by plan or exercise name…"]"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Clearable="true"
                       Variant="Variant.Outlined"
                       Class="mb-2" />
 
-        <MudPaper Class="pa-4 history-heatmap-panel" Elevation="1">
+        <MudPaper Class="pa-4 history-heatmap-panel" Elevation="0">
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HeatmapWeeks"
                              EndLocal="@_heatmapEndLocal"
@@ -61,7 +61,7 @@
             <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="@Loc["Last week"]" />
         </div>
 
-        <MudPaper Class="pa-3 bodyweight-panel" Elevation="1">
+        <MudPaper Class="pa-3 bodyweight-panel" Elevation="0">
             <div class="bodyweight-panel__header">
                 <MudText Typo="Typo.h2" Class="bodyweight-panel__title">@Loc["Bodyweight"]</MudText>
                 <span class="bodyweight-panel__right">

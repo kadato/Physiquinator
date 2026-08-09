@@ -17,12 +17,10 @@
     unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Physiquinator app styles - wwwroot file (loaded in MAUI; scoped bundle is NOT shipped) */
+/* Physiquinator app styles - wwwroot file (loaded in MAUI) */
 
 :root {
     --app-page-x: 16px;
-    --app-tab-bar-height: 64px;
-    --app-action-bar-height: 64px;
     --app-page-bottom-extra: 12px;
     --app-page-top: 2rem;
     /* FAB & nav pill system */
@@ -58,7 +56,7 @@ html, body, #app, .mud-typography, .mud-button, .mud-input {
 /* Typography improvements complying with modern-web-guidance */
 h1, h2, h3, h4, h5, h6,
 .mud-typography-h1, .mud-typography-h2, .mud-typography-h3, .mud-typography-h4, .mud-typography-h5, .mud-typography-h6,
-.mud-dialog-title, .page-header__title, .settings-card__title, .home-header__title {
+.mud-dialog-title, .settings-card__title, .home-header__title {
     text-wrap: balance;
 }
 
@@ -73,43 +71,11 @@ p, li, .mud-typography-body1, .mud-typography-body2, .mud-text-secondary {
     text-wrap: pretty;
 }
 
-/* Modern Web Guidance: View Transitions API Root Configuration */
-
-::view-transition-old(root) {
-    animation: 180ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
-}
-
-::view-transition-new(root) {
-    animation: 220ms cubic-bezier(0, 0, 0.2, 1) both fade-in;
-}
-
-@keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-@keyframes fade-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
 /* Modern Web Guidance: Container Queries for responsive component cards */
 .home-hero,
 .stat-card,
-.home-stat,
-.history-stat,
-.plan-card,
-.workout-exercise-card,
-.activity-heatmap-card,
-.history-record-card {
+.plan-card {
     container-type: inline-size;
-}
-
-/* Modern Web Guidance: Content-visibility for fast scrolling (INP optimization) */
-.history-record-card,
-.history-data-table tr {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 72px;
 }
 
 /* Modern Web Guidance: Form Controls & Post-Interaction Validation */
@@ -128,25 +94,15 @@ input, select, textarea {
     border-color: var(--mud-palette-primary) !important;
 }
 
-/* Auto-expanding text fields */
-textarea.auto-size,
-.field-sizing-content {
-    field-sizing: content;
-    min-height: 2.5rem;
-}
-
 /* Top-layer & Modal Entry/Exit Animations using @starting-style */
 .mud-dialog,
-.plan-exercise-sheet,
-.confirm-dialog-card {
+.plan-exercise-sheet {
     transition: opacity 200ms ease-out, transform 200ms ease-out;
 }
 
 
 @starting-style {
-    .mud-dialog[open],
-    .plan-exercise-sheet--open,
-    .confirm-dialog-card {
+    .mud-dialog[open] {
         opacity: 0;
         transform: translateY(12px) scale(0.98);
     }
@@ -160,11 +116,6 @@ textarea.auto-size,
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-    ::view-transition-group(*),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
-        animation: none !important;
-    }
 }
 
 #app {
@@ -177,22 +128,17 @@ textarea.auto-size,
 }
 
 /* Hide scrollbars on specific containers or touch-optimized horizontal carousels while maintaining scroll functionality */
-.no-scrollbar,
-.heatmap-scroll,
-.app-tab-bar__inner {
+.heatmap-scroll {
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE and Edge */
 }
-.no-scrollbar::-webkit-scrollbar,
-.heatmap-scroll::-webkit-scrollbar,
-.app-tab-bar__inner::-webkit-scrollbar {
+.heatmap-scroll::-webkit-scrollbar {
     display: none !important; /* Chrome, Safari, and Opera */
 }
 
 /* Elegant, thin scrollbars for main content area, dialogs, and tables (only on desktop/large viewports) */
 @media (min-width: 960px) {
     .app-main-scroll,
-    .history-data-table .mud-table-container,
     .mud-dialog-content {
         --scrollbar-thumb: color-mix(in srgb, var(--mud-palette-text-primary) 18%, transparent);
         --scrollbar-track: transparent;
@@ -204,19 +150,16 @@ textarea.auto-size,
 
     @supports not (scrollbar-color: auto) {
         .app-main-scroll::-webkit-scrollbar,
-        .history-data-table .mud-table-container::-webkit-scrollbar,
         .mud-dialog-content::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         .app-main-scroll::-webkit-scrollbar-thumb,
-        .history-data-table .mud-table-container::-webkit-scrollbar-thumb,
         .mud-dialog-content::-webkit-scrollbar-thumb {
             background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
         .app-main-scroll::-webkit-scrollbar-track,
-        .history-data-table .mud-table-container::-webkit-scrollbar-track,
         .mud-dialog-content::-webkit-scrollbar-track {
             background: var(--scrollbar-track);
         }
@@ -225,7 +168,6 @@ textarea.auto-size,
     /* High contrast overrides for users who prefer contrast on desktop */
     @media (prefers-contrast: more) {
         .app-main-scroll,
-        .history-data-table .mud-table-container,
         .mud-dialog-content {
             --scrollbar-thumb: var(--mud-palette-text-primary);
             --scrollbar-track: var(--mud-palette-background);
@@ -237,7 +179,6 @@ textarea.auto-size,
 /* Hide scrollbars completely on mobile/tablet viewports to maximize screen space */
 @media (max-width: 959px) {
     .app-main-scroll,
-    .history-data-table .mud-table-container,
     .mud-dialog-content {
         scrollbar-width: none !important; /* Firefox */
         scrollbar-gutter: auto !important; /* Do not reserve space for scrollbars */
@@ -245,7 +186,6 @@ textarea.auto-size,
     }
 
     .app-main-scroll::-webkit-scrollbar,
-    .history-data-table .mud-table-container::-webkit-scrollbar,
     .mud-dialog-content::-webkit-scrollbar {
         display: none !important; /* Chrome, Safari, and Opera */
     }
@@ -259,15 +199,6 @@ textarea.auto-size,
     min-height: 0;
     height: 100%;
     overflow: hidden;
-    background-color: var(--mud-palette-background);
-}
-.app-startup-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: var(--mud-palette-background);
 }
 .app-main-scroll {
@@ -301,17 +232,6 @@ textarea.auto-size,
    Floating Nav Pill (MainLayout bottom navigation)
    ============================================================ */
 
-/* Shared glass surface */
-.app-bottom-dock {
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--mud-palette-lines-default);
-    box-shadow: none !important;
-    box-sizing: border-box;
-}
-
 /* Floating pill wrapper — sits outside app-main-scroll as fixed overlay */
 .app-nav-pill {
     position: fixed;
@@ -328,7 +248,7 @@ textarea.auto-size,
     pointer-events: all;
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: 0;
     height: var(--app-nav-pill-height);
     border-radius: 999px;
@@ -337,7 +257,7 @@ textarea.auto-size,
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 80%, transparent);
     box-shadow: none !important;
-    padding: 0 0.5rem;
+    padding: 0;
     overflow: hidden;
 }
 
@@ -351,7 +271,7 @@ textarea.auto-size,
     gap: 3px;
     min-width: 0;
     height: calc(var(--app-nav-pill-height) - 12px);
-    margin: 6px 4px;
+    margin: 6px 0;
     padding: 0 8px;
     border: none;
     border-radius: 999px;
@@ -472,11 +392,6 @@ textarea.auto-size,
     color: #fff !important;
 }
 
-.app-fab--success {
-    background-color: var(--mud-palette-success) !important;
-    color: #fff !important;
-}
-
 /* Mini FAB */
 .app-fab--mini {
     width: var(--app-fab-mini-size);
@@ -527,12 +442,6 @@ textarea.auto-size,
     bottom: calc(var(--app-fab-bottom) + var(--app-fab-size) + 12px);
 }
 
-.app-fab--br-3 {
-    right: var(--app-fab-right);
-    bottom: calc(var(--app-fab-bottom) + (var(--app-fab-size) + 12px) * 2);
-    animation-delay: 0.08s;
-}
-
 /* FAB positioning helpers — bottom-left */
 .app-fab--bl-1 {
     left: var(--app-fab-left);
@@ -564,9 +473,6 @@ textarea.auto-size,
     }
     .app-fab--br-2 {
     animation-delay: 0.04s;
-        right: calc(50% - 300px + var(--app-fab-right));
-    }
-    .app-fab--br-3 {
         right: calc(50% - 300px + var(--app-fab-right));
     }
     .app-fab--bl-1 {
@@ -604,12 +510,6 @@ textarea.auto-size,
 /* FAB label tooltip (shown on long-press hover on desktop) */
 
 
-
-
-.app-action-bar {
-    display: none; /* hidden — replaced by FABs */
-}
-
 .app-shell--fixed-dock .app-main-scroll {
     scroll-padding-bottom: calc(
         var(--app-fab-size) + var(--app-fab-bottom) + 24px
@@ -634,10 +534,6 @@ textarea.auto-size,
     line-height: 1.15;
 }
 
-.home-stats-section {
-    margin-bottom: 1.25rem;
-}
-
 .home-stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -646,9 +542,7 @@ textarea.auto-size,
 }
 
 /* Stat cards — shared by Home, History, and Bodyweight pages */
-.stat-card.mud-paper,
-.home-stat.mud-paper,
-.history-stat.mud-paper {
+.stat-card.mud-paper {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -668,24 +562,19 @@ textarea.auto-size,
     transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.stat-card__value,
-.home-stat__value,
-.history-stat__value {
+.stat-card__value {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.1;
     color: var(--mud-palette-primary);
 }
 
-.stat-card__value--date,
-.home-stat__value--date {
+.stat-card__value--date {
     font-size: 1rem;
     font-weight: 600;
 }
 
-.stat-card__label,
-.home-stat__label,
-.history-stat__label {
+.stat-card__label {
     font-size: 0.7rem;
     font-weight: 500;
     line-height: 1.2;
@@ -798,8 +687,7 @@ textarea.auto-size,
     }
 
     /* Slightly taller stat cards so the row reads as one band */
-    .home-overview .stat-card.mud-paper,
-    .home-overview .home-stat.mud-paper {
+    .home-overview .stat-card.mud-paper {
         min-height: 6.25rem;
         border-color: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
     }
@@ -875,24 +763,9 @@ textarea.auto-size,
     flex-shrink: 0;
 }
 
-.plan-card-start {
-    min-height: 40px;
-    min-width: 4.5rem;
-}
-
 .plan-card-icon-btn {
     min-width: 44px !important;
     min-height: 44px !important;
-}
-
-.workout-completed-section .mud-card,
-.workout-upcoming-section .mud-card {
-    overflow: hidden;
-}
-
-.workout-completed-section .mud-card .mud-card-content,
-.workout-upcoming-section .mud-card .mud-card-content {
-    padding: 0.875rem 1rem;
 }
 
 /* Striped tables — visible contrast on default Mud theme */
@@ -921,10 +794,6 @@ textarea.auto-size,
 .mud-paper .mud-table-root {
     border-radius: 0 0 12px 12px;
     overflow: hidden;
-}
-.history-data-table .mud-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .mud-input-control,
@@ -955,7 +824,7 @@ textarea.auto-size,
     border-radius: 12px;
 }
 
-/* Hide number input spin buttons everywhere (global — scoped CSS bundle is not shipped in MAUI) */
+/* Hide number input spin buttons everywhere (global) */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -988,15 +857,9 @@ input[type="number"] {
         display: flex;
         flex-direction: column;
     }
-    .workout-upcoming-section {
-        order: 1;
-    }
-    .workout-completed-section {
-        order: 2;
-    }
 }
 
-/* Plan editor (MAUI WebView: global CSS - scoped bundle often missing in Debug) */
+/* Plan editor */
 .plan-page {
     padding-bottom: 0;
 }
@@ -1233,35 +1096,6 @@ input[type="number"] {
 
 .plan-exercise-row__move .mud-icon-root {
     font-size: 1.05rem;
-}
-
-.plan-editor-footer__actions {
-    display: flex;
-    align-items: stretch;
-    gap: 0.5rem;
-    width: 100%;
-}
-
-.plan-editor-footer__cancel,
-.plan-editor-footer__export {
-    flex-shrink: 0;
-    min-width: auto;
-    text-transform: none;
-    font-weight: 600;
-    border-radius: 12px !important;
-}
-
-.plan-editor-footer__export {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-}
-
-.plan-editor-footer__save {
-    flex: 1;
-    min-width: 0;
-    font-weight: 700;
-    border-radius: 12px !important;
-    text-transform: none;
 }
 
 .plan-exercise-sheet__body {
@@ -1726,30 +1560,6 @@ button.heatmap-cell.heatmap-selected::before {
     }
 }
 
-.rest-timer-complete {
-    width: 100%;
-    padding: 0.5rem 0;
-}
-
-.rest-timer-complete__avatar.mud-avatar {
-    width: clamp(5rem, 22vw, 6.5rem) !important;
-    height: clamp(5rem, 22vw, 6.5rem) !important;
-    font-size: clamp(2.5rem, 10vw, 3.25rem) !important;
-    box-shadow: none !important;
-}
-
-.rest-timer-complete__title {
-    font-weight: 800 !important;
-    letter-spacing: -0.02em;
-    color: var(--mud-palette-success) !important;
-}
-
-.rest-timer-complete__action {
-    font-weight: 700 !important;
-    border-radius: 12px !important;
-    min-height: 3.25rem;
-}
-
 @media (prefers-reduced-motion: reduce) {
     .rest-timer-panel--complete.mud-paper {
         animation: none;
@@ -1764,41 +1574,6 @@ button.heatmap-cell.heatmap-selected::before {
     max-height: 100dvh;
 }
 
-
-
-/* Log set dialog — global (dialog renders in MudDialogProvider portal) */
-.mud-dialog-container .mud-dialog.set-log-dialog {
-    max-height: min(92dvh, 100dvh);
-    width: 100%;
-}
-
-.mud-dialog-container .mud-dialog.set-log-dialog .mud-dialog-content {
-    padding-bottom: 0.5rem;
-}
-
-.mud-dialog-container .set-log-dialog__footer {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-    width: 100%;
-    margin-top: 0.75rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--mud-palette-lines-default);
-}
-
-.mud-dialog-container .set-log-dialog__footer .mud-button-root {
-    width: 100% !important;
-    min-height: 3rem;
-    margin: 0 !important;
-    justify-content: center;
-}
-
-.mud-dialog-container .set-log-dialog__footer .mud-button-label {
-    text-transform: none;
-    font-size: 1rem;
-    font-weight: 600;
-}
 
 /* Set metric stepper — plan page + dialogs (MAUI WebView global) */
 .set-metric-stepper__row {
@@ -1891,20 +1666,7 @@ button.heatmap-cell.heatmap-selected::before {
 }
 
 /* Exercise progress sessions table — tight columns on mobile */
-.exercise-progress-table .mud-table-head .mud-table-cell,
-.exercise-progress-table .mud-table-cell {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    font-variant-numeric: tabular-nums;
-}
-
-.exercise-progress-table .mud-table-head .mud-table-cell {
-    font-size: 0.7rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.375rem;
-}
-
-.exercise-progress-table .exercise-progress-table__action {
+.exercise-progress-table__action {
     width: 2.25rem;
     max-width: 2.25rem;
     padding-left: 0.125rem !important;
@@ -1912,17 +1674,13 @@ button.heatmap-cell.heatmap-selected::before {
     text-align: center;
 }
 
-.exercise-progress-table .exercise-progress-table__open {
+.exercise-progress-table__open {
     width: 44px;
     height: 44px;
     min-width: 44px;
     min-height: 44px;
     padding: 0;
     margin: 0 auto;
-}
-
-.exercise-progress-table .mud-table-body .mud-table-row {
-    min-height: 48px;
 }
 
 /* ==========================================================================
@@ -2491,15 +2249,6 @@ button.history-session-card.history-session-card--selected {
     transition: box-shadow 120ms ease, border-color 120ms ease !important;
 }
 
-.settings-card--danger.mud-paper {
-    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 25%, transparent) !important;
-    background: linear-gradient(
-        165deg,
-        color-mix(in srgb, var(--mud-palette-error) 4%, transparent) 0%,
-        var(--mud-palette-surface) 100%
-    ) !important;
-}
-
 .settings-card__header {
     display: flex;
     align-items: center;
@@ -2509,10 +2258,6 @@ button.history-session-card.history-session-card--selected {
 
 .settings-card__icon {
     color: var(--mud-palette-primary);
-}
-
-.settings-card--danger .settings-card__icon {
-    color: var(--mud-palette-error);
 }
 
 .settings-card__title {
@@ -2619,47 +2364,6 @@ button.history-session-card.history-session-card--selected {
     transition: background-color 120ms ease, border-color 120ms ease !important;
 }
 
-/* Workout Completed Accordion Header */
-.workout-completed-header {
-    display: flex;
-    align-items: center;
-    border-radius: 16px;
-    padding: 0.75rem 1.25rem;
-    background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface));
-    border: 1px solid color-mix(in srgb, var(--mud-palette-success) 20%, transparent);
-    box-shadow: none !important;
-    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-    cursor: pointer;
-    user-select: none;
-}
-
-/* Premium, pill-shaped progress bars for workout cards */
-.workout-upcoming-section .mud-progress-linear,
-.workout-completed-section .mud-progress-linear {
-    height: 10px !important;
-    border-radius: 9999px !important;
-    background-color: color-mix(in srgb, var(--mud-palette-text-primary) 8%, transparent) !important;
-    overflow: hidden;
-}
-
-.workout-upcoming-section .mud-progress-linear .mud-progress-linear-bar,
-.workout-completed-section .mud-progress-linear .mud-progress-linear-bar {
-    border-radius: 9999px !important;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Gradient fill for upcoming exercise progress */
-.workout-upcoming-section .mud-progress-linear.mud-progress-linear-primary .mud-progress-linear-bar {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-primary) 70%, #fff) 0%, var(--mud-palette-primary) 100%) !important;
-    box-shadow: none !important;
-}
-
-/* Gradient fill for completed exercise progress */
-.workout-completed-section .mud-progress-linear.mud-progress-linear-success .mud-progress-linear-bar {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-success) 70%, #fff) 0%, var(--mud-palette-success) 100%) !important;
-    box-shadow: none !important;
-}
-
 /* Clickable snackbars styling */
 .mud-snackbar {
     cursor: pointer;
@@ -2717,19 +2421,6 @@ button.history-session-card.history-session-card--selected {
 .exercise-name {
     font-size: 1.6rem !important;
     letter-spacing: -0.015em;
-}
-
-.exercise-order-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: color-mix(in srgb, var(--mud-palette-text-secondary) 15%, transparent);
-    color: var(--mud-palette-text-secondary);
-    font-size: 0.8rem;
-    font-weight: 700;
 }
 
 /* Set progress pill */
@@ -2862,65 +2553,6 @@ button.history-session-card.history-session-card--selected {
 .log-set-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.set-input-group {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    position: relative;
-    max-width: 5.5rem;
-}
-
-.set-input-group--stepper {
-    max-width: none;
-    flex: 1 1 auto;
-}
-
-
-.inline-set-input {
-    width: 100%;
-    height: 2.25rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
-    background-color: var(--mud-palette-surface);
-    color: var(--mud-palette-text-primary);
-    font-size: 1rem;
-    font-weight: 600;
-    text-align: center;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.inline-set-input:focus {
-    outline: none;
-    border-color: var(--mud-palette-primary);
-    box-shadow: none !important;
-}
-
-.inline-set-input::placeholder {
-    color: color-mix(in srgb, var(--mud-palette-text-secondary) 50%, transparent);
-    font-weight: 500;
-}
-
-.inline-set-input:disabled {
-    background-color: transparent;
-    border-color: transparent;
-    color: var(--mud-palette-text-secondary);
-    font-weight: 500;
-}
-
-.unit-label {
-    font-size: 0.75rem;
-    color: var(--mud-palette-text-secondary);
-    font-weight: 500;
-}
-
-.times-separator {
-    font-weight: 600;
-    color: var(--mud-palette-text-secondary);
-    user-select: none;
-    margin: 0 0.25rem;
 }
 
 .completed-icon {
@@ -3062,7 +2694,6 @@ button,
 a,
 .mud-button-root,
 .mud-icon-button,
-.app-tab,
 .plan-exercise-row__body,
 .history-session-card,
 .exercise-accordion-header,
@@ -3074,16 +2705,13 @@ a,
 }
 
 /* No accidental text selection when long-pressing buttons, drag handles or values */
-.app-tab,
 .plan-card-handle,
 .plan-exercise-handle,
 .set-metric-stepper__value,
 .set-metric-stepper__btn,
 .log-set-btn,
 .rest-timer-digits,
-.stat-card,
-.home-stat,
-.history-stat {
+.stat-card {
     user-select: none;
     -webkit-user-select: none;
 }
@@ -3098,8 +2726,6 @@ a,
 
 /* Stable numerals for stats, set values and the rest timer */
 .stat-card__value,
-.home-stat__value,
-.history-stat__value,
 .rest-timer-digits {
     font-variant-numeric: tabular-nums;
 }
@@ -3245,21 +2871,8 @@ a,
     border-radius: 12px;
 }
 /* ==========================================================================
-   
-/* ==========================================================================
    Settings expansion panels (collapsed cards on the settings page)
    ========================================================================== */
-
-.settings-group-label {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--mud-palette-text-secondary);
-    padding: 0.5rem 0.25rem 0;
-}
-
-.settings-group-label:first-child {
-    padding-top: 0;
-}
 
 .settings-panels .mud-expand-panel {
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 6%, transparent) !important;
@@ -3680,11 +3293,6 @@ html[data-theme="dark"] .app-splash__retry {
     background-color: var(--mud-palette-divider);
 }
 
-.workout-session-stats-hint {
-    margin-top: -6px;
-    text-align: center;
-}
-
 /* History infinite scroll */
 .history-infinite-scroll-sentinel {
     height: 1px;
@@ -3729,9 +3337,9 @@ html[data-theme="dark"] .app-splash__retry {
         flex-direction: row;
         height: 64px;
         gap: 6px;
-        padding: 0 0.75rem;
+        padding: 0;
         border-radius: 20px;
-        justify-content: center;
+        justify-content: space-between;
     }
 
     .app-nav-tab {
@@ -3739,7 +3347,7 @@ html[data-theme="dark"] .app-splash__retry {
         gap: 8px;
         min-width: 136px;
         height: 52px;
-        margin: 6px 4px;
+        margin: 6px 0;
         padding: 0 1.25rem;
         flex: 0 1 auto;
     }
@@ -3772,8 +3380,7 @@ html[data-theme="dark"] .app-splash__retry {
 
     /* --- FABs: anchored to the screen corner --- */
     .app-fab--br-1,
-    .app-fab--br-2,
-    .app-fab--br-3 {
+    .app-fab--br-2 {
         right: 32px;
     }
 
@@ -3794,10 +3401,6 @@ html[data-theme="dark"] .app-splash__retry {
     .app-fab--bl-2,
     .app-shell--immersive .app-fab--bl-2 {
         bottom: calc(32px + var(--app-fab-size) + 14px);
-    }
-
-    .app-fab--br-3 {
-        bottom: calc(32px + (var(--app-fab-size) + 14px) * 2);
     }
 
     .workout-undo-btn {
@@ -3834,16 +3437,12 @@ html[data-theme="dark"] .app-splash__retry {
         gap: 1rem;
     }
 
-    .stat-card.mud-paper,
-    .home-stat.mud-paper,
-    .history-stat.mud-paper {
+    .stat-card.mud-paper {
         min-height: 6.25rem;
         padding: 1rem;
     }
 
-    .stat-card__value,
-    .home-stat__value,
-    .history-stat__value {
+    .stat-card__value {
         font-size: 1.75rem;
     }
 
@@ -3881,36 +3480,6 @@ html[data-theme="dark"] .app-splash__retry {
     display: none;
 }
 
-/* Active-profile chip: fixed top-right on top-level pages */
-.app-profile-chip {
-    appearance: none;
-    -webkit-appearance: none;
-    position: fixed;
-    top: max(0.75rem, env(safe-area-inset-top));
-    right: 1rem;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.3125rem 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--mud-palette-text-primary);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    max-width: 40vw;
-}
-
-.app-profile-chip__name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 @media (min-width: 960px) {
     .app-fab__label {
         display: inline;
@@ -3933,9 +3502,7 @@ html[data-theme="dark"] .app-splash__retry {
         opacity: 1;
     }
 
-    .stat-card.mud-paper:hover,
-    .home-stat.mud-paper:hover,
-    .history-stat.mud-paper:hover {
+    .stat-card.mud-paper:hover {
         border-color: color-mix(in srgb, var(--mud-palette-primary) 30%, transparent);
     }
 
@@ -3983,9 +3550,7 @@ html[data-theme="light"] .history-session-card__badge-inprogress {
 
 /* Danger titles ("Remove all data"): error red fails 4.5:1 on the light
    background; use a darker red in the light theme. */
-html[data-theme="light"] .settings-panel--danger .settings-panel__title,
-html[data-theme="light"] .settings-card--danger .settings-card__title,
-html[data-theme="light"] .settings-card--danger .mud-card-content {
+html[data-theme="light"] .settings-panel--danger .settings-panel__title {
     color: #B91C1C;
 }
 
@@ -4883,11 +4448,6 @@ html[data-theme="dark"] .share-card__footer {
     outline-offset: 2px;
 }
 
-.inline-set-input:focus-visible {
-    outline: 2px solid var(--mud-palette-primary);
-    outline-offset: 1px;
-}
-
 .heatmap-cell:focus-visible {
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: 1px;
@@ -4915,9 +4475,7 @@ html[data-theme="dark"] .share-card__footer {
 
 @media (prefers-contrast: more) {
     .mud-text-secondary,
-    .stat-card__label,
-    .home-stat__label,
-    .history-stat__label {
+    .stat-card__label {
         color: var(--mud-palette-text-primary) !important;
     }
 }

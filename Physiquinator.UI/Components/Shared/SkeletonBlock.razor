@@ -1,0 +1,19 @@
+@* Shimmer placeholder block used by page skeleton layouts. *@
+
+<div class="skeleton-block @ClassName"
+     style="@($"width:{Width};height:{Height};border-radius:{Radius}")"
+     aria-hidden="true"></div>
+
+@code {
+    [Parameter]
+    public string Width { get; set; } = "100%";
+
+    [Parameter]
+    public string Height { get; set; } = "1rem";
+
+    [Parameter]
+    public string Radius { get; set; } = "0.75rem";
+
+    [Parameter]
+    public string? ClassName { get; set; }
+}

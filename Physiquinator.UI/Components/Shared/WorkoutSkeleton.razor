@@ -1,0 +1,20 @@
+@* Skeleton for the active workout page while the plan and session load. *@
+
+<div class="workout-skeleton" aria-hidden="true">
+    <div class="workout-skeleton__top">
+        <div class="workout-skeleton__stats">
+            <SkeletonBlock Height="4.25rem" />
+            <SkeletonBlock Height="4.25rem" />
+        </div>
+        <SkeletonBlock Height="10rem" Radius="1rem" ClassName="workout-skeleton__timer" />
+    </div>
+    <div class="workout-skeleton__exercise">
+        <SkeletonBlock Height="3.5rem" Radius="1rem" />
+    </div>
+    <div class="workout-skeleton__exercise">
+        <SkeletonBlock Height="3.5rem" Radius="1rem" />
+    </div>
+</div>
+
+@code {
+}

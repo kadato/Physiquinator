@@ -1,0 +1,23 @@
+@* Skeleton for detail pages (session detail, exercise progress, bodyweight
+   progress) while the data loads. *@
+
+<div class="detail-skeleton" aria-hidden="true">
+    <div class="detail-skeleton__card">
+        <SkeletonBlock Height="1.4rem" Width="55%" />
+        <SkeletonBlock Height="0.85rem" Width="35%" ClassName="detail-skeleton__sub" />
+        <div class="detail-skeleton__stats">
+            <SkeletonBlock Height="4.25rem" />
+            <SkeletonBlock Height="4.25rem" />
+            <SkeletonBlock Height="4.25rem" />
+        </div>
+    </div>
+    <div class="detail-skeleton__card">
+        <SkeletonBlock Height="1.1rem" Width="40%" ClassName="detail-skeleton__sub" />
+        <SkeletonBlock Height="0.85rem" />
+        <SkeletonBlock Height="0.85rem" />
+        <SkeletonBlock Height="0.85rem" Width="80%" />
+    </div>
+</div>
+
+@code {
+}

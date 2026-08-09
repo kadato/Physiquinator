@@ -18,8 +18,9 @@
 @inject TimeProvider TimeProvider
 @inject WorkoutScheduleService ScheduleService
 @inject Physiquinator.Core.Services.Ai.AiAssistantService AiAssistant
+@inject IStringLocalizer<UiText> Loc
 
-<PageTitle>Home</PageTitle>
+<PageTitle>@Loc["Home"]</PageTitle>
 
 <MudStack Spacing="3" Class="home-page app-fab-page-padding">
     <header class="home-header d-flex justify-space-between align-center">
@@ -29,14 +30,14 @@
 
     @if (_isLoading)
     {
-        <LoadingCenter Label="Loading…" />
+        <HomeSkeleton />
     }
     else
     {
     @if (_inProgressSession != null || _summary != null)
     {
         var hasHero = _inProgressSession != null && _inProgressPlanId != null;
-        <section class="home-overview @(hasHero ? "home-overview--with-hero" : "")" aria-label="Overview">
+        <section class="home-overview @(hasHero ? "home-overview--with-hero" : "")" aria-label="@Loc["Overview"]">
             @if (_inProgressSession != null && _inProgressPlanId is { } heroPlanId)
             {
                 <MudPaper Class="home-hero" Elevation="0">
@@ -44,7 +45,7 @@
                         <div class="home-hero__header">
                             <span class="home-hero__label">
                                 <span class="home-hero__dot" aria-hidden="true"></span>
-                                In progress
+                                @Loc["In progress"]
                             </span>
                         </div>
                         <MudText Typo="Typo.h2" Class="home-hero__title">@_inProgressSession.PlanName</MudText>
@@ -54,14 +55,14 @@
                                    Class="home-hero__continue"
                                    StartIcon="@Icons.Material.Filled.PlayArrow"
                                    OnClick="@(() => Navigation.NavigateTo(AppRoutes.Workout(heroPlanId)))">
-                            Continue workout
+                            @Loc["Continue workout"]
                         </MudButton>
                     </MudStack>
                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                    Size="Size.Small"
                                    Color="Color.Error"
                                    Class="home-hero__discard"
-                                   aria-label="Discard workout"
+                                   aria-label="@Loc["Discard workout"]"
                                    OnClick="DeleteInProgressWorkoutAsync" />
                 </MudPaper>
             }
@@ -69,9 +70,9 @@
             @if (_summary != null)
             {
                 <div class="home-stats">
-                    <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="Streak" />
-                    <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="This week" />
-                    <StatCard Value="@LastSessionLabel" Label="Last workout" ValueClass="stat-card__value--date" />
+                    <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@Loc["Streak"]" />
+                    <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@Loc["This week"]" />
+                    <StatCard Value="@LastSessionLabel" Label="@Loc["Last workout"]" ValueClass="stat-card__value--date" />
                 </div>
             }
         </section>
@@ -87,9 +88,9 @@
         </MudPaper>
     }
 
-    <section aria-label="Your plans">
+    <section aria-label="@Loc["Your plans"]">
         <div class="home-plans-header">
-            <MudText Typo="Typo.h2" Class="home-plans-header__title">Your plans</MudText>
+            <MudText Typo="Typo.h2" Class="home-plans-header__title">@Loc["Your plans"]</MudText>
             @if (_plans != null && _plans.Count > 0)
             {
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
@@ -98,7 +99,7 @@
 
         @if (_plans == null || !_plans.Any())
         {
-            <EmptyState Message="No plans yet. Tap the + button below to create your first workout plan."
+            <EmptyState Message="@Loc["No plans yet. Tap the + button below to create your first workout plan."]"
                         Icon="@Icons.Material.Outlined.FitnessCenter">
             </EmptyState>
         }
@@ -124,10 +125,10 @@
 @* FABs: New Plan (bottom-right primary) and AI Chat (above it, if enabled) *@
 <button type="button"
         class="app-fab app-fab--primary app-fab--br-1 app-fab--extended"
-        aria-label="New plan"
+        aria-label="@Loc["New plan"]"
         @onclick="() => Navigation.NavigateTo(AppRoutes.PlanEditor)">
     <MudIcon Icon="@Icons.Material.Filled.Add" />
-    <span class="app-fab__label">New plan</span>
+    <span class="app-fab__label">@Loc["New plan"]</span>
 </button>
 
 @if (_aiNeedsKeyHint)
@@ -135,13 +136,13 @@
     <MudAlert Severity="Severity.Warning" Class="home-ai-hint">
         <div class="d-flex align-items-center gap-2">
             <div class="flex-grow-1">
-                The AI assistant is enabled, but no API key is set yet.
+                @Loc["The AI assistant is enabled, but no API key is set yet."]
             </div>
             <MudButton Variant="Variant.Text"
                        Color="Color.Warning"
                        Class="flex-shrink-0"
                        OnClick="GoToAiSettings">
-                Open settings
+                @Loc["Open settings"]
             </MudButton>
         </div>
     </MudAlert>
@@ -151,10 +152,10 @@
 {
     <button type="button"
             class="app-fab app-fab--secondary app-fab--br-2 app-fab--extended"
-            aria-label="AI Assistant"
+            aria-label="@Loc["AI assistant"]"
             @onclick="OpenAiChatAsync">
         <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
-        <span class="app-fab__label">AI assistant</span>
+        <span class="app-fab__label">@Loc["AI assistant"]</span>
     </button>
 }
 
@@ -183,17 +184,17 @@
 
     private string LastDoneLabelFor(Guid planId) =>
         _lastSessionByPlan.TryGetValue(planId.ToString(), out var lastUtc)
-            ? FormatLastDone(lastUtc)
-            : "Never done";
+            ? FormatLastDone(lastUtc, Loc)
+            : Loc["Never done"];
 
-    private static string FormatLastDone(DateTime lastUtc)
+    private static string FormatLastDone(DateTime lastUtc, IStringLocalizer<UiText> loc)
     {
         var local = lastUtc.ToLocalTime().Date;
         var days = (DateTime.Today - local).Days;
-        if (days <= 0) return "Done today";
-        if (days == 1) return "Done yesterday";
-        if (days < 7) return $"Done {days} days ago";
-        return $"Last done {UiDateFormats.LocalDateCompact(lastUtc)}";
+        if (days <= 0) return loc["Done today"];
+        if (days == 1) return loc["Done yesterday"];
+        if (days < 7) return loc["Done {0} days ago", days];
+        return loc["Last done {0}", UiDateFormats.LocalDateCompact(lastUtc)];
     }
 
     private IEnumerable<WorkoutPlan> SortedPlans =>
@@ -228,11 +229,11 @@
         if (open != null)
         {
             var continueExisting = await DialogService.ConfirmAsync(
-                "Workout in progress",
-                $"You have an unfinished session for '{planName}'.",
-                confirmText: "Continue",
+                Loc["Workout in progress"],
+                Loc["You have an unfinished session for '{0}'.", planName],
+                confirmText: Loc["Continue"],
                 confirmColor: Color.Primary,
-                cancelText: "Start new");
+                cancelText: Loc["Start new"]);
 
             if (continueExisting)
             {
@@ -250,11 +251,11 @@
         if (anyOpen != null && anyOpen.TryGetPlanId() is { } otherPlanId && otherPlanId != planId)
         {
             var continueOther = await DialogService.ConfirmAsync(
-                "Another workout in progress",
-                $"You have an unfinished session for '{anyOpen.PlanName}'. Continue that workout?",
-                confirmText: "Continue",
+                Loc["Another workout in progress"],
+                Loc["You have an unfinished session for '{0}'. Continue that workout?", anyOpen.PlanName],
+                confirmText: Loc["Continue"],
                 confirmColor: Color.Primary,
-                cancelText: "Start new");
+                cancelText: Loc["Start new"]);
 
             if (continueOther)
             {
@@ -281,10 +282,10 @@
 
         var planName = _inProgressSession.PlanName;
         var confirmed = await DialogService.ConfirmAsync(
-            "Discard workout",
-            ConfirmDialogService.DiscardWorkoutMessage(planName),
-            confirmText: "Discard",
-            cancelText: "Cancel",
+            Loc["Discard workout"],
+            ConfirmDialogService.DiscardWorkoutMessage(planName, Loc),
+            confirmText: Loc["Discard"],
+            cancelText: Loc["Cancel"],
             confirmColor: Color.Error);
 
         if (!confirmed) return;
@@ -292,16 +293,16 @@
         await HistoryRepository.DeleteSessionAsync(_inProgressSession.Id);
         SessionService.EndWorkout();
         await RefreshInProgressAsync();
-        Snackbar.Add("Workout discarded.", Severity.Success);
+        Snackbar.Add(Loc["Workout discarded."], Severity.Success);
     }
 
     private async Task DeletePlan(Guid planId, string planName)
     {
         var plan = _plans?.FirstOrDefault(p => p.Id == planId);
         var confirmed = await DialogService.ConfirmAsync(
-            "Delete plan",
-            $"Delete '{planName}'? You can undo this for a short time after.",
-            confirmText: "Delete",
+            Loc["Delete plan"],
+            Loc["Delete '{0}'? You can undo this for a short time after.", planName],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!confirmed)
@@ -310,11 +311,11 @@
         await PlanService.DeletePlanAsync(planId);
         _plans = await PlanService.GetAllPlansAsync();
         Snackbar.Add(
-            "Plan deleted.",
+            Loc["Plan deleted."],
             Severity.Success,
             options =>
             {
-                options.Action = "Undo";
+                options.Action = Loc["Undo"];
                 options.ActionColor = Color.Primary;
                 options.RequireInteraction = true;
                 options.OnClick = _ => RestoreDeletedPlanAsync(plan);
@@ -328,7 +329,7 @@
 
         await PlanService.SavePlanAsync(plan);
         _plans = await PlanService.GetAllPlansAsync();
-        Snackbar.Add($"'{plan.Name}' restored.", Severity.Success);
+        Snackbar.Add(Loc["'{0}' restored.", plan.Name], Severity.Success);
     }
 
     private async Task ExportSinglePlan(Guid planId, string planName)
@@ -339,11 +340,11 @@
             await FileTransfer.ExportJsonAsync(
                 FileTransferNames.JsonFileName(FileTransferNames.SafeFileStem(planName), TimeProvider.GetLocalNow()),
                 json);
-            Snackbar.Add($"'{planName}' exported.", Severity.Success);
+            Snackbar.Add(Loc["'{0}' exported.", planName], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Export failed: {0}", ex.Message], Severity.Error);
         }
     }
 

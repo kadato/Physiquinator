@@ -6,27 +6,27 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject WeightUnitService WeightUnitService
+@inject IStringLocalizer<UiText> Loc
 
-<PageHeader Title="Bodyweight" ShowBack="false" />
+<PageTitle>@Loc["Bodyweight"]</PageTitle>
+
+<PageHeader Title="@Loc["Bodyweight"]" ShowBack="false" />
 
 @if (!_ready)
 {
-    <LoadingCenter />
+    <DetailSkeleton />
 }
 else if (_allEntries.Count == 0)
 {
-    <MudStack Spacing="3">
-        <MudText Typo="Typo.body2" Class="mud-text-secondary">
-            No bodyweight logged yet. Use the quick log on the history page to record your weight.
-        </MudText>
-    </MudStack>
+    <EmptyState Message="@Loc["No bodyweight logged yet. Use the quick log on the history page to record your weight."]"
+                Icon="@Icons.Material.Outlined.MonitorWeight" />
 }
 else
 {
     <MudStack Spacing="3">
         <div class="bodyweight-range-row">
             <MudSelect T="BodyweightTimeRange"
-                       Label="Time range"
+                       Label="@Loc["Time range"]"
                        Variant="Variant.Outlined"
                        Dense="true"
                        Margin="Margin.Dense"
@@ -44,22 +44,21 @@ else
 
         @if (_entries.Count == 0)
         {
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                No entries logged in the selected time range.
-            </MudText>
+            <EmptyState Message="@Loc["No entries logged in the selected time range."]"
+                        Icon="@Icons.Material.Outlined.DateRange" />
         }
         else
         {
             <div class="history-stats">
-                <StatCard Value="@FormatWeightWithUnit(_entries[0].BodyweightKg)" Label="Latest" />
-                <StatCard Value="@TrendLabel" Label="Change" />
-                <StatCard Value="@_entries.Count.ToString()" Label="Entries" />
+                <StatCard Value="@FormatWeightWithUnit(_entries[0].BodyweightKg)" Label="@Loc["Latest"]" />
+                <StatCard Value="@TrendLabel" Label="@Loc["Change"]" />
+                <StatCard Value="@_entries.Count.ToString()" Label="@Loc["Entries"]" />
             </div>
 
             <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
-                <MudText Typo="Typo.h6" Class="mb-1">Trend</MudText>
+                <MudText Typo="Typo.h6" Class="mb-1">@Loc["Trend"]</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-                    Logged weight over time.
+                    @Loc["Logged weight over time."]
                 </MudText>
                 @if (_hasChartData)
                 {
@@ -76,7 +75,7 @@ else
                 else
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        Log your weight each day to see the trend here.
+                        @Loc["Log your weight each day to see the trend here."]
                     </MudText>
                 }
             </MudPaper>
@@ -84,8 +83,8 @@ else
             <MudPaper Class="premium-table bodyweight-table" Elevation="0">
                 <MudTable Items="_entries" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
                     <HeaderContent>
-                        <MudTh>Date</MudTh>
-                        <MudTh>Weight</MudTh>
+                        <MudTh>@Loc["Date"]</MudTh>
+                        <MudTh>@Loc["Weight"]</MudTh>
                         <MudTh Class="bodyweight-table__action" />
                     </HeaderContent>
                     <RowTemplate>
@@ -95,14 +94,14 @@ else
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Size="Size.Small"
                                            Color="Color.Info"
-                                           Class="bodyweight-table__edit"
-                                           aria-label="@($"Edit entry for {UiDateFormats.DateOnlyCompact(context.DateOnly)}")"
-                                           OnClick="@(() => EditEntryAsync(context))" />
+                                            Class="bodyweight-table__edit"
+                                            aria-label="@Loc["Edit entry for {0}", UiDateFormats.DateOnlyCompact(context.DateOnly)]"
+                                            OnClick="@(() => EditEntryAsync(context))" />
                             <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                            Size="Size.Small"
                                            Color="Color.Error"
                                            Class="bodyweight-table__delete"
-                                           aria-label="Delete entry"
+                                           aria-label="@Loc["Delete entry"]"
                                            OnClick="@(() => DeleteEntryAsync(context))" />
                         </MudTd>
                     </RowTemplate>
@@ -169,13 +168,13 @@ else
         _ => int.MaxValue
     };
 
-    private static string RangeLabel(BodyweightTimeRange range) => range switch
+    private string RangeLabel(BodyweightTimeRange range) => range switch
     {
-        BodyweightTimeRange.OneMonth => "Last month",
-        BodyweightTimeRange.ThreeMonths => "Last 3 months",
-        BodyweightTimeRange.SixMonths => "Last 6 months",
-        BodyweightTimeRange.OneYear => "Last year",
-        _ => "All time"
+        BodyweightTimeRange.OneMonth => Loc["Last month"],
+        BodyweightTimeRange.ThreeMonths => Loc["Last 3 months"],
+        BodyweightTimeRange.SixMonths => Loc["Last 6 months"],
+        BodyweightTimeRange.OneYear => Loc["Last year"],
+        _ => Loc["All time"]
     };
 
     protected override async Task OnInitializedAsync()
@@ -232,7 +231,7 @@ else
             .ToArray();
         _chartSeries = [ new ChartSeries<double>
         {
-            Name = "Bodyweight",
+            Name = Loc["Bodyweight"],
             Data = values
         } ];
 
@@ -282,7 +281,7 @@ else
             FullWidth = true,
         };
 
-        var dialog = await DialogService.ShowAsync<BodyweightEditDialog>("Edit entry", parameters, options);
+        var dialog = await DialogService.ShowAsync<BodyweightEditDialog>(Loc["Edit entry"], parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is double displayWeight)
         {
@@ -293,22 +292,23 @@ else
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Could not update entry: {ex.Message}", Severity.Error);
+                Snackbar.Add(Loc["Could not update entry: {0}", ex.Message], Severity.Error);
                 return;
             }
 
             _allEntries = await LoadEntriesAsync();
             ApplyRangeAndRebuild();
-            Snackbar.Add("Entry updated.", Severity.Success);
+            Snackbar.Add(Loc["Entry updated."], Severity.Success);
         }
     }
 
     private async Task DeleteEntryAsync(BodyweightEntry entry)
     {
         var confirmed = await DialogService.ConfirmAsync(
-            "Delete entry",
-            $"Remove the {UiDateFormats.DateOnlyCompact(entry.DateOnly)} bodyweight entry ({FormatWeightWithUnit(entry.BodyweightKg)})? This cannot be undone.",
-            confirmText: "Delete",
+            Loc["Delete entry"],
+            Loc["Remove the {0} bodyweight entry ({1})? This cannot be undone.",
+                UiDateFormats.DateOnlyCompact(entry.DateOnly), FormatWeightWithUnit(entry.BodyweightKg)],
+            confirmText: Loc["Delete"],
             confirmColor: Color.Error);
 
         if (!confirmed) return;
@@ -319,12 +319,12 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Could not delete entry: {ex.Message}", Severity.Error);
+            Snackbar.Add(Loc["Could not delete entry: {0}", ex.Message], Severity.Error);
             return;
         }
 
         _allEntries = await LoadEntriesAsync();
         ApplyRangeAndRebuild();
-        Snackbar.Add("Entry removed.", Severity.Info);
+        Snackbar.Add(Loc["Entry removed."], Severity.Info);
     }
 }

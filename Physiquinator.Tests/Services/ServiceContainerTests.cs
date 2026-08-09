@@ -58,6 +58,8 @@ public class ServiceContainerTests
 
         public Task ExportTextAsync(string fileName, string text, string shareTitle = "Export") => Task.CompletedTask;
 
+        public Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share") => Task.CompletedTask;
+
         public Task<string?> PickJsonAsync(string pickerTitle) => Task.FromResult<string?>(null);
     }
 

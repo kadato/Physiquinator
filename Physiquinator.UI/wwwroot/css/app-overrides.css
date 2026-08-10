@@ -1261,8 +1261,17 @@ button.heatmap-cell.heatmap-scheduled::before {
     border-radius: 50%;
 }
 
-button.heatmap-cell.heatmap-today::before {
-    border: 1.5px solid var(--mud-palette-text-primary);
+button.heatmap-cell.heatmap-planned::before {
+    background-color: transparent;
+    border: 1.5px solid var(--mud-palette-primary);
+    border-radius: 50%;
+    opacity: 0.9;
+}
+
+/* Today: a ring around the whole cell so the current day stands out
+   regardless of whether the dot is filled. */
+button.heatmap-cell.heatmap-today {
+    box-shadow: inset 0 0 0 2px var(--mud-palette-text-primary);
 }
 
 button.heatmap-cell.heatmap-selected::before {

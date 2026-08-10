@@ -23,12 +23,13 @@
                     var cellSchedule = GetScheduleForDate?.Invoke(cellDate);
                     var isScheduled = cellSchedule?.Contains(cellDate.DayOfWeek) == true;
                     var isMissed = isScheduled && !active && !isFuture;
+                    var cellState = GetCellState(isFuture, active, isScheduled);
                     var title = GetCellTitle(cellDate, active, isMissed, cellSchedule);
                     var isSelected = SelectedDay == cellDate;
                     var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                     <button type="button"
                             @key="cellDate"
-                            class="heatmap-cell @(active ? "heatmap-on" : "heatmap-off") @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null)"
+                            class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null)"
                             title="@title"
                             aria-label="@title"
                             aria-pressed="@(isSelected ? "true" : "false")"
@@ -48,7 +49,7 @@
     [Parameter]
     public int Weeks { get; set; } = 53;
 
-    /// <summary>Last calendar day included in the grid (future days in the last week render empty).</summary>
+    /// <summary>Last calendar day included in the grid; future days in the last week render as planned outlines when scheduled.</summary>
     [Parameter]
     public DateOnly? EndLocal { get; set; }
 
@@ -125,6 +126,13 @@
 
     private DateOnly GetCellDate(int weekColumn, int dayRow) =>
         _leftMonday.AddDays(weekColumn * 7 + dayRow);
+
+    private static string GetCellState(bool isFuture, bool active, bool isScheduled)
+    {
+        if (isFuture && isScheduled)
+            return "heatmap-planned";
+        return active ? "heatmap-on" : "heatmap-off";
+    }
 
     private static string? DayLabel(int row) => row switch
     {

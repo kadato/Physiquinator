@@ -25,7 +25,7 @@
                     var isMissed = isScheduled && !active && !isFuture;
                     var cellState = GetCellState(isFuture, active, isScheduled);
                     var title = GetCellTitle(cellDate, active, isMissed, cellSchedule);
-                    var isSelected = SelectedDay == cellDate;
+                    var isSelected = IsDaySelected?.Invoke(cellDate) ?? false;
                     var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                     <button type="button"
                             @key="cellDate"
@@ -60,11 +60,20 @@
     [Parameter]
     public Func<DateOnly, IReadOnlySet<DayOfWeek>>? GetScheduleForDate { get; set; }
 
+    /// <summary>Reports whether a day is currently selected (filter or multi-select mode).</summary>
     [Parameter]
-    public DateOnly? SelectedDay { get; set; }
+    public Func<DateOnly, bool>? IsDaySelected { get; set; }
 
+    /// <summary>
+    /// Bumped by the owner whenever its selection state changes, so the grid
+    /// re-renders even though <see cref="IsDaySelected"/> is a stable method group.
+    /// </summary>
     [Parameter]
-    public EventCallback<DateOnly?> SelectedDayChanged { get; set; }
+    public int SelectionVersion { get; set; }
+
+    /// <summary>Raised with the tapped day; the owner toggles it in its filter or selection state.</summary>
+    [Parameter]
+    public EventCallback<DateOnly> DaySelectionChanged { get; set; }
 
     private DateOnly _endLocal;
     private DateOnly _leftMonday;
@@ -74,8 +83,9 @@
     private IReadOnlyDictionary<DateOnly, int>? _prevCountsByDay;
     private int _prevWeeks;
     private DateOnly? _prevEndLocal;
-    private DateOnly? _prevSelectedDay;
     private Func<DateOnly, IReadOnlySet<DayOfWeek>>? _prevGetScheduleForDate;
+    private Func<DateOnly, bool>? _prevIsDaySelected;
+    private int _prevSelectionVersion;
 
     protected override bool ShouldRender()
     {
@@ -83,16 +93,18 @@
             !ReferenceEquals(CountsByDay, _prevCountsByDay) ||
             Weeks != _prevWeeks ||
             EndLocal != _prevEndLocal ||
-            SelectedDay != _prevSelectedDay ||
-            GetScheduleForDate != _prevGetScheduleForDate;
+            GetScheduleForDate != _prevGetScheduleForDate ||
+            IsDaySelected != _prevIsDaySelected ||
+            SelectionVersion != _prevSelectionVersion;
 
         if (shouldRender)
         {
             _prevCountsByDay = CountsByDay;
             _prevWeeks = Weeks;
             _prevEndLocal = EndLocal;
-            _prevSelectedDay = SelectedDay;
             _prevGetScheduleForDate = GetScheduleForDate;
+            _prevIsDaySelected = IsDaySelected;
+            _prevSelectionVersion = SelectionVersion;
         }
 
         return shouldRender;
@@ -168,8 +180,7 @@
     private async Task OnCellClickAsync(DateOnly cellDate)
     {
         if (cellDate > _endLocal) return;
-        if (!SelectedDayChanged.HasDelegate) return;
-        var next = SelectedDay == cellDate ? (DateOnly?)null : cellDate;
-        await SelectedDayChanged.InvokeAsync(next);
+        if (!DaySelectionChanged.HasDelegate) return;
+        await DaySelectionChanged.InvokeAsync(cellDate);
     }
 }

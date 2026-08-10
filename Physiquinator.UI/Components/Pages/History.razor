@@ -26,7 +26,9 @@
         }
     </PageHeader>
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-        @Loc["Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday."]
+        @(_selectMode
+            ? Loc["Tap days on the grid to select every session logged on those days, then delete them together."]
+            : Loc["Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday."])
     </MudText>
 
     @if (_sessions == null || _activityByDay == null || _listSessions == null || _summary == null)
@@ -50,8 +52,9 @@
                              Weeks="@HeatmapWeeks"
                              EndLocal="@_heatmapEndLocal"
                              GetScheduleForDate="ScheduleService.GetScheduleForDate"
-                             SelectedDay="_selectedDay"
-                             SelectedDayChanged="OnSelectedDayChanged" />
+                             IsDaySelected="IsDaySelected"
+                             SelectionVersion="_selectionVersion"
+                             DaySelectionChanged="OnHeatmapDayTapAsync" />
         </MudPaper>
 
         <div class="history-stats">
@@ -96,19 +99,31 @@
                 <button type="button"
                         class="bodyweight-log-row__log-btn"
                         @onclick="LogBodyweightAsync"
-                        disabled="@CannotLogBodyweight">
-                    <MudIcon Icon="@Icons.Material.Filled.Scale" Size="Size.Small" />
-                    @Loc["Log"]
+                        disabled="@CannotLogBodyweight"
+                        aria-label="@Loc["Log bodyweight"]">
+                    <MudIcon Icon="@Icons.Material.Filled.Save" Size="Size.Medium" />
                 </button>
             </div>
         </MudPaper>
 
-        @if (_selectedDay is { } selectedDay)
+        @if (_selectedDays.Count > 0)
         {
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
-                <MudChip T="string" Color="Color.Primary" OnClose="ClearDayFilter">
-                    @UiDateFormats.DateOnlyCompact(selectedDay)
-                </MudChip>
+                @foreach (var day in _selectedDays.OrderBy(d => d))
+                {
+                    <MudChip T="string" Color="Color.Primary" OnClose="() => ToggleDayFilter(day)">
+                        @UiDateFormats.DateOnlyCompact(day)
+                    </MudChip>
+                }
+                @if (_selectedDays.Count > 1)
+                {
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="ClearDayFilters">
+                        @Loc["Clear all"]
+                    </MudButton>
+                }
             </MudStack>
         }
 
@@ -117,11 +132,11 @@
             <EmptyState Message="@Loc["No logged workouts yet. Start a plan from home."]"
                         Icon="@Icons.Material.Outlined.History" />
         }
-        else if (!_listSessions.Any() && _selectedDay != null)
+        else if (!_listSessions.Any() && _selectedDays.Count > 0)
         {
-            <EmptyState Message="@Loc["No workouts logged on this day."]"
+            <EmptyState Message="@Loc["No workouts logged on these days."]"
                         Icon="@Icons.Material.Outlined.CalendarMonth">
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearDayFilter">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearDayFilters">
                     @Loc["Clear filter"]
                 </MudButton>
             </EmptyState>
@@ -225,7 +240,7 @@
                 </div>
             }
 
-            @if (_hasMoreSessions && _selectedDay == null)
+            @if (_hasMoreSessions && _selectedDays.Count == 0)
             {
                 <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
             }
@@ -240,11 +255,11 @@
 
     private List<WorkoutSessionLogEntity>? _sessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
-    private IReadOnlyList<WorkoutSessionLogEntity>? _daySessions;
+    private IReadOnlyList<WorkoutSessionLogEntity>? _filterDaySessions;
     private IReadOnlyDictionary<DateOnly, int>? _activityByDay;
     private DateOnly _heatmapEndLocal;
     private WorkoutDaySummary? _summary;
-    private DateOnly? _selectedDay;
+    private readonly HashSet<DateOnly> _selectedDays = [];
     private string _searchText = "";
     private int _loadedSessionCount;
     private bool _hasMoreSessions;
@@ -252,7 +267,9 @@
     private bool _sentinelObserved;
     private DotNetObjectReference<History>? _dotNetRef;
     private bool _selectMode;
+    private int _selectionVersion;
     private readonly HashSet<string> _selectedSessionIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<DateOnly, IReadOnlyList<WorkoutSessionLogEntity>> _selectDaySessionsCache = new();
 
     private BodyweightEntry? _latestBodyweight;
     private double? _bodyweightInputKg;
@@ -278,11 +295,25 @@
             OpenSession(sessionId);
     }
 
-    private void ToggleSelectMode()
+    private async Task ToggleSelectMode()
     {
         _selectMode = !_selectMode;
-        if (!_selectMode)
+        if (_selectMode)
+        {
+            // Exit the day filters so grid taps mean session selection, not filtering.
+            if (_selectedDays.Count > 0)
+            {
+                _selectedDays.Clear();
+                _filterDaySessions = null;
+                await UpdateSessionsListAsync();
+            }
+        }
+        else
+        {
             _selectedSessionIds.Clear();
+            _selectDaySessionsCache.Clear();
+        }
+        _selectionVersion++;
     }
 
     private bool IsSelected(string sessionId) => _selectedSessionIds.Contains(sessionId);
@@ -291,6 +322,59 @@
     {
         if (!_selectedSessionIds.Add(sessionId))
             _selectedSessionIds.Remove(sessionId);
+        _selectionVersion++;
+    }
+
+    /// <summary>
+    /// Heatmap cell state: filter mode reports the day-filter chips,
+    /// select mode reports days whose every session is selected.
+    /// </summary>
+    private bool IsDaySelected(DateOnly day) => _selectMode
+        ? _selectDaySessionsCache.TryGetValue(day, out var sessions)
+          && sessions.Count > 0
+          && sessions.All(s => _selectedSessionIds.Contains(s.Id))
+        : _selectedDays.Contains(day);
+
+    private async Task OnHeatmapDayTapAsync(DateOnly day)
+    {
+        if (_selectMode)
+        {
+            await ToggleDaySessionSelectionAsync(day);
+            return;
+        }
+
+        await ToggleDayFilter(day);
+    }
+
+    private async Task ToggleDayFilter(DateOnly day)
+    {
+        if (!_selectedDays.Add(day))
+            _selectedDays.Remove(day);
+        _filterDaySessions = null;
+        _selectionVersion++;
+        await UpdateSessionsListAsync();
+    }
+
+    private async Task ClearDayFilters()
+    {
+        _selectedDays.Clear();
+        _filterDaySessions = null;
+        _selectionVersion++;
+        await UpdateSessionsListAsync();
+    }
+
+    private async Task ToggleDaySessionSelectionAsync(DateOnly day)
+    {
+        IReadOnlyList<WorkoutSessionLogEntity> sessions = await HistoryRepo.GetSessionsForLocalDayAsync(day);
+        _selectDaySessionsCache[day] = sessions;
+
+        var allSelected = sessions.Count > 0 && sessions.All(s => _selectedSessionIds.Contains(s.Id));
+        if (allSelected)
+            _selectedSessionIds.ExceptWith(sessions.Select(s => s.Id));
+        else
+            _selectedSessionIds.UnionWith(sessions.Select(s => s.Id));
+        _selectionVersion++;
+        StateHasChanged();
     }
 
     private async Task DeleteSession(string sessionId, string planName, bool inProgress)
@@ -332,7 +416,7 @@
 
         foreach (var sessionId in _selectedSessionIds)
         {
-            var session = _sessions?.FirstOrDefault(s => s.Id == sessionId);
+            var session = await HistoryRepo.GetSessionAsync(sessionId);
             if (session?.EndedAtUtc == null)
                 SessionService.EndWorkout();
 
@@ -340,6 +424,7 @@
         }
 
         _selectedSessionIds.Clear();
+        _selectDaySessionsCache.Clear();
         await ReloadAsync();
         Snackbar.Add(Loc["Sessions deleted."], Severity.Success);
     }
@@ -349,7 +434,8 @@
         _sessions = [.. await HistoryRepo.GetRecentSessionsAsync(SessionPageSize)];
         _loadedSessionCount = _sessions.Count;
         _hasMoreSessions = _sessions.Count >= SessionPageSize;
-        _daySessions = null;
+        _filterDaySessions = null;
+        _selectionVersion++;
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var bodyweightTask = HistoryRepo.GetBodyweightLogsAsync(1);
@@ -394,7 +480,7 @@
     [JSInvokable]
     public async Task<bool> OnLoadMoreVisible()
     {
-        if (_sessions == null || _selectedDay != null || !_hasMoreSessions || _isLoadingMore)
+        if (_sessions == null || _selectedDays.Count > 0 || !_hasMoreSessions || _isLoadingMore)
             return false;
 
         _isLoadingMore = true;
@@ -419,7 +505,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_selectedDay != null || !_hasMoreSessions)
+        if (_selectedDays.Count > 0 || !_hasMoreSessions)
         {
             if (_sentinelObserved)
             {
@@ -514,17 +600,14 @@
         }
 
         IEnumerable<WorkoutSessionLogEntity> source;
-        if (_selectedDay == null)
+        if (_selectedDays.Count == 0)
         {
             source = _sessions;
         }
         else
         {
-            if (_daySessions == null)
-            {
-                _daySessions = await HistoryRepo.GetSessionsForLocalDayAsync(_selectedDay.Value);
-            }
-            source = _daySessions;
+            _filterDaySessions ??= await LoadFilteredDaySessionsAsync();
+            source = _filterDaySessions;
         }
 
         if (!string.IsNullOrWhiteSpace(query))
@@ -538,18 +621,20 @@
         _listSessions = source.ToList();
     }
 
+    /// <summary>All sessions logged on any of the filtered days, newest first.</summary>
+    private async Task<IReadOnlyList<WorkoutSessionLogEntity>> LoadFilteredDaySessionsAsync()
+    {
+        var sessions = new List<WorkoutSessionLogEntity>();
+        foreach (var day in _selectedDays)
+        {
+            sessions.AddRange(await HistoryRepo.GetSessionsForLocalDayAsync(day));
+        }
+        return [.. sessions.OrderByDescending(s => s.StartedAtUtc)];
+    }
+
     private async Task OnSearchTextChanged(string text)
     {
         _searchText = text;
         await UpdateSessionsListAsync();
     }
- 
-    private async Task OnSelectedDayChanged(DateOnly? day)
-    {
-        _selectedDay = day;
-        _daySessions = null;
-        await UpdateSessionsListAsync();
-    }
- 
-    private Task ClearDayFilter() => OnSelectedDayChanged(null);
 }

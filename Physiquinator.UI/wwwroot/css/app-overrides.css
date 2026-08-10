@@ -134,6 +134,14 @@ input, select, textarea {
 
 /* Hide scrollbars on specific containers or touch-optimized horizontal carousels while maintaining scroll functionality */
 .heatmap-scroll {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    padding-bottom: 2px;
+    padding-right: env(safe-area-inset-right, 0);
+    overscroll-behavior-x: contain;
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE and Edge */
 }
@@ -1175,17 +1183,6 @@ input[type="number"] {
     flex-shrink: 0;
 }
 
-.heatmap-scroll {
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-    padding-bottom: 2px;
-    padding-right: env(safe-area-inset-right, 0);
-    overscroll-behavior-x: contain;
-}
-
 .heatmap-grid {
     display: grid;
     gap: var(--heatmap-gap, 3px);
@@ -1684,10 +1681,12 @@ html.app-ime-open .mud-dialog-container {
     user-select: none;
 }
 
+/* Set value unit ("kg"): full opacity in the text color; the old 0.65
+   opacity on top of the tinted surface drops below 4.5:1. */
 .set-metric-stepper__value-unit {
     font-size: 0.85rem;
     font-weight: 600;
-    opacity: 0.65;
+    opacity: 1;
     margin-left: 0.25rem;
     display: inline-block;
 }
@@ -3687,12 +3686,6 @@ html[data-theme="dark"] .home-ai-hint .mud-button-root .mud-button-label {
    4.5:1 in light theme; use a darker blue. */
 html[data-theme="light"] .history-session-card__badge-inprogress {
     color: #1D4ED8;
-}
-
-/* Set value unit ("kg"): the 0.65 opacity on top of the tinted surface
-   drops below 4.5:1; render it at full opacity in the text color. */
-.set-metric-stepper__value-unit {
-    opacity: 1;
 }
 
 /* Danger titles ("Remove all data"): error red fails 4.5:1 on the light

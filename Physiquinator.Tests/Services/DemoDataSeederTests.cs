@@ -240,6 +240,91 @@ public class DemoDataSeederTests : IAsyncLifetime
             $"Bench PR should fall in a recent session, was {bestWeight.CompletedAtUtc:O}");
     }
 
+    [Fact]
+    public async Task SeedDemoData_PlansDemoAllLogTypesWarmupsAndSupersets()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+
+        List<WorkoutPlan> plans = await _planService.GetAllPlansAsync();
+
+        // All three logging styles are represented across the demo plans.
+        Assert.Contains(plans.SelectMany(p => p.Exercises), e => e.LogType == ExerciseLogType.WeightAndReps);
+        Assert.Contains(plans.SelectMany(p => p.Exercises), e => e.LogType == ExerciseLogType.BodyweightReps);
+        Assert.Contains(plans.SelectMany(p => p.Exercises), e => e.LogType == ExerciseLogType.Duration);
+
+        // Bodyweight exercises carry their bodyweight share.
+        ExercisePlan pushUps = plans
+            .Single(p => p.Id == DemoDataIds.PushPlan)
+            .Exercises.Single(e => e.Name == "Push-Ups");
+        Assert.Equal(ExerciseLogType.BodyweightReps, pushUps.LogType);
+        Assert.Equal(65, pushUps.BodyweightPercent);
+
+        // Compound lifts include warm-up sets in the plan.
+        var push = plans.Single(p => p.Id == DemoDataIds.PushPlan);
+        Assert.Equal(2, push.Exercises.Single(e => e.Id == DemoDataIds.PushBench).WarmupSetCount);
+        Assert.Equal(1, push.Exercises.Single(e => e.Id == DemoDataIds.PushOhp).WarmupSetCount);
+        var pull = plans.Single(p => p.Id == DemoDataIds.PullPlan);
+        Assert.Equal(1, pull.Exercises.Single(e => e.Id == DemoDataIds.PullDeadlift).WarmupSetCount);
+        Assert.Equal(1, pull.Exercises.Single(e => e.Id == DemoDataIds.PullPullups).WarmupSetCount);
+        var leg = plans.Single(p => p.Id == DemoDataIds.LegPlan);
+        Assert.Equal(2, leg.Exercises.Single(e => e.Id == DemoDataIds.LegSquat).WarmupSetCount);
+        Assert.Equal(1, leg.Exercises.Single(e => e.Id == DemoDataIds.LegRdl).WarmupSetCount);
+
+        // Full Body pairs exercises into supersets.
+        var fb = plans.Single(p => p.Id == DemoDataIds.FullBodyPlan);
+        var fbExercises = fb.Exercises.ToDictionary(e => e.Id);
+        Assert.Equal("A", fbExercises[DemoDataIds.FbBench].SupersetGroupId);
+        Assert.Equal("A", fbExercises[DemoDataIds.FbRow].SupersetGroupId);
+        Assert.Equal("B", fbExercises[DemoDataIds.FbOhp].SupersetGroupId);
+        Assert.Equal("B", fbExercises[DemoDataIds.FbPullup].SupersetGroupId);
+        Assert.Null(fbExercises[DemoDataIds.FbSquat].SupersetGroupId);
+        Assert.Null(fbExercises[DemoDataIds.FbPlank].SupersetGroupId);
+    }
+
+    [Fact]
+    public async Task SeedDemoHistory_LogsWarmupSetsAlignedWithPlan()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+
+        IReadOnlyList<WorkoutSessionLogEntity> recent = await _historyRepo.GetRecentSessionsAsync(200);
+        WorkoutSessionLogEntity pushSession = recent.First(s => s.PlanName == "Push Day" && s.EndedAtUtc != null);
+
+        IReadOnlyList<WorkoutSetLogEntity> benchSets = (await _historyRepo.GetSetsForSessionAsync(pushSession.Id))
+            .Where(s => s.ExerciseName == "Bench Press")
+            .OrderBy(s => s.SetIndex)
+            .ToList();
+
+        Assert.Equal(6, benchSets.Count); // 2 warm-ups + 4 working
+        Assert.Equal([true, true, false, false, false, false], benchSets.Select(s => s.IsWarmup));
+        Assert.Equal([0, 1, 2, 3, 4, 5], benchSets.Select(s => s.SetIndex));
+        // Warm-up loads ramp up but stay below the working load.
+        Assert.True(benchSets[0].WeightKg < benchSets[1].WeightKg);
+        Assert.True(benchSets[1].WeightKg < benchSets[2].WeightKg);
+        Assert.Equal(benchSets[2].WeightKg, benchSets[^1].WeightKg);
+        Assert.All(benchSets.Where(s => s.IsWarmup), s => Assert.True(s.WeightKg > 0));
+
+        // Warm-up rows are excluded from progress aggregates.
+        IReadOnlyList<ExerciseSessionProgressEntry> benchProgress = await _historyRepo.GetExerciseSessionProgressAsync(DemoDataIds.PushPlan, "Bench Press", 30);
+        Assert.All(benchProgress, r => Assert.Equal(4, r.SetCount));
+    }
+
+    [Fact]
+    public async Task SeedDemoHistory_DurationAndSupersetExercisesHaveNoWarmups()
+    {
+        await _sut.SeedDemoDataIfNeededAsync();
+        await _sut.SeedDemoHistoryIfNeededAsync();
+
+        IReadOnlyList<WorkoutSessionLogEntity> recent = await _historyRepo.GetRecentSessionsAsync(200);
+        WorkoutSessionLogEntity fbSession = recent.First(s => s.PlanName == "Full Body Workout" && s.EndedAtUtc != null);
+        IReadOnlyList<WorkoutSetLogEntity> sets = await _historyRepo.GetSetsForSessionAsync(fbSession.Id);
+
+        Assert.DoesNotContain(sets, s => s.IsWarmup && s.ExerciseName is "Plank" or "Pull-Ups" or "Barbell Rows" or "Overhead Press");
+        // Squat and bench warm-ups are present on the Full Body plan.
+        Assert.Contains(sets, s => s.IsWarmup && s.ExerciseName == "Squats");
+        Assert.Contains(sets, s => s.IsWarmup && s.ExerciseName == "Bench Press");
+    }
+
     private static DateOnly GetMondayOfWeek(DateOnly date)
     {
         var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;

@@ -15,6 +15,7 @@ public static class DemoDataIds
     public static readonly Guid PushLateral = Guid.Parse("dead0000-0000-4000-8000-000000001004");
     public static readonly Guid PushTriPush = Guid.Parse("dead0000-0000-4000-8000-000000001005");
     public static readonly Guid PushTriOver = Guid.Parse("dead0000-0000-4000-8000-000000001006");
+    public static readonly Guid PushPushups = Guid.Parse("dead0000-0000-4000-8000-000000001007");
 
     // Pull exercises
     public static readonly Guid PullDeadlift = Guid.Parse("dead0000-0000-4000-8000-000000002001");

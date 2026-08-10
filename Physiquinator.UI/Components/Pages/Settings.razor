@@ -23,6 +23,7 @@
 @inject TimeProvider TimeProvider
 @inject BackupRestoreService BackupRestore
 @inject WeightUnitService WeightUnitService
+@inject IAccountService Account
 @inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
@@ -43,11 +44,43 @@
                   Variant="Variant.Outlined"
                   Class="mb-2" />
 
-    <MudTabs @bind-ActivePanelIndex="_activeTabIndex"
-             Class="settings-tabs"
-             Rounded="true"
-             AlwaysShowScrollButtons="true">
-        <MudTabPanel Icon="@Icons.Material.Filled.Tune" Text="@Loc["General"]">
+    <div class="settings-tab-row" role="tablist" aria-label="@Loc["Settings sections"]">
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTabIndex == 0)"
+                class="settings-tab @(_activeTabIndex == 0 ? "settings-tab--active" : "")"
+                @onclick="() => _activeTabIndex = 0">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+            <span>@Loc["General"]</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTabIndex == 1)"
+                class="settings-tab @(_activeTabIndex == 1 ? "settings-tab--active" : "")"
+                @onclick="() => _activeTabIndex = 1">
+            <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+            <span>@Loc["AI"]</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTabIndex == 2)"
+                class="settings-tab @(_activeTabIndex == 2 ? "settings-tab--active" : "")"
+                @onclick="() => _activeTabIndex = 2">
+            <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" />
+            <span>@Loc["Data"]</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTabIndex == 3)"
+                class="settings-tab @(_activeTabIndex == 3 ? "settings-tab--active" : "")"
+                @onclick="() => _activeTabIndex = 3">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <span>@Loc["About"]</span>
+        </button>
+    </div>
+
+        @if (_activeTabIndex == 0)
+        {
             <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (PanelMatches(AppearanceKeywords))
         {
@@ -268,9 +301,37 @@
         </MudExpansionPanel>
         }
 
+        @if (Account.IsSignOutSupported && PanelMatches(SignOutKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Logout" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title">@Loc["Account"]</span>
+                            <span class="settings-panel__subtitle">@Loc["Sign out of this account"]</span>
+                        </span>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <div class="settings-panel__content">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   OnClick="SignOutAsync"
+                                   StartIcon="@Icons.Material.Filled.Logout"
+                                   Class="btn-premium-ghost">
+                            @Loc["Sign out"]
+                        </MudButton>
+                    </div>
+                </ChildContent>
+            </MudExpansionPanel>
+        }
+
         </MudExpansionPanels>
-        </MudTabPanel>
-        <MudTabPanel Icon="@Icons.Material.Filled.SmartToy" Text="@Loc["AI Assistant"]">
+        }
+
+        @if (_activeTabIndex == 1)
+        {
             <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (PanelMatches(AiKeywords))
         {
@@ -415,8 +476,10 @@
         </MudExpansionPanel>
         }
     </MudExpansionPanels>
-    </MudTabPanel>
-    <MudTabPanel Icon="@Icons.Material.Filled.Storage" Text="@Loc["Data"]">
+    }
+
+    @if (_activeTabIndex == 2)
+    {
         <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (PanelMatches(BackupKeywords))
         {
@@ -496,8 +559,10 @@
         </MudExpansionPanel>
         }
     </MudExpansionPanels>
-    </MudTabPanel>
-    <MudTabPanel Icon="@Icons.Material.Filled.Info" Text="@Loc["About"]">
+    }
+
+    @if (_activeTabIndex == 3)
+    {
         <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (AppUpdateService.IsSupported && PanelMatches(UpdatesKeywords))
         {
@@ -595,8 +660,7 @@
         </MudExpansionPanel>
         }
     </MudExpansionPanels>
-    </MudTabPanel>
-    </MudTabs>
+    }
 
     @if (NoResultsVisible)
     {
@@ -635,6 +699,14 @@
         if (AboutTabVisible) { _activeTabIndex = 3; }
     }
 
+    private async Task SignOutAsync()
+    {
+        if (!Account.IsSignOutSupported)
+            return;
+
+        await Account.SignOutAsync();
+    }
+
     private bool PanelMatches(string[] keywords)
     {
         if (!SearchActive)
@@ -649,6 +721,7 @@
     private static readonly string[] RestTimerKeywords = ["rest", "timer", "notification", "sound", "vibration", "overlay"];
     private static readonly string[] ProfilesKeywords = ["profiles", "profile", "user", "multi"];
     private static readonly string[] ScheduleKeywords = ["schedule", "streak", "days", "training"];
+    private static readonly string[] SignOutKeywords = ["account", "sign out", "signout", "logout"];
     private static readonly string[] AiKeywords = ["ai", "assistant", "chat", "openai", "openrouter", "ollama", "model", "api"];
     private static readonly string[] BackupKeywords = ["backup", "export", "import", "data", "restore"];
     private static readonly string[] UpdatesKeywords = ["updates", "update", "version", "release"];
@@ -658,7 +731,8 @@
         || PanelMatches(UnitsKeywords)
         || PanelMatches(RestTimerKeywords)
         || PanelMatches(ProfilesKeywords)
-        || PanelMatches(ScheduleKeywords);
+        || PanelMatches(ScheduleKeywords)
+        || (Account.IsSignOutSupported && PanelMatches(SignOutKeywords));
 
     private bool AiTabVisible => PanelMatches(AiKeywords);
 

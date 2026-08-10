@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-commit hook: runs the same dotnet format checks as CI (test.yml)
+# on staged .NET sources so format violations never reach the pipeline.
+# Bypass intentionally with: git commit --no-verify
+# Enable on a fresh clone with: git config core.hooksPath .githooks
+
+staged=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(cs|razor|xaml)$' || true)
+if [ -z "$staged" ]; then
+    exit 0
+fi
+
+fail=0
+for proj in \
+    Physiquinator.Core/Physiquinator.Core.csproj \
+    Physiquinator.UI/Physiquinator.UI.csproj \
+    Physiquinator.Web/Physiquinator.Web.csproj \
+    Physiquinator.Tests/Physiquinator.Tests.csproj; do
+    if ! dotnet format "$proj" --verify-no-changes --severity warn; then
+        echo "Format check failed for $proj. Run: dotnet format $proj"
+        fail=1
+    fi
+done
+exit $fail

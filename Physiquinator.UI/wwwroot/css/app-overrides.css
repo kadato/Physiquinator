@@ -424,6 +424,14 @@ input, select, textarea {
     box-shadow: none !important;
 }
 
+/* MudBlazor's .mud-button-root:disabled paints the button in the
+   action-disabled color, which on the primary background makes the icon
+   invisible. Keep the white icon on disabled primary FABs. */
+.app-fab--primary:disabled,
+.app-fab--primary.app-fab--disabled {
+    color: #fff !important;
+}
+
 /* FAB icon sizing */
 .app-fab .mud-icon-root {
     font-size: 24px !important;

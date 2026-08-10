@@ -93,9 +93,9 @@ public static class ExerciseCatalog
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var result = new List<string>(All.Count + 32);
-        foreach (string name in All.Select(e => e.Name).Where(seen.Add))
+        foreach (var name in All.Select(e => e.Name).Where(seen.Add))
             result.Add(name);
-        foreach (string name in historyNames.Where(n => !string.IsNullOrWhiteSpace(n) && seen.Add(n)))
+        foreach (var name in historyNames.Where(n => !string.IsNullOrWhiteSpace(n) && seen.Add(n)))
             result.Add(name);
         return result;
     }

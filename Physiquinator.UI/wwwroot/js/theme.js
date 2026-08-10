@@ -24,7 +24,7 @@
                     ? document.querySelector(elOrSelector)
                     : elOrSelector;
                 if (el) {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
                 }
             }, 300);
         } catch {

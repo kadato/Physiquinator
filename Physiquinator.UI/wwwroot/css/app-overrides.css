@@ -1687,6 +1687,33 @@ html.app-ime-open .mud-dialog-container {
     outline: none;
 }
 
+/* The edit form must lay out exactly like the value button it replaces, or
+   the row jumps when the input swaps in. */
+.set-metric-stepper__edit-form {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.set-metric-stepper__edit-form .set-metric-stepper__input {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Hide native number spinners so the input keeps the value button's width
+   and the row does not jump on mobile. */
+.set-metric-stepper__input::-webkit-outer-spin-button,
+.set-metric-stepper__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.set-metric-stepper__input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 
 .exercise-progress-chart__plot {
     width: 100%;

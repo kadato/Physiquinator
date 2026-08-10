@@ -46,10 +46,6 @@ public class ServiceContainerTests
         public Task ScheduleRestEndAlarmAsync(DateTime restEndsAtUtc, string title, string description) => Task.CompletedTask;
 
         public Task CancelRestEndAlarmAsync() => Task.CompletedTask;
-
-        public Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets) => Task.CompletedTask;
-
-        public Task CancelSetLoggedNotificationAsync() => Task.CompletedTask;
     }
 
     private sealed class NoopFileTransferService : IFileTransferService

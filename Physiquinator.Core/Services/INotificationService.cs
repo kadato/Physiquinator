@@ -57,13 +57,4 @@ public interface INotificationService
 
     /// <summary>Cancels the scheduled rest-end alarm.</summary>
     Task CancelRestEndAlarmAsync();
-
-    /// <summary>
-    /// Shows a brief "Set logged" notification with an Undo action, mirroring
-    /// the in-app undo toast after a set is logged from a background surface.
-    /// </summary>
-    Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets);
-
-    /// <summary>Removes the set-logged notification.</summary>
-    Task CancelSetLoggedNotificationAsync();
 }

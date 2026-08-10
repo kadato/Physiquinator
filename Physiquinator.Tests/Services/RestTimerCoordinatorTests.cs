@@ -68,10 +68,6 @@ public class RestTimerCoordinatorTests
             CancelAlarmCalls++;
             return Task.CompletedTask;
         }
-
-        public Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets) => Task.CompletedTask;
-
-        public Task CancelSetLoggedNotificationAsync() => Task.CompletedTask;
     }
 
     private sealed record Fixture(

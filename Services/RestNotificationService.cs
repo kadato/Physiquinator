@@ -22,7 +22,6 @@ public sealed class RestNotificationService(
     public const int ScheduledRestNotificationId = 9001;
     public const int ImmediateRestCompleteNotificationId = 9002;
     public const int OngoingRestNotificationId = 9101;
-    public const int SetLoggedNotificationId = 9102;
 
     public const string AndroidChannelId = "physiquinator_rest";
 
@@ -191,53 +190,6 @@ public sealed class RestNotificationService(
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"RestNotificationService hide timer UI failed: {ex}");
-        }
-
-        return Task.CompletedTask;
-    }
-
-    public async Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets)
-    {
-        if (!_settings.Enabled)
-            return;
-
-        if (!IsSupportedPlatform)
-            return;
-
-        try
-        {
-            LocalNotificationCenter.Current.Cancel(SetLoggedNotificationId);
-
-            var request = new NotificationRequest
-            {
-                NotificationId = SetLoggedNotificationId,
-                Title = "Set logged",
-                Description = $"{exerciseName} {setIndex}/{totalSets}",
-                CategoryType = NotificationCategoryType.Status,
-                Android = new AndroidOptions
-                {
-                    ChannelId = AndroidChannelId,
-                    Priority = AndroidPriority.Low
-                }
-            };
-
-            await LocalNotificationCenter.Current.Show(request);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"RestNotificationService set logged failed: {ex}");
-        }
-    }
-
-    public Task CancelSetLoggedNotificationAsync()
-    {
-        try
-        {
-            LocalNotificationCenter.Current.Cancel(SetLoggedNotificationId);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"RestNotificationService cancel set logged failed: {ex}");
         }
 
         return Task.CompletedTask;

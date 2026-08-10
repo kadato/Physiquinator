@@ -623,14 +623,9 @@ public sealed class RestOverlayService : Service
             if (result.Status == QuickActionStatus.NothingToLog)
                 return;
 
-            IServiceProvider? services = IPlatformApplication.Current?.Services;
-            if (services?.GetService(typeof(INotificationService)) is INotificationService notifications &&
-                result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
-                await notifications.ShowSetLoggedNotificationAsync(result.ExerciseName, result.LoggedSetIndex.Value, result.SetTotal.Value);
-
             if (result.Status == QuickActionStatus.WorkoutCompleted)
             {
-                var vibration = services?.GetService(typeof(IVibrationService)) as IVibrationService;
+                var vibration = IPlatformApplication.Current?.Services.GetService(typeof(IVibrationService)) as IVibrationService;
                 vibration?.Vibrate(TimeSpan.FromMilliseconds(800));
             }
         }

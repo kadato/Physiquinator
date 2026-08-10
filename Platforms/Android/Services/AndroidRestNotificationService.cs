@@ -23,7 +23,6 @@ public sealed class AndroidRestNotificationService(
 {
     public const int OngoingRestNotificationId = 9100;
     public const int ImmediateRestCompleteNotificationId = 9002;
-    public const int SetLoggedNotificationId = 9003;
     public const string OngoingChannelId = "physiquinator_rest_ongoing";
     /// <summary>Silent low-importance channel for the mandatory FGS notification — invisible to the user.</summary>
     public const string SilentOngoingChannelId = "physiquinator_rest_ongoing_silent";
@@ -115,32 +114,6 @@ public sealed class AndroidRestNotificationService(
         return Task.CompletedTask;
     }
 
-    public Task ShowSetLoggedNotificationAsync(string exerciseName, int setIndex, int totalSets)
-    {
-        EnsureChannels();
-
-        Notification.Builder? builder = BuildBaseNotification(_context, OngoingChannelId, "Set logged", $"{exerciseName} {setIndex}/{totalSets}", publicVisibility: true)
-            .SetAutoCancel(true)
-            .SetContentIntent(BuildOpenAppIntent(_context))
-            .AddAction(BuildUndoAction(_context));
-
-        NotificationManager? nm = GetNotificationManager();
-        nm?.Cancel(SetLoggedNotificationId);
-        nm?.Notify(SetLoggedNotificationId, builder!.Build()!);
-
-        // Auto-dismiss after a while so it does not clutter the shade; long
-        // enough to act on, unlike the in-app toast which is in your face.
-        var handler = new Handler(Looper.MainLooper!);
-        handler.PostDelayed(() => GetNotificationManager()?.Cancel(SetLoggedNotificationId), 15000);
-        return Task.CompletedTask;
-    }
-
-    public Task CancelSetLoggedNotificationAsync()
-    {
-        GetNotificationManager()?.Cancel(SetLoggedNotificationId);
-        return Task.CompletedTask;
-    }
-
     public Task ShowWorkoutTimerUiAsync(WorkoutTimerState state)
     {
         if (!_settings.Enabled)
@@ -162,6 +135,15 @@ public sealed class AndroidRestNotificationService(
     {
         if (!_settings.Enabled)
             return Task.CompletedTask;
+
+        // The in-app checkmark and knock sound already announce the end of
+        // rest while the app is open. Posting here too would duplicate the
+        // alert whenever the exact alarm wins the race against the JS tick.
+        if (MainActivity.IsInForeground)
+        {
+            GetNotificationManager()?.Cancel(ImmediateRestCompleteNotificationId);
+            return Task.CompletedTask;
+        }
 
         EnsureChannels();
 
@@ -227,12 +209,6 @@ public sealed class AndroidRestNotificationService(
 
         return PendingIntent.GetBroadcast(context, requestCode, intent,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable)!;
-    }
-
-    private static Notification.Action BuildUndoAction(Context context)
-    {
-        PendingIntent intent = BuildActionIntent(context, RestTimerActionReceiver.ActionUndoSet, 9406);
-        return new Notification.Action.Builder(Icon.CreateWithResource(context, Resource.Drawable.ic_rest_timer), "Undo", intent).Build();
     }
 
     private static Notification.Action BuildAddTimeAction(Context context, int addTimeSeconds) =>

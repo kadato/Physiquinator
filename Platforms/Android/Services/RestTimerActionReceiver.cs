@@ -21,7 +21,6 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
     public const string ActionAddRest = "physiquinator.action.ADD_REST";
     public const string ActionSkipRest = "physiquinator.action.SKIP_REST";
     public const string ActionLogSet = "physiquinator.action.LOG_SET";
-    public const string ActionUndoSet = "physiquinator.action.UNDO_SET";
 
     public override void OnReceive(Context? context, Intent? intent)
     {
@@ -39,7 +38,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
             if (session == null)
                 return;
 
-            if (action is ActionLogSet or ActionUndoSet)
+            if (action == ActionLogSet)
             {
                 var quickAction = services.GetService(typeof(WorkoutQuickActionService)) as WorkoutQuickActionService;
                 if (quickAction == null)
@@ -49,9 +48,7 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
                 if (pendingResult == null)
                     return;
 
-                _ = action == ActionLogSet
-                    ? RunLogSetAsync(quickAction, pendingResult, services)
-                    : RunUndoSetAsync(quickAction, pendingResult, services);
+                _ = RunLogSetAsync(quickAction, pendingResult);
                 return;
             }
 
@@ -73,40 +70,15 @@ public sealed class RestTimerActionReceiver : BroadcastReceiver
         }
     }
 
-    private static async Task RunLogSetAsync(WorkoutQuickActionService quickAction, PendingResult pendingResult, IServiceProvider services)
+    private static async Task RunLogSetAsync(WorkoutQuickActionService quickAction, PendingResult pendingResult)
     {
         try
         {
-            QuickActionResult result = await quickAction.LogNextSetAsync();
-            if (result.Status != QuickActionStatus.NothingToLog)
-            {
-                var notifications = services.GetService(typeof(INotificationService)) as INotificationService;
-                if (notifications != null && result.ExerciseName != null && result.LoggedSetIndex != null && result.SetTotal != null)
-                    await notifications.ShowSetLoggedNotificationAsync(result.ExerciseName, result.LoggedSetIndex.Value, result.SetTotal.Value);
-            }
+            await quickAction.LogNextSetAsync();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"RestTimerActionReceiver log set failed: {ex}");
-        }
-        finally
-        {
-            pendingResult.Finish();
-        }
-    }
-
-    private static async Task RunUndoSetAsync(WorkoutQuickActionService quickAction, PendingResult pendingResult, IServiceProvider services)
-    {
-        try
-        {
-            await quickAction.UndoLastSetAsync();
-            var notifications = services.GetService(typeof(INotificationService)) as INotificationService;
-            if (notifications != null)
-                await notifications.CancelSetLoggedNotificationAsync();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"RestTimerActionReceiver undo failed: {ex}");
         }
         finally
         {

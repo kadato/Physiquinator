@@ -342,9 +342,17 @@ async function run() {
             await blazorNavigate(app.page, '/');
             await app.page.waitForSelector('.home-page', { timeout: 5000 });
             await delay(500);
-            await app.page.click('button[aria-label="AI Assistant"]');
+            await app.page.click('button[aria-label="AI assistant"]');
             await app.page.waitForSelector('.ai-chat-container', { timeout: 5000 });
             await delay(500);
+            // Clear any conversation left over from a previous theme so the
+            // quick-action chips render again (they only show on an empty chat).
+            try {
+                await app.page.click('button[aria-label="Clear history"]');
+                await delay(300);
+            } catch (e) {
+                console.log('No chat history to clear.');
+            }
             // Click "Progressive Overload" chip
             await app.page.click('.mud-chip:has-text("Progressive Overload")');
             // Wait for thinking indicator to appear (if slow) or wait directly for the streamed AI text response

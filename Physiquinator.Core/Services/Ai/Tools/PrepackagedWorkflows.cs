@@ -48,6 +48,7 @@ public sealed class GenerateDeloadPlanWorkflowTool(WorkoutPlanService planServic
                 DefaultWeightKg = e.DefaultWeightKg.HasValue ? Math.Round(e.DefaultWeightKg.Value * 0.9, 1) : null,
                 RestIntervalSeconds = Math.Max(60, e.RestIntervalSeconds - 15),
                 Order = e.Order,
+                BodyweightPercent = e.BodyweightPercent,
                 LogType = e.LogType
             })]
         };

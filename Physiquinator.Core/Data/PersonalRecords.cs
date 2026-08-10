@@ -41,7 +41,8 @@ public static class PersonalRecordCalculator
     public static PersonalRecords Compute(
         IEnumerable<ExerciseSetLogRow> rows,
         ExerciseLogType logType,
-        double? bodyweightKg = null)
+        double? bodyweightKg = null,
+        double? bodyweightPercent = null)
     {
         ArgumentNullException.ThrowIfNull(rows);
 
@@ -54,7 +55,7 @@ public static class PersonalRecordCalculator
         {
             AppendBest(entries, ExerciseRecordKind.BestWeight, rows, r => r.WeightKg);
             AppendBest(entries, ExerciseRecordKind.MostReps, rows, r => r.Reps is { } reps ? (double?)reps : null);
-            AppendBest(entries, ExerciseRecordKind.BestVolume, rows, r => ComputeVolume(r, logType, bodyweightKg));
+            AppendBest(entries, ExerciseRecordKind.BestVolume, rows, r => ComputeVolume(r, logType, bodyweightKg, bodyweightPercent));
         }
 
         return new PersonalRecords(entries);
@@ -63,19 +64,25 @@ public static class PersonalRecordCalculator
     /// <summary>
     /// Volume of a single set: reps × weight. Both metrics must be logged;
     /// a set missing either contributes 0 (no tonnage can be attributed).
-    /// Bodyweight-relative exercises include the user's bodyweight when known.
+    /// Bodyweight-relative exercises include the bodyweight share of the
+    /// user's bodyweight when known (100% when no share is set).
     /// </summary>
-    public static double ComputeVolume(int? reps, double? weightKg, ExerciseLogType logType, double? bodyweightKg = null)
+    public static double ComputeVolume(
+        int? reps,
+        double? weightKg,
+        ExerciseLogType logType,
+        double? bodyweightKg = null,
+        double? bodyweightPercent = null)
     {
         if (reps is not { } r) return 0;
         if (logType == ExerciseLogType.BodyweightReps && bodyweightKg is > 0)
-            return r * (bodyweightKg.Value + (weightKg ?? 0));
+            return r * (bodyweightKg.Value * (bodyweightPercent ?? 100) / 100.0 + (weightKg ?? 0));
         if (weightKg is not { } w) return 0;
         return r * w;
     }
 
-    private static double ComputeVolume(ExerciseSetLogRow row, ExerciseLogType logType, double? bodyweightKg) =>
-        ComputeVolume(row.Reps, row.WeightKg, logType, bodyweightKg);
+    private static double ComputeVolume(ExerciseSetLogRow row, ExerciseLogType logType, double? bodyweightKg, double? bodyweightPercent) =>
+        ComputeVolume(row.Reps, row.WeightKg, logType, bodyweightKg, bodyweightPercent);
 
     private static void AppendBest(
         List<PersonalRecordEntry> entries,

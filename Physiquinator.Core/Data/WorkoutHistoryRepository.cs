@@ -241,14 +241,15 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     /// <summary>
     /// Last <paramref name="maxSessions"/> sessions for the plan that logged <paramref name="exerciseName"/>, newest first.
     /// Volume is reps × weight (both must be logged); bodyweight-relative
-    /// exercises include the user's bodyweight when known.
+    /// exercises include the bodyweight share of the user's bodyweight when known.
     /// </summary>
     public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAsync(
         Guid workoutPlanId,
         string exerciseName,
         int maxSessions = 30,
         double? bodyweightKg = null,
-        ExerciseLogType logType = ExerciseLogType.WeightAndReps)
+        ExerciseLogType logType = ExerciseLogType.WeightAndReps,
+        double? bodyweightPercent = null)
     {
         if (string.IsNullOrWhiteSpace(exerciseName)) return [];
         maxSessions = Math.Clamp(maxSessions, 1, 200);
@@ -262,7 +263,8 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             exerciseName,
             maxSessions,
             useBodyweight,
-            useBodyweight ? bodyweightKg!.Value : 0);
+            useBodyweight ? bodyweightKg!.Value : 0,
+            useBodyweight ? bodyweightPercent ?? 100 : 100);
 
         List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
 
@@ -346,7 +348,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     private static string BuildVolumeSelect(bool useBodyweight) =>
         useBodyweight
-            ? "SUM(CASE WHEN s.Reps IS NOT NULL AND s.IsWarmup = 0 THEN s.Reps * (? + IFNULL(s.WeightKg, 0)) ELSE 0 END)"
+            ? "SUM(CASE WHEN s.Reps IS NOT NULL AND s.IsWarmup = 0 THEN s.Reps * (? * (? / 100.0) + IFNULL(s.WeightKg, 0)) ELSE 0 END)"
             : "SUM(CASE WHEN s.Reps IS NOT NULL AND s.WeightKg IS NOT NULL AND s.IsWarmup = 0 THEN s.Reps * s.WeightKg ELSE 0 END)";
 
     private static (string Query, object[] Args) BuildSessionProgressQuery(
@@ -354,11 +356,16 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         string? exerciseNameFilter,
         int maxSessions,
         bool useBodyweight,
-        double bodyweightForQuery)
+        double bodyweightForQuery,
+        double bodyweightPercentForQuery = 100)
     {
         var whereClauses = new List<string>();
         var args = new List<object>();
-        if (useBodyweight) args.Add(bodyweightForQuery);
+        if (useBodyweight)
+        {
+            args.Add(bodyweightForQuery);
+            args.Add(bodyweightPercentForQuery);
+        }
         whereClauses.Add("s.IsWarmup = 0");
         if (!string.IsNullOrEmpty(workoutPlanIdFilter))
         {

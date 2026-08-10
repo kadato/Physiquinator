@@ -28,6 +28,7 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
         RestIntervalSeconds = e.RestIntervalSeconds,
         DefaultReps = e.DefaultReps,
         DefaultWeightKg = e.DefaultWeightKg,
+        BodyweightPercent = e.BodyweightPercent,
         LogType = (ExerciseLogType)e.LogType
     };
 
@@ -53,6 +54,7 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
         RestIntervalSeconds = exercise.RestIntervalSeconds,
         DefaultReps = exercise.DefaultReps,
         DefaultWeightKg = exercise.DefaultWeightKg,
+        BodyweightPercent = exercise.BodyweightPercent,
         LogType = (int)exercise.LogType
     };
 

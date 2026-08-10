@@ -101,6 +101,10 @@ public sealed class AppDatabase
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN SupersetGroupId TEXT");
 
         if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='BodyweightPercent'") == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN BodyweightPercent REAL");
+
+        if (await db.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM pragma_table_info('WorkoutSetLogs') WHERE name='IsWarmup'") == 0)
             await db.ExecuteAsync("ALTER TABLE WorkoutSetLogs ADD COLUMN IsWarmup INTEGER NOT NULL DEFAULT 0");
 

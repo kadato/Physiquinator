@@ -595,6 +595,45 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetExerciseSessionProgressAsync_WithBodyweightShare_ScalesVolume()
+    {
+        var planId = Guid.NewGuid();
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        var day1 = new DateOnly(2024, 4, 15);
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var s1 = await InsertSessionAtUtcAsync(planId, "Bodyweight", t1);
+        // 10 reps, no offset: 10 × (80 × 65%) = 520
+        await _sut.LogSetAsync(s1, 0, "Push-Up", 0, reps: 10, weightKg: null);
+        // 10 reps, +5 kg offset: 10 × (80 × 65% + 5) = 570
+        await _sut.LogSetAsync(s1, 0, "Push-Up", 1, reps: 10, weightKg: 5);
+
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(
+            planId, "Push-Up", maxSessions: 10, bodyweightKg: 80, logType: ExerciseLogType.BodyweightReps, bodyweightPercent: 65);
+
+        Assert.Single(rows);
+        Assert.Equal(520 + 570, rows[0].TotalVolumeKg);
+    }
+
+    [Fact]
+    public async Task GetExerciseSessionProgressAsync_WithBodyweightShare_NullDefaultsToFullBodyweight()
+    {
+        var planId = Guid.NewGuid();
+        TimeZoneInfo tz = TimeZoneInfo.Local;
+        var day1 = new DateOnly(2024, 4, 20);
+        DateTime t1 = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(day1.ToDateTime(TimeOnly.MinValue).AddHours(9), DateTimeKind.Unspecified), tz);
+
+        var s1 = await InsertSessionAtUtcAsync(planId, "Bodyweight", t1);
+        await _sut.LogSetAsync(s1, 0, "Pull-Up", 0, reps: 10, weightKg: null);
+
+        IReadOnlyList<ExerciseSessionProgressEntry> rows = await _sut.GetExerciseSessionProgressAsync(
+            planId, "Pull-Up", maxSessions: 10, bodyweightKg: 80, logType: ExerciseLogType.BodyweightReps, bodyweightPercent: null);
+
+        Assert.Single(rows);
+        Assert.Equal(800, rows[0].TotalVolumeKg);
+    }
+
+    [Fact]
     public async Task GetExercisesSessionProgressAsync_ReturnsNewestSessionPerExercise_ScopedByPlan()
     {
         var planId = Guid.NewGuid();

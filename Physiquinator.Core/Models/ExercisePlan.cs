@@ -26,6 +26,14 @@ public class ExercisePlan
     /// <summary>Optional default load in kilograms for set logging.</summary>
     public double? DefaultWeightKg { get; set; }
 
+    /// <summary>
+    /// Share of the user's bodyweight counted toward volume for bodyweight
+    /// exercises, in percent (e.g. 65 for push-ups). Null means full
+    /// bodyweight (100%). Only used when <see cref="LogType"/> is
+    /// <see cref="ExerciseLogType.BodyweightReps"/>.
+    /// </summary>
+    public double? BodyweightPercent { get; set; }
+
     /// <summary>The logging style used for this exercise.</summary>
     public ExerciseLogType LogType { get; set; } = ExerciseLogType.WeightAndReps;
 

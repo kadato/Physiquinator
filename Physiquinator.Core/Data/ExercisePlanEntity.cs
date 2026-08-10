@@ -27,5 +27,7 @@ public class ExercisePlanEntity
 
     public double? DefaultWeightKg { get; set; }
 
+    public double? BodyweightPercent { get; set; }
+
     public int LogType { get; set; }
 }

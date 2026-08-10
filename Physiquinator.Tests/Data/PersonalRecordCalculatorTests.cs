@@ -142,5 +142,37 @@ public class PersonalRecordCalculatorTests
     {
         // The profile bodyweight must never be folded into a weighted exercise's volume.
         Assert.Equal(300, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 30, ExerciseLogType.WeightAndReps, bodyweightKg: 80));
+        Assert.Equal(300, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 30, ExerciseLogType.WeightAndReps, bodyweightKg: 80, bodyweightPercent: 65));
+    }
+
+    [Fact]
+    public void ComputeVolume_BodyweightReps_AppliesBodyweightShare()
+    {
+        // 10 reps × (80 kg × 65% + 0) = 520
+        Assert.Equal(520, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.BodyweightReps, bodyweightKg: 80, bodyweightPercent: 65));
+        // Offset still adds on top of the share: 10 × (80 × 65% + 5) = 570
+        Assert.Equal(570, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: 5, ExerciseLogType.BodyweightReps, bodyweightKg: 80, bodyweightPercent: 65));
+    }
+
+    [Fact]
+    public void ComputeVolume_BodyweightReps_NullShareMeansFullBodyweight()
+    {
+        Assert.Equal(800, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.BodyweightReps, bodyweightKg: 80, bodyweightPercent: null));
+        Assert.Equal(800, PersonalRecordCalculator.ComputeVolume(reps: 10, weightKg: null, ExerciseLogType.BodyweightReps, bodyweightKg: 80));
+    }
+
+    [Fact]
+    public void Compute_BodyweightReps_UsesShareForVolume()
+    {
+        var t1 = new DateTime(2026, 6, 1, 10, 0, 0, DateTimeKind.Utc);
+        ExerciseSetLogRow[] rows =
+        [
+            Row("s1", t1, reps: 10, weight: null), // volume 10 × (80 × 65%) = 520
+        ];
+
+        PersonalRecords records = PersonalRecordCalculator.Compute(rows, ExerciseLogType.BodyweightReps, bodyweightKg: 80, bodyweightPercent: 65);
+
+        PersonalRecordEntry volume = Assert.Single(records.Entries, e => e.Kind == ExerciseRecordKind.BestVolume);
+        Assert.Equal(520, volume.Value);
     }
 }

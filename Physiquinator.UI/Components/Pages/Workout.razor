@@ -1310,7 +1310,11 @@ else
                 FullWidth = true,
             };
 
-            await DialogService.ShowAsync<WorkoutSummaryDialog>(Loc["Workout complete"], parameters, options);
+            // ShowAsync completes when the dialog opens; await Result so the
+            // recap stays up until the user dismisses it instead of being
+            // torn down by the navigation below.
+            IDialogReference dialog = await DialogService.ShowAsync<WorkoutSummaryDialog>(Loc["Workout complete"], parameters, options);
+            await dialog.Result;
         }
 
         Navigation.NavigateTo(AppRoutes.Home);

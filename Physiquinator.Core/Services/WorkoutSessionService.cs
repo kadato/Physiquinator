@@ -259,10 +259,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     /// <summary>Called when the app window becomes active. Completes rest if wall-clock end passed.</summary>
     public void NotifyAppActivated()
     {
-        if (!TryCompleteRestIfExpired())
-            return;
-
-        RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
+        TryCompleteRestIfExpired();
     }
 
     /// <summary>Used by tests and <see cref="NotifyAppActivated"/>.</summary>
@@ -272,6 +269,10 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         if (UtcNow < _restEndsAtUtc.Value) return false;
 
         StopRest();
+        // Same completion signal the internal timer and JS tick paths raise, so
+        // the workout page latches the checkmark instead of unmounting the
+        // panel when the exact-alarm path finishes the rest.
+        RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
         return true;
     }
 

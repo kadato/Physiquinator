@@ -107,6 +107,23 @@ public class WorkoutSessionServiceTests
     }
 
     [Fact]
+    public void TryCompleteRestIfExpired_raises_completion_signal()
+    {
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+        svc.StartRest(10);
+
+        var fired = 0;
+        svc.RestCompletedWhileBackground += (_, _) => fired++;
+
+        clock.Advance(TimeSpan.FromSeconds(11));
+        Assert.True(svc.TryCompleteRestIfExpired());
+        Assert.Equal(1, fired);
+    }
+
+    [Fact]
     public void ResetRest_restarts_full_duration()
     {
         var clock = new ManualTimeProvider();

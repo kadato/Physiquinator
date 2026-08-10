@@ -106,6 +106,9 @@
         if (exercise.DefaultReps.HasValue)
             parts.Add(loc["{0} reps", exercise.DefaultReps]);
 
+        if (exercise.LogType == ExerciseLogType.BodyweightReps && exercise.BodyweightPercent.HasValue)
+            parts.Add(loc["{0} bodyweight", ExerciseCatalog.FormatShare(exercise.BodyweightPercent)]);
+
         if (exercise.DefaultWeightKg.HasValue)
             parts.Add(loc["{0}", ExerciseWeightFormatter.FormatWeightWithUnit(exercise.DefaultWeightKg.Value, unit)]);
 

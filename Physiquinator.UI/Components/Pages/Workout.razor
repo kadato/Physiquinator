@@ -241,7 +241,7 @@ else
             var exercise = plan.Exercises[exerciseIndex];
             if (exercise.LogType == ExerciseLogType.Duration) continue;
             if (setIndex < exercise.WarmupSetCount) continue;
-            total += PersonalRecordCalculator.ComputeVolume(value.Reps, value.Weight, exercise.LogType, _bodyweightKg);
+            total += PersonalRecordCalculator.ComputeVolume(value.Reps, value.Weight, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
             any = true;
         }
 
@@ -942,7 +942,7 @@ else
         {
             IReadOnlyList<ExerciseSetLogRow> rows = await HistoryRepository.GetExerciseSetLogRowsAsync(plan.Id, exercise.Name);
             var prior = rows.Where(r => r.SessionId != _historySessionId);
-            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg);
+            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
 
             var (_, message) = BuildPersonalRecordMessage(records, exercise, weightKg, reps);
             if (message != null)
@@ -982,7 +982,7 @@ else
             }
 
             var prior = rows.Where(r => r.SessionId != _historySessionId);
-            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg);
+            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
 
             var claimed = new HashSet<ExerciseRecordKind>();
             foreach (var (key, value) in _sessionSets)
@@ -1015,7 +1015,7 @@ else
         double weightKg,
         int reps)
     {
-        var setVolumeKg = PersonalRecordCalculator.ComputeVolume(reps, weightKg, exercise.LogType, _bodyweightKg);
+        var setVolumeKg = PersonalRecordCalculator.ComputeVolume(reps, weightKg, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
 
         if (exercise.LogType == ExerciseLogType.Duration)
         {

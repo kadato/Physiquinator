@@ -194,6 +194,7 @@ else
 
     private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
+    private double? _bodyweightPercent;
 
     private int ActiveMaxSessions => _range switch
     {
@@ -226,7 +227,7 @@ else
 
         IReadOnlyList<ExerciseSetLogRow> rows =
             await HistoryRepo.GetExerciseSetLogRowsAsync(PlanId, _decodedExerciseName);
-        PersonalRecords records = PersonalRecordCalculator.Compute(rows, _logType, _bodyweightKg);
+        PersonalRecords records = PersonalRecordCalculator.Compute(rows, _logType, _bodyweightKg, _bodyweightPercent);
 
         var parameters = new DialogParameters<PersonalRecordsDialog>
         {
@@ -263,6 +264,7 @@ else
         var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
         _planMissing = ex == null;
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
+        _bodyweightPercent = ex?.BodyweightPercent;
         _metric = _logType == ExerciseLogType.Duration ? ChartMetric.TotalTime : ChartMetric.Volume;
         await LoadRowsAsync();
         BuildChartData();
@@ -272,7 +274,7 @@ else
     private async Task LoadRowsAsync()
     {
         _rows = await HistoryRepo.GetExerciseSessionProgressAsync(
-            PlanId, _decodedExerciseName, ActiveMaxSessions, _bodyweightKg, _logType);
+            PlanId, _decodedExerciseName, ActiveMaxSessions, _bodyweightKg, _logType, _bodyweightPercent);
     }
 
     private async Task OnRangeChanged(ExerciseProgressRange range)
@@ -364,7 +366,8 @@ else
                 ChartMetric.BestWeight => Loc["Best bodyweight offset per session."],
                 ChartMetric.TotalReps => Loc["Total reps per session."],
                 _ when _bodyweightKg.HasValue =>
-                    Loc["Volume per set: reps × (bodyweight [{0}] + offset).",
+                    Loc["Volume per set: reps × ({0} of bodyweight [{1}] + offset).",
+                        ExerciseCatalog.FormatShare(_bodyweightPercent),
                         ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)],
                 _ => Loc["Bodyweight is not set in Settings, so only total reps are plotted."]
             };

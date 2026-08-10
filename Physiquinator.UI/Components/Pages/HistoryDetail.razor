@@ -271,6 +271,7 @@ else
     private Guid? _planGuid;
     private List<string> _distinctExerciseNames = new();
     private Dictionary<string, ExerciseLogType> _logTypesByExercise = new();
+    private Dictionary<string, double?> _percentByExercise = new();
     private double? _bodyweightKg;
     private bool _editMode;
     private string? _editingSetId;
@@ -308,12 +309,14 @@ else
         _sets = sets;
         _planGuid = _session?.TryGetPlanId();
         _logTypesByExercise = new(StringComparer.OrdinalIgnoreCase);
+        _percentByExercise = new(StringComparer.OrdinalIgnoreCase);
         if (_snapshot != null)
         {
             foreach (ExercisePlan exercise in _snapshot.Exercises)
             {
                 // First occurrence wins; malformed snapshots may repeat a name with different casing.
                 _logTypesByExercise.TryAdd(exercise.Name, exercise.LogType);
+                _percentByExercise.TryAdd(exercise.Name, exercise.BodyweightPercent);
             }
         }
         _distinctExerciseNames = sets
@@ -544,9 +547,11 @@ else
             var any = false;
             foreach (var set in _sets)
             {
-                if (GetLogType(set.ExerciseName) == ExerciseLogType.Duration || set.Reps is not { } reps)
+                var type = GetLogType(set.ExerciseName);
+                if (type == ExerciseLogType.Duration || set.Reps is not { } reps)
                     continue;
-                total += PersonalRecordCalculator.ComputeVolume(reps, set.WeightKg, GetLogType(set.ExerciseName), _bodyweightKg);
+                total += PersonalRecordCalculator.ComputeVolume(
+                    reps, set.WeightKg, type, _bodyweightKg, GetBodyweightPercent(set.ExerciseName));
                 any = true;
             }
 
@@ -571,6 +576,11 @@ else
         _logTypesByExercise.TryGetValue(exerciseName, out var type)
             ? type
             : ExerciseLogType.WeightAndReps;
+
+    private double? GetBodyweightPercent(string exerciseName) =>
+        _percentByExercise.TryGetValue(exerciseName, out var percent)
+            ? percent
+            : null;
 
     private string FormatReps(string exerciseName, int? reps)
     {

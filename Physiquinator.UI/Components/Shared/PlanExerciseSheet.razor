@@ -13,18 +13,22 @@
         <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
             <MudStack Spacing="3" Class="plan-exercise-sheet__body">
                 <MudAutocomplete T="string"
-                                 @bind-Value="_name"
+                                 Value="_name"
                                  id="exercise-sheet-name-input"
                                  Variant="Variant.Filled"
                                  Label="@Loc["Exercise name"]"
                                  Placeholder="@Loc["e.g. Bench press"]"
                                  SearchFunc="SearchExerciseNamesAsync"
+                                 ValueChanged="OnNameChanged"
                                  CoerceValue="false"
                                  ResetValueOnEmptyText="true"
                                  MaxItems="50"
                                  Dense="false"
                                  autocapitalize="words"
                                  @onfocus="OnExerciseNameFocus" />
+                <MudText Typo="Typo.caption" Class="plan-exercise-sheet__catalog-hint">
+                    @Loc["Suggestions include the built-in exercise catalog."]
+                </MudText>
 
             <MudSelect Value="_logType"
                        ValueChanged="OnLogTypeChanged"
@@ -94,6 +98,22 @@
                                   InputMode="decimal" />
             }
 
+            @if (_logType == ExerciseLogType.BodyweightReps)
+            {
+                <SetMetricStepper Label="@Loc["Bodyweight share"]"
+                                  @bind-Value="_bodyweightPercent"
+                                  Step="5"
+                                  Min="0"
+                                  Max="300"
+                                  IsInteger="true"
+                                  Format="0"
+                                  InputMode="numeric"
+                                  Unit="%" />
+                <MudText Typo="Typo.caption">
+                    @Loc["{0} of your bodyweight counts toward volume.", BodyweightShareLabel]
+                </MudText>
+            }
+
                 <div class="plan-exercise-sheet__footer">
                     <MudButton Variant="Variant.Text"
                                FullWidth="true"
@@ -129,11 +149,16 @@
     private double? _restSeconds;
     private double? _defaultReps;
     private double? _defaultWeightKg;
+    private double? _bodyweightPercent;
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
     private string _supersetGroupId = "";
     private List<string> _exerciseNames = [];
+    private string _nameAtOpen = "";
 
     private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
+
+    private string BodyweightShareLabel =>
+        Loc["{0}%", _bodyweightPercent ?? 100];
 
     private string DefaultWeightLabel =>
         _logType == ExerciseLogType.BodyweightReps
@@ -164,14 +189,17 @@
     protected override async Task OnInitializedAsync()
     {
         _name = Exercise.Name;
+        _nameAtOpen = Exercise.Name;
         _setCount = Exercise.SetCount;
         _warmupSetCount = Exercise.WarmupSetCount;
         _restSeconds = Exercise.RestIntervalSeconds;
         _defaultReps = Exercise.DefaultReps;
         _defaultWeightKg = Exercise.DefaultWeightKg;
+        _bodyweightPercent = Exercise.BodyweightPercent;
         _logType = Exercise.LogType;
         _supersetGroupId = Exercise.SupersetGroupId ?? "";
-        _exerciseNames = [.. await HistoryRepository.GetExerciseNamesAsync(100)];
+        var historyNames = await HistoryRepository.GetExerciseNamesAsync(100);
+        _exerciseNames = [.. ExerciseCatalog.MergeSuggestionNames(historyNames)];
     }
 
     private Task<IEnumerable<string>> SearchExerciseNamesAsync(string? text, CancellationToken token)
@@ -182,6 +210,30 @@
         var query = text.Trim();
         return Task.FromResult<IEnumerable<string>>(
             _exerciseNames.Where(n => n.Contains(query, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>
+    /// When the typed name matches a catalog entry and differs from the name
+    /// the exercise had when the sheet opened, pre-fill the entry's logging
+    /// type, bodyweight share, and default metrics.
+    /// </summary>
+    private void OnNameChanged(string? name)
+    {
+        _name = name ?? "";
+        if (string.IsNullOrWhiteSpace(_name) || string.Equals(_name.Trim(), _nameAtOpen, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        ExerciseCatalogEntry? entry = ExerciseCatalog.Find(_name.Trim());
+        if (entry == null)
+            return;
+
+        _logType = entry.LogType;
+        _bodyweightPercent = entry.BodyweightPercent;
+        if (entry.DefaultReps.HasValue)
+            _defaultReps = entry.DefaultReps;
+        if (entry.DefaultWeightKg.HasValue)
+            _defaultWeightKg = entry.DefaultWeightKg;
+        StateHasChanged();
     }
 
     private void Cancel() => MudDialog.Cancel();
@@ -202,6 +254,7 @@
             Order = Exercise.Order,
             DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
             DefaultWeightKg = _logType == ExerciseLogType.Duration ? null : _defaultWeightKg,
+            BodyweightPercent = _logType == ExerciseLogType.BodyweightReps ? _bodyweightPercent : null,
             LogType = _logType
         };
 

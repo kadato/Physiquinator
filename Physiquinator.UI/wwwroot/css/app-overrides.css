@@ -3374,9 +3374,10 @@ html[data-theme="dark"] .app-splash__retry {
 @media (max-width: 600px) {
     .mud-dialog-container {
         align-items: flex-start !important;
-        /* The --app-ime-inset tail keeps the dialog bottom above the keyboard
-           when the WebView is not resized (edge-to-edge Android). */
-        padding: 16px 8px calc(120px + var(--app-ime-inset, 0px)) 8px !important;
+        /* The bottom padding grows only when the on-screen keyboard covers the
+           app (edge-to-edge Android, WebView not resized). With the keyboard
+           closed the sheet fills the viewport height instead of floating. */
+        padding: 16px 8px calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) 8px !important;
         overflow-y: auto !important;
         display: flex !important;
         flex-direction: column !important;
@@ -3384,6 +3385,7 @@ html[data-theme="dark"] .app-splash__retry {
 
     .mud-dialog-container .mud-dialog {
         margin: 0 auto !important; /* Remove top/bottom margins so they rely on container padding */
+        max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px) - var(--app-ime-inset, 0px)) !important;
     }
 }
 

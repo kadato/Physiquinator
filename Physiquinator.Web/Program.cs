@@ -64,6 +64,9 @@ builder.Services.AddPhysiquinatorServices(
 // Per-account database files: registered after Core's registration so they win.
 builder.Services.AddScoped<IDatabasePathProvider, WebUserDatabasePathProvider>();
 
+// Sign-out is web-only; registered after Core's no-op default so it wins.
+builder.Services.AddScoped<IAccountService, WebAccountService>();
+
 builder.Services.AddSingleton(_ => new HttpClient());
 builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();

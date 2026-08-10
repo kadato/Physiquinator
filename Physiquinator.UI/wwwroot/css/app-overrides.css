@@ -3153,7 +3153,7 @@ html[data-theme="light"] .app-splash {
 }
 
 html[data-theme="light"] .app-splash__logo svg g {
-    fill: #0F766E;
+    fill: #047857;
 }
 
 .app-splash__logo {
@@ -4276,7 +4276,7 @@ html[data-theme="dark"] .share-card {
 .share-card__logo {
     width: 30px;
     height: 30px;
-    fill: #0F766E;
+    fill: #047857;
 }
 
 html[data-theme="dark"] .share-card__logo {

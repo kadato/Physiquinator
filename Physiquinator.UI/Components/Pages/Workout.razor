@@ -944,8 +944,8 @@ else
             var prior = rows.Where(r => r.SessionId != _historySessionId);
             PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
 
-            var (_, message) = BuildPersonalRecordMessage(records, exercise, weightKg, reps);
-            if (message != null)
+            var (kind, message) = BuildPersonalRecordMessage(records, exercise, weightKg, reps);
+            if (message != null && kind != ExerciseRecordKind.BestVolume)
                 Snackbar.Add(message, Severity.Success);
         }
         catch (Exception ex)

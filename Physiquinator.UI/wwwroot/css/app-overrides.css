@@ -736,16 +736,17 @@ input, select, textarea {
    below 960px; wide screens get multi-column grids)
    ============================================================ */
 
-@media (min-width: 960px) {
-    /* Workout: elapsed/volume stats above the rest timer, which gets the
-       full row to itself. */
-    .workout-top {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-        align-items: start;
-    }
+/* Workout: elapsed/volume stats above the rest timer, which gets the
+   full row to itself. Applied at every width so the stats and the rest
+   timer never touch on mobile. */
+.workout-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
 
+@media (min-width: 960px) {
     .workout-top > .rest-timer-panel {
         width: 100%;
         max-width: none;
@@ -2515,6 +2516,7 @@ button.history-session-card.history-session-card--selected {
     padding: 1rem 1.25rem;
     cursor: pointer;
     user-select: none;
+    text-align: left;
 }
 
 .exercise-accordion-header--static {
@@ -2530,6 +2532,7 @@ button.history-session-card.history-session-card--selected {
 .exercise-name {
     font-size: 1.6rem !important;
     letter-spacing: -0.015em;
+    text-align: left;
 }
 
 /* Set progress pill */

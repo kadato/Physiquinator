@@ -11,16 +11,7 @@
             @if (IsCompleted)
             {
                 <span class="completed-icon mr-2" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 22 22" fill="none">
-                        <defs>
-                            <linearGradient id="chk-grad" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#34d399"/>
-                                <stop offset="100%" stop-color="#059669"/>
-                            </linearGradient>
-                        </defs>
-                        <rect x="1" y="1" width="20" height="20" rx="5" fill="url(#chk-grad)"/>
-                        <polyline points="6.5,11.5 9.5,14.5 15.5,8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    </svg>
+                    <MudIcon Icon="@Icons.Material.Filled.Check" />
                 </span>
                 <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@Exercise.Name</MudText>
             }

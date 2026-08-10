@@ -2667,14 +2667,23 @@ button.history-session-card.history-session-card--selected {
     cursor: not-allowed;
 }
 
+/* Completed-exercise checkmark: a soft success-tinted circle with a themed
+   check icon, matching the app's MudBlazor icon language instead of a
+   hardcoded gradient badge. */
 .completed-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 2rem;
-    height: 2rem;
-    filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.4));
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mud-palette-success) 16%, transparent);
+    color: var(--mud-palette-success);
+}
+
+.completed-icon .mud-icon-root {
+    font-size: 1.1rem;
 }
 
 /* Progress bar overrides for active state */

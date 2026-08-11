@@ -796,6 +796,18 @@ input, select, textarea {
     flex-shrink: 0;
 }
 
+/* Tiny screens: handle + three action buttons would squeeze the plan name to
+   a sliver; wrap the actions under the name instead. */
+@media (max-width: 340px) {
+    .plan-card__row {
+        flex-wrap: wrap;
+        row-gap: 0.375rem;
+    }
+    .plan-card__actions {
+        margin-inline-start: auto;
+    }
+}
+
 .plan-card-icon-btn {
     min-width: 44px !important;
     min-height: 44px !important;
@@ -1114,6 +1126,22 @@ input[type="number"] {
     flex-shrink: 0;
 }
 
+/* Phone widths: wrap the move/delete actions under the exercise text so the
+   name and summary keep a usable column width instead of being squeezed to
+   a sliver by the handle and three icon buttons. */
+@media (max-width: 480px) {
+    .plan-exercise-row {
+        flex-wrap: wrap;
+        row-gap: 0.125rem;
+    }
+    .plan-exercise-row__main {
+        flex: 1 1 100%;
+    }
+    .plan-exercise-row__actions {
+        margin-inline-start: auto;
+    }
+}
+
 .plan-exercise-row__moves {
     display: flex;
     flex-direction: column;
@@ -1129,6 +1157,17 @@ input[type="number"] {
 
 .plan-exercise-row__move .mud-icon-root {
     font-size: 1.05rem;
+}
+
+/* Plan row move/delete controls: MudBlazor Size.Small icon buttons are
+   ~24px; pad them to 40px for reliable taps. On phone widths the actions
+   wrap onto their own row, so there is room. */
+.plan-exercise-row__move.mud-icon-button,
+.plan-exercise-row__delete.mud-icon-button {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
 }
 
 .plan-exercise-sheet__body {
@@ -1964,6 +2003,10 @@ button.history-session-card.history-session-card--selected {
     text-transform: none;
 }
 
+.history-select-toggle.mud-button-root {
+    min-height: 44px;
+}
+
 .import-preview-rows {
     display: flex;
     flex-direction: column;
@@ -2577,6 +2620,17 @@ button.history-session-card.history-session-card--selected {
     font-size: 1.1rem;
 }
 
+/* Mid-workout move/skip controls: MudBlazor Size.Small icon buttons are
+   ~24px, below the 44px touch guideline. Pad them to 40px so taps land
+   reliably while keeping the header compact. */
+.exercise-move-btn.mud-icon-button,
+.exercise-skip-btn.mud-icon-button {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+}
+
 /* Set Rows styling */
 .set-logging-rows {
     display: flex;
@@ -2782,6 +2836,30 @@ button.history-session-card.history-session-card--selected {
 .profile-row--active {
     background-color: var(--mud-palette-primary-hover);
     border-color: var(--mud-palette-primary);
+}
+
+/* Long profile names truncate instead of pushing the action buttons off
+   screen; the nested flex containers must all allow shrinking. */
+.profile-row > :first-child,
+.profile-row > :first-child > * {
+    min-width: 0;
+}
+.profile-row__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Very narrow screens: the switch/rename/delete buttons wrap onto their own
+   line instead of overflowing the viewport. */
+@media (max-width: 340px) {
+    .profile-row {
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+    }
+    .profile-row > :last-child {
+        margin-inline-start: auto;
+    }
 }
 
 .icon-btn-square {
@@ -3121,6 +3199,13 @@ a,
 
 .settings-panels .mud-expand-panel .mud-expand-panel-icon {
     color: var(--mud-palette-text-secondary);
+}
+
+/* The subtitle is white-space: nowrap with an ellipsis; without min-width: 0
+   on the text wrapper its intrinsic width forces the panel header wider than
+   the screen on narrow viewports. */
+.settings-panels .mud-expand-panel-header .mud-expand-panel-text {
+    min-width: 0;
 }
 
 /* ==========================================================================
@@ -4650,6 +4735,7 @@ html[data-theme="dark"] .share-card__footer {
     justify-content: center;
     gap: 0.375rem;
     padding: 0.625rem 0.875rem;
+    min-height: 44px;
     border: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 80%, transparent);
     border-radius: 999px;
     background: var(--mud-palette-surface);

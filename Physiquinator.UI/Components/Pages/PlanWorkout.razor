@@ -51,7 +51,7 @@ else
                                       autocomplete="off"
                                       enterkeyhint="done" />
                         <MudGrid Spacing="2" Class="plan-details-card__grid">
-                            <MudItem xs="6">
+                            <MudItem xs="12" sm="6">
                                 <SetMetricStepper Label="@Loc["Default sets"]"
                                                   @bind-Value="DefaultSetCountValue"
                                                   Step="1"
@@ -60,7 +60,7 @@ else
                                                   Format="0"
                                                   InputMode="numeric" />
                             </MudItem>
-                            <MudItem xs="6">
+                            <MudItem xs="12" sm="6">
                                 <SetMetricStepper Label="@Loc["Default rest (s)"]"
                                                   @bind-Value="RestIntervalSecondsValue"
                                                   Step="5"

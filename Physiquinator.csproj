@@ -47,6 +47,13 @@
 
     <!-- Debug Configuration: Optimize for fast deployment -->
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <!-- Unpackaged Windows debug: plain `dotnet build -t:Run` / `dotnet run`
+             must copy wwwroot (index.html) to the output root. With the default
+             packaged (MSIX) layout the BlazorWebView cannot find its host page
+             and shows the "https://0.0.0.1/ ERR_ADDRESS_UNREACHABLE" page.
+             Release and CI pass their own WindowsPackageType explicitly. -->
+        <WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
+
         <!-- Android optimizations for faster wireless debugging -->
         <AndroidUseSharedRuntime>true</AndroidUseSharedRuntime>
         <AndroidLinkMode>None</AndroidLinkMode>

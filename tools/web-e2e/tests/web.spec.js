@@ -68,7 +68,10 @@ test('sign out returns to the login screen', async ({ page }) => {
         // No dialog; nothing to dismiss.
     }
 
-    await page.getByTitle('Sign out of this account').click();
+    // The Account panel lives on the Settings page: expand it, then sign out.
+    await page.goto('/settings');
+    await page.locator('.mud-expand-panel-header', { hasText: 'Account' }).click();
+    await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByLabel('Username')).toBeVisible({ timeout: 30_000 });
 });

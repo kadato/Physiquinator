@@ -350,7 +350,11 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
     private void StartInternalTimer()
     {
-        _internalTimer ??= new System.Threading.Timer(OnInternalTimerTick, null, 500, 500);
+        // One-second tick: the JS bridge drives the visible countdown at the
+        // same cadence, and the exact rest-end alarm is the precise path, so
+        // this timer only needs to notice expiry while the app is not ticking
+        // (backgrounded). A slower tick keeps the CPU in deep sleep longer.
+        _internalTimer ??= new System.Threading.Timer(OnInternalTimerTick, null, 1000, 1000);
     }
 
     private void StopInternalTimer()

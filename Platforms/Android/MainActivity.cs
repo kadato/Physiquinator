@@ -1,7 +1,9 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Activity;
+using Physiquinator.Platforms.Android.Services;
 using AndroidView = global::Android.Views.View;
 using AndroidViewGroup = global::Android.Views.ViewGroup;
 using WebView = global::Android.Webkit.WebView;
@@ -35,6 +37,30 @@ public class MainActivity : MauiAppCompatActivity
         // Tracks foreground state without overriding activity lifecycle
         // methods, which can interfere with MAUI's fragment setup.
         Application?.RegisterActivityLifecycleCallbacks(new ForegroundTracker());
+    }
+
+    /// <summary>
+    /// Tells the rest-timer overlay service that the app changed foreground
+    /// state so it can show/hide the bubble and start/stop its ticker without
+    /// polling. The service is already running as a foreground service for
+    /// the whole workout; starting it again while it is not running (no
+    /// workout) fails silently on Android 12+ from the background, which is
+    /// the desired no-op.
+    /// </summary>
+    private static void NotifyOverlayVisibilityChange(string action)
+    {
+        try
+        {
+            Context context = global::Android.App.Application.Context;
+            context.StartService(new Intent(context, typeof(RestOverlayService))
+                .SetAction(action)
+                .SetPackage(context.PackageName!));
+        }
+        catch (Exception)
+        {
+            // No workout/service running, or background-start restriction;
+            // nothing to show.
+        }
     }
 
     private sealed class WorkoutBackGuardCallback : OnBackPressedCallback
@@ -116,9 +142,17 @@ public class MainActivity : MauiAppCompatActivity
 
     private sealed class ForegroundTracker : Java.Lang.Object, global::Android.App.Application.IActivityLifecycleCallbacks
     {
-        public void OnActivityStarted(Activity? activity) => IsInForeground = true;
+        public void OnActivityStarted(Activity? activity)
+        {
+            IsInForeground = true;
+            NotifyOverlayVisibilityChange(RestOverlayService.ActionForegrounded);
+        }
 
-        public void OnActivityStopped(Activity? activity) => IsInForeground = false;
+        public void OnActivityStopped(Activity? activity)
+        {
+            IsInForeground = false;
+            NotifyOverlayVisibilityChange(RestOverlayService.ActionBackgrounded);
+        }
 
         public void OnActivityCreated(Activity? activity, Bundle? savedInstanceState)
         {

@@ -25,8 +25,10 @@ namespace Physiquinator.Platforms.Android.Services;
 /// overlay showing the live rest countdown (or the upcoming set between
 /// rests) with themed actions - add time, reset, skip - plus a close
 /// button. Tapping the bubble body opens the app. The state is
-/// read from <see cref="WorkoutSessionService"/> on a 500 ms ticker, so it
-/// stays accurate regardless of WebView suspension. The overlay view is only
+/// read from <see cref="WorkoutSessionService"/> on a one-second ticker that
+/// runs only while the bubble is visible, so it stays accurate regardless of
+/// WebView suspension without waking the CPU for a workout held in the
+/// foreground. The overlay view is only
 /// shown while the app is backgrounded; the foreground service notification
 /// stays up for the whole workout. Declared in AndroidManifest.xml
 /// (foregroundServiceType specialUse); <see cref="RegisterAttribute"/> pins
@@ -43,7 +45,13 @@ public sealed class RestOverlayService : Service
     public const string ExtraNextSetIndex = "nextSetIndex";
     public const string ExtraNextSetTotal = "nextSetTotal";
 
-    private const long TickerIntervalMs = 500;
+    private const long TickerIntervalMs = 1000;
+
+    /// <summary>MainActivity pings the service on app lifecycle changes so the
+    /// bubble can be shown/hidden without a polling ticker running in the
+    /// foreground.</summary>
+    public const string ActionForegrounded = "physiquinator.overlay.foregrounded";
+    public const string ActionBackgrounded = "physiquinator.overlay.backgrounded";
 
     private IWindowManager? _windowManager;
     private AndroidView? _overlayView;
@@ -111,13 +119,26 @@ public sealed class RestOverlayService : Service
                 // bubble countdown freezes for the rest of the workout.
                 System.Diagnostics.Debug.WriteLine($"RestOverlayService ticker failed: {ex}");
             }
-            _handler?.PostDelayed(tick, TickerIntervalMs);
+            // Only reschedule while the ticker is still wanted; StopTicker
+            // must win even when it runs mid-tick.
+            if (_tickerRunning)
+                _handler?.PostDelayed(tick, TickerIntervalMs);
         };
         _tickAction = tick;
     }
 
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
     {
+        // Foreground/background lifecycle pings from MainActivity: show or
+        // hide the bubble without rebuilding the notification. The ticker
+        // runs only while the overlay is actually visible, so a workout held
+        // in the foreground costs no wakeups.
+        if (intent?.Action == ActionForegrounded || intent?.Action == ActionBackgrounded)
+        {
+            UpdateOverlayVisibility();
+            return StartCommandResult.NotSticky;
+        }
+
         WorkoutTimerState state = intent != null ? ReadState(intent) : ReadSessionState();
 
         Notification notification = AndroidRestNotificationService.BuildWorkoutNotification(this, state, ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds);
@@ -128,22 +149,13 @@ public sealed class RestOverlayService : Service
 
         UpdateOverlayVisibility();
 
-        // The ticker is the only thing that re-evaluates overlay visibility
-        // (e.g. when the app backgrounds without a state change), so it must
-        // run for the whole workout, not only once the overlay is shown.
-        if (!_tickerRunning)
-        {
-            _tickerRunning = true;
-            _handler?.Post(_tickAction!);
-        }
-
         return StartCommandResult.NotSticky;
     }
 
     public override void OnDestroy()
     {
         _stopping = true;
-        _handler?.RemoveCallbacks(_tickAction!);
+        StopTicker();
         _handler = null;
 
         RemoveOverlayView();
@@ -152,6 +164,30 @@ public sealed class RestOverlayService : Service
     }
 
     public override IBinder? OnBind(Intent? intent) => null;
+
+    /// <summary>
+    /// Starts the one-second ticker. Called only when the overlay view is
+    /// visible (app backgrounded and bubble not dismissed), so a workout in
+    /// the foreground does not wake the CPU for the whole session.
+    /// </summary>
+    private void StartTicker()
+    {
+        if (_tickerRunning || _stopping)
+            return;
+
+        _tickerRunning = true;
+        _handler?.Post(_tickAction!);
+    }
+
+    /// <summary>Cancels any pending and future ticks (also wins mid-tick).</summary>
+    private void StopTicker()
+    {
+        if (!_tickerRunning)
+            return;
+
+        _tickerRunning = false;
+        _handler?.RemoveCallbacks(_tickAction!);
+    }
 
     /// <summary>Shows the overlay only while the app is in the background and not dismissed by the user.</summary>
     private void UpdateOverlayVisibility()
@@ -182,6 +218,8 @@ public sealed class RestOverlayService : Service
 
     private void RemoveOverlayView()
     {
+        StopTicker();
+
         if (_overlayView == null)
             return;
 
@@ -325,7 +363,7 @@ public sealed class RestOverlayService : Service
             _windowManager?.AddView(root, _layoutParams);
             _overlayView = root;
 
-            UpdateTicker();
+            StartTicker();
         }
         catch (Exception ex)
         {
@@ -696,7 +734,6 @@ public sealed class RestOverlayService : Service
             return;
         }
 
-        UpdateOverlayVisibility();
         if (_overlayView == null)
             return;
 

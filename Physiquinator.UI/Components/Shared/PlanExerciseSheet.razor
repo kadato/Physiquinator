@@ -3,11 +3,13 @@
 @inject IJSRuntime JS
 @inject WorkoutHistoryRepository HistoryRepository
 @inject WeightUnitService WeightUnitService
-@inject IStringLocalizer<UiText> Loc
 
 <MudDialog Class="plan-exercise-sheet">
     <TitleContent>
-        <MudText Typo="Typo.h6">@(IsNew ? Loc["Add exercise"] : Loc["Edit exercise"])</MudText>
+        <div class="d-flex align-items-center gap-3">
+            <MudIcon Icon="@(IsNew ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="fw-bold">@(IsNew ? "Add exercise" : "Edit exercise")</MudText>
+        </div>
     </TitleContent>
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
@@ -16,8 +18,8 @@
                                  Value="_name"
                                  id="exercise-sheet-name-input"
                                  Variant="Variant.Filled"
-                                 Label="@Loc["Exercise name"]"
-                                 Placeholder="@Loc["e.g. Bench press"]"
+                                 Label="@("Exercise name")"
+                                 Placeholder="@("e.g. Bench press")"
                                  SearchFunc="SearchExerciseNamesAsync"
                                  ValueChanged="OnNameChanged"
                                  CoerceValue="false"
@@ -27,28 +29,28 @@
                                  autocapitalize="words"
                                  @onfocus="OnExerciseNameFocus" />
                 <MudText Typo="Typo.caption" Class="plan-exercise-sheet__catalog-hint">
-                    @Loc["Suggestions include the built-in exercise catalog."]
+                    @("Suggestions include the built-in exercise catalog.")
                 </MudText>
 
             <MudSelect Value="_logType"
                        ValueChanged="OnLogTypeChanged"
                        Variant="Variant.Filled"
-                       Label="@Loc["Exercise type"]"
+                       Label="@("Exercise type")"
                        Class="mb-2"
                        T="ExerciseLogType">
-                <MudSelectItem Value="ExerciseLogType.WeightAndReps">@Loc["Weight and reps"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.BodyweightReps">@Loc["Bodyweight (reps)"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.Duration">@Loc["Duration (s)"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.WeightAndReps">@("Weight and reps")</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.BodyweightReps">@("Bodyweight (reps)")</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.Duration">@("Duration (s)")</MudSelectItem>
             </MudSelect>
 
-            <SetMetricStepper Label="@Loc["Sets"]"
+            <SetMetricStepper Label="@("Sets")"
                               @bind-Value="_setCount"
                               Step="1"
                               Min="1"
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="@Loc["Warm-up sets"]"
+            <SetMetricStepper Label="@("Warm-up sets")"
                               @bind-Value="_warmupSetCount"
                               Step="1"
                               Min="0"
@@ -56,7 +58,7 @@
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="@Loc["Rest (s)"]"
+            <SetMetricStepper Label="@("Rest (s)")"
                               @bind-Value="_restSeconds"
                               Step="5"
                               Min="0"
@@ -68,17 +70,17 @@
                        Value="_supersetGroupId"
                        ValueChanged="OnSupersetGroupChanged"
                        Variant="Variant.Filled"
-                       Label="@Loc["Superset group"]"
+                       Label="@("Superset group")"
                        Class="mb-2"
-                       HelperText="@Loc["Exercises in the same group are logged back-to-back without rest."]">
-                <MudSelectItem Value="@string.Empty">@Loc["None"]</MudSelectItem>
+                       HelperText="@("Exercises in the same group are logged back-to-back without rest.")">
+                <MudSelectItem Value="@string.Empty">@("None")</MudSelectItem>
                 <MudSelectItem Value="@("A")">A</MudSelectItem>
                 <MudSelectItem Value="@("B")">B</MudSelectItem>
                 <MudSelectItem Value="@("C")">C</MudSelectItem>
                 <MudSelectItem Value="@("D")">D</MudSelectItem>
             </MudSelect>
             <SetMetricStepper @key="@($"reps-stepper-{_logType}")"
-                              Label="@(_logType == ExerciseLogType.Duration ? Loc["Default duration (s)"] : Loc["Default reps"])"
+                              Label="@(_logType == ExerciseLogType.Duration ? "Default duration (s)" : "Default reps")"
                               @bind-Value="_defaultReps"
                               Step="1"
                               Min="0"
@@ -100,7 +102,7 @@
 
             @if (_logType == ExerciseLogType.BodyweightReps)
             {
-                <SetMetricStepper Label="@Loc["Bodyweight share"]"
+                <SetMetricStepper Label="@("Bodyweight share")"
                                   @bind-Value="_bodyweightPercent"
                                   Step="5"
                                   Min="0"
@@ -110,7 +112,7 @@
                                   InputMode="numeric"
                                   Unit="%" />
                 <MudText Typo="Typo.caption">
-                    @Loc["{0} of your bodyweight counts toward volume.", BodyweightShareLabel]
+                    @(string.Format("{0} of your bodyweight counts toward volume.", BodyweightShareLabel))
                 </MudText>
             }
 
@@ -118,14 +120,14 @@
                     <MudButton Variant="Variant.Text"
                                FullWidth="true"
                                OnClick="Cancel">
-                        @Loc["Cancel"]
+                        @("Cancel")
                     </MudButton>
                     <MudButton Color="Color.Primary"
                                Variant="Variant.Filled"
                                FullWidth="true"
                                ButtonType="ButtonType.Submit"
                                Disabled="@ConfirmDisabled">
-                        @Loc["Save exercise"]
+                        @("Save exercise")
                     </MudButton>
                 </div>
             </MudStack>
@@ -158,12 +160,12 @@
     private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
 
     private string BodyweightShareLabel =>
-        Loc["{0}%", _bodyweightPercent ?? 100];
+        string.Format("{0}%", _bodyweightPercent ?? 100);
 
     private string DefaultWeightLabel =>
         _logType == ExerciseLogType.BodyweightReps
-            ? Loc["Default weight offset ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]
-            : Loc["Default weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)];
+            ? string.Format("Default weight offset ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current))
+            : string.Format("Default weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current));
 
     private double? DefaultWeightDisplay =>
         _defaultWeightKg is { } kg

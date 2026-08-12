@@ -7,14 +7,13 @@
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject ISnackbar Snackbar
 @inject ILogger<UpdateDialog> Logger
-@inject IStringLocalizer<UiText> Loc
 
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
             <MudIcon Icon="@Icons.Material.Filled.SystemUpdate" Color="Color.Primary" Size="Size.Large" />
             <div>
-                <MudText Typo="Typo.h6" Class="fw-bold">@Loc["Update available"]</MudText>
+                <MudText Typo="Typo.h6" Class="fw-bold">@("Update available")</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@VersionLine</MudText>
             </div>
         </div>
@@ -22,13 +21,13 @@
     <DialogContent>
         <MudStack Spacing="3" Class="py-2">
             <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                @Loc["Version"] <strong>@Release.Tag</strong> @Loc["is ready to install. Your plans and history stay on this device and are not affected."]
+                @("Version") <strong>@Release.Tag</strong> @("is ready to install. Your plans and history stay on this device and are not affected.")
             </MudText>
 
             @if (!string.IsNullOrWhiteSpace(Release.Notes))
             {
                 <div class="update-dialog__notes">
-                    <MudText Typo="Typo.overline" Class="mud-text-secondary">@Loc["What's new"]</MudText>
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary">@("What's new")</MudText>
                     <div class="update-dialog__notes-body markdown-body">@((MarkupString)RenderedNotes)</div>
                 </div>
             }
@@ -39,21 +38,21 @@
                 {
                     <MudProgressLinear Value="(int)(_downloadProgress * 100)" Color="Color.Primary" Class="mt-2" />
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                        @Loc["Downloading update… {0}%", Math.Round(_downloadProgress * 100)]
+                        @(string.Format("Downloading update… {0}%", Math.Round(_downloadProgress * 100)))
                     </MudText>
                 }
             }
             else
             {
                 <MudAlert Severity="Severity.Info">
-                    @Loc["A newer version is available, but in-app updates are not supported on this platform."]
+                    @("A newer version is available, but in-app updates are not supported on this platform.")
                 </MudAlert>
             }
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="NeverNotify" Disabled="_downloading">@Loc["Don't ask again"]</MudButton>
-        <MudButton OnClick="Close" Disabled="_downloading">@Loc["Later"]</MudButton>
+        <MudButton OnClick="NeverNotify" Disabled="_downloading">@("Don't ask again")</MudButton>
+        <MudButton OnClick="Close" Disabled="_downloading">@("Later")</MudButton>
         @if (Downloadable)
         {
             <MudButton Color="Color.Primary"
@@ -61,7 +60,7 @@
                        StartIcon="@Icons.Material.Filled.Download"
                        Disabled="_downloading"
                        OnClick="DownloadAsync">
-                @(_downloading ? Loc["Downloading…"] : Loc["Download"])
+                @(_downloading ? "Downloading…" : "Download")
             </MudButton>
         }
     </DialogActions>
@@ -115,13 +114,13 @@
 
             var update = new UpdateCheckResult(Release, true, DownloadUrl);
             await AppUpdateService.DownloadAndInstallAsync(update, progress);
-            Snackbar.Add(Loc["Update installed. The app will restart automatically."], Severity.Success);
+            Snackbar.Add("Update installed. The app will restart automatically.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Update download failed");
-            Snackbar.Add(Loc["Update failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Update failed: {0}", ex.Message), Severity.Error);
             MudDialog.Close(DialogResult.Cancel());
         }
     }
@@ -131,6 +130,7 @@
     private void NeverNotify()
     {
         AppUpdateSettings.SetAutoCheckEnabled(false);
+        Snackbar.Add("Automatic update checks are off.", Severity.Info);
         MudDialog.Close(DialogResult.Ok(false));
     }
 }

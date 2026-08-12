@@ -3,8 +3,6 @@
 @using Physiquinator.Core.Services.Ai
 @using Physiquinator.Core.Models
 @using Physiquinator.Core.Formatting
-@using Microsoft.Extensions.Localization
-@using Physiquinator.UI.Localization
 @using Physiquinator.UI.Components.Shared
 @inject ThemeService ThemeService
 @inject RestAlertSettingsService RestAlertSettings
@@ -24,19 +22,18 @@
 @inject BackupRestoreService BackupRestore
 @inject WeightUnitService WeightUnitService
 @inject IAccountService Account
-@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 
-<PageTitle>@Loc["Settings"]</PageTitle>
+<PageTitle>@("Settings")</PageTitle>
 
 <MudStack Spacing="3">
-    <PageHeader Title="@Loc["Settings"]" ShowBack="false" />
+    <PageHeader Title="@("Settings")" />
 
     <MudTextField T="string"
                   Value="_settingsSearch"
                   ValueChanged="OnSearchChanged"
-                  Placeholder="@Loc["Search settings…"]"
+                  Placeholder="@("Search settings…")"
                   Adornment="Adornment.Start"
                   AdornmentIcon="@Icons.Material.Filled.Search"
                   Clearable="true"
@@ -44,14 +41,14 @@
                   Variant="Variant.Outlined"
                   Class="mb-2" />
 
-    <div class="settings-tab-row" role="tablist" aria-label="@Loc["Settings sections"]">
+    <div class="settings-tab-row" role="tablist" aria-label="@("Settings sections")">
         <button type="button"
                 role="tab"
                 aria-selected="@(_activeTabIndex == 0)"
                 class="settings-tab @(_activeTabIndex == 0 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 0">
             <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
-            <span>@Loc["General"]</span>
+            <span>@("General")</span>
         </button>
         <button type="button"
                 role="tab"
@@ -59,7 +56,7 @@
                 class="settings-tab @(_activeTabIndex == 1 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 1">
             <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
-            <span>@Loc["AI"]</span>
+            <span>@("AI")</span>
         </button>
         <button type="button"
                 role="tab"
@@ -67,7 +64,7 @@
                 class="settings-tab @(_activeTabIndex == 2 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 2">
             <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" />
-            <span>@Loc["Data"]</span>
+            <span>@("Data")</span>
         </button>
         <button type="button"
                 role="tab"
@@ -75,7 +72,7 @@
                 class="settings-tab @(_activeTabIndex == 3 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 3">
             <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
-            <span>@Loc["About"]</span>
+            <span>@("About")</span>
         </button>
     </div>
 
@@ -89,8 +86,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Appearance"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Light or dark mode"]</span>
+                            <span class="settings-panel__title">@("Appearance")</span>
+                            <span class="settings-panel__subtitle">@("Light or dark mode")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -98,15 +95,15 @@
                 <div class="settings-panel__content">
                     <MudSelect T="string"
                                Variant="Variant.Filled"
-                               Label="@Loc["Light or dark mode"]"
+                               Label="@("Light or dark mode")"
                                Value="_preference"
                                ValueChanged="OnThemePreferenceChanged">
-                        <MudSelectItem Value="@ThemePreference.System">@Loc["Match system"]</MudSelectItem>
-                        <MudSelectItem Value="@ThemePreference.Light">@Loc["Light (always)"]</MudSelectItem>
-                        <MudSelectItem Value="@ThemePreference.Dark">@Loc["Dark (always)"]</MudSelectItem>
+                        <MudSelectItem Value="@ThemePreference.System">@("Match system")</MudSelectItem>
+                        <MudSelectItem Value="@ThemePreference.Light">@("Light (always)")</MudSelectItem>
+                        <MudSelectItem Value="@ThemePreference.Dark">@("Dark (always)")</MudSelectItem>
                     </MudSelect>
                     <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                        @Loc["Active mode:"] <strong>@_effectiveThemeLabel</strong>
+                        @("Active mode:") <strong>@_effectiveThemeLabel</strong>
                     </MudText>
                 </div>
             </ChildContent>
@@ -120,8 +117,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Units"]</span>
-                            <span class="settings-panel__subtitle">@Loc["How weights are displayed"]</span>
+                            <span class="settings-panel__title">@("Units")</span>
+                            <span class="settings-panel__subtitle">@("How weights are displayed")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -129,14 +126,14 @@
                 <div class="settings-panel__content">
                     <MudSelect T="WeightUnit"
                                Variant="Variant.Filled"
-                               Label="@Loc["Weight unit"]"
+                               Label="@("Weight unit")"
                                Value="_weightUnit"
                                ValueChanged="OnWeightUnitChanged">
-                        <MudSelectItem Value="WeightUnit.Kilograms">@Loc["Kilograms (kg)"]</MudSelectItem>
-                        <MudSelectItem Value="WeightUnit.Pounds">@Loc["Pounds (lb)"]</MudSelectItem>
+                        <MudSelectItem Value="WeightUnit.Kilograms">@("Kilograms (kg)")</MudSelectItem>
+                        <MudSelectItem Value="WeightUnit.Pounds">@("Pounds (lb)")</MudSelectItem>
                     </MudSelect>
                     <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                        @Loc["Weights are stored in kilograms and converted when displayed."]
+                        @("Weights are stored in kilograms and converted when displayed.")
                     </MudText>
                 </div>
             </ChildContent>
@@ -150,8 +147,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Rest timer"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Notifications and rest time"]</span>
+                            <span class="settings-panel__title">@("Rest timer")</span>
+                            <span class="settings-panel__subtitle">@("Notifications and rest time")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -160,30 +157,30 @@
                     @if (!RestNotifications.SupportsNotifications)
                     {
                         <MudAlert Severity="Severity.Info" Class="mb-3">
-                            @Loc["Notifications are not supported on this platform. The rest timer still runs inside the app."]
+                            @("Notifications are not supported on this platform. The rest timer still runs inside the app.")
                         </MudAlert>
                     }
                     <MudSwitch T="bool"
-                               Label="@Loc["Notify when rest ends"]"
+                               Label="@("Notify when rest ends")"
                                Disabled="!RestNotifications.SupportsNotifications"
                                Value="_restAlertsEnabled"
                                ValueChanged="OnRestAlertsEnabledChanged" />
                     <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                        @Loc["Push notification when your rest timer expires. Includes the next exercise name."]
+                        @("Push notification when your rest timer expires. Includes the next exercise name.")
                     </MudText>
 
                     <MudSwitch T="bool"
                                Class="mt-3"
-                               Label="@Loc["Sound & vibration"]"
+                               Label="@("Sound & vibration")"
                                Disabled="!_restAlertsEnabled || !RestNotifications.SupportsNotifications"
                                Value="_restSoundVibrationEnabled"
                                ValueChanged="OnRestSoundVibrationChanged" />
                     <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                        @Loc["Play the knock sound and vibrate when the rest-end notification fires."]
+                        @("Play the knock sound and vibrate when the rest-end notification fires.")
                     </MudText>
 
                     <MudStack Spacing="0" Class="mt-4">
-                        <SetMetricStepper Label="@Loc["Add rest time (s)"]"
+                        <SetMetricStepper Label="@("Add rest time (s)")"
                                           @bind-Value="_addTimeSecondsValue"
                                           Step="5"
                                           Min="5"
@@ -192,37 +189,37 @@
                                           Format="0"
                                           InputMode="numeric" />
                         <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                            @Loc["The + button on the rest timer adds this many seconds."]
+                            @("The + button on the rest timer adds this many seconds.")
                         </MudText>
                     </MudStack>
                     <MudStack Spacing="0" Class="mt-4">
-                        <MudText Typo="Typo.body2" Class="font-weight-semibold">@Loc["Floating timer"]</MudText>
+                        <MudText Typo="Typo.body2" Class="font-weight-semibold">@("Floating timer")</MudText>
                         @if (RestNotifications.SupportsOverlay)
                         {
                             @if (_overlayPermissionGranted)
                             {
                                 <MudText Typo="Typo.body2" Color="Color.Success" Class="mt-1">
-                                    @Loc["Enabled - a draggable bubble shows the rest countdown over other apps while you train."]
+                                    @("Enabled - a draggable bubble shows the rest countdown over other apps while you train.")
                                 </MudText>
                             }
                             else
                             {
                                 <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                                    @Loc["The floating bubble needs the \"Display over other apps\" permission. Without it, no bubble appears when you leave the app during a rest."]
+                                    @("The floating bubble needs the \\\"Display over other apps\\\" permission. Without it, no bubble appears when you leave the app during a rest.")
                                 </MudText>
                                 <MudButton Variant="Variant.Outlined"
                                            Color="Color.Primary"
                                            Class="mt-3 align-self-start"
                                            StartIcon="@Icons.Material.Filled.PictureInPictureAlt"
                                            OnClick="OpenOverlaySettingsAsync">
-                                    @Loc["Grant permission"]
+                                    @("Grant permission")
                                 </MudButton>
                             }
                         }
                         else
                         {
                             <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                                @Loc["Not available on this device."]
+                                @("Not available on this device.")
                             </MudText>
                         }
                     </MudStack>
@@ -238,8 +235,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["User profiles"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Create, switch, and manage profiles"]</span>
+                            <span class="settings-panel__title">@("User profiles")</span>
+                            <span class="settings-panel__subtitle">@("Create, switch, and manage profiles")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -258,15 +255,15 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Workout schedule"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Keep your streak alive on rest days"]</span>
+                            <span class="settings-panel__title">@("Workout schedule")</span>
+                            <span class="settings-panel__subtitle">@("Keep your streak alive on rest days")</span>
                         </span>
                     </div>
                 </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudText Typo="Typo.body2" Class="mb-2">
-                        @Loc["Pick the days you normally train."]
+                        @("Pick the days you normally train.")
                     </MudText>
                     <div class="settings-schedule-days">
                         @foreach (var day in ScheduleDayOrder)
@@ -276,15 +273,16 @@
                             <button type="button"
                                     class="settings-schedule-day"
                                     aria-pressed="@(isSelected ? "true" : "false")"
+                                    aria-label="@DayName(d)"
                                     @onclick="@(() => ToggleScheduleDay(d))">
-                                @d.ToString()[..3]
+                                @AbbreviatedDayName(d)
                             </button>
                         }
                     </div>
                     @if (_scheduleDays.Count == 0)
                     {
                         <MudText Typo="Typo.body2" Class="mt-3 mud-text-secondary">
-                            @Loc["No schedule yet. Without one, your streak counts every calendar day you train, so two rest days in a row end it."]
+                            @("No schedule yet. Without one, your streak counts every calendar day you train, so two rest days in a row end it.")
                         </MudText>
                     }
                     else
@@ -293,7 +291,7 @@
                             @ScheduleSummaryLabel
                         </MudText>
                         <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                            @Loc["Rest days never break your streak. A scheduled day you skip does."]
+                            @("Rest days never break your streak. A scheduled day you skip does.")
                         </MudText>
                     }
                 </div>
@@ -308,8 +306,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Logout" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Account"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Sign out of this account"]</span>
+                            <span class="settings-panel__title">@("Account")</span>
+                            <span class="settings-panel__subtitle">@("Sign out of this account")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -320,7 +318,7 @@
                                    OnClick="SignOutAsync"
                                    StartIcon="@Icons.Material.Filled.Logout"
                                    Class="btn-premium-ghost">
-                            @Loc["Sign out"]
+                            @("Sign out")
                         </MudButton>
                     </div>
                 </ChildContent>
@@ -340,15 +338,15 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["AI Assistant"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Configure OpenAI / OpenRouter / Ollama API"]</span>
+                            <span class="settings-panel__title">@("AI Assistant")</span>
+                            <span class="settings-panel__subtitle">@("Configure OpenAI / OpenRouter / Ollama API")</span>
                         </span>
                     </div>
                 </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSwitch T="bool"
-                               Label="@Loc["Enable AI Assistant"]"
+                               Label="@("Enable AI Assistant")"
                                Value="_aiSettings.Enabled"
                                ValueChanged="OnAiEnabledChanged" />
 
@@ -356,16 +354,16 @@
                          && string.IsNullOrWhiteSpace(_aiSettings.ApiKey))
                     {
                         <MudAlert Severity="Severity.Warning" Class="mt-3">
-                            @Loc["No API key set yet. The assistant needs one to answer."]
+                            @("No API key set yet. The assistant needs one to answer.")
                         </MudAlert>
                     }
 
                     @if (_aiSettings.Enabled)
                     {
-                        <form @onsubmit="SaveAiSettings" @onsubmit:preventDefault>
+                        <form @onsubmit="() => SaveAiSettings()" @onsubmit:preventDefault>
                         <MudStack Spacing="3" Class="mt-3">
                             <MudSelect T="AiProviderType"
-                                       Label="@Loc["Provider preset"]"
+                                       Label="@("Provider preset")"
                                        Variant="Variant.Filled"
                                        Value="_aiSettings.Provider"
                                        ValueChanged="OnAiProviderChanged">
@@ -377,41 +375,41 @@
                             </MudSelect>
 
                             <MudTextField T="string"
-                                          Label="@Loc["API Base URL"]"
+                                          Label="@("API Base URL")"
                                           Variant="Variant.Filled"
                                           @bind-Value="_aiSettings.BaseUrl"
-                                          HelperText="@Loc["Standard base URL (e.g. https://api.openai.com/v1)"]" />
+                                          HelperText="@("Standard base URL (e.g. https://api.openai.com/v1)")" />
 
                             <MudTextField T="string"
-                                          Label="@Loc["API Key"]"
+                                          Label="@("API Key")"
                                           Variant="Variant.Filled"
                                           InputType="@(_showApiKey ? InputType.Text : InputType.Password)"
                                           Adornment="Adornment.End"
                                           AdornmentIcon="@(_showApiKey ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
                                           OnAdornmentClick="@(() => _showApiKey = !_showApiKey)"
                                           @bind-Value="_aiSettings.ApiKey"
-                                          HelperText="@Loc["Stored on-device in plaintext preferences"]" />
+                                          HelperText="@("Stored on-device in plaintext preferences")" />
 
                              @if (_fetchingModels)
                              {
                                  <div class="d-flex align-center gap-2 py-1">
                                      <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
-                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Fetching models from endpoint…"]</MudText>
+                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@("Fetching models from endpoint…")</MudText>
                                  </div>
                              }
 
                              <MudTextField T="string"
-                                           Label="@Loc["Model Name"]"
+                                           Label="@("Model Name")"
                                            Variant="Variant.Filled"
                                            @bind-Value="_aiSettings.ModelName"
-                                           HelperText="@Loc["e.g. gpt-4o-mini, deepseek-v4-flash, kimi-k3. Free text always works."]" />
+                                           HelperText="@("e.g. gpt-4o-mini, deepseek-v4-flash, kimi-k3. Free text always works.")" />
 
                              @if (_availableModels.Count > 0)
                              {
                                  <MudSelect T="string"
-                                            Label="@Loc["Fetched models"]"
+                                            Label="@("Fetched models")"
                                             Variant="Variant.Filled"
-                                            Placeholder="@Loc["Pick from the models the provider returned"]"
+                                            Placeholder="@("Pick from the models the provider returned")"
                                             Value="@_pickedFetchedModel"
                                             ValueChanged="OnFetchedModelPicked">
                                      @foreach (var model in _availableModels)
@@ -422,18 +420,18 @@
                              }
 
                             <MudTextField T="string"
-                                          Label="@Loc["Custom instructions / prompt (optional)"]"
+                                          Label="@("Custom instructions / prompt (optional)")"
                                           Variant="Variant.Filled"
                                           Lines="2"
                                           @bind-Value="_aiSettings.CustomSystemPrompt"
-                                          HelperText="@Loc["Extra instructions passed to the AI assistant"]" />
+                                          HelperText="@("Extra instructions passed to the AI assistant")" />
 
                             <div class="settings-btn-group mt-2">
                                 <MudButton Variant="Variant.Filled"
                                            Color="Color.Primary"
                                            ButtonType="ButtonType.Submit"
                                            StartIcon="@Icons.Material.Filled.Save">
-                                    @Loc["Save settings"]
+                                    @("Save settings")
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
                                            Disabled="_fetchingModels"
@@ -441,11 +439,11 @@
                                            StartIcon="@Icons.Material.Filled.CloudDownload">
                                     @if (_fetchingModels)
                                     {
-                                        <span>@Loc["Fetching…"]</span>
+                                        <span>@("Fetching…")</span>
                                     }
                                     else
                                     {
-                                        <span>@Loc["Fetch models"]</span>
+                                        <span>@("Fetch models")</span>
                                     }
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
@@ -454,17 +452,17 @@
                                            StartIcon="@Icons.Material.Filled.CheckCircle">
                                     @if (_testingAiConnection)
                                     {
-                                        <span>@Loc["Testing…"]</span>
+                                        <span>@("Testing…")</span>
                                     }
                                     else
                                     {
-                                        <span>@Loc["Test connection"]</span>
+                                        <span>@("Test connection")</span>
                                     }
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined"
                                            OnClick="OpenAiChat"
                                            StartIcon="@Icons.Material.Filled.SmartToy">
-                                    @Loc["Open assistant"]
+                                    @("Open assistant")
                                 </MudButton>
                             </div>
                         </MudStack>
@@ -488,8 +486,8 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Backup"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Export or import plans and history"]</span>
+                            <span class="settings-panel__title">@("Backup")</span>
+                            <span class="settings-panel__subtitle">@("Export or import plans and history")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -498,61 +496,61 @@
                         <MudAlert Severity="Severity.Info" Class="mb-3 settings-local-banner">
                             <div class="d-flex align-items-center gap-2">
                                 <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
-                                <span>@Loc["All data stays on this device — no accounts, no cloud sync. Use export to back it up."]</span>
+                                <span>@("All data stays on this device — no accounts, no cloud sync. Use export to back it up.")</span>
                             </div>
                         </MudAlert>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @Loc["Export"] <strong>@Loc["everything"]</strong> @Loc["— plans, workout history, bodyweight log, training schedule, and all settings — into one file. Import it to restore everything at once."]
+                            @("Export") <strong>@("everything")</strong> @("— plans, workout history, bodyweight log, training schedule, and all settings — into one file. Import it to restore everything at once.")
                         </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
                                    OnClick="ExportAllData"
                                    StartIcon="@Icons.Material.Filled.Upload">
-                            @Loc["Export all data"]
+                            @("Export all data")
                         </MudButton>
                         <MudButton Variant="Variant.Outlined" OnClick="ImportAllData" StartIcon="@Icons.Material.Filled.Download">
-                            @Loc["Import all data"]
+                            @("Import all data")
                         </MudButton>
                     </div>
 
                     <MudDivider Class="my-4" />
 
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        @Loc["Export all plans as JSON, or import a file you exported earlier."]
+                        @("Export all plans as JSON, or import a file you exported earlier.")
                     </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
                                    Disabled="@(_planCount == 0)"
                                    OnClick="ExportAllPlans"
                                    StartIcon="@Icons.Material.Filled.Upload">
-                            @Loc["Export all plans"]
+                            @("Export all plans")
                         </MudButton>
                         <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
-                            @Loc["Import plans"]
+                            @("Import plans")
                         </MudButton>
                     </div>
                     @if (_planCount == 0)
                     {
-                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@Loc["Create a plan first to enable export."]</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Create a plan first to enable export.")</MudText>
                     }
 
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
-                        @Loc["Export or import workout history JSON. Import merges by session and set id."]
+                        @("Export or import workout history JSON. Import merges by session and set id.")
                     </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
                                    Disabled="@(_historySessionCount == 0)"
                                    OnClick="ExportHistory"
                                    StartIcon="@Icons.Material.Filled.Upload">
-                            @Loc["Export history"]
+                            @("Export history")
                         </MudButton>
                         <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
-                            @Loc["Import history"]
+                            @("Import history")
                         </MudButton>
                     </div>
                     @if (_historySessionCount == 0)
                     {
-                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@Loc["Finish at least one workout to enable export."]</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Finish at least one workout to enable export.")</MudText>
                     }
                 </div>
             </ChildContent>
@@ -571,29 +569,29 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Updates"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Version {0}", _currentVersion]</span>
+                            <span class="settings-panel__title">@("Updates")</span>
+                            <span class="settings-panel__subtitle">@(string.Format("Version {0}", _currentVersion))</span>
                         </span>
                     </div>
                 </TitleContent>
                 <ChildContent>
                     <div class="settings-panel__content">
                         <MudSwitch T="bool"
-                                   Label="@Loc["Check for updates automatically"]"
+                                   Label="@("Check for updates automatically")"
                                    Value="_autoCheckEnabled"
                                    ValueChanged="OnAutoCheckEnabledChanged" />
                         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @Loc["When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available. Turn it off to never be notified about updates."]
+                            @("When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available. Turn it off to never be notified about updates.")
                         </MudText>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @Loc["New releases are published on GitHub and can be installed from here."]
+                            @("New releases are published on GitHub and can be installed from here.")
                         </MudText>
                         <div class="settings-btn-group">
                             <MudButton Variant="Variant.Outlined"
                                        Disabled="@_checkingForUpdates"
                                        OnClick="CheckForUpdatesAsync"
                                        StartIcon="@Icons.Material.Filled.SystemUpdate">
-                                @Loc["Check for updates"]
+                                @("Check for updates")
                             </MudButton>
                         </div>
                         @if (_checkingForUpdates)
@@ -604,7 +602,7 @@
                         {
                             <div class="mt-3">
                                 <MudText Typo="Typo.body2">
-                                    @Loc["Latest release:"] <strong>@_latestRelease.Tag</strong>
+                                    @("Latest release:") <strong>@_latestRelease.Tag</strong>
                                     @if (_latestRelease.PublishedAt is { } published)
                                     {
                                         <span class="mud-text-secondary">(@UiDateFormats.LocalDateCompact(published.DateTime))</span>
@@ -613,16 +611,16 @@
                                 @if (_updateAvailable && string.IsNullOrEmpty(_downloadUrl))
                                 {
                                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                        @Loc["A newer version is available, but in-app updates are not supported on this platform."]
+                                        @("A newer version is available, but in-app updates are not supported on this platform.")
                                     </MudText>
                                 }
                                 else if (_updateAvailable)
                                 {
-                                    <MudText Typo="Typo.body2" Color="Color.Primary">@Loc["A newer version is available."]</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Primary">@("A newer version is available.")</MudText>
                                 }
                                 else
                                 {
-                                    <MudText Typo="Typo.body2" Color="Color.Success">@Loc["You are on the latest version."]</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Success">@("You are on the latest version.")</MudText>
                                 }
                             </div>
                         }
@@ -638,22 +636,22 @@
                     <div class="settings-panel__header">
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
-                            <span class="settings-panel__title">@Loc["Remove all data"]</span>
-                            <span class="settings-panel__subtitle">@Loc["Permanently deletes everything on this device"]</span>
+                            <span class="settings-panel__title">@("Remove all data")</span>
+                            <span class="settings-panel__subtitle">@("Permanently deletes everything on this device")</span>
                         </span>
                     </div>
                 </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        @Loc["Permanently deletes every plan and workout log on this device. Export backups first if needed."]
+                        @("Permanently deletes every plan and workout log on this device. Export backups first if needed.")
                     </MudText>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Error"
                                OnClick="RemoveAllDataAsync"
                                StartIcon="@Icons.Material.Filled.DeleteForever"
                                Class="btn-premium-ghost">
-                        @Loc["Remove all data…"]
+                        @("Remove all data…")
                     </MudButton>
                 </div>
             </ChildContent>
@@ -664,7 +662,7 @@
 
     @if (NoResultsVisible)
     {
-        <EmptyState Message="@Loc["No settings match your search."]"
+        <EmptyState Message="@("No settings match your search.")"
                     Icon="@Icons.Material.Outlined.SearchOff" />
     }
 </MudStack>
@@ -702,6 +700,16 @@
     private async Task SignOutAsync()
     {
         if (!Account.IsSignOutSupported)
+            return;
+
+        var confirmed = await DialogService.ConfirmAsync(
+            "Sign out?",
+            "Sign out of this account? Your data stays on this device.",
+            confirmText: "Sign out",
+            cancelText: "Cancel",
+            confirmColor: Color.Error);
+
+        if (!confirmed)
             return;
 
         await Account.SignOutAsync();
@@ -748,7 +756,7 @@
         && !DataTabVisible
         && !AboutTabVisible;
 
-    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? Loc["Light"] : Loc["Dark"];
+    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
 
     private static readonly DayOfWeek[] ScheduleDayOrder =
     [
@@ -758,14 +766,26 @@
 
     private HashSet<DayOfWeek> _scheduleDays = [];
 
+    private static string AbbreviatedDayName(DayOfWeek day)
+    {
+        var name = System.Globalization.DateTimeFormatInfo.CurrentInfo?.GetAbbreviatedDayName(day);
+        return string.IsNullOrEmpty(name) ? day.ToString()[..3] : name;
+    }
+
+    private static string DayName(DayOfWeek day)
+    {
+        var name = System.Globalization.DateTimeFormatInfo.CurrentInfo?.GetDayName(day);
+        return string.IsNullOrEmpty(name) ? day.ToString() : name;
+    }
+
     private string ScheduleSummaryLabel
     {
         get
         {
-            var days = string.Join(", ", ScheduleDayOrder.Where(_scheduleDays.Contains).Select(d => d.ToString()[..3]));
+            var days = string.Join(", ", ScheduleDayOrder.Where(_scheduleDays.Contains).Select(AbbreviatedDayName));
             var next = WorkoutSchedule.NextWorkoutDay(DateOnly.FromDateTime(DateTime.Today));
-            var nextLabel = next is { } n ? $"{n.DayOfWeek} {UiDateFormats.DateOnlyCompact(n)}" : "—";
-            return Loc["You train {0} day(s) per week: {1}. Next training day: {2}.", _scheduleDays.Count, days, nextLabel];
+            var nextLabel = next is { } n ? $"{DayName(n.DayOfWeek)} {UiDateFormats.DateOnlyCompact(n)}" : "—";
+            return string.Format("You train {0} day(s) per week: {1}. Next training day: {2}.", _scheduleDays.Count, days, nextLabel);
         }
     }
 
@@ -788,12 +808,18 @@
         }
     }
 
+    protected override void OnInitialized()
+    {
+        // Sync synchronously so the first render shows real values (no
+        // wrong-state flash on toggles before OnInitializedAsync finishes).
+        SyncFromService();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ThemeService.ThemeChanged += HandleSettingsChanged;
         RestAlertSettings.Changed += HandleSettingsChanged;
         WorkoutSchedule.Changed += HandleSettingsChanged;
-        SyncFromService();
         _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
         await RefreshPlanCountAsync();
         await RefreshHistoryCountAsync();
@@ -843,20 +869,20 @@
         _fetchingModels = true;
         try
         {
-            SaveAiSettings();
+            SaveAiSettings(showToast: false);
             _availableModels = await AiAssistant.FetchAvailableModelsAsync();
             if (_availableModels.Count > 0)
             {
-                Snackbar.Add(Loc["Fetched {0} available models!", _availableModels.Count], Severity.Success);
+                Snackbar.Add(string.Format("Fetched {0} available models!", _availableModels.Count), Severity.Success);
             }
             else
             {
-                Snackbar.Add(Loc["No models returned. Verify Base URL and API key."], Severity.Warning);
+                Snackbar.Add("No models returned. Verify Base URL and API key.", Severity.Warning);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Failed to fetch models: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Failed to fetch models: {0}", ex.Message), Severity.Error);
         }
         finally
         {
@@ -881,7 +907,7 @@
     {
         WeightUnitService.Set(unit);
         _weightUnit = unit;
-        Snackbar.Add(Loc["Weights now shown in {0}.", ExerciseWeightFormatter.UnitSuffix(unit)], Severity.Success);
+        Snackbar.Add(string.Format("Weights now shown in {0}.", ExerciseWeightFormatter.UnitSuffix(unit)), Severity.Success);
     }
 
     private void OnAiEnabledChanged(bool enabled)
@@ -901,10 +927,11 @@
 
 
 
-    private void SaveAiSettings()
+    private void SaveAiSettings(bool showToast = true)
     {
         AiAssistant.SaveSettings(_aiSettings);
-        Snackbar.Add(Loc["AI Assistant settings saved."], Severity.Success);
+        if (showToast)
+            Snackbar.Add("AI Assistant settings saved.", Severity.Success);
     }
 
     private async Task TestAiConnectionAsync()
@@ -912,21 +939,21 @@
         _testingAiConnection = true;
         try
         {
-            SaveAiSettings();
+            SaveAiSettings(showToast: false);
             await AiAssistant.SendUserMessageAsync("Hello! Respond with a brief 1-sentence confirmation that connection is successful.");
             var lastMsg = AiAssistant.Messages.LastOrDefault();
             if (lastMsg != null && lastMsg.IsError)
             {
-                Snackbar.Add(Loc["Connection test failed: {0}", lastMsg.Content], Severity.Error);
+                Snackbar.Add(string.Format("Connection test failed: {0}", lastMsg.Content), Severity.Error);
             }
             else
             {
-                Snackbar.Add(Loc["AI Connection test successful!"], Severity.Success);
+                Snackbar.Add("AI Connection test successful!", Severity.Success);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Test failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Test failed: {0}", ex.Message), Severity.Error);
         }
         finally
         {
@@ -944,7 +971,7 @@
             MaxWidth = MaxWidth.Small,
             FullWidth = true
         };
-        await DialogService.ShowAsync<AiChatModal>(Loc["Physiquinator AI"], options);
+        await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
     }
 
 
@@ -966,23 +993,27 @@
     {
         RestAlertSettings.SetEnabled(enabled);
         _restAlertsEnabled = enabled;
+        Snackbar.Add(enabled ? "Rest notifications on." : "Rest notifications off.", Severity.Success);
     }
 
     private void OnRestSoundVibrationChanged(bool enabled)
     {
         RestAlertSettings.SetSoundVibrationEnabled(enabled);
         _restSoundVibrationEnabled = enabled;
+        Snackbar.Add(enabled ? "Sound & vibration on." : "Sound & vibration off.", Severity.Success);
     }
 
     private void OnAutoCheckEnabledChanged(bool enabled)
     {
         AppUpdateSettings.SetAutoCheckEnabled(enabled);
         _autoCheckEnabled = enabled;
+        Snackbar.Add(enabled ? "Automatic update checks on." : "Automatic update checks off.", Severity.Success);
     }
 
     private async Task OnThemePreferenceChanged(string preference)
     {
         await ThemeService.SetPreferenceAsync(preference);
+        Snackbar.Add("Theme updated.", Severity.Success);
     }
 
     private async Task RefreshPlanCountAsync()
@@ -1002,11 +1033,11 @@
         {
             var json = await PlanService.ExportAllPlansToJsonAsync();
             await FileTransfer.ExportJsonAsync(FileTransferNames.JsonFileName("physiquinator_plans", TimeProvider.GetLocalNow()), json);
-            Snackbar.Add(Loc["All plans exported."], Severity.Success);
+            Snackbar.Add("All plans exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Export failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1014,7 +1045,7 @@
     {
         try
         {
-            var json = await FileTransfer.PickJsonAsync(Loc["Select workout plan JSON file"]);
+            var json = await FileTransfer.PickJsonAsync("Select workout plan JSON file");
             if (json == null)
                 return;
 
@@ -1030,13 +1061,13 @@
             }
 
             var proceed = await ShowImportPreviewAsync(
-                Loc["Import plans"],
+                "Import plans",
                 [
-                    (Loc["Plans in file"], preview.Total.ToString()),
-                    (Loc["New plans"], preview.New.ToString()),
-                    (Loc["Will overwrite"], preview.Overwritten.ToString()),
+                    ("Plans in file", preview.Total.ToString()),
+                    ("New plans", preview.New.ToString()),
+                    ("Will overwrite", preview.Overwritten.ToString()),
                 ],
-                Loc["Plans with the same ID replace the existing one. Everything else is added."]);
+                "Plans with the same ID replace the existing one. Everything else is added.");
 
             if (!proceed)
                 return;
@@ -1054,12 +1085,11 @@
             }
 
             await RefreshPlanCountAsync();
-            Snackbar.Add(Loc["Imported {0} plan(s).", importedCount], Severity.Success);
-            Navigation.NavigateTo(AppRoutes.Home);
+            Snackbar.Add(string.Format("Imported {0} plan(s).", importedCount), Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Import failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1071,12 +1101,12 @@
             await FileTransfer.ExportJsonAsync(
                 FileTransferNames.JsonFileName("physiquinator_history", TimeProvider.GetLocalNow()),
                 json,
-                Loc["Export workout history"]);
-            Snackbar.Add(Loc["Workout history exported."], Severity.Success);
+                "Export workout history");
+            Snackbar.Add("Workout history exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Export failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1084,31 +1114,31 @@
     {
         try
         {
-            var json = await FileTransfer.PickJsonAsync(Loc["Select workout history JSON file"]);
+            var json = await FileTransfer.PickJsonAsync("Select workout history JSON file");
             if (json == null)
                 return;
 
             var preview = await WorkoutHistoryService.PreviewImportAsync(json);
 
             var proceed = await ShowImportPreviewAsync(
-                Loc["Import history"],
+                "Import history",
                 [
-                    (Loc["Workouts in file"], preview.Sessions.ToString()),
-                    (Loc["Set logs"], preview.Sets.ToString()),
-                    (Loc["Bodyweight entries"], preview.BodyweightEntries.ToString()),
+                    ("Workouts in file", preview.Sessions.ToString()),
+                    ("Set logs", preview.Sets.ToString()),
+                    ("Bodyweight entries", preview.BodyweightEntries.ToString()),
                 ],
-                Loc["Import merges by session and set id. Existing matching entries are replaced."]);
+                "Import merges by session and set id. Existing matching entries are replaced.");
 
             if (!proceed)
                 return;
 
             var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
             await RefreshHistoryCountAsync();
-            Snackbar.Add(Loc["Imported {0} workout(s) and {1} set log(s).", sessions, sets], Severity.Success);
+            Snackbar.Add(string.Format("Imported {0} workout(s) and {1} set log(s).", sessions, sets), Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Import failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1120,12 +1150,12 @@
             await FileTransfer.ExportJsonAsync(
                 FileTransferNames.JsonFileName("physiquinator_backup", TimeProvider.GetLocalNow()),
                 json,
-                Loc["Export all data"]);
-            Snackbar.Add(Loc["Full backup exported."], Severity.Success);
+                "Export all data");
+            Snackbar.Add("Full backup exported.", Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Export failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1133,22 +1163,22 @@
     {
         try
         {
-            var json = await FileTransfer.PickJsonAsync(Loc["Select full backup JSON file"]);
+            var json = await FileTransfer.PickJsonAsync("Select full backup JSON file");
             if (json == null)
                 return;
 
             var preview = await BackupRestoreService.PreviewImportAsync(json);
 
             var proceed = await ShowImportPreviewAsync(
-                Loc["Import all data"],
+                "Import all data",
                 [
-                    (Loc["Plans"], preview.PlansImported.ToString()),
-                    (Loc["Workouts"], preview.SessionsImported.ToString()),
-                    (Loc["Set logs"], preview.SetsImported.ToString()),
-                    (Loc["Schedule entries"], preview.SchedulesImported.ToString()),
-                    (Loc["Settings"], preview.PreferencesImported.ToString()),
+                    ("Plans", preview.PlansImported.ToString()),
+                    ("Workouts", preview.SessionsImported.ToString()),
+                    ("Set logs", preview.SetsImported.ToString()),
+                    ("Schedule entries", preview.SchedulesImported.ToString()),
+                    ("Settings", preview.PreferencesImported.ToString()),
                 ],
-                Loc["Everything in the backup is merged into this device. Existing matching entries are replaced."]);
+                "Everything in the backup is merged into this device. Existing matching entries are replaced.");
 
             if (!proceed)
                 return;
@@ -1158,15 +1188,14 @@
             await RefreshPlanCountAsync();
             await RefreshHistoryCountAsync();
             Snackbar.Add(
-                Loc["Restored {0} plan(s), {1} workout(s), {2} set(s), {3} schedule entry(s), {4} setting(s).",
+                string.Format("Restored {0} plan(s), {1} workout(s), {2} set(s), {3} schedule entry(s), {4} setting(s).",
                     result.PlansImported, result.SessionsImported, result.SetsImported,
-                    result.SchedulesImported, result.PreferencesImported],
+                    result.SchedulesImported, result.PreferencesImported),
                 Severity.Success);
-            Navigation.NavigateTo(AppRoutes.Home);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Import failed: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1189,7 +1218,7 @@
             FullWidth = true,
         };
 
-        var dialog = await DialogService.ShowAsync<ImportPreviewDialog>(Loc["Import"], parameters, options);
+        var dialog = await DialogService.ShowAsync<ImportPreviewDialog>("Import", parameters, options);
         var result = await dialog.Result;
         return result is { Canceled: false };
     }
@@ -1197,9 +1226,9 @@
     private async Task RemoveAllDataAsync()
     {
         var confirmed = await DialogService.ConfirmAsync(
-            Loc["Remove all data?"],
-            Loc["This cannot be undone. Export any backups you need before continuing."],
-            confirmText: Loc["Remove"],
+            "Remove all data?",
+            "This cannot be undone. Export any backups you need before continuing.",
+            confirmText: "Remove",
             confirmColor: Color.Error);
 
         if (!confirmed)
@@ -1211,12 +1240,12 @@
             SyncFromService();
             await RefreshPlanCountAsync();
             await RefreshHistoryCountAsync();
-            Snackbar.Add(Loc["All local data has been removed."], Severity.Success);
+            Snackbar.Add("All local data has been removed.", Severity.Success);
             Navigation.NavigateTo(AppRoutes.Home);
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Could not remove data: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Could not remove data: {0}", ex.Message), Severity.Error);
         }
     }
 
@@ -1234,11 +1263,11 @@
             _downloadUrl = result.DownloadUrl;
             if (!_updateAvailable)
             {
-                Snackbar.Add(Loc["You are on the latest version."], Severity.Success);
+                Snackbar.Add("You are on the latest version.", Severity.Success);
             }
             else if (string.IsNullOrEmpty(_downloadUrl))
             {
-                Snackbar.Add(Loc["A newer version is available, but in-app updates are not supported on this platform."], Severity.Info);
+                Snackbar.Add("A newer version is available, but in-app updates are not supported on this platform.", Severity.Info);
             }
             else if (result.Latest is { } release)
             {
@@ -1256,12 +1285,12 @@
                     FullWidth = true,
                 };
 
-                await DialogService.ShowAsync<UpdateDialog>(Loc["Update available"], parameters, options);
+                await DialogService.ShowAsync<UpdateDialog>("Update available", parameters, options);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Could not check for updates: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Could not check for updates: {0}", ex.Message), Severity.Error);
         }
         finally
         {

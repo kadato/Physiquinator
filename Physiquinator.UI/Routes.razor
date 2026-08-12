@@ -1,4 +1,4 @@
-﻿@inject IStringLocalizer<UiText> Loc
+@inject NavigationManager Navigation
 
 <Router AppAssembly="@typeof(Routes).Assembly">
     <Found Context="routeData">
@@ -8,19 +8,32 @@
                 <FocusOnNavigate RouteData="@routeData" Selector="h1" />
             </ChildContent>
             <ErrorContent>
-                <MudAlert Severity="Severity.Error" Class="ma-3">
-                    @Loc["Something went wrong while showing this page. Please try again."]
-                </MudAlert>
+                <div class="pa-3">
+                    <MudAlert Severity="Severity.Error">
+                        @("Something went wrong while showing this page. Please try again.")
+                    </MudAlert>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="mt-3"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="ReloadPage">
+                        @("Reload")
+                    </MudButton>
+                </div>
             </ErrorContent>
         </Microsoft.AspNetCore.Components.Web.ErrorBoundary>
     </Found>
     <NotFound>
-        <PageTitle>@Loc["Not found"]</PageTitle>
+        <PageTitle>@("Not found")</PageTitle>
         <LayoutView Layout="@typeof(Components.Layout.MainLayout)">
-            <EmptyState Message="@Loc["Sorry, there's nothing at this address."]"
+            <EmptyState Message="@("Sorry, there's nothing at this address.")"
                         Icon="@Icons.Material.Outlined.SearchOff">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">@Loc["Go home"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">@("Go home")</MudButton>
             </EmptyState>
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private void ReloadPage() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+}

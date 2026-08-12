@@ -1,11 +1,10 @@
 @* Edit a bodyweight entry (upserts the value for the entry's date). *@
-@inject IStringLocalizer<UiText> Loc
 
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
             <MudIcon Icon="@Icons.Material.Filled.MonitorWeight" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">@Loc["Edit entry"]</MudText>
+            <MudText Typo="Typo.h6" Class="fw-bold">@("Edit entry")</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -15,21 +14,21 @@
                     @DateLabel — @UnitSuffix
                 </MudText>
                 <MudTextField T="string"
-                              Label="@Loc["Bodyweight"]"
+                              Label="@("Bodyweight")"
                               Variant="Variant.Filled"
                               InputMode="@((InputMode)2)"
                               @bind-Value="_valueText"
-                              Placeholder="@Loc["e.g. 80.5"]"
+                              Placeholder="@("e.g. 80.5")"
                               enterkeyhint="done" />
             </MudStack>
             <div class="mud-dialog-actions">
-                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@Loc["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@("Cancel")</MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
-                           Disabled="@(!double.TryParse(_valueText, out var v) || v <= 0)"
+                           Disabled="@(!TryParseValue(out _))"
                            StartIcon="@Icons.Material.Filled.Save"
                            ButtonType="ButtonType.Submit">
-                    @Loc["Save"]
+                    @("Save")
                 </MudButton>
             </div>
         </form>
@@ -60,10 +59,16 @@
 
     private void Cancel() => MudDialog.Cancel();
 
+    private bool TryParseValue(out double value) =>
+        (double.TryParse(_valueText, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.CurrentCulture, out value)
+         || double.TryParse(_valueText, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out value))
+        && value > 0;
+
     private void Confirm()
     {
-        if (double.TryParse(_valueText, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var value) && value > 0)
+        if (TryParseValue(out var value))
         {
             MudDialog.Close(DialogResult.Ok(value));
         }

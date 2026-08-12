@@ -1,14 +1,5 @@
-@inject NavigationManager Navigation
-@inject IStringLocalizer<UiText> Loc
-
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="page-header mb-3">
-    @if (ShowBack)
-    {
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                       aria-label="@Loc["Back"]"
-                       OnClick="OnBackClick" />
-    }
-    <MudText Typo="Typo.h1" Class="flex-grow-1">@Title</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="@($"page-header mb-3 {Class}".Trim())">
+    <MudText Typo="Typo.h1" Class="@($"flex-grow-1 {TitleClass}".Trim())">@Title</MudText>
     @if (ChildContent != null)
     {
         <MudStack Row="true" Spacing="1">@ChildContent</MudStack>
@@ -20,19 +11,11 @@
     public string Title { get; set; } = "";
 
     [Parameter]
-    public bool ShowBack { get; set; } = true;
+    public string? Class { get; set; }
 
     [Parameter]
-    public EventCallback OnBack { get; set; }
+    public string? TitleClass { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-
-    private async Task OnBackClick()
-    {
-        if (OnBack.HasDelegate)
-            await OnBack.InvokeAsync();
-        else
-            Navigation.NavigateTo(AppRoutes.Home);
-    }
 }

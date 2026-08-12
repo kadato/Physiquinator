@@ -1,18 +1,17 @@
 @* Add a set that was missed during the workout. *@
-@inject IStringLocalizer<UiText> Loc
 
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
             <MudIcon Icon="@Icons.Material.Filled.AddCircle" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">@Loc["Add set"]</MudText>
+            <MudText Typo="Typo.h6" Class="fw-bold">@("Add set")</MudText>
         </div>
     </TitleContent>
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault>
             <MudStack Spacing="3" Class="py-2">
                 <MudSelect T="string"
-                           Label="@Loc["Exercise"]"
+                           Label="@("Exercise")"
                            Variant="Variant.Filled"
                            Value="_exerciseName"
                            ValueChanged="OnExerciseChanged">
@@ -25,31 +24,33 @@
                 @if (GetLogType(_exerciseName) != ExerciseLogType.Duration)
                 {
                     <MudTextField T="string"
-                                  Label="@Loc["Weight"]"
+                                  Label="@("Weight")"
                                   Variant="Variant.Filled"
                                   InputMode="@((InputMode)2)"
                                   @bind-Value="_weightText"
                                   Placeholder="0"
                                   enterkeyhint="next"
-                                  HelperText="@Loc["Weight in {0} (optional)", UnitSuffix]" />
+                                  Error="@WeightInvalid"
+                                  ErrorText="@("Enter a valid weight.")"
+                                  HelperText="@(string.Format("Weight in {0} (optional)", UnitSuffix))" />
                 }
 
                 <MudTextField T="string"
-                              Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["Duration (s)"] : Loc["Reps"])"
+                              Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "Duration (s)" : "Reps")"
                               Variant="Variant.Filled"
                               InputMode="InputMode.numeric"
                               @bind-Value="_repsText"
-                              Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? Loc["e.g. 60"] : Loc["e.g. 10"])"
+                              Placeholder="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "e.g. 60" : "e.g. 10")"
                               enterkeyhint="done" />
             </MudStack>
             <div class="mud-dialog-actions">
-                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@Loc["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Text" ButtonType="ButtonType.Button" OnClick="Cancel">@("Cancel")</MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            Disabled="@CannotAdd"
                            StartIcon="@Icons.Material.Filled.Add"
                            ButtonType="ButtonType.Submit">
-                    @Loc["Add set"]
+                    @("Add set")
                 </MudButton>
             </div>
         </form>
@@ -77,8 +78,15 @@
     private ExerciseLogType GetLogType(string name) =>
         LogTypes.TryGetValue(name, out var type) ? type : ExerciseLogType.WeightAndReps;
 
+    private bool WeightInvalid =>
+        GetLogType(_exerciseName) != ExerciseLogType.Duration
+        && !string.IsNullOrWhiteSpace(_weightText)
+        && !double.TryParse(_weightText, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.CurrentCulture, out _);
+
     private bool CannotAdd =>
         string.IsNullOrWhiteSpace(_exerciseName)
+        || WeightInvalid
         || (GetLogType(_exerciseName) == ExerciseLogType.Duration
             ? !int.TryParse(_repsText, out var d) || d <= 0
             : !int.TryParse(_repsText, out var r) || r <= 0);
@@ -108,7 +116,8 @@
         {
             if (int.TryParse(_repsText, out var parsedReps) && parsedReps > 0)
                 reps = parsedReps;
-            if (double.TryParse(_weightText, out var weight))
+            if (double.TryParse(_weightText, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.CurrentCulture, out var weight))
                 weightKg = weight > 0 ? weight : null;
         }
 

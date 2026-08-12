@@ -241,6 +241,90 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetLastSessionSetMetricsByExerciseAsync_ReturnsPerSetMetricsFromLatestSession()
+    {
+        var planId = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(planId, "Day1", null);
+        await _sut.LogSetAsync(s1, 0, "Squat", 0, reps: 10, weightKg: 60);
+        await _sut.LogSetAsync(s1, 0, "Squat", 1, reps: 8, weightKg: 65);
+        await _sut.LogSetAsync(s1, 1, "Bench", 0, reps: 8, weightKg: 50);
+        await _sut.EndSessionAsync(s1);
+
+        var s2 = await _sut.BeginSessionAsync(planId, "Day2", null);
+        await _sut.LogSetAsync(s2, 0, "Squat", 0, reps: 12, weightKg: 62.5);
+        await _sut.LogSetAsync(s2, 0, "Squat", 1, reps: 10, weightKg: 65);
+        await _sut.LogSetAsync(s2, 1, "Bench", 0, reps: 9, weightKg: 52.5);
+
+        IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> map =
+            await _sut.GetLastSessionSetMetricsByExerciseAsync(planId);
+
+        Assert.Equal(2, map.Count);
+        Assert.Equal(12, map["Squat"][0].Reps);
+        Assert.Equal(62.5, map["Squat"][0].WeightKg);
+        Assert.Equal(10, map["Squat"][1].Reps);
+        Assert.Equal(65, map["Squat"][1].WeightKg);
+        Assert.Equal(9, map["Bench"][0].Reps);
+        Assert.Equal(52.5, map["Bench"][0].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetLastSessionSetMetricsByExerciseAsync_ScopesByPlanId()
+    {
+        var p1 = Guid.NewGuid();
+        var p2 = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(p1, "A", null);
+        await _sut.LogSetAsync(s1, 0, "Lift", 0, reps: 5, weightKg: 40);
+        await _sut.LogSetAsync(s1, 0, "Lift", 1, reps: 5, weightKg: 45);
+        var s2 = await _sut.BeginSessionAsync(p2, "B", null);
+        await _sut.LogSetAsync(s2, 0, "Lift", 0, reps: 1, weightKg: 1);
+
+        IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> map =
+            await _sut.GetLastSessionSetMetricsByExerciseAsync(p1);
+
+        Assert.Single(map);
+        Assert.Equal(5, map["Lift"][0].Reps);
+        Assert.Equal(40, map["Lift"][0].WeightKg);
+        Assert.Equal(45, map["Lift"][1].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetLastSessionSetMetricsByExerciseAsync_ExcludesCurrentSession()
+    {
+        var planId = Guid.NewGuid();
+        var s1 = await _sut.BeginSessionAsync(planId, "Day1", null);
+        await _sut.LogSetAsync(s1, 0, "Squat", 0, reps: 10, weightKg: 60);
+        await _sut.LogSetAsync(s1, 0, "Squat", 1, reps: 8, weightKg: 65);
+        await _sut.EndSessionAsync(s1);
+
+        var s2 = await _sut.BeginSessionAsync(planId, "Day2", null);
+        await _sut.LogSetAsync(s2, 0, "Squat", 0, reps: 12, weightKg: 70);
+
+        IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> map =
+            await _sut.GetLastSessionSetMetricsByExerciseAsync(planId, s2);
+
+        Assert.Single(map);
+        Assert.Equal(2, map["Squat"].Count);
+        Assert.Equal(10, map["Squat"][0].Reps);
+        Assert.Equal(60, map["Squat"][0].WeightKg);
+        Assert.Equal(8, map["Squat"][1].Reps);
+        Assert.Equal(65, map["Squat"][1].WeightKg);
+    }
+
+    [Fact]
+    public async Task GetLastSessionSetMetricsByExerciseAsync_ReturnsEmpty_WhenNoEarlierLogs()
+    {
+        var planId = Guid.NewGuid();
+        var sessionId = await _sut.BeginSessionAsync(planId, "Day1", null);
+        await _sut.LogSetAsync(sessionId, 0, "Squat", 0, reps: 10, weightKg: 60);
+
+        IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> map =
+            await _sut.GetLastSessionSetMetricsByExerciseAsync(planId, sessionId);
+
+        Assert.Empty(map);
+        Assert.Empty(await _sut.GetLastSessionSetMetricsByExerciseAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
     public void TryParsePlanSnapshot_ReturnsNull_ForInvalidJson()
     {
         Assert.Null(WorkoutHistoryRepository.TryParsePlanSnapshot("{not json"));

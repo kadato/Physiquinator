@@ -70,6 +70,14 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public double? WeightKg { get; set; }
     }
 
+    private sealed class LastSessionSetMetricsRow
+    {
+        public string ExerciseName { get; set; } = "";
+        public int SetIndex { get; set; }
+        public int? Reps { get; set; }
+        public double? WeightKg { get; set; }
+    }
+
     private sealed class ExerciseNameRow
     {
         public string ExerciseName { get; set; } = "";
@@ -671,6 +679,48 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     }
 
     /// <summary>
+    /// Reps and weight per set index for each exercise as logged in the most
+    /// recent earlier session of the plan (newest session with set logs other
+    /// than <paramref name="excludeSessionId"/>), so the next workout can
+    /// pre-fill each set with the values of the same set number.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>>> GetLastSessionSetMetricsByExerciseAsync(
+        Guid workoutPlanId,
+        string? excludeSessionId = null)
+    {
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        List<LastSessionSetMetricsRow> rows = await _db.Database.QueryAsync<LastSessionSetMetricsRow>(
+            @"SELECT s.ExerciseName AS ExerciseName,
+                     s.SetIndex AS SetIndex,
+                     s.Reps AS Reps,
+                     s.WeightKg AS WeightKg
+              FROM WorkoutSetLogs s
+              INNER JOIN (
+                  SELECT sess.Id AS SessionId
+                  FROM WorkoutSessionLogs sess
+                  INNER JOIN WorkoutSetLogs setlog ON setlog.SessionId = sess.Id
+                  WHERE sess.WorkoutPlanId = ? AND (? IS NULL OR sess.Id != ?)
+                  ORDER BY sess.StartedAtUtc DESC, sess.Id DESC
+                  LIMIT 1
+              ) latest ON latest.SessionId = s.SessionId
+              WHERE s.IsWarmup = 0",
+            planIdStr, excludeSessionId, excludeSessionId);
+
+        return rows
+            .GroupBy(r => r.ExerciseName, StringComparer.Ordinal)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyDictionary<int, LastSetMetrics>)g
+                    .GroupBy(r => r.SetIndex)
+                    .ToDictionary(
+                        sg => sg.Key,
+                        sg => new LastSetMetrics(sg.First().Reps, sg.First().WeightKg)),
+                StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// Latest logged reps/weight for this exercise name under the same workout plan (any session, including the current one).
     /// </summary>
     public async Task<LastSetMetrics?> GetLatestSetMetricsForExerciseAsync(Guid workoutPlanId, string exerciseName)
@@ -781,6 +831,46 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.Database.Table<WorkoutSessionLogEntity>()
             .Where(s => s.Id == sessionId)
             .DeleteAsync();
+    }
+
+    /// <summary>Re-inserts a deleted session together with its logged sets (undo support).</summary>
+    public async Task RestoreSessionAsync(WorkoutSessionLogEntity session, IReadOnlyList<WorkoutSetLogEntity> sets)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        await _db.EnsureInitializedAsync();
+
+        await _db.Database.RunInTransactionAsync(conn =>
+        {
+            conn.InsertOrReplace(session);
+            if (sets == null) return;
+            foreach (WorkoutSetLogEntity set in sets)
+            {
+                if (set is null) continue;
+                set.SessionId = session.Id;
+                if (string.IsNullOrWhiteSpace(set.Id))
+                    set.Id = Guid.NewGuid().ToString();
+                conn.InsertOrReplace(set);
+            }
+        });
+    }
+
+    /// <summary>Re-inserts deleted set logs of a session (undo support).</summary>
+    public async Task RestoreSetLogsAsync(string sessionId, IReadOnlyList<WorkoutSetLogEntity> sets)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId) || sets is null || sets.Count == 0) return;
+        await _db.EnsureInitializedAsync();
+
+        await _db.Database.RunInTransactionAsync(conn =>
+        {
+            foreach (WorkoutSetLogEntity set in sets)
+            {
+                if (set is null) continue;
+                set.SessionId = sessionId;
+                if (string.IsNullOrWhiteSpace(set.Id))
+                    set.Id = Guid.NewGuid().ToString();
+                conn.InsertOrReplace(set);
+            }
+        });
     }
 
     /// <summary>

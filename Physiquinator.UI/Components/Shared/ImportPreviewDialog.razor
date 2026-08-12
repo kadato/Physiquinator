@@ -1,5 +1,4 @@
 @* Preview of what an import will do before anything is merged. *@
-@inject IStringLocalizer<UiText> Loc
 
 <MudDialog>
     <TitleContent>
@@ -25,9 +24,9 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">@("Cancel")</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="Confirm">
-            @Loc["Import"]
+            @("Import")
         </MudButton>
     </DialogActions>
 </MudDialog>

@@ -5,7 +5,6 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
-@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 
@@ -19,17 +18,17 @@
                         <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">@Loc["Physiquinator AI"]</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">@Loc["Fitness assistant & plan engine"]</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">@("Physiquinator AI")</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary ai-chat-subtitle">@("Fitness assistant & plan engine")</MudText>
                     </div>
                 </div>
                 <div class="ai-chat-header__actions">
                     <MudIconButton Icon="@Icons.Material.Outlined.DeleteSweep"
-                                   aria-label="@Loc["Clear history"]"
+                                   aria-label="@("Clear history")"
                                    Size="Size.Small"
                                    OnClick="ClearHistory" />
                     <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   aria-label="@Loc["Close"]"
+                                   aria-label="@("Close")"
                                    Size="Size.Small"
                                    OnClick="Close" />
                 </div>
@@ -42,25 +41,25 @@
                     <div class="ai-api-key-banner__content">
                         <MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Medium" />
                         <div>
-                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@Loc["API key required"]</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Loc["Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI."]</MudText>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@("API key required")</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@("Provide an API key (OpenAI, OpenRouter, OpenCode) to chat with Physiquinator AI.")</MudText>
                         </div>
                     </div>
                     <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" OnClick="NavigateToSettings" Class="ai-banner-button">
-                        @Loc["Set up key"]
+                        @("Set up key")
                     </MudButton>
                 </div>
             }
 
             <!-- Messages Area -->
-            <div class="ai-chat-messages" @ref="_messagesElement">
+            <div class="ai-chat-messages" @ref="_messagesElement" role="log" aria-live="polite" aria-relevant="additions">
                 @if (AiAssistant.Messages.Count == 0)
                 {
                     <div class="ai-chat-empty">
                         <MudIcon Icon="@Icons.Material.Outlined.FitnessCenter" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
-                        <MudText Typo="Typo.h6" Class="font-weight-semibold">@Loc["How can I help you train?"]</MudText>
+                        <MudText Typo="Typo.h6" Class="font-weight-semibold">@("How can I help you train?")</MudText>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary align-center max-w-400 ai-chat-empty__hint">
-                            @Loc["Ask me to create workout plans, log bodyweight, analyze your personal records, tweak app settings, or generate progressive overload recommendations!"]
+                            @("Ask me to create workout plans, log bodyweight, analyze your personal records, tweak app settings, or generate progressive overload recommendations!")
                         </MudText>
                     </div>
                 }
@@ -89,7 +88,7 @@
                                         {
                                             <div class="ai-msg__thinking">
                                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                                <span>@Loc["Thinking & executing actions…"]</span>
+                                                <span>@("Thinking & executing actions…")</span>
                                             </div>
                                         }
                                         else
@@ -103,7 +102,7 @@
                                             @foreach (var tc in msg.ToolCalls)
                                             {
                                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
-                                                    @Loc["Executed {0}", tc.Name]
+                                                    @(string.Format("Executed {0}", tc.Name))
                                                 </MudChip>
                                             }
                                         </div>
@@ -114,7 +113,7 @@
                                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                            Size="Size.Small"
                                                            Class="ai-msg__copy"
-                                                           aria-label="@Loc["Copy message"]"
+                                                           aria-label="@("Copy message")"
                                                            OnClick="@(() => CopyMessageAsync(msg.Content))" />
                                         }
                                         <span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
@@ -131,16 +130,16 @@
             {
                 <div class="ai-chat-quick-actions">
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick" Class="ai-chat-quick-chip">
-                        @Loc["Progressive overload"]
+                        @("Progressive overload")
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick" Class="ai-chat-quick-chip">
-                        @Loc["Performance stats"]
+                        @("Performance stats")
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick" Class="ai-chat-quick-chip">
-                        @Loc["Log bodyweight"]
+                        @("Log bodyweight")
                     </MudChip>
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick" Class="ai-chat-quick-chip">
-                        @Loc["Deload plan"]
+                        @("Deload plan")
                     </MudChip>
                 </div>
             }
@@ -151,7 +150,7 @@
                     <div class="ai-chat-input__field">
                         <MudTextField T="string"
                                       Variant="Variant.Text"
-                                       Placeholder="@Loc["Ask Physiquinator AI…"]"
+                                       Placeholder="@("Ask Physiquinator AI…")"
                                       Immediate="true"
                                       @bind-Value="_inputText"
                                       OnKeyDown="HandleKeyDown"
@@ -166,8 +165,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Stop"
                                        Color="Color.Error"
                                        Variant="Variant.Filled"
-                                       aria-label="@Loc["Stop generating"]"
-                                       title="@Loc["Stop generating"]"
+                                       aria-label="@("Stop generating")"
+                                       title="@("Stop generating")"
                                        OnClick="StopGeneration"
                                        Class="ai-chat-send-button" />
                     }
@@ -176,8 +175,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Send"
                                        Color="Color.Primary"
                                        Variant="Variant.Filled"
-                                        aria-label="@Loc["Send message"]"
-                                        title="@Loc["Send message"]"
+                                        aria-label="@("Send message")"
+                                        title="@("Send message")"
                                        Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
                                        OnClick="SendMessageAsync"
                                        Class="ai-chat-send-button" />
@@ -217,7 +216,7 @@
         msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error" : "ai-msg ai-msg--assistant";
 
     private static string FormatTime(DateTime timestamp) =>
-        timestamp.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        timestamp.ToLocalTime().ToString("t", System.Globalization.CultureInfo.CurrentCulture);
 
 
     protected override void OnInitialized()
@@ -271,9 +270,9 @@
         }
 
         if (copied)
-            Snackbar.Add(Loc["Message copied."], Severity.Success);
+            Snackbar.Add("Message copied.", Severity.Success);
         else
-            Snackbar.Add(Loc["Could not copy to clipboard."], Severity.Error);
+            Snackbar.Add("Could not copy to clipboard.", Severity.Error);
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
@@ -285,16 +284,16 @@
     }
 
     private async Task OnProgressiveOverloadClick() =>
-        await SendPrompt(Loc["Suggest progressive overload recommendations for my active workout plans."]);
+        await SendPrompt("Suggest progressive overload recommendations for my active workout plans.");
 
     private async Task OnPerformanceStatsClick() =>
-        await SendPrompt(Loc["Show my current workout stats and recent performance."]);
+        await SendPrompt("Show my current workout stats and recent performance.");
 
     private async Task OnLogBodyweightClick() =>
-        await SendPrompt(Loc["Log my bodyweight for today and show my recent trends."]);
+        await SendPrompt("Log my bodyweight for today and show my recent trends.");
 
     private async Task OnDeloadPlanClick() =>
-        await SendPrompt(Loc["Create a deload version of my primary workout plan."]);
+        await SendPrompt("Create a deload version of my primary workout plan.");
 
     private async Task SendPrompt(string prompt)
     {

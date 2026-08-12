@@ -304,12 +304,12 @@ input, select, textarea {
 }
 
 .app-nav-tab--active {
-    background: #CFE3E2;
-    color: #0B5A53;
+    background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent);
+    color: var(--mud-palette-primary);
 }
 
 .app-nav-tab--active .mud-icon-root {
-    color: #0B5A53 !important;
+    color: var(--mud-palette-primary) !important;
     transform: scale(1.1);
 }
 
@@ -324,7 +324,7 @@ input, select, textarea {
 }
 
 .app-nav-tab--active .app-nav-tab__label {
-    color: #0B5A53;
+    color: var(--mud-palette-primary);
 }
 
 /* Main scroll area padding accounts for the floating nav pill */
@@ -355,7 +355,7 @@ input, select, textarea {
     -webkit-tap-highlight-color: transparent;
     box-shadow: none !important;
     background-color: var(--mud-palette-primary) !important;
-    color: var(--mud-palette-primary-contrasttext) !important;
+    color: var(--mud-palette-primary-text) !important;
     transition: box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease;
     outline: none;
     overflow: hidden;
@@ -391,7 +391,7 @@ input, select, textarea {
 /* FAB variants */
 .app-fab--primary {
     background-color: var(--mud-palette-primary) !important;
-    color: #fff !important;
+    color: var(--mud-palette-primary-text) !important;
 }
 
 .app-fab--secondary {
@@ -402,7 +402,7 @@ input, select, textarea {
 
 .app-fab--error {
     background-color: var(--mud-palette-error) !important;
-    color: #fff !important;
+    color: var(--mud-palette-error-text, #fff) !important;
 }
 
 /* Mini FAB */
@@ -437,7 +437,7 @@ input, select, textarea {
    invisible. Keep the white icon on disabled primary FABs. */
 .app-fab--primary:disabled,
 .app-fab--primary.app-fab--disabled {
-    color: #fff !important;
+    color: var(--mud-palette-primary-text) !important;
 }
 
 /* FAB icon sizing */
@@ -642,8 +642,8 @@ input, select, textarea {
     top: 6px;
     right: 6px;
     flex-shrink: 0;
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 44px;
+    min-height: 44px;
     margin: 0;
     opacity: 0.7;
     border-radius: 999px;
@@ -1126,9 +1126,16 @@ input[type="number"] {
     flex-shrink: 0;
 }
 
-/* Phone widths: wrap the move/delete actions under the exercise text so the
-   name and summary keep a usable column width instead of being squeezed to
-   a sliver by the handle and three icon buttons. */
+/* Plan row overflow menu: MudBlazor's default icon activator is ~48px, so it
+   already meets the touch guideline; square it to match the icon-button
+   language of the rows next to it. */
+.plan-exercise-row__menu .mud-icon-button {
+    border-radius: 12px;
+}
+
+/* Phone widths: wrap the actions under the exercise text so the name and
+   summary keep a usable column width instead of being squeezed to a sliver
+   by the handle and the overflow menu. */
 @media (max-width: 480px) {
     .plan-exercise-row {
         flex-wrap: wrap;
@@ -1140,34 +1147,6 @@ input[type="number"] {
     .plan-exercise-row__actions {
         margin-inline-start: auto;
     }
-}
-
-.plan-exercise-row__moves {
-    display: flex;
-    flex-direction: column;
-}
-
-.plan-exercise-row__move {
-    opacity: 0.7;
-}
-
-.plan-exercise-row__move:hover {
-    opacity: 1;
-}
-
-.plan-exercise-row__move .mud-icon-root {
-    font-size: 1.05rem;
-}
-
-/* Plan row move/delete controls: MudBlazor Size.Small icon buttons are
-   ~24px; pad them to 40px for reliable taps. On phone widths the actions
-   wrap onto their own row, so there is room. */
-.plan-exercise-row__move.mud-icon-button,
-.plan-exercise-row__delete.mud-icon-button {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
 }
 
 .plan-exercise-sheet__body {
@@ -1393,7 +1372,7 @@ button.heatmap-cell.heatmap-selected::before {
 }
 
 .rest-timer-panel--complete.mud-paper {
-    border: 2px solid var(--mud-palette-success);
+    border: 1px solid var(--mud-palette-success);
     border-radius: 16px;
     background: linear-gradient(
         165deg,
@@ -1401,7 +1380,9 @@ button.heatmap-cell.heatmap-selected::before {
         color-mix(in srgb, var(--mud-palette-success) 12%, transparent) 45%,
         var(--mud-palette-surface) 100%
     );
-    box-shadow: none !important;
+    /* Inset ring keeps the completed card the exact same outer size as the
+       running card (no 1px-per-side border growth, so nothing shifts). */
+    box-shadow: inset 0 0 0 1px var(--mud-palette-success) !important;
     animation: rest-timer-complete-in 0.45s ease-out;
 }
 
@@ -1435,10 +1416,29 @@ button.heatmap-cell.heatmap-selected::before {
 }
 
 .rest-timer-check {
-    width: clamp(5rem, 22vw, 7.5rem) !important;
-    height: clamp(5rem, 22vw, 7.5rem) !important;
-    font-size: clamp(5rem, 22vw, 7.5rem) !important;
+    /* Sized to the exact digits line box (font-size x line-height 0.95) so
+       the completed card keeps the identical height as the running countdown. */
+    width: calc(clamp(5.5rem, 24vw, 8rem) * 0.95) !important;
+    height: calc(clamp(5.5rem, 24vw, 8rem) * 0.95) !important;
+    font-size: calc(clamp(5.5rem, 24vw, 8rem) * 0.95) !important;
     color: var(--mud-palette-success) !important;
+}
+
+.rest-timer-panel--complete .rest-timer-check {
+    animation: rest-timer-check-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--mud-palette-success) 45%, transparent));
+}
+
+@keyframes rest-timer-check-pop {
+    0% {
+        transform: scale(0.55);
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .rest-timer-digits {
@@ -1626,7 +1626,7 @@ button.heatmap-cell.heatmap-selected::before {
 }
 
 .rest-timer-edge-fill--imminent {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-warning) 55%, #fff) 0%, var(--mud-palette-warning) 100%);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mud-palette-warning) 55%, var(--mud-palette-background)) 0%, var(--mud-palette-warning) 100%);
 }
 
 .rest-timer-edge-fill--urgent {
@@ -1636,6 +1636,7 @@ button.heatmap-cell.heatmap-selected::before {
 
 .rest-timer-panel--complete .rest-timer-edge-fill {
     background: var(--mud-palette-success);
+    animation: none;
 }
 
 @keyframes urgent-pulse {
@@ -1650,6 +1651,11 @@ button.heatmap-cell.heatmap-selected::before {
 @media (prefers-reduced-motion: reduce) {
     .rest-timer-panel--complete.mud-paper {
         animation: none;
+    }
+
+    .rest-timer-panel--complete .rest-timer-check {
+        animation: none;
+        filter: none;
     }
 
     .rest-timer-edge-fill {
@@ -1790,12 +1796,16 @@ html.app-ime-open .mud-dialog-container {
     display: none !important;
 }
 
-/* Exercise progress sessions table — tight columns on mobile */
-.exercise-progress-table__action {
-    width: 2.25rem;
-    max-width: 2.25rem;
-    padding-left: 0.125rem !important;
-    padding-right: 0.125rem !important;
+/* Exercise progress sessions table — tight columns on mobile.
+   Higher specificity than `.premium-table .mud-table-cell` (both use
+   `!important`) so the action column's padding truly wins; otherwise the
+   44px button overflows its 44px cell and the paper clips its right edge. */
+.premium-table .mud-table-cell.exercise-progress-table__action,
+.premium-table .mud-table-head .mud-table-cell.exercise-progress-table__action {
+    width: 60px;
+    max-width: 60px;
+    padding-left: 0 !important;
+    padding-right: 16px !important;
     text-align: center;
 }
 
@@ -1849,10 +1859,10 @@ html.app-ime-open .mud-dialog-container {
     text-decoration: none !important;
 }
 
-/* History session cards are real buttons for keyboard access. MudBlazor's
-   global `button` rule sets justify-content/align-items to center, which
-   shrink-wraps and centers the card content; restore full-width stretching. */
-button.history-session-card {
+/* History session cards are keyboard-focusable divs with role="button"
+   (they contain their own buttons, which cannot nest inside a real button).
+   The card content must stretch full width like a normal block. */
+.history-session-card {
     appearance: none;
     -webkit-appearance: none;
     margin: 0;
@@ -1865,7 +1875,7 @@ button.history-session-card {
     align-items: stretch;
 }
 
-button.history-session-card:focus-visible {
+.history-session-card:focus-visible {
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: -2px;
 }
@@ -1960,7 +1970,7 @@ button.history-session-card:focus-visible {
     font-size: 1.5rem;
 }
 
-button.history-session-card.history-session-card--selected {
+button.history-session-card--selected {
     border-color: var(--mud-palette-primary);
     background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
 }
@@ -1971,15 +1981,24 @@ button.history-session-card.history-session-card--selected {
     gap: 0.25rem;
 }
 
+.history-session-card__delete-btn.mud-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+}
+
 .history-session-card__delete-btn .mud-icon-root {
     font-size: 1.15rem;
-    color: var(--mud-palette-text-secondary);
-    transition: color 150ms ease;
+    color: var(--mud-palette-error);
+    opacity: 0.8;
+    transition: color 150ms ease, opacity 150ms ease;
 }
 
 .history-session-card__delete-btn:hover .mud-icon-root,
 .history-session-card__delete-btn:focus-visible .mud-icon-root {
     color: var(--mud-palette-error);
+    opacity: 1;
 }
 
 .history-select-bar {
@@ -2020,7 +2039,7 @@ button.history-session-card.history-session-card--selected {
     justify-content: space-between;
     gap: 1rem;
     padding: 0.625rem 0.875rem;
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--mud-palette-background-grey);
 }
 
@@ -2093,7 +2112,7 @@ button.history-session-card.history-session-card--selected {
     align-items: center;
     gap: 0.625rem;
     padding: 0.625rem 0.875rem;
-    border-radius: 10px;
+    border-radius: 12px;
     background: color-mix(in srgb, var(--mud-palette-warning) 8%, var(--mud-palette-surface));
 }
 
@@ -2133,7 +2152,7 @@ button.history-session-card.history-session-card--selected {
     text-transform: none !important;
     font-weight: 600 !important;
     letter-spacing: 0.01em !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     white-space: nowrap;
 }
 
@@ -2238,7 +2257,8 @@ button.history-session-card.history-session-card--selected {
     margin-top: 0.5rem;
 }
 
-.bodyweight-range-row__select {
+.bodyweight-range-row__select,
+.exercise-progress-range {
     min-width: 9.5rem;
     max-width: 12rem;
 }
@@ -2260,12 +2280,19 @@ button.history-session-card.history-session-card--selected {
     transition: background-color 120ms ease;
 }
 
-.pr-dialog-row:hover {
-    background: rgba(127, 127, 127, 0.08);
+.pr-dialog-row:hover,
+.pr-dialog-row:focus-visible {
+    background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
+    outline: none;
+}
+
+.pr-dialog-row:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: -2px;
 }
 
 .pr-dialog-row + .pr-dialog-row {
-    border-top: 1px solid rgba(127, 127, 127, 0.14);
+    border-top: 1px solid var(--mud-palette-lines-default);
 }
 
 .pr-dialog-row__icon {
@@ -2305,25 +2332,18 @@ button.history-session-card.history-session-card--selected {
 }
 
 .bodyweight-table.mud-paper .bodyweight-table__action {
-    width: 6.25rem;
-    max-width: 6.25rem;
+    width: 3.5rem;
+    max-width: 3.5rem;
     padding-left: 0 !important;
     padding-right: 0.5rem !important;
     text-align: center;
     white-space: nowrap;
 }
 
-.bodyweight-table.mud-paper .bodyweight-table__edit,
-.bodyweight-table.mud-paper .bodyweight-table__delete {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0;
-    margin: 0 2px;
-    display: inline-grid;
-    place-items: center;
-    vertical-align: middle;
+/* Bodyweight row overflow menu: default icon activator is ~48px; square it
+   to match the table's icon-button language. */
+.bodyweight-table__menu .mud-icon-button {
+    border-radius: 12px;
 }
 
 .bodyweight-table .mud-table-body .mud-table-row {
@@ -2350,7 +2370,7 @@ button.history-session-card.history-session-card--selected {
     min-width: 3.5rem;
     padding: 0.375rem 0.5rem;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, transparent);
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--mud-palette-surface);
     color: var(--mud-palette-text-primary);
     font-family: inherit;
@@ -2475,6 +2495,105 @@ button.history-session-card.history-session-card--selected {
     padding: 12px 16px !important;
     font-size: 0.875rem !important;
     color: var(--mud-palette-text-primary) !important;
+}
+
+/* Tables must fit the phone-width page container. At the default 16px cell
+   padding the tables' minimum width exceeds the container, and because the
+   last column's buttons poke out past the table box the scroll container
+   cannot reveal them: the last column ends up clipped and unreachable.
+   Tighten padding, let headers wrap, and size the action column to its
+   button so the last column always fits (or, on very narrow screens, scrolls
+   fully into view). */
+@media (max-width: 959.98px) {
+    .premium-table .mud-table-head .mud-table-cell {
+        white-space: normal;
+    }
+
+    .premium-table .mud-table-cell,
+    .premium-table .mud-table-head .mud-table-cell {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .premium-table .mud-table-cell.exercise-progress-table__action,
+    .premium-table .mud-table-head .mud-table-cell.exercise-progress-table__action {
+        width: 52px !important;
+        max-width: 52px !important;
+        padding-left: 0 !important;
+        padding-right: 8px !important;
+    }
+}
+
+/* Lazy list tables: grid rows fed by the infinite-scroll sentinel instead of
+   MudTable pagination. Mirrors the history page's loading behavior while
+   keeping the tabular look of the premium tables. */
+.infinite-table-list {
+    width: 100%;
+}
+
+.infinite-table-head,
+.infinite-table-row {
+    display: grid;
+    align-items: center;
+    gap: 8px;
+}
+
+.infinite-table-head {
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--mud-palette-text-secondary) !important;
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 3%, var(--mud-palette-surface)) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 80%, transparent) !important;
+    padding: 12px 16px !important;
+}
+
+.infinite-table-row {
+    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
+    color: var(--mud-palette-text-primary) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 40%, transparent) !important;
+    transition: background 120ms ease;
+}
+
+/* Zebra striping: rows are even-positioned siblings after the head row. */
+.infinite-table-row:nth-child(even) {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 1.5%, transparent) !important;
+}
+
+.infinite-table-head--3,
+.infinite-table-row--3 {
+    grid-template-columns: 1fr 1fr 52px;
+}
+
+.infinite-table-head--4,
+.infinite-table-row--4 {
+    grid-template-columns: 1.5fr 1fr 1fr 52px;
+}
+
+.infinite-table-head--4x,
+.infinite-table-row--4x {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+.infinite-table-head--5,
+.infinite-table-row--5 {
+    grid-template-columns: 2fr 1fr 1fr 1fr 52px;
+}
+
+.infinite-table-row__action {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+@media (max-width: 959.98px) {
+    .infinite-table-head,
+    .infinite-table-row {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
 }
 
 /* Premium Buttons */
@@ -2640,34 +2759,30 @@ button.history-session-card.history-session-card--selected {
     color: var(--mud-palette-success);
 }
 
-/* Mid-workout exercise reorder controls */
-.exercise-move-controls {
+/* Mid-workout exercise actions menu */
+.exercise-more-menu {
     display: flex;
     align-items: center;
-    gap: 0.125rem;
 }
 
-.exercise-move-btn {
+.exercise-more-btn {
     opacity: 0.75;
 }
 
-.exercise-move-btn:hover {
+.exercise-more-btn:hover {
     opacity: 1;
 }
 
-.exercise-move-btn .mud-icon-root {
-    font-size: 1.1rem;
+.exercise-more-btn .mud-icon-root {
+    font-size: 1.2rem;
 }
 
-/* Mid-workout move/skip controls: MudBlazor Size.Small icon buttons are
-   ~24px, below the 44px touch guideline. Pad them to 40px so taps land
-   reliably while keeping the header compact. */
-.exercise-move-btn.mud-icon-button,
-.exercise-skip-btn.mud-icon-button {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
+/* Mid-workout actions menu activator: meets the 44px touch guideline. */
+.exercise-more-btn.mud-icon-button {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
 }
 
 /* Set Rows styling */
@@ -2818,9 +2933,9 @@ button.history-session-card.history-session-card--selected {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 36px;
-    min-width: 36px;
-    height: 36px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
     padding: 0;
     border: none;
     border-radius: 8px;
@@ -2914,7 +3029,7 @@ button.history-session-card.history-session-card--selected {
 .active-badge {
     font-size: 0.75rem;
     background-color: var(--mud-palette-primary);
-    color: #fff;
+    color: var(--mud-palette-primary-text);
     padding: 2px 8px;
     border-radius: 4px;
     font-weight: 600;
@@ -3018,7 +3133,7 @@ a,
     height: var(--app-fab-size) !important;
     padding: 0 !important;
     background-color: var(--mud-palette-error) !important;
-    color: #fff !important;
+    color: var(--mud-palette-error-text, #fff) !important;
     border: none !important;
     border-radius: 50% !important;
     box-shadow: 0 4px 16px color-mix(in srgb, var(--mud-palette-error) 35%, transparent) !important;
@@ -3071,6 +3186,15 @@ a,
     margin: 0;
 }
 
+/* Brand header (Home): the page title uses the larger brand scale and stays
+   centered, matching the pre-PageHeader home hero treatment. */
+.page-header.home-header .mud-typography-h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+}
+
 /* Plan card action buttons (edit + overflow menu) meet the touch-target guideline */
 .plan-card__actions .mud-icon-button {
     width: 44px !important;
@@ -3082,6 +3206,11 @@ a,
 .plan-card {
     content-visibility: auto;
     contain-intrinsic-size: auto 76px;
+}
+
+/* History session card div participates in tap feedback and touch handling */
+.history-session-card {
+    touch-action: manipulation;
 }
 
 /* ==========================================================================
@@ -3328,99 +3457,99 @@ html[data-theme="dark"] .app-splash__retry {
     transform: scale(0.97);
 }
 
-/* Update dialog: release notes block */
-.update-dialog__notes {
+/* Update dialog: release notes block. The rendered notes container ships its
+   own scoped styles (UpdateDialog.razor.css); these rules are the fallback
+   for platforms that do not load the scoped bundle. */
+.update-notes-container {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 12px 16px;
     background-color: var(--mud-palette-background-grey);
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: 12px;
-    padding: 0.75rem 1rem;
 }
 
-.update-dialog__notes-body {
-    margin-top: 0.25rem;
-    max-height: 40vh;
-    overflow-y: auto;
+.update-notes-container .markdown-body {
     font-size: 0.875rem;
     line-height: 1.5;
     color: var(--mud-palette-text-primary);
 }
 
-/* Rendered markdown release notes */
-.update-dialog__notes-body.markdown-body > :first-child {
+.update-notes-container .markdown-body > :first-child {
     margin-top: 0;
 }
 
-.update-dialog__notes-body.markdown-body > :last-child {
+.update-notes-container .markdown-body > :last-child {
     margin-bottom: 0;
 }
 
-.update-dialog__notes-body.markdown-body h1,
-.update-dialog__notes-body.markdown-body h2,
-.update-dialog__notes-body.markdown-body h3,
-.update-dialog__notes-body.markdown-body h4 {
+.update-notes-container .markdown-body h1,
+.update-notes-container .markdown-body h2,
+.update-notes-container .markdown-body h3,
+.update-notes-container .markdown-body h4 {
     font-weight: 600;
     margin: 0.75rem 0 0.375rem;
     line-height: 1.3;
 }
 
-.update-dialog__notes-body.markdown-body h1 { font-size: 1.125rem; }
-.update-dialog__notes-body.markdown-body h2 { font-size: 1.0625rem; }
-.update-dialog__notes-body.markdown-body h3 { font-size: 1rem; }
-.update-dialog__notes-body.markdown-body h4 { font-size: 0.9375rem; }
+.update-notes-container .markdown-body h1 { font-size: 1.125rem; }
+.update-notes-container .markdown-body h2 { font-size: 1.0625rem; }
+.update-notes-container .markdown-body h3 { font-size: 1rem; }
+.update-notes-container .markdown-body h4 { font-size: 0.9375rem; }
 
-.update-dialog__notes-body.markdown-body p,
-.update-dialog__notes-body.markdown-body ul,
-.update-dialog__notes-body.markdown-body ol,
-.update-dialog__notes-body.markdown-body blockquote,
-.update-dialog__notes-body.markdown-body pre,
-.update-dialog__notes-body.markdown-body table {
+.update-notes-container .markdown-body p,
+.update-notes-container .markdown-body ul,
+.update-notes-container .markdown-body ol,
+.update-notes-container .markdown-body blockquote,
+.update-notes-container .markdown-body pre,
+.update-notes-container .markdown-body table {
     margin: 0.5rem 0;
 }
 
-.update-dialog__notes-body.markdown-body ul,
-.update-dialog__notes-body.markdown-body ol {
+.update-notes-container .markdown-body ul,
+.update-notes-container .markdown-body ol {
     padding-left: 1.25rem;
 }
 
-.update-dialog__notes-body.markdown-body li {
+.update-notes-container .markdown-body li {
     margin: 0.25rem 0;
 }
 
-.update-dialog__notes-body.markdown-body li > ul,
-.update-dialog__notes-body.markdown-body li > ol {
+.update-notes-container .markdown-body li > ul,
+.update-notes-container .markdown-body li > ol {
     margin: 0.25rem 0;
 }
 
-.update-dialog__notes-body.markdown-body a {
+.update-notes-container .markdown-body a {
     color: var(--mud-palette-primary);
 }
 
-.update-dialog__notes-body.markdown-body code {
+.update-notes-container .markdown-body code {
     background-color: var(--mud-palette-background-grey);
     border-radius: 4px;
     padding: 0.125rem 0.3125rem;
     font-size: 0.8125rem;
 }
 
-.update-dialog__notes-body.markdown-body pre {
+.update-notes-container .markdown-body pre {
     background-color: var(--mud-palette-background-grey);
     border-radius: 8px;
     padding: 0.625rem 0.75rem;
     overflow-x: auto;
 }
 
-.update-dialog__notes-body.markdown-body pre code {
+.update-notes-container .markdown-body pre code {
     background: none;
     padding: 0;
 }
 
-.update-dialog__notes-body.markdown-body blockquote {
+.update-notes-container .markdown-body blockquote {
     border-left: 3px solid var(--mud-palette-primary);
     padding-left: 0.75rem;
     color: var(--mud-palette-text-secondary);
 }
 
-.update-dialog__notes-body.markdown-body hr {
+.update-notes-container .markdown-body hr {
     border: none;
     border-top: 1px solid var(--mud-palette-lines-default);
     margin: 0.75rem 0;
@@ -3565,7 +3694,7 @@ html[data-theme="dark"] .app-splash__retry {
 }
 
 .workout-session-stat__label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--mud-palette-text-secondary);
@@ -3691,7 +3820,7 @@ html[data-theme="dark"] .app-splash__retry {
     }
 
     /* --- Typography scale --- */
-    .home-header__title {
+    .page-header.home-header .mud-typography-h1 {
         font-size: 2.375rem;
         letter-spacing: -0.03em;
     }
@@ -3927,8 +4056,8 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 }
 
 .ai-chat-header__actions .mud-icon-button {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 999px;
     transition: background-color 120ms ease, transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -4094,8 +4223,17 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 }
 
 .ai-msg--assistant:hover .ai-msg__actions,
-.ai-msg--user:hover .ai-msg__actions {
+.ai-msg--user:hover .ai-msg__actions,
+.ai-msg--assistant:focus-within .ai-msg__actions,
+.ai-msg--user:focus-within .ai-msg__actions {
     opacity: 1;
+}
+
+/* Touch devices have no hover: keep the copy action always reachable. */
+@media (hover: none) {
+    .ai-msg__actions {
+        opacity: 1;
+    }
 }
 
 .ai-msg__time {
@@ -4248,8 +4386,8 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     }
 
     .ai-chat-header__actions .mud-icon-button {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
     }
 
     .ai-chat-composer {
@@ -4299,7 +4437,7 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     height: 1.35rem;
     margin-left: 0.5rem;
     padding: 0 0.3rem;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -4307,7 +4445,7 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
 }
 
 .plan-exercise-row__chip--superset {
-    color: var(--mud-palette-primary-contrasttext);
+    color: var(--mud-palette-primary-text);
     background: color-mix(in srgb, var(--mud-palette-primary) 85%, transparent);
 }
 
@@ -4319,10 +4457,10 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     height: 1.4rem;
     margin-right: 0.5rem;
     padding: 0 0.3rem;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--mud-palette-primary-contrasttext);
+    color: var(--mud-palette-primary-text);
     background: color-mix(in srgb, var(--mud-palette-primary) 85%, transparent);
 }
 
@@ -4349,12 +4487,46 @@ html[data-theme="dark"] .history-session-card__badge-inprogress {
     opacity: 0.85;
 }
 
+/* Completed-set edit rows (mirror of WorkoutExerciseCard.razor.css so the
+   styling survives on platforms that do not load the scoped bundle). */
+.set-completed-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mud-palette-divider);
+}
+
+.set-completed-row:last-child {
+    border-bottom: none;
+}
+
+.set-completed-row__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.set-completed-row__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.exercise-accordion-header {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: inherit;
+    font: inherit;
+    color: inherit;
+}
+
 .history-detail-warmup-badge {
     display: inline-flex;
     align-items: center;
     margin-right: 0.4rem;
     padding: 0.05rem 0.4rem;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.03em;
@@ -4661,8 +4833,14 @@ html[data-theme="dark"] .share-card__footer {
 
 .detail-skeleton__stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
+}
+
+.detail-skeleton__range {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
 }
 
 .workout-skeleton__top {
@@ -4692,6 +4870,10 @@ html[data-theme="dark"] .share-card__footer {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
+    .detail-skeleton__stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
     .history-skeleton__rows {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4710,7 +4892,11 @@ html[data-theme="dark"] .share-card__footer {
 
 .workout-undo-btn:focus-visible,
 .set-metric-stepper__value:focus-visible,
-.set-metric-stepper__btn:focus-visible {
+.set-metric-stepper__btn:focus-visible,
+.log-set-btn:focus-visible,
+.rest-timer-add-btn:focus-visible,
+.bodyweight-log-row__log-btn:focus-visible,
+.exercise-accordion-header:focus-visible {
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: 2px;
 }
@@ -4722,7 +4908,12 @@ html[data-theme="dark"] .share-card__footer {
 
 .plan-exercise-row__body:focus-visible,
 .history-session-check:focus-visible,
-.home-hero__discard:focus-visible {
+.home-hero__discard:focus-visible,
+.app-nav-tab:focus-visible,
+.settings-tab:focus-visible,
+.settings-schedule-day:focus-visible,
+.plan-card-handle:focus-visible,
+.plan-exercise-handle:focus-visible {
     outline: 2px solid var(--mud-palette-primary);
     outline-offset: 1px;
 }

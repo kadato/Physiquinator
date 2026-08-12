@@ -7,12 +7,19 @@
     cursor: pointer;
 }
 
-.pr-dialog-row:hover {
-    background: rgba(127, 127, 127, 0.08);
+.pr-dialog-row:hover,
+.pr-dialog-row:focus-visible {
+    background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
+    outline: none;
+}
+
+.pr-dialog-row:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: -2px;
 }
 
 .pr-dialog-row + .pr-dialog-row {
-    border-top: 1px solid rgba(127, 127, 127, 0.14);
+    border-top: 1px solid var(--mud-palette-lines-default);
 }
 
 .pr-dialog-row__icon {

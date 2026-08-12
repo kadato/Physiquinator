@@ -164,8 +164,10 @@ jobs:
         RANGE="${PREV:+${PREV}..}HEAD"
         FEATURES=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^feat' | sed -E 's/^feat(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
         FIXES=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^fix' | sed -E 's/^fix(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
+        PERF=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^perf' | sed -E 's/^perf(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
+        REFACTOR=$(git log "$RANGE" --no-merges --pretty=format:%s | grep -E '^refactor' | sed -E 's/^refactor(\([^)]*\))?: //' | sed 's/^./\U&/' || true)
         {
-          echo "## What's new"
+          echo "## Release notes for v${VERSION}"
           echo ""
           if [ -n "$FEATURES" ]; then
             echo "### Features"
@@ -177,8 +179,18 @@ jobs:
             echo "$FIXES" | sed 's/^/- /'
             echo ""
           fi
-          if [ -z "$FEATURES" ] && [ -z "$FIXES" ]; then
-            echo "Improvements and under-the-hood changes."
+          if [ -n "$PERF" ]; then
+            echo "### Performance"
+            echo "$PERF" | sed 's/^/- /'
+            echo ""
+          fi
+          if [ -n "$REFACTOR" ]; then
+            echo "### Refactoring"
+            echo "$REFACTOR" | sed 's/^/- /'
+            echo ""
+          fi
+          if [ -z "$FEATURES" ] && [ -z "$FIXES" ] && [ -z "$PERF" ] && [ -z "$REFACTOR" ]; then
+            echo "Maintenance updates and general improvements."
             echo ""
           fi
         } > RELEASE_NOTES.md

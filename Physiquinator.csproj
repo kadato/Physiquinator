@@ -42,7 +42,7 @@
 
         <!-- CS1591: XML doc comments are not required for an application project -->
         <NoWarn>$(NoWarn);CS1591;XA0141</NoWarn>
-        <DefaultItemExcludes>$(DefaultItemExcludes);Physiquinator.Core\**;Physiquinator.UI\**;Physiquinator.Tests\**;Physiquinator.Web\**;artifacts\**</DefaultItemExcludes>
+        <DefaultItemExcludes>$(DefaultItemExcludes);Physiquinator.Core\**;Physiquinator.UI\**;Physiquinator.Tests\**;Physiquinator.Web\**;artifacts\**;tools\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->
@@ -221,6 +221,7 @@
               SkipUnchangedFiles="false"
               Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'" />
     </Target>
+
 
 
 </Project>

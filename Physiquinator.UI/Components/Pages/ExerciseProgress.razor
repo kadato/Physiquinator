@@ -1,4 +1,5 @@
 @page "/history/exercise-progress/{PlanId:guid}/{ExerciseName}"
+@implements IAsyncDisposable
 @using System.Globalization
 @using MudBlazor.Charts
 @inject WorkoutHistoryRepository HistoryRepo
@@ -7,11 +8,11 @@
 @inject UserProfileService UserProfileService
 @inject IDialogService DialogService
 @inject WeightUnitService WeightUnitService
-@inject IStringLocalizer<UiText> Loc
+@inject IJSRuntime JS
 
 <PageTitle>@_decodedExerciseName</PageTitle>
 
-<PageHeader Title="@_decodedExerciseName" ShowBack="false">
+<PageHeader Title="@_decodedExerciseName">
     @if (_ready && _rows.Any())
     {
         <MudButton Variant="Variant.Text"
@@ -19,7 +20,7 @@
                    Class="premium-btn"
                    StartIcon="@Icons.Material.Filled.EmojiEvents"
                    OnClick="ShowPersonalRecordsAsync">
-            @Loc["PRs"]
+            @("PRs")
         </MudButton>
     }
 </PageHeader>
@@ -34,32 +35,34 @@ else
         @if (_planMissing)
         {
             <MudAlert Severity="Severity.Warning">
-                @Loc["This plan no longer exists, but its logged history is still shown here."]
+                @("This plan no longer exists, but its logged history is still shown here.")
             </MudAlert>
         }
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
             <MudSelect T="ExerciseProgressRange"
-                       Label="@Loc["Range"]"
+                       Label="@("Range")"
                        Variant="Variant.Outlined"
                        Dense="true"
                        Margin="Margin.Dense"
+                       AnchorOrigin="Origin.BottomRight"
+                       TransformOrigin="Origin.TopRight"
                        Class="exercise-progress-range"
                        Value="_range"
                        ValueChanged="OnRangeChanged">
-                <MudSelectItem Value="ExerciseProgressRange.Last10">@Loc["Last 10 sessions"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseProgressRange.Last30">@Loc["Last 30 sessions"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseProgressRange.Last60">@Loc["Last 60 sessions"]</MudSelectItem>
-                <MudSelectItem Value="ExerciseProgressRange.All">@Loc["All sessions"]</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.Last10">@("Last 10 sessions")</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.Last30">@("Last 30 sessions")</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.Last60">@("Last 60 sessions")</MudSelectItem>
+                <MudSelectItem Value="ExerciseProgressRange.All">@("All sessions")</MudSelectItem>
             </MudSelect>
             <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                @(_rows.Count == 1 ? Loc["1 session with this exercise"] : Loc["{0} sessions with this exercise", _rows.Count])
+                @SessionCountLabel
             </MudText>
         </MudStack>
 
         @if (!_rows.Any())
         {
-            <EmptyState Message="@Loc["No sets logged for this exercise on this plan yet."]"
+            <EmptyState Message="@("No sets logged for this exercise on this plan yet.")"
                         Icon="@Icons.Material.Outlined.FitnessCenter" />
         }
         else
@@ -80,7 +83,7 @@ else
             }
 
             <MudPaper Class="pa-3 exercise-progress-chart" Elevation="0">
-                <MudText Typo="Typo.h6" Class="mb-1">@Loc["Progression"]</MudText>
+                <MudText Typo="Typo.h6" Class="settings-card__title mb-1">@("Progression")</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
                     @GetChartCaption()
                 </MudText>
@@ -99,57 +102,71 @@ else
                 else
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        @Loc["Log reps or weight on sets to see progression."]
+                        @("Log reps or weight on sets to see progression.")
                     </MudText>
                 }
             </MudPaper>
 
             <MudPaper Class="premium-table" Elevation="0">
-                <MudTable Items="_rows" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
-                    <HeaderContent>
-                        <MudTh>@Loc["Date"]</MudTh>
+                <div class="infinite-table-list">
+                    <div class="infinite-table-head @(_logType == ExerciseLogType.Duration ? "infinite-table-head--4" : "infinite-table-head--5")">
+                        <span>@("Date")</span>
                         @if (_logType == ExerciseLogType.Duration)
                         {
-                            <MudTh>@Loc["Total time"]</MudTh>
-                            <MudTh>@Loc["Sets"]</MudTh>
+                            <span>@("Total time")</span>
+                            <span>@("Sets")</span>
                         }
                         else if (_logType == ExerciseLogType.BodyweightReps)
                         {
-                            <MudTh>@Loc["Best offset"]</MudTh>
-                            <MudTh>@Loc["Reps (total)"]</MudTh>
-                            <MudTh>@Loc["Sets"]</MudTh>
+                            <span>@("Best offset")</span>
+                            <span>@("Reps (total)")</span>
+                            <span>@("Sets")</span>
                         }
                         else
                         {
-                            <MudTh>@Loc["{0} (best)", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)]</MudTh>
-                            <MudTh>@Loc["Reps (total)"]</MudTh>
-                            <MudTh>@Loc["Sets"]</MudTh>
+                            <span>@(string.Format("{0} (best)", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)))</span>
+                            <span>@("Reps (total)")</span>
+                            <span>@("Sets")</span>
                         }
-                        <MudTh Class="exercise-progress-table__action" />
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@UiDateFormats.LocalDateCompact(context.StartedAtUtc)</MudTd>
-                        @if (_logType == ExerciseLogType.Duration)
-                        {
-                            <MudTd>@(context.TotalReps)s</MudTd>
-                            <MudTd>@context.SetCount</MudTd>
-                        }
-                        else
-                        {
-                            <MudTd>@FormatBestWeight(context.BestWeightKg)</MudTd>
-                            <MudTd>@context.TotalReps</MudTd>
-                            <MudTd>@context.SetCount</MudTd>
-                        }
-                        <MudTd Class="exercise-progress-table__action">
-                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
-                                           Size="Size.Small"
-                                           Variant="Variant.Text"
-                                            Class="exercise-progress-table__open premium-btn"
-                                            aria-label="@Loc["Open session"]"
-                                            OnClick="@(() => GoSession(context.SessionId))" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                        <span class="infinite-table-head__action" />
+                    </div>
+                    @foreach (var row in _rows.Take(_loadedListCount))
+                    {
+                        var item = row;
+                        <div @key="item.SessionId" class="infinite-table-row @(_logType == ExerciseLogType.Duration ? "infinite-table-row--4" : "infinite-table-row--5")">
+                            <span>@UiDateFormats.LocalDateCompact(item.StartedAtUtc)</span>
+                            @if (_logType == ExerciseLogType.Duration)
+                            {
+                                <span>@(string.Format("{0}s", item.TotalReps))</span>
+                                <span>@item.SetCount</span>
+                            }
+                            else
+                            {
+                                <span>@FormatBestWeight(item.BestWeightKg)</span>
+                                <span>@item.TotalReps</span>
+                                <span>@item.SetCount</span>
+                            }
+                            <span class="infinite-table-row__action">
+                                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                               Size="Size.Small"
+                                               Variant="Variant.Text"
+                                                Class="exercise-progress-table__open premium-btn"
+                                                aria-label="@("Open session")"
+                                                OnClick="@(() => GoSession(item.SessionId))" />
+                            </span>
+                        </div>
+                    }
+                </div>
+                @if (_isLoadingMore)
+                {
+                    <div class="history-infinite-scroll-loading" aria-hidden="true">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    </div>
+                }
+                @if (_hasMoreListItems)
+                {
+                    <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
+                }
             </MudPaper>
         }
     </MudStack>
@@ -179,12 +196,19 @@ else
     public string ExerciseName { get; set; } = "";
 
     private const int AllTimeMaxSessions = 200;
+    private const int ListPageSize = 50;
+    private const string LoadMoreSentinelId = "exercise-progress-load-more-sentinel";
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
 
     private bool _ready;
     private bool _planMissing;
     private string _decodedExerciseName = "";
     private IReadOnlyList<ExerciseSessionProgressEntry> _rows = Array.Empty<ExerciseSessionProgressEntry>();
+    private int _loadedListCount;
+    private bool _hasMoreListItems;
+    private bool _isLoadingMore;
+    private bool _sentinelObserved;
+    private DotNetObjectReference<ExerciseProgress>? _dotNetRef;
     private ExerciseProgressRange _range = ExerciseProgressRange.Last30;
     private ChartMetric _metric = ChartMetric.Volume;
     private string[] _chartLabels = Array.Empty<string>();
@@ -204,18 +228,31 @@ else
         _ => 30
     };
 
+    /// <summary>Session count caption; flags when the "All sessions" range is capped.</summary>
+    private string SessionCountLabel
+    {
+        get
+        {
+            if (_range == ExerciseProgressRange.All && _rows.Count >= AllTimeMaxSessions)
+                return string.Format("Showing the {0} most recent sessions", AllTimeMaxSessions);
+            return _rows.Count == 1
+                ? "1 session with this exercise"
+                : string.Format("{0} sessions with this exercise", _rows.Count);
+        }
+    }
+
     private IReadOnlyList<ChartMetric> MetricOptions => _logType switch
     {
         ExerciseLogType.Duration => [ChartMetric.TotalTime],
         _ => [ChartMetric.Volume, ChartMetric.BestWeight, ChartMetric.TotalReps]
     };
 
-    private string MetricLabel(ChartMetric metric) => metric switch
+    private static string MetricLabel(ChartMetric metric) => metric switch
     {
-        ChartMetric.Volume => Loc["Volume"],
-        ChartMetric.BestWeight => Loc["Best weight"],
-        ChartMetric.TotalReps => Loc["Total reps"],
-        _ => Loc["Total time"]
+        ChartMetric.Volume => "Volume",
+        ChartMetric.BestWeight => "Best weight",
+        ChartMetric.TotalReps => "Total reps",
+        _ => "Total time"
     };
 
     private void GoSession(string sessionId) =>
@@ -243,7 +280,7 @@ else
             FullWidth = true,
         };
 
-        await DialogService.ShowAsync<PersonalRecordsDialog>(Loc["Personal records"], parameters, options);
+        await DialogService.ShowAsync<PersonalRecordsDialog>("Personal records", parameters, options);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -268,6 +305,7 @@ else
         _metric = _logType == ExerciseLogType.Duration ? ChartMetric.TotalTime : ChartMetric.Volume;
         await LoadRowsAsync();
         BuildChartData();
+        ResetListPaging();
         _ready = true;
     }
 
@@ -277,11 +315,37 @@ else
             PlanId, _decodedExerciseName, ActiveMaxSessions, _bodyweightKg, _logType, _bodyweightPercent);
     }
 
+    /// <summary>Reveals the next chunk of session rows for the lazy list (no pagination UI).</summary>
+    private void ResetListPaging()
+    {
+        _loadedListCount = Math.Min(ListPageSize, _rows.Count);
+        _hasMoreListItems = _loadedListCount < _rows.Count;
+    }
+
+    /// <summary>
+    /// Invoked from JS when the sentinel scrolls into view. Reveals the next chunk
+    /// of already-loaded session rows and reports whether more pages may exist.
+    /// </summary>
+    [JSInvokable]
+    public Task<bool> OnLoadMoreVisible()
+    {
+        if (_isLoadingMore || !_hasMoreListItems || _rows.Count == 0)
+            return Task.FromResult(false);
+
+        _isLoadingMore = true;
+        _loadedListCount = Math.Min(_loadedListCount + ListPageSize, _rows.Count);
+        _hasMoreListItems = _loadedListCount < _rows.Count;
+        _isLoadingMore = false;
+        StateHasChanged();
+        return Task.FromResult(_hasMoreListItems);
+    }
+
     private async Task OnRangeChanged(ExerciseProgressRange range)
     {
         _range = range;
         await LoadRowsAsync();
         BuildChartData();
+        ResetListPaging();
     }
 
     private void SetMetric(ChartMetric metric)
@@ -345,10 +409,10 @@ else
         var unitSuffix = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
         return _metric switch
         {
-            ChartMetric.BestWeight => Loc["Best weight ({0})", unitSuffix],
-            ChartMetric.TotalReps => Loc["Total reps"],
-            ChartMetric.TotalTime => Loc["Total duration (s)"],
-            _ => Loc["Volume ({0})", unitSuffix]
+            ChartMetric.BestWeight => string.Format("Best weight ({0})", unitSuffix),
+            ChartMetric.TotalReps => "Total reps",
+            ChartMetric.TotalTime => "Total duration (s)",
+            _ => string.Format("Volume ({0})", unitSuffix)
         };
     }
 
@@ -357,26 +421,26 @@ else
         var unitSuffix = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
         if (_logType == ExerciseLogType.Duration)
         {
-            return Loc["Total exercise time per session, in seconds."];
+            return "Total exercise time per session, in seconds.";
         }
         if (_logType == ExerciseLogType.BodyweightReps)
         {
             return _metric switch
             {
-                ChartMetric.BestWeight => Loc["Best bodyweight offset per session."],
-                ChartMetric.TotalReps => Loc["Total reps per session."],
+                ChartMetric.BestWeight => "Best bodyweight offset per session.",
+                ChartMetric.TotalReps => "Total reps per session.",
                 _ when _bodyweightKg.HasValue =>
-                    Loc["Volume per set: reps × ({0} of bodyweight [{1}] + offset).",
+                    string.Format("Volume per set: reps x ({0} of bodyweight [{1}] + offset).",
                         ExerciseCatalog.FormatShare(_bodyweightPercent),
-                        ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)],
-                _ => Loc["Bodyweight is not set in Settings, so only total reps are plotted."]
+                        ExerciseWeightFormatter.FormatWeightWithUnit(_bodyweightKg.Value, WeightUnitService.Current)),
+                _ => "Bodyweight is not set in Settings, so only total reps are plotted."
             };
         }
         return _metric switch
         {
-            ChartMetric.BestWeight => Loc["Best logged weight per session, in {0}.", unitSuffix],
-            ChartMetric.TotalReps => Loc["Total reps per session."],
-            _ => Loc["Volume per set: reps × {0} (both must be logged).", unitSuffix]
+            ChartMetric.BestWeight => string.Format("Best logged weight per session, in {0}.", unitSuffix),
+            ChartMetric.TotalReps => "Total reps per session.",
+            _ => string.Format("Volume per set: reps × {0} (both must be logged).", unitSuffix)
         };
     }
 
@@ -391,4 +455,43 @@ else
     }
 
     private bool _hasChartData;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_hasMoreListItems)
+        {
+            if (_sentinelObserved)
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+                _sentinelObserved = false;
+            }
+            return;
+        }
+
+        if (!_sentinelObserved)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await InfiniteScrollInterop.ObserveAsync(JS, LoadMoreSentinelId, _dotNetRef, nameof(OnLoadMoreVisible));
+            _sentinelObserved = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sentinelObserved)
+        {
+            try
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+            }
+            catch (JSDisconnectedException)
+            {
+                // WebView disposed
+            }
+            _sentinelObserved = false;
+        }
+
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
+    }
 }

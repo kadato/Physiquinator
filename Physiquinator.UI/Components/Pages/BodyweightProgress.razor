@@ -1,4 +1,5 @@
 @page "/history/bodyweight"
+@implements IAsyncDisposable
 @using System.Globalization
 @using System.Linq
 @using MudBlazor.Charts
@@ -6,11 +7,11 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject WeightUnitService WeightUnitService
-@inject IStringLocalizer<UiText> Loc
+@inject IJSRuntime JS
 
-<PageTitle>@Loc["Bodyweight"]</PageTitle>
+<PageTitle>@("Bodyweight")</PageTitle>
 
-<PageHeader Title="@Loc["Bodyweight"]" ShowBack="false" />
+<PageHeader Title="@("Bodyweight")" />
 
 @if (!_ready)
 {
@@ -18,7 +19,7 @@
 }
 else if (_allEntries.Count == 0)
 {
-    <EmptyState Message="@Loc["No bodyweight logged yet. Use the quick log on the history page to record your weight."]"
+    <EmptyState Message="@("No bodyweight logged yet. Use the quick log on the history page to record your weight.")"
                 Icon="@Icons.Material.Outlined.MonitorWeight" />
 }
 else
@@ -26,7 +27,7 @@ else
     <MudStack Spacing="3">
         <div class="bodyweight-range-row">
             <MudSelect T="BodyweightTimeRange"
-                       Label="@Loc["Time range"]"
+                       Label="@("Time range")"
                        Variant="Variant.Outlined"
                        Dense="true"
                        Margin="Margin.Dense"
@@ -44,21 +45,21 @@ else
 
         @if (_entries.Count == 0)
         {
-            <EmptyState Message="@Loc["No entries logged in the selected time range."]"
+            <EmptyState Message="@("No entries logged in the selected time range.")"
                         Icon="@Icons.Material.Outlined.DateRange" />
         }
         else
         {
             <div class="history-stats">
-                <StatCard Value="@FormatWeightWithUnit(_entries[0].BodyweightKg)" Label="@Loc["Latest"]" />
-                <StatCard Value="@TrendLabel" Label="@Loc["Change"]" />
-                <StatCard Value="@_entries.Count.ToString()" Label="@Loc["Entries"]" />
+                <StatCard Value="@FormatWeightWithUnit(_entries[0].BodyweightKg)" Label="@("Latest")" />
+                <StatCard Value="@TrendLabel" Label="@("Change")" />
+                <StatCard Value="@_entries.Count.ToString()" Label="@("Entries")" />
             </div>
 
             <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
-                <MudText Typo="Typo.h6" Class="mb-1">@Loc["Trend"]</MudText>
+                <MudText Typo="Typo.h6" Class="settings-card__title mb-1">@("Trend")</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-                    @Loc["Logged weight over time."]
+                    @("Logged weight over time.")
                 </MudText>
                 @if (_hasChartData)
                 {
@@ -75,36 +76,49 @@ else
                 else
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        @Loc["Log your weight each day to see the trend here."]
+                        @("Log your weight each day to see the trend here.")
                     </MudText>
                 }
             </MudPaper>
 
             <MudPaper Class="premium-table bodyweight-table" Elevation="0">
-                <MudTable Items="_entries" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.None">
-                    <HeaderContent>
-                        <MudTh>@Loc["Date"]</MudTh>
-                        <MudTh>@Loc["Weight"]</MudTh>
-                        <MudTh Class="bodyweight-table__action" />
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@UiDateFormats.DateOnlyCompact(context.DateOnly)</MudTd>
-                        <MudTd>@FormatWeightWithUnit(context.BodyweightKg)</MudTd>
-                        <MudTd Class="bodyweight-table__action">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           Size="Size.Small"
-                                            Class="bodyweight-table__edit"
-                                            aria-label="@Loc["Edit entry for {0}", UiDateFormats.DateOnlyCompact(context.DateOnly)]"
-                                            OnClick="@(() => EditEntryAsync(context))" />
-                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
-                                           Size="Size.Small"
-                                           Color="Color.Error"
-                                           Class="bodyweight-table__delete"
-                                           aria-label="@Loc["Delete entry"]"
-                                           OnClick="@(() => DeleteEntryAsync(context))" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                <div class="infinite-table-list">
+                    <div class="infinite-table-head infinite-table-head--3">
+                        <span>@("Date")</span>
+                        <span>@("Weight")</span>
+                        <span class="infinite-table-head__action" />
+                    </div>
+                    @foreach (var entry in _entries.Take(_loadedListCount))
+                    {
+                        var item = entry;
+                        <div @key="item.DateOnly" class="infinite-table-row infinite-table-row--3">
+                            <span>@UiDateFormats.DateOnlyCompact(item.DateOnly)</span>
+                            <span>@FormatWeightWithUnit(item.BodyweightKg)</span>
+                            <span class="infinite-table-row__action">
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                                         Class="bodyweight-table__menu"
+                                         Dense="true"
+                                         AriaLabel="@(string.Format("Actions for entry {0}", UiDateFormats.DateOnlyCompact(item.DateOnly)))">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Edit"
+                                                 OnClick="@(() => EditEntryAsync(item))">Edit entry</MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Outlined.DeleteOutline"
+                                                 IconColor="Color.Error"
+                                                 OnClick="@(() => DeleteEntryAsync(item))">Delete entry</MudMenuItem>
+                                </MudMenu>
+                            </span>
+                        </div>
+                    }
+                </div>
+                @if (_isLoadingMore)
+                {
+                    <div class="history-infinite-scroll-loading" aria-hidden="true">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    </div>
+                }
+                @if (_hasMoreListItems)
+                {
+                    <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
+                }
             </MudPaper>
         }
     </MudStack>
@@ -123,6 +137,8 @@ else
     private const int EntryLimit = 1000;
     private const int MaxChartAxisLabels = 6;
     private const int MaxYAxisTicks = 5;
+    private const int ListPageSize = 50;
+    private const string LoadMoreSentinelId = "bodyweight-load-more-sentinel";
 
     /// <summary>Show per-entry dots only for sparse series; dense series render as a clean line.</summary>
     private const int MaxChartMarkerEntries = 60;
@@ -130,6 +146,11 @@ else
     private bool _ready;
     private IReadOnlyList<BodyweightEntry> _allEntries = Array.Empty<BodyweightEntry>();
     private IReadOnlyList<BodyweightEntry> _entries = Array.Empty<BodyweightEntry>();
+    private int _loadedListCount;
+    private bool _hasMoreListItems;
+    private bool _isLoadingMore;
+    private bool _sentinelObserved;
+    private DotNetObjectReference<BodyweightProgress>? _dotNetRef;
     private BodyweightTimeRange _range = BodyweightTimeRange.AllTime;
     private string[] _chartLabels = Array.Empty<string>();
     private ChartSeriesList _chartSeries = [];
@@ -143,8 +164,11 @@ else
         {
             if (_entries.Count < 2) return "—";
             var diff = _entries[0].BodyweightKg - _entries[^1].BodyweightKg;
-            var sign = diff >= 0 ? "+" : "-";
-            return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(diff), WeightUnitService.Current)} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+            var formatted = ExerciseWeightFormatter.FormatWeight(Math.Abs(diff), WeightUnitService.Current);
+            var unit = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);
+            if (diff == 0) return $"{formatted} {unit}";
+            var sign = diff > 0 ? "+" : "-";
+            return $"{sign}{formatted} {unit}";
         }
     }
 
@@ -152,10 +176,35 @@ else
         ExerciseWeightFormatter.FormatWeightWithUnit(kg, WeightUnitService.Current);
 
 
-    private void OnRangeChanged(BodyweightTimeRange range)
+    private async Task OnRangeChanged(BodyweightTimeRange range)
     {
         _range = range;
         ApplyRangeAndRebuild();
+    }
+
+    /// <summary>Reveals the next chunk of entries for the lazy list (no pagination UI).</summary>
+    private void ResetListPaging()
+    {
+        _loadedListCount = Math.Min(ListPageSize, _entries.Count);
+        _hasMoreListItems = _loadedListCount < _entries.Count;
+    }
+
+    /// <summary>
+    /// Invoked from JS when the sentinel scrolls into view. Reveals the next chunk
+    /// of already-loaded entries and reports whether more pages may exist.
+    /// </summary>
+    [JSInvokable]
+    public Task<bool> OnLoadMoreVisible()
+    {
+        if (_isLoadingMore || !_hasMoreListItems || _entries.Count == 0)
+            return Task.FromResult(false);
+
+        _isLoadingMore = true;
+        _loadedListCount = Math.Min(_loadedListCount + ListPageSize, _entries.Count);
+        _hasMoreListItems = _loadedListCount < _entries.Count;
+        _isLoadingMore = false;
+        StateHasChanged();
+        return Task.FromResult(_hasMoreListItems);
     }
 
     private static int RangeDays(BodyweightTimeRange range) => range switch
@@ -167,13 +216,13 @@ else
         _ => int.MaxValue
     };
 
-    private string RangeLabel(BodyweightTimeRange range) => range switch
+    private static string RangeLabel(BodyweightTimeRange range) => range switch
     {
-        BodyweightTimeRange.OneMonth => Loc["Last month"],
-        BodyweightTimeRange.ThreeMonths => Loc["Last 3 months"],
-        BodyweightTimeRange.SixMonths => Loc["Last 6 months"],
-        BodyweightTimeRange.OneYear => Loc["Last year"],
-        _ => Loc["All time"]
+        BodyweightTimeRange.OneMonth => "Last month",
+        BodyweightTimeRange.ThreeMonths => "Last 3 months",
+        BodyweightTimeRange.SixMonths => "Last 6 months",
+        BodyweightTimeRange.OneYear => "Last year",
+        _ => "All time"
     };
 
     protected override async Task OnInitializedAsync()
@@ -199,6 +248,7 @@ else
     {
         _entries = ApplyRange(_allEntries);
         BuildChartData();
+        ResetListPaging();
     }
 
     private IReadOnlyList<BodyweightEntry> ApplyRange(IReadOnlyList<BodyweightEntry> entries)
@@ -230,7 +280,7 @@ else
             .ToArray();
         _chartSeries = [ new ChartSeries<double>
         {
-            Name = Loc["Bodyweight"],
+            Name = "Bodyweight",
             Data = values
         } ];
 
@@ -280,7 +330,7 @@ else
             FullWidth = true,
         };
 
-        var dialog = await DialogService.ShowAsync<BodyweightEditDialog>(Loc["Edit entry"], parameters, options);
+        var dialog = await DialogService.ShowAsync<BodyweightEditDialog>("Edit entry", parameters, options);
         var result = await dialog.Result;
         if (result is { Canceled: false } && result.Data is double displayWeight)
         {
@@ -291,23 +341,23 @@ else
             }
             catch (Exception ex)
             {
-                Snackbar.Add(Loc["Could not update entry: {0}", ex.Message], Severity.Error);
+                Snackbar.Add(string.Format("Could not update entry: {0}", ex.Message), Severity.Error);
                 return;
             }
 
             _allEntries = await LoadEntriesAsync();
             ApplyRangeAndRebuild();
-            Snackbar.Add(Loc["Entry updated."], Severity.Success);
+            Snackbar.Add("Entry updated.", Severity.Success);
         }
     }
 
     private async Task DeleteEntryAsync(BodyweightEntry entry)
     {
         var confirmed = await DialogService.ConfirmAsync(
-            Loc["Delete entry"],
-            Loc["Delete the {0} bodyweight entry ({1})? This cannot be undone.",
-                UiDateFormats.DateOnlyCompact(entry.DateOnly), FormatWeightWithUnit(entry.BodyweightKg)],
-            confirmText: Loc["Delete"],
+            "Delete entry",
+            string.Format("Delete the {0} bodyweight entry ({1})? You can undo this for a short time after.",
+                UiDateFormats.DateOnlyCompact(entry.DateOnly), FormatWeightWithUnit(entry.BodyweightKg)),
+            confirmText: "Delete",
             confirmColor: Color.Error);
 
         if (!confirmed) return;
@@ -318,12 +368,74 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add(Loc["Could not delete entry: {0}", ex.Message], Severity.Error);
+            Snackbar.Add(string.Format("Could not delete entry: {0}", ex.Message), Severity.Error);
             return;
         }
 
         _allEntries = await LoadEntriesAsync();
         ApplyRangeAndRebuild();
-        Snackbar.Add(Loc["Entry deleted."], Severity.Success);
+        Snackbar.Add("Entry deleted.", Severity.Success, options =>
+        {
+            options.Action = "Undo";
+            options.ActionColor = Color.Primary;
+            options.RequireInteraction = true;
+            options.OnClick = _ => RestoreEntryAsync(entry);
+        });
+    }
+
+    private async Task RestoreEntryAsync(BodyweightEntry entry)
+    {
+        try
+        {
+            await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, entry.BodyweightKg);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not restore entry: {0}", ex.Message), Severity.Error);
+            return;
+        }
+
+        _allEntries = await LoadEntriesAsync();
+        ApplyRangeAndRebuild();
+        Snackbar.Add("Entry restored.", Severity.Success);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_hasMoreListItems)
+        {
+            if (_sentinelObserved)
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+                _sentinelObserved = false;
+            }
+            return;
+        }
+
+        if (!_sentinelObserved)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await InfiniteScrollInterop.ObserveAsync(JS, LoadMoreSentinelId, _dotNetRef, nameof(OnLoadMoreVisible));
+            _sentinelObserved = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_sentinelObserved)
+        {
+            try
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
+            }
+            catch (JSDisconnectedException)
+            {
+                // WebView disposed
+            }
+            _sentinelObserved = false;
+        }
+
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
     }
 }

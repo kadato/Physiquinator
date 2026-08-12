@@ -1,5 +1,4 @@
 @inject IJSRuntime JSRuntime
-@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 @if (Compact)
@@ -8,10 +7,10 @@
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(-1))"
-                aria-label="@Loc["Decrease {0}", Label]">&#x2212;</button>
+                aria-label="@(string.Format("Decrease {0}", Label))">&#x2212;</button>
         @if (_editing)
         {
-            <form @onsubmit="CommitEdit" @onsubmit:preventDefault class="set-metric-stepper__edit-form">
+            <div class="set-metric-stepper__edit-form">
                 <input @ref="_inputRef"
                        class="set-metric-stepper__input set-metric-stepper__input--compact"
                        type="number"
@@ -28,7 +27,7 @@
                        @bind:event="oninput"
                        @onblur="CommitEdit"
                        @onkeydown="OnEditKeyDown" />
-            </form>
+            </div>
         }
         else
         {
@@ -51,7 +50,7 @@
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(1))"
-                aria-label="@Loc["Increase {0}", Label]">&#x2B;</button>
+                aria-label="@(string.Format("Increase {0}", Label))">&#x2B;</button>
     </div>
 }
 else
@@ -63,12 +62,12 @@ else
                        Color="Color.Primary"
                        Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
                        OnClick="@(() => Adjust(-1))"
-                       aria-label="@Loc["Decrease {0}", Label]">
+                       aria-label="@(string.Format("Decrease {0}", Label))">
                 &#x2212;
             </MudButton>
             @if (_editing)
             {
-                <form @onsubmit="CommitEdit" @onsubmit:preventDefault class="set-metric-stepper__edit-form">
+                <div class="set-metric-stepper__edit-form">
                     <input @ref="_inputRef"
                            class="set-metric-stepper__input"
                            type="number"
@@ -85,7 +84,7 @@ else
                            @bind:event="oninput"
                            @onblur="CommitEdit"
                            @onkeydown="OnEditKeyDown" />
-                </form>
+                </div>
             }
             else
             {
@@ -105,7 +104,7 @@ else
                        Color="Color.Primary"
                        Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
                        OnClick="@(() => Adjust(1))"
-                       aria-label="@Loc["Increase {0}", Label]">
+                       aria-label="@(string.Format("Increase {0}", Label))">
                 +
             </MudButton>
         </div>
@@ -162,7 +161,7 @@ else
     private bool _jsInitialized;
 
     private string EditInputAriaLabel =>
-        string.IsNullOrWhiteSpace(Label) ? Loc["Edit"] : Loc["Edit {0}", Label];
+        string.IsNullOrWhiteSpace(Label) ? "Edit" : string.Format("Edit {0}", Label);
 
     /// <summary>
     /// The visible button text (value + unit) must be part of the accessible
@@ -172,9 +171,9 @@ else
     {
         get
         {
-            var label = string.IsNullOrWhiteSpace(Label) ? Loc["value"] : Label;
+            var label = string.IsNullOrWhiteSpace(Label) ? "value" : Label;
             var unit = string.IsNullOrWhiteSpace(Unit) ? "" : $" {Unit}";
-            return $"{Loc["Edit {0}", label]}: {DisplayText}{unit}";
+            return $"{string.Format("Edit {0}", label)}: {DisplayText}{unit}";
         }
     }
 

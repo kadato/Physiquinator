@@ -1,6 +1,5 @@
 @* Rest countdown panel with add / reset / skip controls. *@
 @inject WorkoutSessionService SessionService
-@inject IStringLocalizer<UiText> Loc
 @implements IDisposable
 
 <MudPaper Class="@PanelClass" Elevation="0">
@@ -32,21 +31,18 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2" Class="rest-timer-controls">
             <button type="button"
                     class="rest-timer-add-btn"
-                    aria-label="@Loc["Add {0} seconds of rest", AddRestSeconds]"
+                    aria-label="@(string.Format("Add {0} seconds of rest", AddRestSeconds))"
                     @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
             <MudIconButton Icon="@Icons.Material.Filled.Replay"
                            Color="Color.Default"
-                           aria-label="@Loc["Reset rest"]"
+                           aria-label="@("Reset rest")"
                            OnClick="OnReset"
                            Size="Size.Large" />
-            @if (!IsRestComplete)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
-                               Color="Color.Default"
-                               aria-label="@Loc["Skip rest"]"
-                               OnClick="OnSkip"
-                               Size="Size.Large" />
-            }
+            <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
+                           Color="Color.Default"
+                           aria-label="@("Skip rest")"
+                           OnClick="OnSkip"
+                           Size="Size.Large" />
         </MudStack>
 
         <div class="rest-timer-edge-track" aria-hidden="true">
@@ -112,11 +108,11 @@
         _ = InvokeAsync(() =>
         {
             if (!SessionService.IsResting)
-                _liveStatus = Loc["Rest ended"];
+                _liveStatus = "Rest ended";
             else if (SessionService.ActiveRestDurationSeconds != _lastActiveDurationSeconds)
-                _liveStatus = Loc["Rest started"];
+                _liveStatus = "Rest started";
             else
-                _liveStatus = Loc["Rest time added"];
+                _liveStatus = "Rest time added";
             _lastActiveDurationSeconds = SessionService.ActiveRestDurationSeconds;
             StateHasChanged();
         });

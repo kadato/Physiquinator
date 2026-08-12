@@ -21,10 +21,6 @@
     color: var(--mud-palette-text-secondary);
 }
 
-.exercise-skip-btn {
-    margin-left: 4px;
-}
-
 .exercise-accordion-header {
     background: none;
     border: none;

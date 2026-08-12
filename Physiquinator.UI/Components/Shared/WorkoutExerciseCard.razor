@@ -3,10 +3,11 @@
 @using Physiquinator.Core.Formatting
 @using Physiquinator.Core.Models
 @inject WeightUnitService WeightUnitService
-@inject IStringLocalizer<UiText> Loc
 
 <MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
-    <button type="button" class="@HeaderClass" @onclick="@OnHeaderClick">
+    <button type="button" class="@HeaderClass" @onclick="@OnHeaderClick"
+            aria-expanded="@(IsExpanded ? "true" : "false")"
+            aria-controls="@($"exercise-content-{ExerciseIndex}")">
         <div class="header-left">
             @if (IsCompleted)
             {
@@ -23,34 +24,38 @@
         <div class="header-right">
             @if (!string.IsNullOrEmpty(Exercise.SupersetGroupId))
             {
-                <span class="workout-superset-badge" aria-label="@Loc["Superset group {0}", Exercise.SupersetGroupId]">S@(Exercise.SupersetGroupId)</span>
+                <span class="workout-superset-badge" role="img" aria-label="@(string.Format("Superset group {0}", Exercise.SupersetGroupId))">S@(Exercise.SupersetGroupId)</span>
             }
             <span class="@PillClass">@CompletedSetsCount/@Exercise.TotalSetCount</span>
-            @if (CanMoveUp || CanMoveDown)
+            @if (CanMoveUp || CanMoveDown || !IsCompleted)
             {
-                <div @onclick:stopPropagation="true" class="exercise-move-controls">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                                   Size="Size.Small"
-                                   Class="exercise-move-btn"
-                                   Disabled="!CanMoveUp"
-                                   aria-label="@Loc["Move {0} up", Exercise.Name]"
-                                   OnClick="MoveUp" />
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                                   Size="Size.Small"
-                                   Class="exercise-move-btn"
-                                   Disabled="!CanMoveDown"
-                                   aria-label="@Loc["Move {0} down", Exercise.Name]"
-                                   OnClick="MoveDown" />
-                </div>
-            }
-            @if (!IsCompleted)
-            {
-                <div @onclick:stopPropagation="true">
-                    <MudIconButton Icon="@Icons.Material.Filled.SkipNext"
-                                   Size="Size.Small"
-                                   Class="exercise-skip-btn"
-                                   aria-label="@Loc["Skip {0}", Exercise.Name]"
-                                   OnClick="SkipExercise" />
+                <div @onclick:stopPropagation="true" class="exercise-more-menu">
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
+                                           Size="Size.Small"
+                                           Class="exercise-more-btn"
+                                           aria-label="@(string.Format("Actions for {0}", Exercise.Name))"
+                                           OnClick="@context.ToggleAsync" />
+                        </ActivatorContent>
+                        <ChildContent>
+                            @if (CanMoveUp)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
+                                             OnClick="MoveUp">Move up</MudMenuItem>
+                            }
+                            @if (CanMoveDown)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.ArrowDownward"
+                                             OnClick="MoveDown">Move down</MudMenuItem>
+                            }
+                            @if (!IsCompleted)
+                            {
+                                <MudMenuItem Icon="@Icons.Material.Filled.SkipNext"
+                                             OnClick="SkipExercise">Skip exercise</MudMenuItem>
+                            }
+                        </ChildContent>
+                    </MudMenu>
                 </div>
             }
         </div>
@@ -58,7 +63,7 @@
 
     @if (IsExpanded && !IsCompleted)
     {
-        <MudCardContent Class="pt-0">
+        <MudCardContent Class="pt-0" id="@($"exercise-content-{ExerciseIndex}")">
             <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(CompletedSetsCount, Exercise.TotalSetCount)" Class="mb-3" />
 
                 <div class="set-logging-rows">
@@ -73,7 +78,7 @@
                     <div class="set-active-panel">
                         @if (isWarmupActive)
                         {
-                            <span class="warmup-chip">@Loc["Warm-up"]</span>
+                            <span class="warmup-chip">Warm-up</span>
                         }
                         <div class="set-stepper-rows">
                             @if (Exercise.LogType != ExerciseLogType.Duration)
@@ -103,7 +108,7 @@
                                 class="log-set-btn"
                                 @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, activeSetIndex)))"
                                 disabled="@IsCompleting"
-                                aria-label="@Loc["Log set"]">
+                                aria-label="Log set">
                             <MudIcon Icon="@Icons.Material.Filled.Check" />
                         </button>
                     </div>
@@ -113,7 +118,7 @@
 
     @if (IsExpanded && IsCompleted)
     {
-        <MudCardContent Class="pt-0">
+        <MudCardContent Class="pt-0" id="@($"exercise-content-{ExerciseIndex}")">
             @if (CompletedSetRows.Any())
             {
                 @foreach (var row in CompletedSetRows)
@@ -123,11 +128,11 @@
                         <div class="set-completed-row__header">
                             @if (isWarmupRow)
                             {
-                                <span class="warmup-chip warmup-chip--row">@Loc["Warm-up {0}", row.SetIndex + 1]</span>
+                                <span class="warmup-chip warmup-chip--row">@(string.Format("Warm-up {0}", row.SetIndex + 1))</span>
                             }
                             else
                             {
-                                <span class="set-completed-row__label">@Loc["Set {0}", row.SetIndex + 1]</span>
+                                <span class="set-completed-row__label">@(string.Format("Set {0}", row.SetIndex + 1))</span>
                             }
                         </div>
                         <div class="set-stepper-rows">
@@ -159,7 +164,7 @@
             }
             else
             {
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">@Loc["No sets logged for this exercise."]</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">No sets logged for this exercise.</MudText>
             }
         </MudCardContent>
     }

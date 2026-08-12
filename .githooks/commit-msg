@@ -1,6 +1,6 @@
 #!/bin/sh
 # Commit message hook to check for standard commit prefixes.
-# Allowed prefixes: feat:, fix:, perf:, refactor:, docs:, test:, chore:, build:, ci:
+# Allowed prefixes: feat:, fix:, perf:, refactor:, style:, docs:, test:, chore:, build:, ci:, revert:
 
 commit_msg_file="$1"
 commit_msg=$(head -n 1 "$commit_msg_file")
@@ -11,9 +11,9 @@ if echo "$commit_msg" | grep -qE '^(Merge|Initial)'; then
 fi
 
 # Check for conventional commit format
-if ! echo "$commit_msg" | grep -qE '^(feat|fix|perf|refactor|docs|test|chore|build|ci)(\([a-zA-Z0-9_-]+\))?: .+'; then
+if ! echo "$commit_msg" | grep -qE '^(feat|fix|perf|refactor|style|docs|test|chore|build|ci|revert)(\([a-zA-Z0-9_-]+\))?: .+'; then
     echo "ERROR: Invalid commit message format."
-    echo "Commit message must start with a prefix like feat:, fix:, perf:, refactor:, docs:, test:, or chore:."
+    echo "Commit message must start with a prefix like feat:, fix:, perf:, refactor:, style:, docs:, test:, chore:, build:, ci:, or revert:."
     echo "Example: feat: add workout plan export feature"
     exit 1
 fi

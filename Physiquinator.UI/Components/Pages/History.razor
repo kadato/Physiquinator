@@ -10,10 +10,9 @@
 @inject IDialogService DialogService
 @inject WeightUnitService WeightUnitService
 @inject IJSRuntime JS
-@inject IStringLocalizer<UiText> Loc
 <MudStack Spacing="3">
-    <PageTitle>@Loc["Workout history"]</PageTitle>
-    <PageHeader Title="@Loc["Workout history"]" ShowBack="false">
+    <PageTitle>@("Workout history")</PageTitle>
+    <PageHeader Title="@("Workout history")">
         @if (_sessions is { Count: > 0 })
         {
             <MudButton Variant="Variant.Text"
@@ -21,14 +20,14 @@
                        StartIcon="@(_selectMode ? Icons.Material.Filled.Close : Icons.Material.Filled.Checklist)"
                        OnClick="ToggleSelectMode"
                        Class="history-select-toggle premium-btn">
-                @(_selectMode ? Loc["Done"] : Loc["Select"])
+                @(_selectMode ? "Done" : "Select")
             </MudButton>
         }
     </PageHeader>
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
         @(_selectMode
-            ? Loc["Tap days on the grid to select every session logged on those days, then delete them together."]
-            : Loc["Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday."])
+            ? "Tap days on the grid to select every session logged on those days, then delete them together."
+            : "Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday–Sunday.")
     </MudText>
 
     @if (_sessions == null || _activityByDay == null || _listSessions == null || _summary == null)
@@ -40,7 +39,7 @@
         <MudTextField T="string"
                       Value="_searchText"
                       ValueChanged="OnSearchTextChanged"
-                       Placeholder="@Loc["Search by plan or exercise name…"]"
+                       Placeholder="@("Search by plan or exercise name…")"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Clearable="true"
@@ -58,15 +57,15 @@
         </MudPaper>
 
         <div class="history-stats">
-            <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@Loc["Streak"]" />
-            <StatCard Value="@_summary.LongestStreakWorkoutDays.ToString()" Label="@Loc["Longest streak"]" />
-            <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@Loc["This week"]" />
-            <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="@Loc["Last week"]" />
+            <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@("Streak")" />
+            <StatCard Value="@_summary.LongestStreakWorkoutDays.ToString()" Label="@("Longest streak")" />
+            <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@("This week")" />
+            <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="@("Last week")" />
         </div>
 
         <MudPaper Class="pa-3 bodyweight-panel" Elevation="0">
             <div class="bodyweight-panel__header">
-                <MudText Typo="Typo.h2" Class="bodyweight-panel__title">@Loc["Bodyweight"]</MudText>
+                <MudText Typo="Typo.h2" Class="bodyweight-panel__title">@("Bodyweight")</MudText>
                 <span class="bodyweight-panel__right">
                     @if (_latestBodyweight is { } latest)
                     {
@@ -79,7 +78,7 @@
                                    Class="bodyweight-panel__details-btn"
                                    StartIcon="@Icons.Material.Filled.ShowChart"
                                    OnClick="OpenBodyweightProgress">
-                            @Loc["View details"]
+                            @("View details")
                         </MudButton>
                     }
                 </span>
@@ -100,7 +99,7 @@
                         class="bodyweight-log-row__log-btn"
                         @onclick="LogBodyweightAsync"
                         disabled="@CannotLogBodyweight"
-                        aria-label="@Loc["Log bodyweight"]">
+                        aria-label="@("Log bodyweight")">
                     <MudIcon Icon="@Icons.Material.Filled.Save" Size="Size.Medium" />
                 </button>
             </div>
@@ -121,7 +120,7 @@
                                Color="Color.Primary"
                                Size="Size.Small"
                                OnClick="ClearDayFilters">
-                        @Loc["Clear all"]
+                        @("Clear all")
                     </MudButton>
                 }
             </MudStack>
@@ -129,15 +128,15 @@
 
         @if (!_sessions.Any())
         {
-            <EmptyState Message="@Loc["No logged workouts yet. Start a plan from home."]"
+            <EmptyState Message="@("No logged workouts yet. Start a plan from home.")"
                         Icon="@Icons.Material.Outlined.History" />
         }
         else if (!_listSessions.Any() && _selectedDays.Count > 0)
         {
-            <EmptyState Message="@Loc["No workouts logged on these days."]"
+            <EmptyState Message="@("No workouts logged on these days.")"
                         Icon="@Icons.Material.Outlined.CalendarMonth">
                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearDayFilters">
-                    @Loc["Clear filter"]
+                    @("Clear filter")
                 </MudButton>
             </EmptyState>
         }
@@ -147,7 +146,7 @@
             {
                 <div class="history-select-bar">
                     <MudText Typo="Typo.body2" Class="history-select-bar__count">
-                        @Loc["{0} selected", _selectedSessionIds.Count]
+                        @(string.Format("{0} selected", _selectedSessionIds.Count))
                     </MudText>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Error"
@@ -155,7 +154,7 @@
                                Disabled="_selectedSessionIds.Count == 0"
                                StartIcon="@Icons.Material.Filled.Delete"
                                OnClick="DeleteSelectedAsync">
-                        @Loc["Delete"]
+                        @("Delete")
                     </MudButton>
                 </div>
             }
@@ -169,7 +168,7 @@
                         {
                             <button type="button"
                                     class="history-session-check"
-                                    aria-label="@Loc["Select {0}", s.PlanName]"
+                                    aria-label="@(string.Format("Select {0}", s.PlanName))"
                                     @onclick="@(() => ToggleSelect(sid))">
                                 <MudIcon Icon="@(IsSelected(sid)
                                                    ? Icons.Material.Filled.CheckCircle
@@ -177,10 +176,13 @@
                                          Color="@(IsSelected(sid) ? Color.Primary : Color.Default)" />
                             </button>
                         }
-                        <button @key="s.Id"
-                                type="button"
-                                class="history-session-card@(IsSelected(sid) ? " history-session-card--selected" : "")"
-                                @onclick="@(() => HandleSessionTap(sid))">
+                        <div @key="s.Id"
+                             class="history-session-card@(IsSelected(sid) ? " history-session-card--selected" : "")"
+                             role="button"
+                             tabindex="0"
+                             aria-label="@(string.Format("Open session {0}", s.PlanName))"
+                             @onclick="@(() => HandleSessionTap(sid))"
+                             @onkeydown="(e) => OnSessionCardKeyDown(e, sid)">
                             <div class="history-session-card__inner">
                                 <div class="history-session-card__left">
                                     <div class="history-session-card__info">
@@ -193,7 +195,7 @@
                                             }
                                             else
                                             {
-                                                <span class="history-session-card__badge-inprogress">@Loc["In progress"]</span>
+                                                <span class="history-session-card__badge-inprogress">@("In progress")</span>
                                             }
                                         </span>
                                     </div>
@@ -211,24 +213,25 @@
                                                        Size="Size.Small"
                                                        Class="history-session-card__continue-btn"
                                                        OnClick="@(() => ContinueWorkout(continuePlanId))">
-                                                @Loc["Continue"]
+                                                @("Continue")
                                             </MudButton>
                                         </span>
                                     }
                                     else
                                     {
                                         <span @onclick:stopPropagation="true" Class="history-session-card__actions">
-                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
                                                            Size="Size.Small"
+                                                           Color="Color.Error"
                                                            Class="history-session-card__delete-btn"
-                                                            aria-label="@Loc["Delete session {0}", UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)]"
+                                                           aria-label="@(string.Format("Delete session {0}", UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)))"
                                                            OnClick="@(() => DeleteSession(sid, s.PlanName, s.EndedAtUtc == null))" />
                                             <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="history-session-card__chevron" />
                                         </span>
                                     }
                                 </div>
                             </div>
-                        </button>
+                        </div>
                     </div>
                 }
             </div>
@@ -286,6 +289,12 @@
 
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
+
+    private void OnSessionCardKeyDown(KeyboardEventArgs e, string sessionId)
+    {
+        if (e.Key is "Enter" or " " or "Spacebar")
+            HandleSessionTap(sessionId);
+    }
 
     private void HandleSessionTap(string sessionId)
     {
@@ -379,17 +388,22 @@
 
     private async Task DeleteSession(string sessionId, string planName, bool inProgress)
     {
-        var target = string.IsNullOrWhiteSpace(planName) ? Loc["workout"] : planName;
+        var target = string.IsNullOrWhiteSpace(planName) ? "workout" : planName;
         var confirmed = await DialogService.ConfirmAsync(
-            Loc["Delete workout?"],
+            "Delete workout?",
             inProgress
-                ? Loc["Delete the '{0}' session (in progress) and all its logged sets? This cannot be undone.", target]
-                : Loc["Delete the '{0}' session and all its logged sets? This cannot be undone.", target],
-            confirmText: Loc["Delete"],
+                ? string.Format("Delete the '{0}' session (in progress) and all its logged sets? You can undo this for a short time after.", target)
+                : string.Format("Delete the '{0}' session and all its logged sets? You can undo this for a short time after.", target),
+            confirmText: "Delete",
             confirmColor: Color.Error);
 
         if (!confirmed)
             return;
+
+        var deletedSession = await HistoryRepo.GetSessionAsync(sessionId);
+        var deletedSets = deletedSession == null
+            ? []
+            : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList();
 
         if (inProgress)
             SessionService.EndWorkout();
@@ -397,7 +411,13 @@
         await HistoryRepo.DeleteSessionAsync(sessionId);
         _selectedSessionIds.Remove(sessionId);
         await ReloadAsync();
-        Snackbar.Add(Loc["Session deleted."], Severity.Success);
+        Snackbar.Add("Session deleted.", Severity.Success, options =>
+        {
+            options.Action = "Undo";
+            options.ActionColor = Color.Primary;
+            options.RequireInteraction = true;
+            options.OnClick = _ => RestoreSessionAsync(deletedSession, deletedSets);
+        });
     }
 
     private async Task DeleteSelectedAsync()
@@ -406,17 +426,19 @@
             return;
 
         var confirmed = await DialogService.ConfirmAsync(
-            Loc["Delete workouts?"],
-            Loc["Delete {0} session(s) and all their logged sets? This cannot be undone.", _selectedSessionIds.Count],
-            confirmText: Loc["Delete"],
+            "Delete workouts?",
+            string.Format("Delete {0} session(s) and all their logged sets? You can undo this for a short time after.", _selectedSessionIds.Count),
+            confirmText: "Delete",
             confirmColor: Color.Error);
 
         if (!confirmed)
             return;
 
+        var deleted = new List<(WorkoutSessionLogEntity? Session, List<WorkoutSetLogEntity> Sets)>(_selectedSessionIds.Count);
         foreach (var sessionId in _selectedSessionIds)
         {
             var session = await HistoryRepo.GetSessionAsync(sessionId);
+            deleted.Add((session, session == null ? [] : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList()));
             if (session?.EndedAtUtc == null)
                 SessionService.EndWorkout();
 
@@ -426,7 +448,51 @@
         _selectedSessionIds.Clear();
         _selectDaySessionsCache.Clear();
         await ReloadAsync();
-        Snackbar.Add(Loc["Sessions deleted."], Severity.Success);
+        Snackbar.Add("Sessions deleted.", Severity.Success, options =>
+        {
+            options.Action = "Undo";
+            options.ActionColor = Color.Primary;
+            options.RequireInteraction = true;
+            options.OnClick = _ => RestoreSessionsAsync(deleted);
+        });
+    }
+
+    private async Task RestoreSessionAsync(WorkoutSessionLogEntity? session, IReadOnlyList<WorkoutSetLogEntity> sets)
+    {
+        if (session == null) return;
+
+        try
+        {
+            await HistoryRepo.RestoreSessionAsync(session, sets);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not restore: {0}", ex.Message), Severity.Error);
+            return;
+        }
+
+        await ReloadAsync();
+        Snackbar.Add("Session restored.", Severity.Success);
+    }
+
+    private async Task RestoreSessionsAsync(IReadOnlyList<(WorkoutSessionLogEntity? Session, List<WorkoutSetLogEntity> Sets)> sessions)
+    {
+        foreach (var (session, sets) in sessions)
+        {
+            if (session == null) continue;
+            try
+            {
+                await HistoryRepo.RestoreSessionAsync(session, sets);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(string.Format("Could not restore: {0}", ex.Message), Severity.Error);
+                return;
+            }
+        }
+
+        await ReloadAsync();
+        Snackbar.Add("Sessions restored.", Severity.Success);
     }
 
     private async Task ReloadAsync()
@@ -585,7 +651,7 @@
 
         _bodyweightDefault = kg;
         await RefreshBodyweightAsync();
-        Snackbar.Add(Loc["Bodyweight logged."], Severity.Success);
+        Snackbar.Add("Bodyweight logged.", Severity.Success);
     }
 
     private async Task UpdateSessionsListAsync()

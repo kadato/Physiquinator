@@ -1,14 +1,12 @@
 #!/bin/sh
-# Pre-commit hook: runs the same dotnet format checks as CI (test.yml)
-# on staged .NET sources so format violations never reach the pipeline.
-# Bypass intentionally with: git commit --no-verify
-# Enable on a fresh clone with: git config core.hooksPath .githooks
+# Pre-commit hook to format staged C# and Razor files and run unit tests.
 
 staged=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(cs|razor|xaml)$' || true)
 if [ -z "$staged" ]; then
     exit 0
 fi
 
+echo "Running code format checks..."
 fail=0
 for proj in \
     Physiquinator.Core/Physiquinator.Core.csproj \
@@ -20,4 +18,16 @@ for proj in \
         fail=1
     fi
 done
-exit $fail
+
+if [ $fail -ne 0 ]; then
+    echo "Formatting errors found. Please format code before committing."
+    exit 1
+fi
+
+echo "Running unit tests..."
+if ! dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj --no-restore; then
+    echo "Unit tests failed. Resolve failing tests before committing."
+    exit 1
+fi
+
+exit 0

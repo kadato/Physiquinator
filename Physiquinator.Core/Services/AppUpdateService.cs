@@ -29,9 +29,24 @@ public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInst
             return new UpdateCheckResult(release, false, null);
         }
 
-        GitHubReleaseAsset? asset = _installer.AssetFileName is { Length: > 0 }
-            ? release.Assets.FirstOrDefault(a => string.Equals(a.Name, _installer.AssetFileName, StringComparison.OrdinalIgnoreCase))
-            : null;
+        GitHubReleaseAsset? asset = null;
+        if (_installer.AssetFileName is { Length: > 0 })
+        {
+            asset = release.Assets.FirstOrDefault(a => string.Equals(a.Name, _installer.AssetFileName, StringComparison.OrdinalIgnoreCase));
+            if (asset is null)
+            {
+                var extension = Path.GetExtension(_installer.AssetFileName);
+                if (string.Equals(extension, ".apk", StringComparison.OrdinalIgnoreCase))
+                {
+                    asset = release.Assets.FirstOrDefault(a => a.Name.EndsWith(".apk", StringComparison.OrdinalIgnoreCase));
+                }
+                else if (!string.IsNullOrEmpty(extension))
+                {
+                    asset = release.Assets.FirstOrDefault(a => a.Name.EndsWith(extension, StringComparison.OrdinalIgnoreCase) &&
+                        (a.Name.Contains("physiquinator", StringComparison.OrdinalIgnoreCase) || a.Name.Contains("windows", StringComparison.OrdinalIgnoreCase)));
+                }
+            }
+        }
 
         return new UpdateCheckResult(release, true, asset?.DownloadUrl);
     }

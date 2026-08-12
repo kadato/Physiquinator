@@ -61,6 +61,18 @@ public class AppUpdateServiceTests
     }
 
     [Fact]
+    public async Task CheckForUpdatesAsync_WhenExactNameNotFound_FallsBackToExtensionMatch()
+    {
+        var client = new FakeReleaseClient(Release("v1.2.0", new GitHubReleaseAsset("Physiquinator-v1.2.0.apk", "https://x/fallback-apk", 1)));
+        var sut = new AppUpdateService(client, new FakeInstaller("Physiquinator-Android.apk"), Installed);
+
+        UpdateCheckResult result = await sut.CheckForUpdatesAsync();
+
+        Assert.True(result.IsUpdateAvailable);
+        Assert.Equal("https://x/fallback-apk", result.DownloadUrl);
+    }
+
+    [Fact]
     public async Task CheckForUpdatesAsync_WhenNewerReleaseButNoMatchingAsset_ReturnsNullDownloadUrl()
     {
         var client = new FakeReleaseClient(Release("v1.2.0", new GitHubReleaseAsset("other.zip", "https://x/other", 1)));

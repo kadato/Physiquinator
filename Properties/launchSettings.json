@@ -1,8 +1,5 @@
 {
   "profiles": {
-    "Physiquinator (Package)": {
-      "commandName": "MsixPackage"
-    },
     "Physiquinator (Unpackaged)": {
       "commandName": "Project"
     }

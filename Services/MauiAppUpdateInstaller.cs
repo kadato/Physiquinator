@@ -95,19 +95,30 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
 
         var totalBytes = response.Content.Headers.ContentLength;
         await using Stream source = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var target = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
 
-        var buffer = new byte[81920];
-        long copied = 0;
-        int read;
-        while ((read = await source.ReadAsync(buffer, cancellationToken)) > 0)
+        try
         {
-            await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-            copied += read;
-            if (totalBytes is > 0)
+            await using var target = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
+            var buffer = new byte[81920];
+            long copied = 0;
+            int read;
+            while ((read = await source.ReadAsync(buffer, cancellationToken)) > 0)
             {
-                progress?.Report((double)copied / totalBytes.Value);
+                await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                copied += read;
+                if (totalBytes is > 0)
+                {
+                    progress?.Report((double)copied / totalBytes.Value);
+                }
             }
+        }
+        catch
+        {
+            if (File.Exists(destinationPath))
+            {
+                try { File.Delete(destinationPath); } catch { }
+            }
+            throw;
         }
     }
 #endif
@@ -117,9 +128,25 @@ public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller
     {
         Android.Content.Context context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
         var file = new Java.IO.File(apkPath);
+
+        if (!file.Exists())
+        {
+            throw new FileNotFoundException("Downloaded APK file not found.", apkPath);
+        }
+
+        // Check for Android 8.0+ (API 26) unknown app sources install permission
+        if (OperatingSystem.IsAndroidVersionAtLeast(26) && context.PackageManager != null && !context.PackageManager.CanRequestPackageInstalls())
+        {
+            var settingsIntent = new Intent(Android.Provider.Settings.ActionManageUnknownAppSources);
+            settingsIntent.SetData(Android.Net.Uri.Parse($"package:{context.PackageName}"));
+            settingsIntent.AddFlags(ActivityFlags.NewTask);
+            context.StartActivity(settingsIntent);
+            throw new InvalidOperationException("Installation permission required. Please enable 'Allow from this source' for Physiquinator in Android settings and tap Install again.");
+        }
+
         Android.Net.Uri uri = AndroidX.Core.Content.FileProvider.GetUriForFile(
             context,
-            $"{context.PackageName}.fileProvider",
+            $"{context.PackageName}.fileprovider",
             file)!;
 
         var intent = new Android.Content.Intent(Intent.ActionView);

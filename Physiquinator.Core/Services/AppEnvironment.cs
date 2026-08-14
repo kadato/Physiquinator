@@ -10,6 +10,10 @@ public static class AppEnvironment
     public static bool IsScreenshotMode { get; } =
         Environment.GetEnvironmentVariable("PHYSIQUINATOR_SCREENSHOT_MODE") == "true";
 
+    /// <summary>Chrome DevTools port used in screenshot mode, from PHYSIQUINATOR_CDP_PORT.</summary>
+    public static int ScreenshotCdpPort { get; } =
+        int.TryParse(Environment.GetEnvironmentVariable("PHYSIQUINATOR_CDP_PORT"), out var port) ? port : 9255;
+
     /// <summary>Optional PHYSIQUINATOR_DB_DIR override for the database directory.</summary>
     public static string? DatabaseDirectoryOverride { get; } =
         Environment.GetEnvironmentVariable("PHYSIQUINATOR_DB_DIR");

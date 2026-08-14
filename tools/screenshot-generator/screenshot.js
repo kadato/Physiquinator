@@ -120,7 +120,7 @@ async function launchAppAndConnect() {
             APPDATA: TEMP_DATA_DIR,
             PHYSIQUINATOR_SCREENSHOT_MODE: 'true',
             PHYSIQUINATOR_DB_DIR: TEMP_DATA_DIR,
-            WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${PORT}`
+            PHYSIQUINATOR_CDP_PORT: String(PORT)
         },
         detached: false,
         stdio: 'ignore'

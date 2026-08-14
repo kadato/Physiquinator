@@ -41,6 +41,13 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
 
+#if WINDOWS
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+            handlers.AddHandler<Microsoft.AspNetCore.Components.WebView.Maui.BlazorWebView, Physiquinator.Platforms.Windows.ScreenshotWebViewHandler>();
+        });
+#endif
+
         builder.Services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;

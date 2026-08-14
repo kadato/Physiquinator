@@ -810,9 +810,6 @@ else
             }
         }
 
-        if (SessionService.IsResting)
-            SessionService.SkipRest();
-
         _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
         await SafeStateHasChangedAsync();
         Snackbar.Add(string.Format("'{0}' skipped.", exerciseName), Severity.Info);

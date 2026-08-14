@@ -3,7 +3,6 @@
 @* Save — bottom-right primary FAB *@
 <MudIconButton Class="@SaveFabClasses"
                Icon="@Icons.Material.Filled.Check"
-               Disabled="@SaveDisabled"
                OnClick="OnSave"
                aria-label="@("Save plan")" />
 
@@ -24,14 +23,10 @@
 
 
 @code {
-    private string SaveFabClasses =>
-        $"app-fab app-fab--primary app-fab--br-1{(SaveDisabled ? " app-fab--disabled" : string.Empty)}";
+    private static string SaveFabClasses => "app-fab app-fab--primary app-fab--br-1";
 
     [Parameter]
     public bool IsNew { get; set; }
-
-    [Parameter]
-    public bool SaveDisabled { get; set; }
 
     [Parameter]
     public EventCallback OnSave { get; set; }

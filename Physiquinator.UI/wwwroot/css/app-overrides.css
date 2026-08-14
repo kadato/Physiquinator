@@ -1159,8 +1159,12 @@ input[type="number"] {
     gap: 0.5rem;
     width: 100%;
     margin-top: 0.5rem;
-    padding-top: 1rem;
+    padding: 1rem 0 0.75rem;
     border-top: 1px solid var(--mud-palette-lines-default);
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--mud-palette-surface);
 }
 
 #blazor-error-ui {

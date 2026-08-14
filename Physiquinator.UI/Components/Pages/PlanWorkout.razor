@@ -1,6 +1,7 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
 @using Microsoft.Extensions.Logging
+@implements IDisposable
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
@@ -126,7 +127,6 @@ else
     </MudForm>
 
     <PlanEditorFooter IsNew="IsNew"
-                  SaveDisabled="@SaveDisabled"
                   OnSave="Save"
                   OnCancel="GoHome"
                   OnExport="ExportCurrentPlan" />
@@ -143,6 +143,9 @@ else
     private bool _planLoadComplete;
     private bool _planNotFound;
     private bool _loading => PlanId.HasValue && !_planLoadComplete;
+    private Guid? _planId;
+    private CancellationTokenSource? _saveDebounceCts;
+    private Task? _lastSaveTask;
     private string PlanName { get; set; } = "Workout";
     private int RestIntervalSeconds { get; set; } = 60;
     private int DefaultSetCount { get; set; } = 4;
@@ -152,19 +155,13 @@ else
     private bool IsNew => PlanId == null;
     private string PageTitleText => IsNew ? "New plan" : "Edit plan";
 
-    private bool CanSave => !string.IsNullOrWhiteSpace(PlanName)
-        && Exercises.Any()
-        && Exercises.All(e => !string.IsNullOrWhiteSpace(e.Name));
-
-    private bool SaveDisabled => !CanSave;
-
     private double? DefaultSetCountValue
     {
         get => DefaultSetCount;
         set
         {
             DefaultSetCount = Math.Max(1, (int)Math.Round(value ?? 1));
-            _dirty = true;
+            ScheduleAutoSave();
         }
     }
 
@@ -174,20 +171,21 @@ else
         set
         {
             RestIntervalSeconds = Math.Max(0, (int)Math.Round(value ?? 0));
-            _dirty = true;
+            ScheduleAutoSave();
         }
     }
 
     private void OnPlanNameChanged(string value)
     {
         PlanName = value;
-        _dirty = true;
+        ScheduleAutoSave();
     }
 
     protected override async Task OnInitializedAsync()
     {
         if (PlanId.HasValue)
         {
+            _planId = PlanId;
             var plan = await PlanService.GetPlanAsync(PlanId.Value);
             if (plan != null)
             {
@@ -218,19 +216,25 @@ else
         Exercises.Insert(newIndex, item);
         RenumberExercises();
         BumpSortable();
-        _dirty = true;
+        ScheduleAutoSave();
     }
 
     private async Task GoHome()
     {
         if (_dirty)
         {
-            var confirmed = await DialogService.ConfirmAsync(
-                "Discard changes?",
-                "You have unsaved changes to this plan. Leave without saving?",
-                confirmText: "Discard",
-                confirmColor: Color.Error);
-            if (!confirmed) return;
+            if (_lastSaveTask is { } pending)
+                await pending;
+
+            if (_dirty)
+            {
+                var confirmed = await DialogService.ConfirmAsync(
+                    "Discard changes?",
+                    "You have unsaved changes to this plan. Leave without saving?",
+                    confirmText: "Discard",
+                    confirmColor: Color.Error);
+                if (!confirmed) return;
+            }
         }
 
         Navigation.NavigateTo(AppRoutes.Home);
@@ -291,7 +295,8 @@ else
         var parameters = new DialogParameters<PlanExerciseSheet>
         {
             { x => x.Exercise, CloneExercise(exercise) },
-            { x => x.IsNew, isNew }
+            { x => x.IsNew, isNew },
+            { x => x.OnAutoSave, EventCallback.Factory.Create<ExercisePlan>(this, snapshot => ApplyExerciseSnapshot(snapshot)) }
         };
         var options = new DialogOptions
         {
@@ -317,24 +322,113 @@ else
                 return;
             }
 
-            if (isNew && insertAtEnd)
-                Exercises.Add(updated);
-            else
-            {
-                var idx = Exercises.FindIndex(e => e.Id == exercise.Id);
-                if (idx >= 0)
-                    Exercises[idx] = updated;
-            }
-
+            ApplyExerciseSnapshot(updated, warnOnDuplicate: false);
+        }
+        else if (isNew && insertAtEnd && Exercises.RemoveAll(e => e.Id == exercise.Id) > 0)
+        {
+            // The sheet auto-saves on change, so a cancelled add must be undone.
             RenumberExercises();
             BumpSortable();
-            _dirty = true;
-        }
-        else if (isNew && insertAtEnd)
-        {
-            BumpSortable();
+            ScheduleAutoSave();
         }
     }
+
+    private void ApplyExerciseSnapshot(ExercisePlan updated, bool warnOnDuplicate = true)
+    {
+        if (string.IsNullOrWhiteSpace(updated.Name))
+            return;
+
+        if (warnOnDuplicate
+            && Exercises.Any(e =>
+                e.Id != updated.Id
+                && string.Equals(e.Name, updated.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            Snackbar.Add(string.Format("'{0}' is already in this plan.", updated.Name), Severity.Warning);
+            return;
+        }
+
+        var idx = Exercises.FindIndex(e => e.Id == updated.Id);
+        if (idx >= 0)
+            Exercises[idx] = updated;
+        else
+            Exercises.Add(updated);
+
+        RenumberExercises();
+        BumpSortable();
+        ScheduleAutoSave();
+    }
+
+    private void ScheduleAutoSave()
+    {
+        _dirty = true;
+        _saveDebounceCts?.Cancel();
+        _saveDebounceCts?.Dispose();
+        var cts = _saveDebounceCts = new CancellationTokenSource();
+        _lastSaveTask = AutoSaveCoreAsync(cts.Token);
+    }
+
+    private async Task AutoSaveCoreAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(600, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await SavePlanInternalAsync(showConfirmation: false);
+        _dirty = false;
+    }
+
+    private async Task SavePlanInternalAsync(bool showConfirmation)
+    {
+        _planId ??= Guid.NewGuid();
+
+        var plan = new WorkoutPlan
+        {
+            Id = _planId.Value,
+            Name = PlanName.Trim(),
+            RestIntervalSeconds = RestIntervalSeconds,
+            DefaultSetCount = DefaultSetCount,
+            Exercises = Exercises.Select((e, i) => new ExercisePlan
+            {
+                Id = e.Id,
+                Name = e.Name.Trim(),
+                SetCount = e.SetCount,
+                WarmupSetCount = e.WarmupSetCount,
+                SupersetGroupId = e.SupersetGroupId,
+                Order = i,
+                RestIntervalSeconds = e.RestIntervalSeconds,
+                DefaultReps = e.DefaultReps,
+                DefaultWeightKg = e.DefaultWeightKg,
+                BodyweightPercent = e.BodyweightPercent,
+                LogType = e.LogType
+            }).ToList()
+        };
+        await PlanService.SavePlanAsync(plan);
+
+        // Update in-progress session snapshot if one exists for this plan
+        var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(plan.Id);
+        if (openSession != null)
+        {
+            var newSnapshot = WorkoutPlanService.SerializePlanToJson(plan);
+            await HistoryRepository.UpdateSessionSnapshotAsync(openSession.Id, newSnapshot);
+        }
+
+        if (showConfirmation)
+            Snackbar.Add("Plan saved.", Severity.Success);
+    }
+
+    private async Task Save()
+    {
+        await SavePlanInternalAsync(showConfirmation: true);
+        _dirty = false;
+        Navigation.NavigateTo(AppRoutes.Home);
+    }
+
+    public void Dispose() => _saveDebounceCts?.Cancel();
 
     private static ExercisePlan CloneExercise(ExercisePlan source) => new()
     {
@@ -370,7 +464,7 @@ else
         Exercises.RemoveAt(index);
         RenumberExercises();
         BumpSortable();
-        _dirty = true;
+        ScheduleAutoSave();
 
         Snackbar.Add(
             string.Format("'{0}' removed.", name),
@@ -389,7 +483,7 @@ else
         Exercises.Insert(Math.Min(index, Exercises.Count), exercise);
         RenumberExercises();
         BumpSortable();
-        _dirty = true;
+        ScheduleAutoSave();
         Snackbar.Add(string.Format("'{0}' restored.", exercise.Name), Severity.Success);
         await InvokeAsync(StateHasChanged);
     }
@@ -402,47 +496,6 @@ else
     {
         for (var i = 0; i < Exercises.Count; i++)
             Exercises[i].Order = i;
-    }
-
-    private async Task Save()
-    {
-        if (!CanSave)
-            return;
-
-        var plan = new WorkoutPlan
-        {
-            Id = PlanId ?? Guid.NewGuid(),
-            Name = PlanName.Trim(),
-            RestIntervalSeconds = RestIntervalSeconds,
-            DefaultSetCount = DefaultSetCount,
-            Exercises = Exercises.Select((e, i) => new ExercisePlan
-            {
-                Id = e.Id,
-                Name = e.Name.Trim(),
-                SetCount = e.SetCount,
-                WarmupSetCount = e.WarmupSetCount,
-                SupersetGroupId = e.SupersetGroupId,
-                Order = i,
-                RestIntervalSeconds = e.RestIntervalSeconds,
-                DefaultReps = e.DefaultReps,
-                DefaultWeightKg = e.DefaultWeightKg,
-                BodyweightPercent = e.BodyweightPercent,
-                LogType = e.LogType
-            }).ToList()
-        };
-        await PlanService.SavePlanAsync(plan);
-
-        // Update in-progress session snapshot if one exists for this plan
-        var openSession = await HistoryRepository.GetInProgressSessionForPlanAsync(plan.Id);
-        if (openSession != null)
-        {
-            var newSnapshot = WorkoutPlanService.SerializePlanToJson(plan);
-            await HistoryRepository.UpdateSessionSnapshotAsync(openSession.Id, newSnapshot);
-        }
-
-        Snackbar.Add("Plan saved.", Severity.Success);
-        _dirty = false;
-        Navigation.NavigateTo(AppRoutes.Home);
     }
 
     private async Task ExportCurrentPlan()

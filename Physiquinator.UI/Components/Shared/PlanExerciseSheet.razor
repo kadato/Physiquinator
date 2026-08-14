@@ -44,14 +44,16 @@
             </MudSelect>
 
             <SetMetricStepper Label="@("Sets")"
-                              @bind-Value="_setCount"
+                              Value="_setCount"
+                              ValueChanged="OnSetCountChanged"
                               Step="1"
                               Min="1"
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
             <SetMetricStepper Label="@("Warm-up sets")"
-                              @bind-Value="_warmupSetCount"
+                              Value="_warmupSetCount"
+                              ValueChanged="OnWarmupSetCountChanged"
                               Step="1"
                               Min="0"
                               Max="20"
@@ -59,7 +61,8 @@
                               Format="0"
                               InputMode="numeric" />
             <SetMetricStepper Label="@("Rest (s)")"
-                              @bind-Value="_restSeconds"
+                              Value="_restSeconds"
+                              ValueChanged="OnRestSecondsChanged"
                               Step="5"
                               Min="0"
                               IsInteger="true"
@@ -81,7 +84,8 @@
             </MudSelect>
             <SetMetricStepper @key="@($"reps-stepper-{_logType}")"
                               Label="@(_logType == ExerciseLogType.Duration ? "Default duration (s)" : "Default reps")"
-                              @bind-Value="_defaultReps"
+                              Value="_defaultReps"
+                              ValueChanged="OnDefaultRepsChanged"
                               Step="1"
                               Min="0"
                               IsInteger="true"
@@ -103,7 +107,8 @@
             @if (_logType == ExerciseLogType.BodyweightReps)
             {
                 <SetMetricStepper Label="@("Bodyweight share")"
-                                  @bind-Value="_bodyweightPercent"
+                                  Value="_bodyweightPercent"
+                                  ValueChanged="OnBodyweightPercentChanged"
                                   Step="5"
                                   Min="0"
                                   Max="300"
@@ -117,17 +122,20 @@
             }
 
                 <div class="plan-exercise-sheet__footer">
-                    <MudButton Variant="Variant.Text"
-                               FullWidth="true"
-                               OnClick="Cancel">
-                        @("Cancel")
-                    </MudButton>
+                    @if (IsNew)
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   FullWidth="true"
+                                   OnClick="Cancel">
+                            @("Cancel")
+                        </MudButton>
+                    }
                     <MudButton Color="Color.Primary"
                                Variant="Variant.Filled"
                                FullWidth="true"
                                ButtonType="ButtonType.Submit"
                                Disabled="@ConfirmDisabled">
-                        @("Save exercise")
+                        @(IsNew ? "Save exercise" : "Done")
                     </MudButton>
                 </div>
             </MudStack>
@@ -144,6 +152,9 @@
 
     [Parameter]
     public bool IsNew { get; set; }
+
+    [Parameter]
+    public EventCallback<ExercisePlan> OnAutoSave { get; set; }
 
     private string _name = "";
     private double? _setCount;
@@ -178,14 +189,48 @@
         ? ExerciseWeightFormatter.ToDisplay(-200, WeightUnitService.Current)
         : 0;
 
-    private void OnDefaultWeightChanged(double? displayValue) =>
+    private Task OnSetCountChanged(double? value)
+    {
+        _setCount = value;
+        return AutoSaveAsync();
+    }
+
+    private Task OnWarmupSetCountChanged(double? value)
+    {
+        _warmupSetCount = value;
+        return AutoSaveAsync();
+    }
+
+    private Task OnRestSecondsChanged(double? value)
+    {
+        _restSeconds = value;
+        return AutoSaveAsync();
+    }
+
+    private Task OnDefaultRepsChanged(double? value)
+    {
+        _defaultReps = value;
+        return AutoSaveAsync();
+    }
+
+    private Task OnBodyweightPercentChanged(double? value)
+    {
+        _bodyweightPercent = value;
+        return AutoSaveAsync();
+    }
+
+    private Task OnDefaultWeightChanged(double? displayValue)
+    {
         _defaultWeightKg = displayValue.HasValue
             ? ExerciseWeightFormatter.ToKg(displayValue.Value, WeightUnitService.Current)
             : null;
+        return AutoSaveAsync();
+    }
 
-    private void OnSupersetGroupChanged(string groupId)
+    private Task OnSupersetGroupChanged(string groupId)
     {
         _supersetGroupId = groupId;
+        return AutoSaveAsync();
     }
 
     protected override async Task OnInitializedAsync()
@@ -219,48 +264,50 @@
     /// the exercise had when the sheet opened, pre-fill the entry's logging
     /// type, bodyweight share, and default metrics.
     /// </summary>
-    private void OnNameChanged(string? name)
+    private Task OnNameChanged(string? name)
     {
         _name = name ?? "";
-        if (string.IsNullOrWhiteSpace(_name) || string.Equals(_name.Trim(), _nameAtOpen, StringComparison.OrdinalIgnoreCase))
-            return;
+        if (!string.IsNullOrWhiteSpace(_name)
+            && !string.Equals(_name.Trim(), _nameAtOpen, StringComparison.OrdinalIgnoreCase)
+            && ExerciseCatalog.Find(_name.Trim()) is { } entry)
+        {
+            _logType = entry.LogType;
+            _bodyweightPercent = entry.BodyweightPercent;
+            if (entry.DefaultReps.HasValue)
+                _defaultReps = entry.DefaultReps;
+            if (entry.DefaultWeightKg.HasValue)
+                _defaultWeightKg = entry.DefaultWeightKg;
+            StateHasChanged();
+        }
 
-        ExerciseCatalogEntry? entry = ExerciseCatalog.Find(_name.Trim());
-        if (entry == null)
-            return;
-
-        _logType = entry.LogType;
-        _bodyweightPercent = entry.BodyweightPercent;
-        if (entry.DefaultReps.HasValue)
-            _defaultReps = entry.DefaultReps;
-        if (entry.DefaultWeightKg.HasValue)
-            _defaultWeightKg = entry.DefaultWeightKg;
-        StateHasChanged();
+        return AutoSaveAsync();
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+    private ExercisePlan BuildSnapshot() => new()
+    {
+        Id = Exercise.Id,
+        Name = _name.Trim(),
+        SetCount = Math.Max(1, (int)Math.Round(_setCount ?? 1)),
+        WarmupSetCount = Math.Clamp((int)Math.Round(_warmupSetCount ?? 0), 0, 20),
+        SupersetGroupId = string.IsNullOrWhiteSpace(_supersetGroupId) ? null : _supersetGroupId,
+        RestIntervalSeconds = Math.Max(0, (int)Math.Round(_restSeconds ?? 0)),
+        Order = Exercise.Order,
+        DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
+        DefaultWeightKg = _logType == ExerciseLogType.Duration ? null : _defaultWeightKg,
+        BodyweightPercent = _logType == ExerciseLogType.BodyweightReps ? _bodyweightPercent : null,
+        LogType = _logType
+    };
+
+    private Task AutoSaveAsync() => OnAutoSave.InvokeAsync(BuildSnapshot());
 
     private void Confirm()
     {
         if (ConfirmDisabled)
             return;
 
-        var updated = new ExercisePlan
-        {
-            Id = Exercise.Id,
-            Name = _name.Trim(),
-            SetCount = Math.Max(1, (int)Math.Round(_setCount ?? 1)),
-            WarmupSetCount = Math.Clamp((int)Math.Round(_warmupSetCount ?? 0), 0, 20),
-            SupersetGroupId = string.IsNullOrWhiteSpace(_supersetGroupId) ? null : _supersetGroupId,
-            RestIntervalSeconds = Math.Max(0, (int)Math.Round(_restSeconds ?? 0)),
-            Order = Exercise.Order,
-            DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
-            DefaultWeightKg = _logType == ExerciseLogType.Duration ? null : _defaultWeightKg,
-            BodyweightPercent = _logType == ExerciseLogType.BodyweightReps ? _bodyweightPercent : null,
-            LogType = _logType
-        };
-
-        MudDialog.Close(DialogResult.Ok(updated));
+        MudDialog.Close(DialogResult.Ok(BuildSnapshot()));
     }
 
     private async Task OnLogTypeChanged(ExerciseLogType type)
@@ -270,6 +317,7 @@
         await Task.Delay(50);
         _logType = type;
         StateHasChanged();
+        await AutoSaveAsync();
     }
 
     private async Task OnExerciseNameFocus()

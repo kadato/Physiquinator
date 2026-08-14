@@ -17,8 +17,9 @@
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
                 
-                // If they move more than 8px horizontally, start dragging
-                if (!hasDragged && Math.abs(dx) > 8) {
+                // Only start dragging after a clear horizontal gesture, so
+                // taps that jitter a few pixels still open the editor.
+                if (!hasDragged && Math.abs(dx) > 20) {
                     hasDragged = true;
                     wasDragged = true;
                     element.classList.add('set-metric-stepper__value--dragging');
@@ -28,9 +29,10 @@
                 }
                 
                 if (hasDragged) {
-                    // Sensitivity: 12px of horizontal movement equals 1 step increment/decrement
+                    // Sensitivity: 12px of horizontal movement equals 1 step.
+                    // Truncate so partial steps never round up to a full step.
                     const sensitivity = 12;
-                    const steps = Math.round(dx / sensitivity);
+                    const steps = Math.trunc(dx / sensitivity);
                     
                     if (steps !== lastSteps) {
                         lastSteps = steps;

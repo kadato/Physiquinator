@@ -31,8 +31,10 @@ public sealed class AppInitializationService(
                 return;
             }
 
-            await theme.EnsureInitializedAsync().ConfigureAwait(false);
-            await scheduleService.EnsureLoadedAsync().ConfigureAwait(false);
+            await Task.WhenAll(
+                theme.EnsureInitializedAsync(),
+                scheduleService.EnsureLoadedAsync()
+            ).ConfigureAwait(false);
 
             if (preferences.IsDefaultProfile)
             {

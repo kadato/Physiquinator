@@ -274,7 +274,7 @@
                                     class="settings-schedule-day"
                                     aria-pressed="@(isSelected ? "true" : "false")"
                                     aria-label="@DayName(d)"
-                                    @onclick="@(() => ToggleScheduleDay(d))">
+                                    @onclick="@(() => ToggleScheduleDayAsync(d))">
                                 @AbbreviatedDayName(d)
                             </button>
                         }
@@ -975,12 +975,12 @@
     }
 
 
-    private void ToggleScheduleDay(DayOfWeek day)
+    private async Task ToggleScheduleDayAsync(DayOfWeek day)
     {
         if (!_scheduleDays.Add(day))
             _scheduleDays.Remove(day);
 
-        WorkoutSchedule.SetDays(_scheduleDays);
+        await WorkoutSchedule.SetDaysAsync(_scheduleDays);
     }
 
     private void HandleSettingsChanged()

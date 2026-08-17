@@ -8,13 +8,15 @@ public sealed class AppDataResetService(
     WorkoutSessionService sessionService,
     ThemeService themeService,
     RestAlertSettingsService restAlertSettings,
-    WorkoutScheduleService scheduleService)
+    WorkoutScheduleService scheduleService,
+    WorkoutPlanService planService)
 {
     public async Task ClearAllLocalDataAsync()
     {
         sessionService.EndWorkout();
         await database.ClearAllUserDataAsync().ConfigureAwait(false);
-        scheduleService.ResetCache();
+        await scheduleService.ResetCacheAsync().ConfigureAwait(false);
+        planService.InvalidatePlanCache();
         await themeService.ResetStoredPreferenceToSystemAsync().ConfigureAwait(true);
         restAlertSettings.SetEnabled(true);
     }

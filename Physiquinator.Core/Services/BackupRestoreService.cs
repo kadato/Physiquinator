@@ -226,6 +226,7 @@ public sealed class BackupRestoreService(
             return 0;
 
         await planRepository.SavePlansAsync(plans);
+        planService.InvalidatePlanCache();
         return plans.Count;
     }
 
@@ -272,7 +273,8 @@ public sealed class BackupRestoreService(
             }
         });
 
-        scheduleService.ResetCache();
+        await scheduleService.ResetCacheAsync().ConfigureAwait(false);
+        planService.InvalidatePlanCache();
         return count;
     }
 

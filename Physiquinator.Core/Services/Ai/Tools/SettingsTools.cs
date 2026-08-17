@@ -138,14 +138,14 @@ public sealed class UpdateWorkoutScheduleTool(WorkoutScheduleService scheduleSer
         required = new[] { "days" }
     };
 
-    public Task<string> ExecuteAsync(string argumentsJson)
+    public async Task<string> ExecuteAsync(string argumentsJson)
     {
         using var doc = JsonDocument.Parse(argumentsJson);
         JsonElement root = doc.RootElement;
 
         if (!root.TryGetProperty("days", out JsonElement daysProp) || daysProp.ValueKind != JsonValueKind.Array)
         {
-            return Task.FromResult(JsonSerializer.Serialize(new { success = false, error = "Invalid days array" }));
+            return JsonSerializer.Serialize(new { success = false, error = "Invalid days array" });
         }
 
         var parsedDays = new List<DayOfWeek>();
@@ -157,11 +157,11 @@ public sealed class UpdateWorkoutScheduleTool(WorkoutScheduleService scheduleSer
             }
         }
 
-        scheduleService.SetDays(parsedDays);
-        return Task.FromResult(JsonSerializer.Serialize(new
+        await scheduleService.SetDaysAsync(parsedDays);
+        return JsonSerializer.Serialize(new
         {
             success = true,
             message = $"Updated scheduled workout days to: {string.Join(", ", parsedDays)}"
-        }));
+        });
     }
 }

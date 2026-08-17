@@ -19,6 +19,7 @@ public sealed class WorkoutScheduleService(
     private const string DateFormat = "yyyy-MM-dd";
 
     private static readonly IReadOnlySet<DayOfWeek> EmptySchedule = new HashSet<DayOfWeek>();
+    private static readonly Dictionary<int, IReadOnlySet<DayOfWeek>> s_unmaskCache = [];
 
     private readonly SemaphoreSlim _lock = new(1, 1);
     private SQLiteAsyncConnection? _lastConnection;
@@ -90,9 +91,9 @@ public sealed class WorkoutScheduleService(
         return 0;
     }
 
-    public void ResetCache()
+    public async Task ResetCacheAsync()
     {
-        _lock.Wait();
+        await _lock.WaitAsync().ConfigureAwait(false);
         try
         {
             _cache = [];
@@ -109,15 +110,15 @@ public sealed class WorkoutScheduleService(
 
     public bool IsSet => Days.Count > 0;
 
-    public void SetDays(IEnumerable<DayOfWeek> days)
+    public async Task SetDaysAsync(IEnumerable<DayOfWeek> days)
     {
-        EnsureLoadedAsync().GetAwaiter().GetResult();
+        await EnsureLoadedAsync().ConfigureAwait(false);
 
         var mask = 0;
         foreach (DayOfWeek day in days)
             mask |= 1 << (int)day;
 
-        _lock.Wait();
+        await _lock.WaitAsync().ConfigureAwait(false);
         try
         {
             if (_cache.Count <= 1)
@@ -126,7 +127,7 @@ public sealed class WorkoutScheduleService(
                 if (existing != null)
                 {
                     existing.DaysBitmask = mask;
-                    database.Database.UpdateAsync(existing).GetAwaiter().GetResult();
+                    await database.Database.UpdateAsync(existing).ConfigureAwait(false);
                 }
                 else
                 {
@@ -135,7 +136,7 @@ public sealed class WorkoutScheduleService(
                         DaysBitmask = mask,
                         EffectiveFrom = "0001-01-01"
                     };
-                    database.Database.InsertAsync(entity).GetAwaiter().GetResult();
+                    await database.Database.InsertAsync(entity).ConfigureAwait(false);
                     _cache = [.. _cache, entity];
                 }
 
@@ -150,27 +151,27 @@ public sealed class WorkoutScheduleService(
             _lock.Release();
         }
 
-        SetDays(days, DateOnly.FromDateTime(DateTime.Today));
+        await SetDaysAsync(days, DateOnly.FromDateTime(DateTime.Today)).ConfigureAwait(false);
     }
 
-    public void SetDays(IEnumerable<DayOfWeek> days, DateOnly effectiveFrom)
+    public async Task SetDaysAsync(IEnumerable<DayOfWeek> days, DateOnly effectiveFrom)
     {
         var mask = 0;
         foreach (DayOfWeek day in days)
             mask |= 1 << (int)day;
 
-        EnsureLoadedAsync().GetAwaiter().GetResult();
+        await EnsureLoadedAsync().ConfigureAwait(false);
 
         var dateStr = effectiveFrom.ToString(DateFormat);
 
-        _lock.Wait();
+        await _lock.WaitAsync().ConfigureAwait(false);
         try
         {
             var existing = _cache.FirstOrDefault(x => x.EffectiveFrom == dateStr);
             if (existing != null)
             {
                 existing.DaysBitmask = mask;
-                database.Database.UpdateAsync(existing).GetAwaiter().GetResult();
+                await database.Database.UpdateAsync(existing).ConfigureAwait(false);
             }
             else
             {
@@ -179,9 +180,9 @@ public sealed class WorkoutScheduleService(
                     DaysBitmask = mask,
                     EffectiveFrom = dateStr
                 };
-                database.Database.InsertAsync(entity).GetAwaiter().GetResult();
+                await database.Database.InsertAsync(entity).ConfigureAwait(false);
                 _cache = [.. _cache, entity];
-                _cache = _cache.OrderBy(x => x.EffectiveFrom).ToList();
+                _cache = [.. _cache.OrderBy(x => x.EffectiveFrom)];
             }
 
             // Sync with preferences for legacy fallback compatibility
@@ -228,13 +229,18 @@ public sealed class WorkoutScheduleService(
 
     private static IReadOnlySet<DayOfWeek> Unmask(int mask)
     {
+        if (s_unmaskCache.TryGetValue(mask, out var cached))
+            return cached;
+
         var days = new HashSet<DayOfWeek>();
         for (DayOfWeek day = DayOfWeek.Sunday; day <= DayOfWeek.Saturday; day++)
         {
             if ((mask & (1 << (int)day)) != 0)
                 days.Add(day);
         }
-        return days;
+        var result = (IReadOnlySet<DayOfWeek>)days;
+        s_unmaskCache[mask] = result;
+        return result;
     }
 
     /// <summary>Next scheduled day on or after <paramref name="from"/>; null when no schedule is configured.</summary>

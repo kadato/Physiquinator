@@ -206,8 +206,9 @@
         return string.Format("Last done {0}", UiDateFormats.LocalDateCompact(lastUtc));
     }
 
-    private IEnumerable<WorkoutPlan> SortedPlans =>
-        (_plans ?? []).OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt);
+    private List<WorkoutPlan> SortedPlans =>
+        _sortedPlans ??= (_plans ?? []).OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt).ToList();
+    private List<WorkoutPlan>? _sortedPlans;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -226,6 +227,7 @@
 
         (_summary, _activityByDay) = await summaryTask;
         _plans = await plansTask;
+        _sortedPlans = null;
         var recent = await recentTask;
         _lastSession = recent.FirstOrDefault();
         _inProgressSession = await inProgressTask;
@@ -337,6 +339,7 @@
 
         await PlanService.DeletePlanAsync(planId);
         _plans = await PlanService.GetAllPlansAsync();
+        _sortedPlans = null;
         Snackbar.Add(
             "Plan deleted.",
             Severity.Success,
@@ -356,6 +359,7 @@
 
         await PlanService.SavePlanAsync(plan);
         _plans = await PlanService.GetAllPlansAsync();
+        _sortedPlans = null;
         Snackbar.Add(string.Format("'{0}' restored.", plan.Name), Severity.Success);
     }
 
@@ -442,6 +446,7 @@
 
         // Reload plans from DB to make sure they are in sync
         _plans = await PlanService.GetAllPlansAsync();
+        _sortedPlans = null;
 
         await InvokeAsync(StateHasChanged);
     }
@@ -459,6 +464,7 @@
 
         await PlanService.ReorderPlansAsync(sorted.Select(p => p.Id).ToList());
         _plans = await PlanService.GetAllPlansAsync();
+        _sortedPlans = null;
         await InvokeAsync(StateHasChanged);
     }
 

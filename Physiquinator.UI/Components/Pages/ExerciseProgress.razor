@@ -364,13 +364,24 @@ else
             return;
         }
 
-        var chronological = _rows.Reverse().ToList();
+        var count = _rows.Count;
+        var dates = new DateTime[count];
+        var values = new double[count];
+        var hasPositive = false;
+        for (var i = 0; i < count; i++)
+        {
+            var row = _rows[count - 1 - i];
+            dates[i] = row.StartedAtUtc;
+            var v = GetMetricValue(row);
+            values[i] = v;
+            if (v > 0) hasPositive = true;
+        }
+        _hasChartData = hasPositive;
+
         _chartLabels = SparseChartLabelBuilder.BuildLabels(
-            chronological.Select(r => r.StartedAtUtc).ToList(),
+            dates,
             UiDateFormats.LocalDateChartAxis,
             MaxChartAxisLabels);
-        var values = chronological.Select(GetMetricValue).ToArray();
-        _hasChartData = values.Any(v => v > 0);
 
         _chartSeries =
         [
@@ -381,8 +392,9 @@ else
             }
         ];
 
-        var maxValue = values.DefaultIfEmpty(0).Max();
-        var rotateXLabels = chronological.Count > 4;
+        var maxValue = values.Max();
+
+        var rotateXLabels = count > 4;
         _chartHeightPx = rotateXLabels ? "300px" : "280px";
         _chartOptions = new LineChartOptions
         {

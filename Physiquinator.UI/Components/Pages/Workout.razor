@@ -15,6 +15,7 @@
 @inject ILogger<Workout> Logger
 @inject TimeProvider TimeProvider
 @inject WeightUnitService WeightUnitService
+@inject WorkoutStatsService StatsService
 @implements IAsyncDisposable
 
 <PageTitle>@(SessionService.CurrentPlan?.Name ?? "Workout")</PageTitle>
@@ -435,18 +436,19 @@ else
         _activeSetIndices.Clear();
         int firstUncompletedExIdx = -1;
 
-        IReadOnlyDictionary<string, LastSetMetrics> latestMetrics =
-            await HistoryRepository.GetLatestSetMetricsByExerciseAsync(plan.Id);
+        IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> lastSessionMetrics =
+            await HistoryRepository.GetLastSessionSetMetricsByExerciseAsync(plan.Id, _historySessionId);
 
         for (int e = 0; e < plan.Exercises.Count; e++)
         {
             var exercise = plan.Exercises[e];
-            LastSetMetrics? lastMetrics = latestMetrics.TryGetValue(exercise.Name, out var lm) ? lm : null;
-            var initialReps = lastMetrics?.Reps ?? exercise.DefaultReps ?? DefaultReps;
-            var initialWeight = lastMetrics?.WeightKg ?? exercise.DefaultWeightKg ?? 0;
+            lastSessionMetrics.TryGetValue(exercise.Name, out var setMetrics);
 
             for (int s = 0; s < exercise.TotalSetCount; s++)
             {
+                LastSetMetrics? m = setMetrics != null && setMetrics.TryGetValue(s, out var sm) ? sm : null;
+                var initialWeight = m?.WeightKg ?? exercise.DefaultWeightKg ?? 0;
+                var initialReps = m?.Reps ?? exercise.DefaultReps ?? DefaultReps;
                 _setInputs[(e, s)] = (initialWeight, initialReps);
             }
 
@@ -466,32 +468,6 @@ else
             {
                 _setInputs[(set.ExerciseIndex, set.SetIndex)] = (set.WeightKg ?? 0, set.Reps ?? 0);
                 _sessionSets[(set.ExerciseIndex, set.SetIndex)] = (set.WeightKg, set.Reps);
-            }
-
-            // For each exercise, find the last completed set in the current session (if any)
-            // and use its values to default the remaining uncompleted sets.
-            for (int e = 0; e < plan.Exercises.Count; e++)
-            {
-                var exercise = plan.Exercises[e];
-                var completedSets = currentSets
-                    .Where(s => s.ExerciseIndex == e)
-                    .OrderBy(s => s.CompletedAtUtc)
-                    .ToList();
-
-                if (completedSets.Any())
-                {
-                    var lastCompletedSet = completedSets[^1];
-                    var lastWeight = lastCompletedSet.WeightKg ?? 0;
-                    var lastReps = lastCompletedSet.Reps ?? 0;
-
-                    for (int s = 0; s < exercise.TotalSetCount; s++)
-                    {
-                        if (!SessionService.IsSetCompleted(e, s))
-                        {
-                            _setInputs[(e, s)] = (lastWeight, lastReps);
-                        }
-                    }
-                }
             }
 
             // Re-evaluate first uncompleted set index after loading session sets
@@ -864,18 +840,6 @@ else
                 finalReps);
             _setInputs[inputKey] = (finalWeight, finalReps);
 
-            // Update remaining uncompleted sets of this exercise to default to the logged weight and reps
-            for (int s = 0; s < exercise.TotalSetCount; s++)
-            {
-                if (!SessionService.IsSetCompleted(exerciseIndex, s))
-                {
-                    _setInputs[(exerciseIndex, s)] = (finalWeight, finalReps);
-                }
-            }
-
-            if (!isWarmupSet)
-                await TryShowPersonalRecordToastAsync(plan, exercise, finalWeight, finalReps);
-
             ShowUndoToast();
 
             if (willBeLastSetOfWorkout)
@@ -933,29 +897,6 @@ else
     }
 
     /// <summary>
-    /// Shows a "New PR" toast when the just-logged set beats the best previous
-    /// performance for the exercise on this plan. The current session is
-    /// excluded so its own earlier sets are not mistaken for the old record.
-    /// </summary>
-    private async Task TryShowPersonalRecordToastAsync(WorkoutPlan plan, ExercisePlan exercise, double weightKg, int reps)
-    {
-        try
-        {
-            IReadOnlyList<ExerciseSetLogRow> rows = await HistoryRepository.GetExerciseSetLogRowsAsync(plan.Id, exercise.Name);
-            var prior = rows.Where(r => r.SessionId != _historySessionId);
-            PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
-
-            var (kind, message) = BuildPersonalRecordMessage(records, exercise, weightKg, reps);
-            if (message != null && kind != ExerciseRecordKind.BestVolume)
-                Snackbar.Add(message, Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogDebug(ex, "Personal record check failed");
-        }
-    }
-
-    /// <summary>
     /// Builds the recap shown after the workout ends: session stats and every
     /// personal record earned in this session (one per record kind and exercise).
     /// Returns null when nothing was logged, so no dialog is shown.
@@ -966,40 +907,66 @@ else
         if (plan == null || _sessionSets.Count == 0)
             return null;
 
+        IReadOnlyDictionary<string, IReadOnlyList<ExerciseSetLogRow>> allRows;
+        try
+        {
+            var exerciseNames = plan.Exercises.Select(e => e.Name).ToList();
+            allRows = await HistoryRepository.GetExerciseSetLogRowsBatchAsync(plan.Id, exerciseNames);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Personal record check failed");
+            return null;
+        }
+
         var prs = new List<WorkoutSummaryPr>();
         foreach (var exercise in plan.Exercises)
         {
             var exIdx = plan.Exercises.IndexOf(exercise);
 
-            IReadOnlyList<ExerciseSetLogRow> rows;
-            try
-            {
-                rows = await HistoryRepository.GetExerciseSetLogRowsAsync(plan.Id, exercise.Name);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogDebug(ex, "Personal record check failed");
+            if (!allRows.TryGetValue(exercise.Name, out var rows))
                 continue;
-            }
 
             var prior = rows.Where(r => r.SessionId != _historySessionId);
             PersonalRecords records = PersonalRecordCalculator.Compute(prior, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
 
-            var claimed = new HashSet<ExerciseRecordKind>();
+            double bestWeight = 0;
+            int bestReps = 0;
+            bool hasWorkingSets = false;
+
             foreach (var (key, value) in _sessionSets)
             {
-                if (key.Item1 != exIdx)
+                if (key.Item1 != exIdx || key.Item2 < exercise.WarmupSetCount)
                     continue;
 
-                if (key.Item2 < exercise.WarmupSetCount)
-                    continue;
+                hasWorkingSets = true;
+                var w = value.Weight ?? 0;
+                var r = value.Reps ?? 0;
 
-                var (kind, message) = BuildPersonalRecordMessage(records, exercise, value.Weight ?? 0, value.Reps ?? 0);
-                if (kind is not { } k || message == null || !claimed.Add(k))
-                    continue;
-
-                prs.Add(new WorkoutSummaryPr(exercise.Name, message));
+                if (exercise.LogType == ExerciseLogType.Duration)
+                {
+                    if (r > bestReps)
+                        bestReps = r;
+                }
+                else
+                {
+                    if (w > bestWeight + 1e-9 || (Math.Abs(w - bestWeight) < 1e-9 && r > bestReps))
+                    {
+                        bestWeight = w;
+                        bestReps = r;
+                    }
+                }
             }
+
+            if (!hasWorkingSets)
+                continue;
+
+            var (kind, message) = exercise.LogType == ExerciseLogType.Duration
+                ? BuildPersonalRecordMessage(records, exercise, 0, bestReps)
+                : BuildPersonalRecordMessage(records, exercise, bestWeight, bestReps);
+
+            if (kind != null && message != null)
+                prs.Add(new WorkoutSummaryPr(exercise.Name, message));
         }
 
         return prs;
@@ -1283,6 +1250,7 @@ else
         {
             summaryPrs = await BuildWorkoutSummaryAsync();
             await HistoryRepository.EndSessionAsync(_historySessionId);
+            StatsService.InvalidateCache();
         }
         catch (Exception ex)
         {

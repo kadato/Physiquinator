@@ -77,12 +77,26 @@ public static class ExerciseCatalog
         new("Dumbbell Curl", ExerciseLogType.WeightAndReps, null, 12, 12)
     ];
 
-    /// <summary>Finds a catalog entry by name, case-insensitively.</summary>
+    private static readonly Dictionary<string, ExerciseCatalogEntry> s_byName = InitByName();
+
+    private static Dictionary<string, ExerciseCatalogEntry> InitByName()
+    {
+        var dict = new Dictionary<string, ExerciseCatalogEntry>(All.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in All)
+            dict[entry.Name] = entry;
+        return dict;
+    }
+
+    /// <summary>Catalog exercise names, pre-built once.</summary>
+    public static IReadOnlyList<string> CatalogNames { get; } =
+        [.. All.Select(e => e.Name)];
+
+    /// <summary>Finds a catalog entry by name, O(1) dictionary lookup.</summary>
     public static ExerciseCatalogEntry? Find(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return null;
-        var trimmed = name.Trim();
-        return All.FirstOrDefault(e => string.Equals(e.Name, trimmed, StringComparison.OrdinalIgnoreCase));
+        s_byName.TryGetValue(name.Trim(), out var entry);
+        return entry;
     }
 
     /// <summary>
@@ -91,9 +105,9 @@ public static class ExerciseCatalog
     /// </summary>
     public static IReadOnlyList<string> MergeSuggestionNames(IEnumerable<string> historyNames)
     {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var result = new List<string>(All.Count + 32);
-        foreach (var name in All.Select(e => e.Name).Where(seen.Add))
+        var seen = new HashSet<string>(CatalogNames.Count + 32, StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>(CatalogNames.Count + 32);
+        foreach (var name in CatalogNames.Where(seen.Add))
             result.Add(name);
         foreach (var name in historyNames.Where(n => !string.IsNullOrWhiteSpace(n) && seen.Add(n)))
             result.Add(name);

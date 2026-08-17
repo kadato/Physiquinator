@@ -9,14 +9,33 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 {
     private readonly WorkoutPlanRepository _repository = repository;
     private static readonly JsonSerializerOptions s_jsonOptions = new(PhysiquinatorJsonContext.Default.Options) { WriteIndented = true };
+    private List<WorkoutPlan>? _plansCache;
 
-    public Task<List<WorkoutPlan>> GetAllPlansAsync() => _repository.GetAllPlansAsync();
+    public async Task<List<WorkoutPlan>> GetAllPlansAsync()
+    {
+        if (_plansCache is { } cached)
+            return cached;
+
+        var plans = await _repository.GetAllPlansAsync();
+        _plansCache = plans;
+        return plans;
+    }
+
+    public void InvalidatePlanCache() => _plansCache = null;
 
     public Task<WorkoutPlan?> GetPlanAsync(Guid id) => _repository.GetPlanAsync(id);
 
-    public Task SavePlanAsync(WorkoutPlan plan) => _repository.SavePlanAsync(plan);
+    public async Task SavePlanAsync(WorkoutPlan plan)
+    {
+        await _repository.SavePlanAsync(plan);
+        InvalidatePlanCache();
+    }
 
-    public Task DeletePlanAsync(Guid id) => _repository.DeletePlanAsync(id);
+    public async Task DeletePlanAsync(Guid id)
+    {
+        await _repository.DeletePlanAsync(id);
+        InvalidatePlanCache();
+    }
 
     /// <summary>
     /// Persists a new relative ordering for the given plan IDs (position 0 = first).
@@ -30,6 +49,7 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
             order[i] = (orderedPlanIds[i], i);
 
         await _repository.ReorderPlansAsync(order);
+        InvalidatePlanCache();
     }
 
     /// <summary>
@@ -65,7 +85,8 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
         WorkoutPlan? plan = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutPlan) ?? throw new InvalidOperationException("Failed to deserialize workout plan from JSON.");
-        await SavePlanAsync(plan);
+        await _repository.SavePlanAsync(plan);
+        InvalidatePlanCache();
         return plan;
     }
 
@@ -79,8 +100,9 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
         List<WorkoutPlan>? plans = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListWorkoutPlan) ?? throw new InvalidOperationException("Failed to deserialize workout plans from JSON.");
         foreach (WorkoutPlan plan in plans)
         {
-            await SavePlanAsync(plan);
+            await _repository.SavePlanAsync(plan);
         }
+        InvalidatePlanCache();
         return plans;
     }
 

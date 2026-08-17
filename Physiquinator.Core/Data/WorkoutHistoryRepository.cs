@@ -96,6 +96,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     private sealed class SetLogRow
     {
+        public string ExerciseName { get; set; } = "";
         public string SessionId { get; set; } = "";
         public DateTime CompletedAtUtc { get; set; }
         public int? Reps { get; set; }
@@ -386,7 +387,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             args.Add(exerciseNameFilter);
         }
 
-        var whereSql = whereClauses.Count > 0 ? $"WHERE {string.Join(" AND ", whereClauses)}" : string.Empty;
+        var whereSql = $"WHERE {string.Join(" AND ", whereClauses)}";
         var query = $"""
             SELECT sess.Id AS SessionId, sess.StartedAtUtc AS StartedAtUtc,
                    MAX(s.WeightKg) AS BestWeightKg,
@@ -692,32 +693,27 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
         var planIdStr = workoutPlanId.ToString();
         List<LastSessionSetMetricsRow> rows = await _db.Database.QueryAsync<LastSessionSetMetricsRow>(
-            @"SELECT s.ExerciseName AS ExerciseName,
-                     s.SetIndex AS SetIndex,
-                     s.Reps AS Reps,
-                     s.WeightKg AS WeightKg
+            @"SELECT s.ExerciseName, s.SetIndex, s.Reps, s.WeightKg
               FROM WorkoutSetLogs s
-              INNER JOIN (
-                  SELECT sess.Id AS SessionId
-                  FROM WorkoutSessionLogs sess
-                  INNER JOIN WorkoutSetLogs setlog ON setlog.SessionId = sess.Id
-                  WHERE sess.WorkoutPlanId = ? AND (? IS NULL OR sess.Id != ?)
-                  ORDER BY sess.StartedAtUtc DESC, sess.Id DESC
+              WHERE s.SessionId = (
+                  SELECT Id FROM WorkoutSessionLogs
+                  WHERE WorkoutPlanId = ? AND (? IS NULL OR Id != ?)
+                  ORDER BY StartedAtUtc DESC, Id DESC
                   LIMIT 1
-              ) latest ON latest.SessionId = s.SessionId
-              WHERE s.IsWarmup = 0",
+              )",
             planIdStr, excludeSessionId, excludeSessionId);
 
-        return rows
-            .GroupBy(r => r.ExerciseName, StringComparer.Ordinal)
-            .ToDictionary(
-                g => g.Key,
-                g => (IReadOnlyDictionary<int, LastSetMetrics>)g
-                    .GroupBy(r => r.SetIndex)
-                    .ToDictionary(
-                        sg => sg.Key,
-                        sg => new LastSetMetrics(sg.First().Reps, sg.First().WeightKg)),
-                StringComparer.Ordinal);
+        var result = new Dictionary<string, IReadOnlyDictionary<int, LastSetMetrics>>(rows.Count, StringComparer.Ordinal);
+        foreach (var row in rows)
+        {
+            if (!result.TryGetValue(row.ExerciseName, out var setDict))
+            {
+                setDict = new Dictionary<int, LastSetMetrics>();
+                result[row.ExerciseName] = setDict;
+            }
+            ((Dictionary<int, LastSetMetrics>)setDict)[row.SetIndex] = new LastSetMetrics(row.Reps, row.WeightKg);
+        }
+        return result;
     }
 
     /// <summary>
@@ -771,6 +767,56 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             planIdStr, exerciseName, maxSets);
 
         return [.. rows.Select(r => new ExerciseSetLogRow(r.SessionId, r.CompletedAtUtc, r.Reps, r.WeightKg))];
+    }
+
+    /// <summary>
+    /// Set rows for multiple exercises under a plan in a single query, oldest
+    /// first per exercise. Used by workout summary to compute PRs for all
+    /// exercises in one round-trip instead of N.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, IReadOnlyList<ExerciseSetLogRow>>> GetExerciseSetLogRowsBatchAsync(
+        Guid workoutPlanId,
+        IReadOnlyList<string> exerciseNames,
+        int maxSetsPerExercise = 5000)
+    {
+        if (exerciseNames.Count == 0) return new Dictionary<string, IReadOnlyList<ExerciseSetLogRow>>();
+        maxSetsPerExercise = Math.Clamp(maxSetsPerExercise, 1, 20000);
+        await _db.EnsureInitializedAsync();
+
+        var planIdStr = workoutPlanId.ToString();
+        var placeholders = string.Join(",", exerciseNames.Select(_ => "?"));
+        var limit = maxSetsPerExercise * exerciseNames.Count;
+
+        var args = new List<object> { planIdStr };
+        args.AddRange(exerciseNames.Cast<object>());
+
+        List<SetLogRow> rows = await _db.Database.QueryAsync<SetLogRow>(
+            $@"SELECT s.ExerciseName AS ExerciseName,
+                      s.SessionId AS SessionId,
+                      s.CompletedAtUtc AS CompletedAtUtc,
+                      s.Reps AS Reps,
+                      s.WeightKg AS WeightKg
+               FROM WorkoutSetLogs s
+               INNER JOIN WorkoutSessionLogs sess ON sess.Id = s.SessionId
+               WHERE sess.WorkoutPlanId = ? AND s.ExerciseName IN ({placeholders}) AND s.IsWarmup = 0
+               ORDER BY s.ExerciseName, s.CompletedAtUtc, s.ExerciseIndex, s.SetIndex
+               LIMIT ?",
+            [.. args, limit]);
+
+        var result = new Dictionary<string, List<ExerciseSetLogRow>>(exerciseNames.Count, StringComparer.Ordinal);
+        foreach (var name in exerciseNames)
+            result[name] = [];
+
+        foreach (var row in rows)
+        {
+            if (result.TryGetValue(row.ExerciseName, out var list) && list.Count < maxSetsPerExercise)
+                list.Add(new ExerciseSetLogRow(row.SessionId, row.CompletedAtUtc, row.Reps, row.WeightKg));
+        }
+
+        return result.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlyList<ExerciseSetLogRow>)kvp.Value,
+            StringComparer.Ordinal);
     }
 
     /// <summary>Removes the most recently logged set row for the session (same order as append-only completion).</summary>

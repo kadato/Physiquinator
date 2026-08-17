@@ -14,7 +14,7 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
         DefaultSetCount = planEntity.DefaultSetCount,
         CreatedAt = planEntity.CreatedAt,
         SortOrder = planEntity.SortOrder,
-        Exercises = exercises.Select(ToModel).ToList()
+        Exercises = [.. exercises.Select(ToModel)]
     };
 
     private static ExercisePlan ToModel(ExercisePlanEntity e) => new()
@@ -61,17 +61,15 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
     public async Task<List<WorkoutPlan>> GetAllPlansAsync()
     {
         await _database.EnsureInitializedAsync().ConfigureAwait(false);
+
         List<WorkoutPlanEntity> planEntities = await _database.Database.Table<WorkoutPlanEntity>().ToListAsync().ConfigureAwait(false);
         if (planEntities.Count == 0)
             return [];
 
-        var planIds = planEntities.Select(p => p.Id).ToList();
-        List<ExercisePlanEntity> allExercises = await _database.Database.Table<ExercisePlanEntity>()
-            .Where(e => planIds.Contains(e.WorkoutPlanId))
-            .ToListAsync().ConfigureAwait(false);
+        List<ExercisePlanEntity> allExercises = await _database.Database.Table<ExercisePlanEntity>().ToListAsync().ConfigureAwait(false);
 
         var exercisesGrouped = allExercises.GroupBy(e => e.WorkoutPlanId)
-            .ToDictionary(g => g.Key, g => g.OrderBy(e => e.Order).ToList());
+            .ToDictionary(g => g.Key, g => g.OrderBy(e => e.Order).ToList(), StringComparer.Ordinal);
 
         var plans = new List<WorkoutPlan>(planEntities.Count);
 
@@ -81,7 +79,7 @@ public sealed class WorkoutPlanRepository(AppDatabase database)
             plans.Add(ToModel(planEntity, exercises ?? []));
         }
 
-        return plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt).ToList();
+        return [.. plans.OrderBy(p => p.SortOrder).ThenByDescending(p => p.CreatedAt)];
     }
 
     public async Task<WorkoutPlan?> GetPlanAsync(Guid id)

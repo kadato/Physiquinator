@@ -202,7 +202,7 @@ public class DemoDataSeederTests : IAsyncLifetime
     [Fact]
     public async Task SeedDemoExtras_DoesNotClobberAnExistingSchedule()
     {
-        _scheduleService.SetDays([DayOfWeek.Tuesday, DayOfWeek.Thursday]);
+        await _scheduleService.SetDaysAsync([DayOfWeek.Tuesday, DayOfWeek.Thursday]);
 
         await _sut.SeedDemoDataIfNeededAsync();
         await _sut.SeedDemoHistoryIfNeededAsync();
@@ -290,10 +290,9 @@ public class DemoDataSeederTests : IAsyncLifetime
         IReadOnlyList<WorkoutSessionLogEntity> recent = await _historyRepo.GetRecentSessionsAsync(200);
         WorkoutSessionLogEntity pushSession = recent.First(s => s.PlanName == "Push Day" && s.EndedAtUtc != null);
 
-        IReadOnlyList<WorkoutSetLogEntity> benchSets = (await _historyRepo.GetSetsForSessionAsync(pushSession.Id))
+        List<WorkoutSetLogEntity> benchSets = [.. (await _historyRepo.GetSetsForSessionAsync(pushSession.Id))
             .Where(s => s.ExerciseName == "Bench Press")
-            .OrderBy(s => s.SetIndex)
-            .ToList();
+            .OrderBy(s => s.SetIndex)];
 
         Assert.Equal(6, benchSets.Count); // 2 warm-ups + 4 working
         Assert.Equal([true, true, false, false, false, false], benchSets.Select(s => s.IsWarmup));

@@ -59,7 +59,7 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
         var schedule = new WorkoutScheduleService(preferences, CreateProfileService(preferences), _db);
 
         // Today is scheduled and completed.
-        schedule.SetDays(AllDaysOfWeek);
+        await schedule.SetDaysAsync(AllDaysOfWeek);
 
         var stats = new WorkoutStatsService(new WorkoutHistoryRepository(_db, TimeProvider.System), schedule);
         await _db.Database.InsertAsync(new WorkoutSessionLogEntity
@@ -76,7 +76,8 @@ public class WorkoutStatsServiceTests : IAsyncLifetime
 
         // Today is a rest day: the most recent scheduled day is in the past and was skipped.
         var otherDay = (DayOfWeek)(((int)DateTime.Today.DayOfWeek + 1) % 7);
-        schedule.SetDays([otherDay]);
+        await schedule.SetDaysAsync([otherDay]);
+        stats.InvalidateCache();
 
         (WorkoutDaySummary? restDaySummary, _) = await stats.GetSummaryAsync(DateOnly.FromDateTime(DateTime.Today), weeks: 12);
         Assert.Equal(0, restDaySummary.CurrentStreakWorkoutDays);

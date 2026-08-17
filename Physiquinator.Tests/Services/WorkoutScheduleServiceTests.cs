@@ -20,11 +20,11 @@ public class WorkoutScheduleServiceTests
     }
 
     [Fact]
-    public void SetDays_StoresAndReadsBack_DayOfWeekSet()
+    public async Task SetDays_StoresAndReadsBack_DayOfWeekSet()
     {
         Fixture fix = CreateFixture();
 
-        fix.Schedule.SetDays([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
 
         Assert.True(fix.Schedule.IsSet);
         Assert.Equal(
@@ -33,22 +33,22 @@ public class WorkoutScheduleServiceTests
     }
 
     [Fact]
-    public void SetDays_EmptySet_ClearsSchedule()
+    public async Task SetDays_EmptySet_ClearsSchedule()
     {
         Fixture fix = CreateFixture();
-        fix.Schedule.SetDays([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
 
-        fix.Schedule.SetDays([]);
+        await fix.Schedule.SetDaysAsync([]);
 
         Assert.False(fix.Schedule.IsSet);
         Assert.Empty(fix.Schedule.Days);
     }
 
     [Fact]
-    public void IsScheduled_MatchesConfiguredWeekdays()
+    public async Task IsScheduled_MatchesConfiguredWeekdays()
     {
         Fixture fix = CreateFixture();
-        fix.Schedule.SetDays([DayOfWeek.Tuesday, DayOfWeek.Saturday]);
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Tuesday, DayOfWeek.Saturday]);
 
         Assert.True(fix.Schedule.IsScheduled(new DateOnly(2026, 5, 19)));  // Tuesday
         Assert.True(fix.Schedule.IsScheduled(new DateOnly(2026, 5, 23)));  // Saturday
@@ -56,10 +56,10 @@ public class WorkoutScheduleServiceTests
     }
 
     [Fact]
-    public void NextWorkoutDay_ReturnsNextOccurrence_IncludingSameDay()
+    public async Task NextWorkoutDay_ReturnsNextOccurrence_IncludingSameDay()
     {
         Fixture fix = CreateFixture();
-        fix.Schedule.SetDays([DayOfWeek.Monday, DayOfWeek.Thursday]);
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Monday, DayOfWeek.Thursday]);
 
         Assert.Equal(new DateOnly(2026, 5, 18), fix.Schedule.NextWorkoutDay(new DateOnly(2026, 5, 18))); // Mon
         Assert.Equal(new DateOnly(2026, 5, 21), fix.Schedule.NextWorkoutDay(new DateOnly(2026, 5, 19))); // Tue -> Thu
@@ -67,14 +67,14 @@ public class WorkoutScheduleServiceTests
     }
 
     [Fact]
-    public void ChangedEvent_FiresOnSetDays()
+    public async Task ChangedEvent_FiresOnSetDays()
     {
         Fixture fix = CreateFixture();
         var fired = 0;
         fix.Schedule.Changed += () => fired++;
 
-        fix.Schedule.SetDays([DayOfWeek.Monday]);
-        fix.Schedule.SetDays([]);
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Monday]);
+        await fix.Schedule.SetDaysAsync([]);
 
         Assert.Equal(2, fired);
     }
@@ -92,7 +92,7 @@ public class WorkoutScheduleServiceTests
 
             // The default (demo) profile owns the base key.
             var schedule = new WorkoutScheduleService(preferences, profiles, db);
-            schedule.SetDays([DayOfWeek.Monday]);
+            await schedule.SetDaysAsync([DayOfWeek.Monday]);
 
             // A new profile reads and writes its own key.
             profiles.CreateProfile("Alice");
@@ -100,7 +100,7 @@ public class WorkoutScheduleServiceTests
             await profiles.SwitchProfileAsync(alice.Id);
 
             Assert.Empty(schedule.Days);
-            schedule.SetDays([DayOfWeek.Wednesday]);
+            await schedule.SetDaysAsync([DayOfWeek.Wednesday]);
             Assert.Equal(DayOfWeek.Wednesday, Assert.Single(schedule.Days));
 
             // Back on the demo profile, the Monday schedule is intact.
@@ -131,7 +131,7 @@ public class WorkoutScheduleServiceTests
     }
 
     [Fact]
-    public void GetScheduleForDate_ReturnsHistoricalSchedulesCorrectly()
+    public async Task GetScheduleForDate_ReturnsHistoricalSchedulesCorrectly()
     {
         Fixture fix = CreateFixture();
 
@@ -139,10 +139,10 @@ public class WorkoutScheduleServiceTests
         Assert.Empty(fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 1)));
 
         // Set Mon-Wed-Fri effective on 2026-05-01
-        fix.Schedule.SetDays([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday], new DateOnly(2026, 5, 1));
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday], new DateOnly(2026, 5, 1));
 
         // Set Tue-Thu effective on 2026-05-10
-        fix.Schedule.SetDays([DayOfWeek.Tuesday, DayOfWeek.Thursday], new DateOnly(2026, 5, 10));
+        await fix.Schedule.SetDaysAsync([DayOfWeek.Tuesday, DayOfWeek.Thursday], new DateOnly(2026, 5, 10));
 
         // Query historical dates:
         // Before 2026-05-01: empty

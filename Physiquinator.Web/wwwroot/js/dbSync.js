@@ -38,7 +38,7 @@
         const binary = atob(base64);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
+            bytes[i] = binary.codePointAt(i);
         }
         return bytes;
     }
@@ -71,18 +71,23 @@
 
         // Pulls the stored databases up to the server. Called before Blazor starts,
         // so the first circuit of a fresh dyno opens the visitor's data.
+        // Reads all database blobs in parallel for faster restore.
         restoreToServer() {
             return this.list().then(async (names) => {
+                const dbNames = names.filter(name =>
+                    typeof name === 'string' && name.startsWith('physiquinator') && name.endsWith('.db3')
+                );
+                if (!dbNames.length) {
+                    return;
+                }
+
+                const blobs = await Promise.all(dbNames.map(name => this.get(name)));
                 const files = [];
-                for (const name of names) {
-                    if (typeof name !== 'string' || !name.startsWith('physiquinator') || !name.endsWith('.db3')) {
-                        continue;
+                for (let i = 0; i < dbNames.length; i++) {
+                    const blob = blobs[i];
+                    if (blob?.size) {
+                        files.push({ name: dbNames[i], data: await blobToBase64(blob) });
                     }
-                    const blob = await this.get(name);
-                    if (!blob || !blob.size) {
-                        continue;
-                    }
-                    files.push({ name, data: await blobToBase64(blob) });
                 }
                 if (!files.length) {
                     return;

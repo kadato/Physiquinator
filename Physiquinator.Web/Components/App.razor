@@ -27,6 +27,9 @@
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <!-- Preload Outfit font subsets so first text paint is not blocked -->
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
     <link rel="stylesheet" href="css/web.css" />
@@ -55,15 +58,15 @@
         <button type="button" class="dismiss" aria-label="Dismiss error">🗙</button>
     </div>
 
-    <script src="_content/Physiquinator.UI/js/sortable.min.js"></script>
-    <script src="_content/Physiquinator.UI/js/html2canvas.min.js"></script>
-    <script src="_content/Physiquinator.UI/js/theme.js"></script>
-    <script src="_content/Physiquinator.UI/js/stepperDrag.js"></script>
-    <script src="_content/Physiquinator.UI/js/appHelpers.js"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="js/dbSync.js"></script>
-    <script src="_framework/blazor.web.js" autostart="false"></script>
-    <script src="js/dbSyncBootstrap.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/sortable.min.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/html2canvas.min.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/theme.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/stepperDrag.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/appHelpers.js"></script>
+    <script defer src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script defer src="js/dbSync.js"></script>
+    <script defer src="_framework/blazor.web.js" autostart="false"></script>
+    <script defer src="js/dbSyncBootstrap.js"></script>
 
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
 

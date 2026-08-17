@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Net.Http.Json;
 using System.Security.Claims;
 
 namespace Physiquinator.Web.Services;

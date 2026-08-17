@@ -1,5 +1,4 @@
 using Microsoft.JSInterop;
-using Physiquinator.Core.Services;
 using SQLite;
 
 namespace Physiquinator.Web.Services;

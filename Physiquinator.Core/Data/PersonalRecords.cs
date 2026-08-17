@@ -76,7 +76,7 @@ public static class PersonalRecordCalculator
     {
         if (reps is not { } r) return 0;
         if (logType == ExerciseLogType.BodyweightReps && bodyweightKg is > 0)
-            return r * (bodyweightKg.Value * (bodyweightPercent ?? 100) / 100.0 + (weightKg ?? 0));
+            return r * ((bodyweightKg.Value * (bodyweightPercent ?? 100) / 100.0) + (weightKg ?? 0));
         if (weightKg is not { } w) return 0;
         return r * w;
     }

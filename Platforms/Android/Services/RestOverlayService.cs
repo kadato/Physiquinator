@@ -133,7 +133,7 @@ public sealed class RestOverlayService : Service
         // hide the bubble without rebuilding the notification. The ticker
         // runs only while the overlay is actually visible, so a workout held
         // in the foreground costs no wakeups.
-        if (intent?.Action == ActionForegrounded || intent?.Action == ActionBackgrounded)
+        if (intent?.Action is ActionForegrounded or ActionBackgrounded)
         {
             UpdateOverlayVisibility();
             return StartCommandResult.NotSticky;

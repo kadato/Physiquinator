@@ -63,15 +63,9 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 
-    private sealed class WorkoutBackGuardCallback : OnBackPressedCallback
+    private sealed class WorkoutBackGuardCallback(MainActivity activity) : OnBackPressedCallback(true)
     {
-        private readonly MainActivity _activity;
-
-        public WorkoutBackGuardCallback(MainActivity activity)
-            : base(true)
-        {
-            _activity = activity;
-        }
+        private readonly MainActivity _activity = activity;
 
         public override void HandleOnBackPressed()
         {

@@ -1,5 +1,4 @@
 using Physiquinator.Core.Data;
-using Physiquinator.Core.Models;
 using System.Text.Json;
 
 namespace Physiquinator.Core.Services.Ai.Tools;

@@ -33,7 +33,7 @@ public sealed class WorkoutStatsService(
         DateOnly gridStart = HeatmapGrid.GetMondayOfWeek(endLocal).AddDays(-7 * (weeks - 1));
 
         IReadOnlyDictionary<DateOnly, int> activityByDay = await _repository.GetSessionCountsByLocalDayAsync(utcStart, utcEndExclusive);
-        Func<DateOnly, IReadOnlySet<DayOfWeek>> getSchedule = date => _scheduleService?.GetScheduleForDate(date) ?? EmptySchedule;
+        IReadOnlySet<DayOfWeek> getSchedule(DateOnly date) => _scheduleService?.GetScheduleForDate(date) ?? EmptySchedule;
         WorkoutDaySummary summary = WorkoutDayStats.Compute(activityByDay, endLocal, gridStart, getSchedule);
 
         _cacheKey = (endLocal, weeks);

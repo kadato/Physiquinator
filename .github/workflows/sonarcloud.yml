@@ -34,8 +34,8 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         dotnet-sonarscanner begin \
-          /k:"tothkarolydavid_physiquinator" \
-          /o:"tothkarolydavid" \
+          /k:"kadato_physiquinator" \
+          /o:"kadato" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="**/test-results.trx"

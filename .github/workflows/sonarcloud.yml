@@ -35,7 +35,7 @@ jobs:
       run: |
         dotnet-sonarscanner begin \
           /k:"kadato_physiquinator" \
-          /o:"kadato" \
+          /o:"tothkarolydavid" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
           /d:sonar.cs.vstest.reportsPaths="**/test-results.trx"

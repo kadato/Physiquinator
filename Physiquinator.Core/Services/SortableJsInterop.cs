@@ -19,6 +19,20 @@ public static class SortableJsInterop
         try
         {
             await DestroyAsync(js, destroyFunction);
+            // Ensure Sortable.js is loaded before calling the init function.
+            // The script is lazy-loaded on demand to avoid blocking initial page load.
+            var sortableReady = await js.InvokeAsync<bool>(
+                "eval", "typeof Sortable !== 'undefined'");
+            if (!sortableReady)
+            {
+                await js.InvokeVoidAsync("eval",
+                    "new Promise((resolve, reject) => {" +
+                    "var s = document.createElement('script');" +
+                    "s.src = '_content/Physiquinator.UI/js/sortable.min.js';" +
+                    "s.onload = resolve; s.onerror = reject;" +
+                    "document.head.appendChild(s);" +
+                    "})");
+            }
             return await js.InvokeAsync<bool>(initFunction, listId, dotNetRef);
         }
         catch (JSException)

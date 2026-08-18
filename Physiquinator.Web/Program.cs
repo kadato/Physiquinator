@@ -63,7 +63,7 @@ builder.Services.AddScoped<IDatabasePathProvider, WebUserDatabasePathProvider>()
 // Sign-out is web-only; registered after Core's no-op default so it wins.
 builder.Services.AddScoped<IAccountService, WebAccountService>();
 
-builder.Services.AddSingleton(_ => new HttpClient());
+builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
 builder.Services.AddSingleton<IFileTransferService, WebFileTransferService>();
@@ -126,6 +126,21 @@ app.UseAntiforgery();
 app.UsePhysiquinatorMcpApiKey();
 
 app.MapStaticAssets();
+
+// Add aggressive caching for fingerprinted static assets (JS, CSS, fonts, images)
+// MapStaticAssets already fingerprints URLs, so long cache lifetimes are safe.
+app.Use(async (context, next) =>
+{
+    await next();
+    var path = context.Request.Path.Value ?? string.Empty;
+    var isStaticAsset = path.StartsWith("/_content/", StringComparison.Ordinal)
+        || path.StartsWith("/css/", StringComparison.Ordinal)
+        || path.StartsWith("/js/", StringComparison.Ordinal);
+    if (isStaticAsset && context.Response.Headers.CacheControl.Count == 0)
+    {
+        context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+    }
+});
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(Physiquinator.UI.Routes).Assembly);

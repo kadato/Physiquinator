@@ -16,7 +16,7 @@
    - Install the downloaded file
 
 2. **Download Physiquinator**
-   - Download `Physiquinator-Windows.zip` from the [latest release](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
+   - Download `Physiquinator-Windows.zip` from the [latest release](https://github.com/kadato/Physiquinator/releases/latest)
    - Extract the ZIP file to any folder
    - Run `Physiquinator.exe`
 
@@ -66,7 +66,7 @@ If you prefer to run from source:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/tothKarolyDavid/Physiquinator.git
+git clone https://github.com/kadato/Physiquinator.git
 cd Physiquinator
 
 # Run the app
@@ -85,8 +85,8 @@ dotnet run --framework net11.0-windows10.0.19041.0
 ## Support
 
 For issues or questions:
-- [GitHub Issues](https://github.com/tothKarolyDavid/Physiquinator/issues)
-- [Release Notes](https://github.com/tothKarolyDavid/Physiquinator/releases)
+- [GitHub Issues](https://github.com/kadato/Physiquinator/issues)
+- [Release Notes](https://github.com/kadato/Physiquinator/releases)
 
 ## Building Your Own
 

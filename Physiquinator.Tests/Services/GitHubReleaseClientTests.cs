@@ -9,8 +9,8 @@ public class GitHubReleaseClientTests
 {
     private const string SampleReleaseJson = """
         {
-          "url": "https://api.github.com/repos/tothKarolyDavid/Physiquinator/releases/42",
-          "html_url": "https://github.com/tothKarolyDavid/Physiquinator/releases/tag/v1.2.0",
+          "url": "https://api.github.com/repos/kadato/Physiquinator/releases/42",
+          "html_url": "https://github.com/kadato/Physiquinator/releases/tag/v1.2.0",
           "tag_name": "v1.2.0",
           "name": "Physiquinator v1.2.0",
           "draft": false,
@@ -20,12 +20,12 @@ public class GitHubReleaseClientTests
           "assets": [
             {
               "name": "Physiquinator-Android.apk",
-              "browser_download_url": "https://github.com/tothKarolyDavid/Physiquinator/releases/download/v1.2.0/Physiquinator-Android.apk",
+              "browser_download_url": "https://github.com/kadato/Physiquinator/releases/download/v1.2.0/Physiquinator-Android.apk",
               "size": 31457280
             },
             {
               "name": "Physiquinator-Windows.zip",
-              "browser_download_url": "https://github.com/tothKarolyDavid/Physiquinator/releases/download/v1.2.0/Physiquinator-Windows.zip",
+              "browser_download_url": "https://github.com/kadato/Physiquinator/releases/download/v1.2.0/Physiquinator-Windows.zip",
               "size": 65011712
             }
           ]

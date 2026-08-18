@@ -119,4 +119,4 @@ For issues:
 1. Check Docker Desktop is running
 2. Review error messages during build
 3. Try rebuilding without cache: `docker build --no-cache ...`
-4. Check [GitHub Issues](https://github.com/tothKarolyDavid/Physiquinator/issues)
+4. Check [GitHub Issues](https://github.com/kadato/Physiquinator/issues)

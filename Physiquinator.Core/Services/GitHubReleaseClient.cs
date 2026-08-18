@@ -8,7 +8,7 @@ namespace Physiquinator.Core.Services;
 public sealed class GitHubReleaseClient : IGitHubReleaseClient
 {
     private static readonly Uri LatestReleaseEndpoint =
-        new("https://api.github.com/repos/tothKarolyDavid/Physiquinator/releases/latest");
+        new("https://api.github.com/repos/kadato/Physiquinator/releases/latest");
 
     private readonly HttpClient _http;
 

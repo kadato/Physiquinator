@@ -7,8 +7,8 @@
 ![Blazor Hybrid](https://img.shields.io/badge/Blazor-Hybrid-512BD4?logo=blazor)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
-[![Build](https://img.shields.io/github/actions/workflow/status/tothKarolyDavid/Physiquinator/ci.yml?label=CI&logo=github)](https://github.com/tothKarolyDavid/Physiquinator/actions/workflows/ci.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
+[![Build](https://img.shields.io/github/actions/workflow/status/kadato/Physiquinator/ci.yml?label=CI&logo=github)](https://github.com/kadato/Physiquinator/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/kadato/Physiquinator)](https://github.com/kadato/Physiquinator/releases/latest)
 
 A cross-platform workout tracking app built with **.NET MAUI and Blazor Hybrid**. Plan workouts, log sets with a smart rest timer, track progress and personal records, and ask an on-device AI assistant to analyze your training. All data lives in a local SQLite database and works offline.
 
@@ -88,12 +88,12 @@ It also ships a **web client with a Model Context Protocol (MCP) server**, so an
 
 ## Download & Install
 
-**Latest Release**: [![GitHub Release](https://img.shields.io/github/v/release/tothKarolyDavid/Physiquinator)](https://github.com/tothKarolyDavid/Physiquinator/releases/latest)
+**Latest Release**: [![GitHub Release](https://img.shields.io/github/v/release/kadato/Physiquinator)](https://github.com/kadato/Physiquinator/releases/latest)
 
 | Platform | Package | Size | Requirements |
 |----------|---------|------|--------------|
-| Android | [Physiquinator-Android.apk](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~115 MB | Android 7.0+ |
-| Windows | [Physiquinator-Windows.zip](https://github.com/tothKarolyDavid/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~70 MB | [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/11.0) (one-time, free) |
+| Android | [Physiquinator-Android.apk](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~115 MB | Android 7.0+ |
+| Windows | [Physiquinator-Windows.zip](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~70 MB | [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/11.0) (one-time, free) |
 
 **Android:** enable "Install from unknown sources", open the APK, tap **Install**.
 
@@ -188,7 +188,7 @@ Key design points:
 ## Getting Started
 
 ```bash
-git clone https://github.com/tothKarolyDavid/Physiquinator.git
+git clone https://github.com/kadato/Physiquinator.git
 cd Physiquinator
 dotnet restore
 

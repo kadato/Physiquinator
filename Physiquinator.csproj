@@ -91,9 +91,10 @@
              process start ("Instruction is unrepresentable in DEX V37"). -->
         <AndroidDexTool>d8</AndroidDexTool>
 
-        <!-- ReadyToRun (R2R): if the Android build fails with an R8 crash
-             (dotnet/android#11025), revert this line to false. -->
-        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">true</PublishReadyToRun>
+        <!-- .NET 11 preview SDK workaround (dotnet/android#11025): R2R produces
+             mixed-mode assemblies that Mono.Cecil cannot write on Android.
+             Re-enable once the upstream issue is fixed. -->
+        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
 
         <!-- iOS release optimizations -->
         <MtouchLink>SdkOnly</MtouchLink>

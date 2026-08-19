@@ -5,17 +5,24 @@ namespace Physiquinator.Core.Data;
 public sealed class AppDatabase
 {
     private readonly SemaphoreSlim _switchLock = new(1, 1);
+    private readonly Task? _batteriesInitTask;
     private SQLiteAsyncConnection _database;
     private Task _initializationTask;
 
-    public AppDatabase(string dbPath)
+    public AppDatabase(string dbPath, Task? batteriesInitTask = null)
     {
+        _batteriesInitTask = batteriesInitTask;
         _database = new SQLiteAsyncConnection(dbPath);
         _initializationTask = InitializeAsync();
     }
 
     private async Task InitializeAsync()
     {
+        // Wait for the native SQLite library to finish loading (done on a
+        // background thread in MauiProgram) before touching any SQL.
+        if (_batteriesInitTask != null)
+            await _batteriesInitTask.ConfigureAwait(false);
+
         try
         {
             // Execute PRAGMAs safely. Some pragmas return row values and must use ExecuteScalarAsync.
@@ -119,10 +126,7 @@ public sealed class AppDatabase
         await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_EndedAtUtc ON WorkoutSessionLogs(EndedAtUtc)");
     }
 
-    public async Task EnsureInitializedAsync()
-    {
-        await _initializationTask;
-    }
+    public async Task EnsureInitializedAsync() => await _initializationTask;
 
     /// <summary>
     /// Deletes all persisted workout plans, history, and set logs. Order respects child rows first.

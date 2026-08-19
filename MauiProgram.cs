@@ -1,7 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using MudBlazor;
 using MudBlazor.Services;
+using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
 using Physiquinator.Services;
 using Plugin.LocalNotification;
@@ -16,28 +18,23 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        SQLitePCL.Batteries_V2.Init();
+        // Load the native SQLite library on a background thread so it does not
+        // block the main thread during cold start.  The AppDatabase will await
+        // this task before running its own async initialization.
+        var sqliteBatteriesReady = Task.Run(static () => SQLitePCL.Batteries_V2.Init());
 
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseLocalNotification(config =>
-            {
-                config.AddAndroid(android =>
+            .UseLocalNotification(config => config.AddAndroid(android =>
+                android.AddChannel(new AndroidNotificationChannelRequest
                 {
-                    android.AddChannel(new AndroidNotificationChannelRequest
-                    {
-                        Id = RestNotificationService.AndroidChannelId,
-                        Name = "Rest timer",
-                        Description = "Alerts when rest periods end",
-                        Importance = AndroidImportance.High
-                    });
-                });
-            })
-            .ConfigureFonts(fonts =>
-            {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-            });
+                    Id = RestNotificationService.AndroidChannelId,
+                    Name = "Rest timer",
+                    Description = "Alerts when rest periods end",
+                    Importance = AndroidImportance.High
+                })))
+            .ConfigureFonts(fonts => fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"));
 
         builder.Services.AddMauiBlazorWebView();
 
@@ -58,9 +55,18 @@ public static class MauiProgram
             config.SnackbarConfiguration.ShowCloseIcon = true;
         });
 
-        builder.Services.AddPhysiquinatorServices(
-            new AppPreferences(),
-            new DatabasePathProvider());
+        var prefs = new AppPreferences();
+        var dbPathProvider = new DatabasePathProvider();
+
+        // Register AppDatabase eagerly so it can start init while other
+        // services are being wired up.  TryAddSingleton lets the shared
+        // AddPhysiquinatorServices helper skip its own registration.
+        builder.Services.AddSingleton(new AppDatabase(
+            dbPathProvider.GetDatabasePath(
+                PhysiquinatorServiceCollectionExtensions.GetActiveProfileId(prefs)),
+            sqliteBatteriesReady));
+
+        builder.Services.AddPhysiquinatorServices(prefs, dbPathProvider);
 
         // The MAUI shell (app theme, resource colors, system bars) must follow
         // the Blazor UI theme. Override the base registration with the MAUI

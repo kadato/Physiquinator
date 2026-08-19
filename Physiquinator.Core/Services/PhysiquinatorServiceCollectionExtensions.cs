@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services.Ai;
 using Physiquinator.Core.Services.Ai.Tools;
@@ -36,7 +37,9 @@ public static class PhysiquinatorServiceCollectionExtensions
         {
             services.AddSingleton(preferences);
             services.AddSingleton(databasePathProvider);
-            services.AddSingleton(new AppDatabase(
+            // Use TryAddSingleton so the MAUI host can pre-register AppDatabase
+            // with the async SQLite-batteries task before reaching this helper.
+            services.TryAddSingleton(new AppDatabase(
                 databasePathProvider.GetDatabasePath(GetActiveProfileId(preferences))));
         }
 
@@ -119,7 +122,7 @@ public static class PhysiquinatorServiceCollectionExtensions
     private static TService CreatePerScopeInstance<TService>(TService seed) where TService : class
         => (TService)Activator.CreateInstance(seed.GetType())!;
 
-    private static Guid GetActiveProfileId(IAppPreferences preferences)
+    public static Guid GetActiveProfileId(IAppPreferences preferences)
     {
         var activeIdStr = preferences.Get(PreferenceKeys.ActiveProfileId, string.Empty);
         return Guid.TryParse(activeIdStr, out Guid g) ? g : UserProfileService.DemoProfileId;

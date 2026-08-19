@@ -74,7 +74,9 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <!-- Android release optimizations -->
         <AndroidLinkMode>None</AndroidLinkMode>
-        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+        <!-- Profiled AOT is harmless with RunAOTCompilation=false below;
+             re-enabled so it takes effect if full AOT is switched on later. -->
+        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
         <RunAOTCompilation Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</RunAOTCompilation>
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
@@ -89,11 +91,9 @@
              process start ("Instruction is unrepresentable in DEX V37"). -->
         <AndroidDexTool>d8</AndroidDexTool>
 
-        <!-- .NET 11 preview SDK workaround (dotnet/android#11025): R8 9.1.31 crashes on R2R
-             inputs and on pre-desugared androidx 1.17 classes. Keep an eye on the linked issue:
-             once it is fixed upstream, re-enable AndroidEnableProfiledAot, RunAOTCompilation
-             and PublishReadyToRun for release cold-start/JIT-warmup gains. -->
-        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
+        <!-- ReadyToRun (R2R): if the Android build fails with an R8 crash
+             (dotnet/android#11025), revert this line to false. -->
+        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">true</PublishReadyToRun>
 
         <!-- iOS release optimizations -->
         <MtouchLink>SdkOnly</MtouchLink>

@@ -46,9 +46,16 @@ public sealed class AppInitializationService(
                     NotifyProgress();
                 }
 
-                var didSeedHistory = await demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
+                // History and extras are independent of each other; run in
+                // parallel so the total first-launch seeding time is the max
+                // rather than the sum.
+                var historyTask = demoSeeder.SeedDemoHistoryIfNeededAsync();
+                var extrasTask = demoSeeder.SeedDemoExtrasIfNeededAsync();
 
-                var didSeedExtras = await demoSeeder.SeedDemoExtrasIfNeededAsync().ConfigureAwait(false);
+                await Task.WhenAll(historyTask, extrasTask).ConfigureAwait(false);
+
+                var didSeedHistory = historyTask.Result;
+                var didSeedExtras = extrasTask.Result;
 
                 if (didSeedPlans || didSeedHistory || didSeedExtras)
                 {

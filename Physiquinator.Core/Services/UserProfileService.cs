@@ -25,8 +25,14 @@ public sealed class UserProfileService(
     private readonly IDatabasePathProvider _dbPathProvider = dbPathProvider;
     private readonly TimeProvider _time = time;
 
+    /// <summary>Cached profile list to avoid repeated JSON deserialization on every access.</summary>
+    private List<UserProfile>? _cachedProfiles;
+
     public List<UserProfile> GetProfiles()
     {
+        if (_cachedProfiles != null)
+            return _cachedProfiles;
+
         var json = _preferences.Get(ProfilesKey, string.Empty);
         if (string.IsNullOrEmpty(json))
         {
@@ -39,16 +45,18 @@ public sealed class UserProfileService(
             };
             var list = new List<UserProfile> { defaultProfile };
             SaveProfiles(list);
-            return list;
+            return _cachedProfiles!;
         }
 
         try
         {
-            return JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListUserProfile) ?? [];
+            _cachedProfiles = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListUserProfile) ?? [];
+            return _cachedProfiles;
         }
         catch
         {
-            return [];
+            _cachedProfiles = [];
+            return _cachedProfiles;
         }
     }
 
@@ -182,5 +190,6 @@ public sealed class UserProfileService(
     {
         var json = JsonSerializer.Serialize(profiles, PhysiquinatorJsonContext.Default.ListUserProfile);
         _preferences.Set(ProfilesKey, json);
+        _cachedProfiles = profiles;
     }
 }

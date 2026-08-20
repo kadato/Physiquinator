@@ -76,54 +76,62 @@ public sealed class AppDatabase
         }
     }
 
+    private const int CurrentSchemaVersion = 1;
+
     /// <summary>sqlite-net CreateTable does not add columns on existing installs.</summary>
     private static async Task MigrateAsync(SQLiteAsyncConnection db)
     {
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSessionLogs') WHERE name='PlanSnapshotJson'") == 0)
-            await db.ExecuteAsync("ALTER TABLE WorkoutSessionLogs ADD COLUMN PlanSnapshotJson TEXT");
+        var userVersion = await db.ExecuteScalarAsync<int>("PRAGMA user_version;").ConfigureAwait(false);
+        if (userVersion >= CurrentSchemaVersion)
+            return;
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultReps'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultReps INTEGER");
+                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSessionLogs') WHERE name='PlanSnapshotJson'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE WorkoutSessionLogs ADD COLUMN PlanSnapshotJson TEXT").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultWeightKg'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultWeightKg REAL");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultReps'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultReps INTEGER").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutPlans') WHERE name='SortOrder'") == 0)
-            await db.ExecuteAsync("ALTER TABLE WorkoutPlans ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultWeightKg'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultWeightKg REAL").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0");
+                "SELECT COUNT(*) FROM pragma_table_info('WorkoutPlans') WHERE name='SortOrder'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE WorkoutPlans ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='WarmupSetCount'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN WarmupSetCount INTEGER NOT NULL DEFAULT 0");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='SupersetGroupId'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN SupersetGroupId TEXT");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='WarmupSetCount'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN WarmupSetCount INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='BodyweightPercent'") == 0)
-            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN BodyweightPercent REAL");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='SupersetGroupId'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN SupersetGroupId TEXT").ConfigureAwait(false);
 
         if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSetLogs') WHERE name='IsWarmup'") == 0)
-            await db.ExecuteAsync("ALTER TABLE WorkoutSetLogs ADD COLUMN IsWarmup INTEGER NOT NULL DEFAULT 0");
+                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='BodyweightPercent'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN BodyweightPercent REAL").ConfigureAwait(false);
+
+        if (await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSetLogs') WHERE name='IsWarmup'").ConfigureAwait(false) == 0)
+            await db.ExecuteAsync("ALTER TABLE WorkoutSetLogs ADD COLUMN IsWarmup INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
         // sqlite-net only creates indexed-column indexes on a freshly created
         // table, so pre-existing installs get their indexes here instead.
         // Aggregate queries (progress chart, heatmap, latest-metrics) rely on them.
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_SessionId ON WorkoutSetLogs(SessionId)");
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_ExerciseName ON WorkoutSetLogs(ExerciseName)");
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_CompletedAtUtc ON WorkoutSetLogs(CompletedAtUtc)");
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_WorkoutPlanId ON WorkoutSessionLogs(WorkoutPlanId)");
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_StartedAtUtc ON WorkoutSessionLogs(StartedAtUtc)");
-        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_EndedAtUtc ON WorkoutSessionLogs(EndedAtUtc)");
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_SessionId ON WorkoutSetLogs(SessionId)").ConfigureAwait(false);
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_ExerciseName ON WorkoutSetLogs(ExerciseName)").ConfigureAwait(false);
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSetLogs_CompletedAtUtc ON WorkoutSetLogs(CompletedAtUtc)").ConfigureAwait(false);
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_WorkoutPlanId ON WorkoutSessionLogs(WorkoutPlanId)").ConfigureAwait(false);
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_StartedAtUtc ON WorkoutSessionLogs(StartedAtUtc)").ConfigureAwait(false);
+        await db.ExecuteAsync("CREATE INDEX IF NOT EXISTS IX_WorkoutSessionLogs_EndedAtUtc ON WorkoutSessionLogs(EndedAtUtc)").ConfigureAwait(false);
+
+        await db.ExecuteAsync($"PRAGMA user_version = {CurrentSchemaVersion};").ConfigureAwait(false);
     }
 
     public async Task EnsureInitializedAsync() => await _initializationTask;

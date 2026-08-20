@@ -33,8 +33,7 @@ public static class MauiProgram
                     Name = "Rest timer",
                     Description = "Alerts when rest periods end",
                     Importance = AndroidImportance.High
-                })))
-            .ConfigureFonts(fonts => fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"));
+                })));
 
         builder.Services.AddMauiBlazorWebView();
 

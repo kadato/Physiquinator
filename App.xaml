@@ -13,12 +13,10 @@
 
             <Style TargetType="Label">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
             </Style>
 
             <Style TargetType="Button">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryButtonTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
                 <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonBackgroundColor}" />
                 <Setter Property="Padding" Value="14,10" />
             </Style>

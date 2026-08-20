@@ -1,6 +1,8 @@
 .plan-card {
     width: 100%;
     border-radius: 16px;
+    contain: layout style;
+    transition: border-color 150ms ease;
 }
 
 .plan-card__content {

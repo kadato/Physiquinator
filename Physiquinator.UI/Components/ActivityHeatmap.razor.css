@@ -65,6 +65,7 @@ button.heatmap-cell {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     position: relative;
+    contain: paint layout;
 }
 
 /* The visible "dot": the button provides the full 24px touch target, the
@@ -78,7 +79,8 @@ button.heatmap-cell::before {
     background-color: var(--mud-palette-background-gray);
     opacity: 0.62;
     border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
-    transition: transform 0.12s ease;
+    transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1);
+    transform: translateZ(0);
 }
 
 button.heatmap-cell:disabled {
@@ -86,11 +88,11 @@ button.heatmap-cell:disabled {
 }
 
 button.heatmap-cell:hover::before {
-    transform: scale(1.25);
+    transform: scale(1.25) translateZ(0);
 }
 
 button.heatmap-cell:active::before {
-    transform: scale(1.4);
+    transform: scale(1.35) translateZ(0);
 }
 
 button.heatmap-cell.heatmap-off::before {

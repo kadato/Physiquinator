@@ -1,5 +1,5 @@
 
-<MudCard Class="plan-card" Elevation="0">
+<MudCard Class="plan-card" Elevation="0" data-plan-index="@(PlanIndex.ToString("D2"))">
     <MudCardContent Class="plan-card__content">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2" Class="plan-card__row">
             <button type="button"
@@ -9,7 +9,10 @@
             </button>
             <MudStack Spacing="0" Class="plan-card__info">
                 <MudText Typo="Typo.subtitle1" Class="plan-card-name">@PlanName</MudText>
-                <MudText Typo="Typo.caption" Class="mud-text-secondary">@ExerciseCountLabel@LastDoneSuffix</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__meta">
+                    <span class="mono-token" aria-hidden="true">@PlanIndex.ToString("D2") • @ExerciseCountLabel</span>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@LastDoneSuffix.TrimStart(' ', '·')</MudText>
+                </MudStack>
             </MudStack>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__actions">
                 <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
@@ -41,6 +44,7 @@
     [Parameter] public string PlanName { get; set; } = "";
     [Parameter] public int ExerciseCount { get; set; }
     [Parameter] public string LastDoneLabel { get; set; } = "";
+    [Parameter] public int PlanIndex { get; set; } = 1;
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnEdit { get; set; }
     [Parameter] public EventCallback OnExport { get; set; }

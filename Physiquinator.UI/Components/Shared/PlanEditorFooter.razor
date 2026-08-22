@@ -1,6 +1,6 @@
 @* Plan Editor FABs *@
 
-@* Save — bottom-right primary FAB *@
+@* Save FAB, bottom-right primary *@
 <MudIconButton Class="@SaveFabClasses"
                Icon="@Icons.Material.Filled.Check"
                OnClick="OnSave"
@@ -8,14 +8,14 @@
 
 @if (!IsNew)
 {
-    @* Export — mini FAB above Save *@
+    @* Export mini FAB above Save *@
     <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--br-2"
                    Icon="@Icons.Material.Filled.Upload"
                    OnClick="OnExport"
                    aria-label="@("Export plan")" />
 }
 
-@* Cancel — bottom-left secondary mini FAB *@
+@* Cancel FAB, bottom-left secondary mini *@
     <MudIconButton Class="app-fab app-fab--secondary app-fab--mini app-fab--bl-1"
                    Icon="@Icons.Material.Filled.ArrowBack"
                    OnClick="OnCancel"

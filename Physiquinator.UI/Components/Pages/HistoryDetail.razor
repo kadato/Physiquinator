@@ -21,6 +21,7 @@
     {
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">@("Copy")</MudButton>
         <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">@("Share")</MudButton>
+        <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline" Color="Color.Error" OnClick="DeleteSessionClick" aria-label="@("Delete workout")" />
     }
 </PageHeader>
 
@@ -50,12 +51,20 @@ else
             {
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">@("In progress")</MudText>
             }
-            @if (_planGuid is { } planId)
-            {
-                <MudButton Variant="Variant.Outlined" Class="mt-2 premium-btn premium-btn-outlined" OnClick="@(() => GoPlan(planId))">
-                    @("Open plan")
-                </MudButton>
-            }
+            <div class="d-flex align-items-center gap-2 mt-2">
+                @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@(() => ContinueWorkout(activePlanId))">
+                        @("Continue workout")
+                    </MudButton>
+                }
+                @if (_planGuid is { } planId)
+                {
+                    <MudButton Variant="Variant.Outlined" Class="premium-btn premium-btn-outlined" OnClick="@(() => GoPlan(planId))">
+                        @("Open plan")
+                    </MudButton>
+                }
+            </div>
 
             @if (_sets.Count > 0)
             {
@@ -80,15 +89,19 @@ else
                     <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
                     <MudText Typo="Typo.h6" Class="settings-card__title">@("Progress by exercise")</MudText>
                 </div>
-                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <div class="progress-exercise-grid">
                     @foreach (var name in _distinctExerciseNames)
                     {
                         var exercise = name;
-                        <MudChip T="string" Variant="Variant.Outlined" Class="exercise-chip" OnClick="@(() => GoExerciseProgress(pg, exercise))">
-                            @exercise
-                        </MudChip>
+                        <button type="button"
+                                class="progress-exercise-card"
+                                aria-label="@(string.Format("View progress for {0}", exercise))"
+                                @onclick="@(() => GoExerciseProgress(pg, exercise))">
+                            <span class="progress-exercise-card__name">@exercise</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="progress-exercise-card__chevron" />
+                        </button>
                     }
-                </MudStack>
+                </div>
             </MudPaper>
         }
 
@@ -154,12 +167,12 @@ else
                     {
                         var context = set;
                         <div @key="context.Id" class="infinite-table-row @(_editMode ? "infinite-table-row--5" : "infinite-table-row--4x")">
-                            <span>
+                            <span class="history-detail-exercise-cell">
+                                <span class="history-detail-exercise-name">@context.ExerciseName</span>
                                 @if (context.IsWarmup)
                                 {
                                     <span class="history-detail-warmup-badge">@("Warm-up")</span>
                                 }
-                                @context.ExerciseName
                             </span>
                             @if (_editingSetId == context.Id)
                             {
@@ -169,6 +182,8 @@ else
                                            inputmode="numeric"
                                            min="0"
                                            step="1"
+                                           autocomplete="off"
+                                           enterkeyhint="done"
                                            value="@_editRepsText"
                                            aria-label="@("Reps")"
                                            @onchange="OnEditRepsChanged" />
@@ -185,6 +200,8 @@ else
                                                inputmode="decimal"
                                                min="0"
                                                step="@WeightStep"
+                                               autocomplete="off"
+                                               enterkeyhint="done"
                                                value="@_editWeightText"
                                                aria-label="@(string.Format("Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)))"
                                                @onchange="OnEditWeightChanged" />
@@ -247,22 +264,6 @@ else
         }
 
     </MudStack>
-
-    @* HistoryDetail FABs *@
-    @* Delete — mini error FAB bottom-left, stacked above back FAB *@
-    <MudIconButton Class="app-fab app-fab--error app-fab--mini app-fab--bl-2"
-                   Icon="@Icons.Material.Filled.Delete"
-                   OnClick="DeleteSessionClick"
-                   aria-label="@("Delete this workout")" />
-
-    @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId2)
-    {
-        @* Continue Workout — primary FAB bottom-right *@
-        <MudIconButton Class="app-fab app-fab--primary app-fab--br-1"
-                       Icon="@Icons.Material.Filled.PlayArrow"
-                       OnClick="@(() => ContinueWorkout(activePlanId2))"
-                       aria-label="@("Continue workout")" />
-    }
 
     @* Off-screen share card, captured to PNG by the Share button. *@
     <WorkoutShareCard PlanName="@_session.PlanName"
@@ -484,7 +485,7 @@ else
 
         if (_distinctExerciseNames.Count == 0)
         {
-            Snackbar.Add("No exercises to add a set to.", Severity.Info);
+            Snackbar.Add("Add an exercise first.", Severity.Info);
             return;
         }
 

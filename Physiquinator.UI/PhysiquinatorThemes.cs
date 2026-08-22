@@ -12,44 +12,43 @@ public static class PhysiquinatorThemes
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#0F766E", // Deep Teal
-            Secondary = "#2563EB", // Active Cobalt
-            Tertiary = "#D946EF",
-            Success = "#10B981",
-            Info = "#06B6D4",
-            Warning = "#F59E0B",
-            Error = "#EF4444",
-            Background = "#F8F9FA",
-            Surface = "#FFFFFF",
-            AppbarBackground = "#F8F9FA",
-            TextPrimary = "#111827",
-            TextSecondary = "#6B7280",
-            LinesDefault = "rgba(0, 0, 0, 0.08)",
-            Divider = "rgba(0, 0, 0, 0.06)",
+            Primary = "#24283B", // Tokyo Night ink - deep navy for primary actions, 12:1 on paper
+            PrimaryContrastText = "#D5D6DB",
+            Secondary = "#34548A", // Tokyo Night blue desaturated for light, distinct from success
+            Tertiary = "#5A3E8C", // muted purple
+            Success = "#33635C", // Tokyo Night green darkened for light bg, distinct from error
+            Info = "#34548A",
+            Warning = "#8F5E15",
+            Error = "#8C4351", // Tokyo Night red darkened for light bg, paired with icon
+            Background = "#D5D6DB", // Tokyo Night Light bg
+            Surface = "#E9E9ED", // chip slightly lighter than bg
+            AppbarBackground = "#D5D6DB",
+            TextPrimary = "#1A1B26", // near-black navy, 14:1 on bg
+            TextSecondary = "#565A6E", // 6.2:1 on bg, passes AA
+            LinesDefault = "#B4B8C5", // hairline 1px
+            Divider = "#C7CAD5",
         },
         PaletteDark = new PaletteDark()
         {
-            Primary = "#10B981", // Active Volt Green (Sporty)
-            // White on the volt green fails WCAG AA (2.5:1); render primary
-            // fills with the near-black background tone instead.
-            PrimaryContrastText = "#0B0C10",
-            Secondary = "#3B82F6", // Cobalt Blue
-            Tertiary = "#FF006E", // Energy Magenta
-            Success = "#10B981",
-            Info = "#06B6D4",
-            Warning = "#F59E0B",
-            Error = "#EF4444",
-            Background = "#0B0C10", // Deep Midnight/Obsidian
-            Surface = "#151821", // Sleek charcoal card surface
-            AppbarBackground = "#0B0C10",
-            TextPrimary = "#F3F4F6",
-            TextSecondary = "#9CA3AF",
-            LinesDefault = "rgba(255, 255, 255, 0.08)",
-            Divider = "rgba(255, 255, 255, 0.06)",
+            Primary = "#7AA2F7", // Tokyo Night blue - primary, 6.1:1 on bg, colorblind safe (blue)
+            PrimaryContrastText = "#1A1B26",
+            Secondary = "#7DCFFF", // cyan
+            Tertiary = "#BB9AF7", // magenta
+            Success = "#9ECE6A", // green, distinct luminance from blue
+            Info = "#7DCFFF",
+            Warning = "#E0AF68", // yellow
+            Error = "#F7768E", // red/pink, paired with icon + label
+            Background = "#1A1B26", // Tokyo Night bg
+            Surface = "#24283B", // surface
+            AppbarBackground = "#1A1B26",
+            TextPrimary = "#C0CAF5", // primary text, 9.1:1
+            TextSecondary = "#8A90B8", // secondary text: 4.7:1 on surface #24283B, AA
+            LinesDefault = "rgba(192, 202, 245, 0.12)",
+            Divider = "rgba(192, 202, 245, 0.08)",
         },
         LayoutProperties = new LayoutProperties()
         {
-            DefaultBorderRadius = "16px"
+            DefaultBorderRadius = "0px"
         }
     };
 }

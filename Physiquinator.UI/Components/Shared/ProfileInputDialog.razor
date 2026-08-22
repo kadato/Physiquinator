@@ -2,7 +2,7 @@
 <MudDialog>
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault>
-            <MudTextField T="string" Label="@("Profile name")" Value="@Name" ValueChanged="OnNameChanged" Required="true" Immediate="true" AutoFocus="true"
+            <MudTextField T="string" Variant="Variant.Outlined" Label="@("Profile name")" Value="@Name" ValueChanged="OnNameChanged" Required="true" Immediate="true" AutoFocus="true"
                           autocapitalize="words" autocomplete="off" enterkeyhint="done" />
         </form>
     </DialogContent>

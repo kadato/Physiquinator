@@ -41,7 +41,7 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Size="Size.Small" />
                                 <MudText Typo="Typo.body2">
                                     <strong>@pr.ExerciseName</strong>
-                                    <span class="mud-text-secondary"> — @pr.Message</span>
+                                    <span class="mud-text-secondary">, @pr.Message</span>
                                 </MudText>
                             </div>
                         }
@@ -51,7 +51,7 @@
             else
             {
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                    @("No personal records this time. Keep pushing — they are shown here whenever you beat your best.")
+                    @("No new personal records this session.")
                 </MudText>
             }
         </MudStack>

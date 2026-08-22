@@ -17,9 +17,9 @@
                 <MudAutocomplete T="string"
                                  Value="_name"
                                  id="exercise-sheet-name-input"
-                                 Variant="Variant.Filled"
+                                 Variant="Variant.Outlined"
                                  Label="@("Exercise name")"
-                                 Placeholder="@("e.g. Bench press")"
+                                 Placeholder="@("For example, bench press")"
                                  SearchFunc="SearchExerciseNamesAsync"
                                  ValueChanged="OnNameChanged"
                                  CoerceValue="false"
@@ -29,12 +29,12 @@
                                  autocapitalize="words"
                                  @onfocus="OnExerciseNameFocus" />
                 <MudText Typo="Typo.caption" Class="plan-exercise-sheet__catalog-hint">
-                    @("Suggestions include the built-in exercise catalog.")
+                    @("Type to search the built-in exercise catalog.")
                 </MudText>
 
             <MudSelect Value="_logType"
                        ValueChanged="OnLogTypeChanged"
-                       Variant="Variant.Filled"
+                       Variant="Variant.Outlined"
                        Label="@("Exercise type")"
                        Class="mb-2"
                        T="ExerciseLogType">
@@ -72,7 +72,7 @@
             <MudSelect T="string"
                        Value="_supersetGroupId"
                        ValueChanged="OnSupersetGroupChanged"
-                       Variant="Variant.Filled"
+                       Variant="Variant.Outlined"
                        Label="@("Superset group")"
                        Class="mb-2"
                        HelperText="@("Exercises in the same group are logged back-to-back without rest.")">

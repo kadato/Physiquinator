@@ -4,22 +4,40 @@
 
 <MudPaper Class="@PanelClass" Elevation="0">
     <div class="rest-timer-active">
-        <div class="rest-timer-display">
+        <div class="rest-timer-display @(IsRestComplete ? "rest-timer-display--complete" : "")">
             @if (IsRestComplete)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Check"
-                         Class="rest-timer-check"
-                         aria-hidden="true" />
+                <div class="rest-timer-complete-content">
+                    <span class="rest-timer-complete-icon-box">
+                        <MudIcon Icon="@Icons.Material.Filled.AlarmOn"
+                                 Class="rest-timer-complete-icon"
+                                 aria-hidden="true" />
+                    </span>
+                    <div class="rest-timer-complete-text">
+                        <span class="rest-timer-complete-title">TIME'S UP!</span>
+                        <span class="rest-timer-complete-subtitle">READY FOR NEXT SET</span>
+                    </div>
+                </div>
             }
             else
             {
                 @* Ticking digits are aria-hidden: the live region below
                    announces transitions instead of every second. *@
-                <div class='rest-timer-digits @DigitsClass @(60 > RestSecondsRemaining ? "rest-timer-digits--seconds-only" : "") @(10 > RestSecondsRemaining ? "rest-timer-digits--single-digit" : "")' role="timer" aria-hidden="true">
-                    <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(RestSecondsRemaining)</span>
-                    <span class="rest-timer-separator">:</span>
-                    <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(RestSecondsRemaining)</span>
-                    <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(RestSecondsRemaining)</span>
+                <div class='rest-timer-digits @DigitsClass' role="timer" aria-hidden="true">
+                    @if (RestSecondsRemaining >= 60)
+                    {
+                        <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(RestSecondsRemaining)</span>
+                        <span class="rest-timer-separator" aria-hidden="true">
+                            <span class="timer-dot"></span>
+                            <span class="timer-dot"></span>
+                        </span>
+                        <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(RestSecondsRemaining)</span>
+                        <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(RestSecondsRemaining)</span>
+                    }
+                    else
+                    {
+                        <span class="rest-timer-unit">@FormatSecondsCompact(RestSecondsRemaining)</span>
+                    }
                 </div>
             }
         </div>
@@ -160,9 +178,11 @@
         return $"{m}:{s:D2}";
     }
 
-    private static string FormatMinutes(int totalSeconds) => $"{totalSeconds / 60:D2}";
+    private static string FormatMinutes(int totalSeconds) => $"{totalSeconds / 60}";
 
     private static string FormatSecondsTens(int totalSeconds) => $"{totalSeconds % 60 / 10}";
 
     private static string FormatSecondsUnits(int totalSeconds) => $"{totalSeconds % 60 % 10}";
+
+    private static string FormatSecondsCompact(int totalSeconds) => $"{totalSeconds % 60}";
 }

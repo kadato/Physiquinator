@@ -6,13 +6,13 @@
     border-radius: 0;
     background: transparent;
     border: none;
-    --heatmap-cell-size: 24px;
+    --heatmap-cell-size: 26px;
     --heatmap-gap: 3px;
 }
 
 .heatmap-labels {
     display: grid;
-    grid-template-rows: repeat(7, var(--heatmap-cell-size, 24px));
+    grid-template-rows: repeat(7, var(--heatmap-cell-size, 26px));
     gap: var(--heatmap-gap, 3px);
     align-items: center;
     padding: 2px 0;
@@ -24,8 +24,7 @@
     min-width: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-    padding-right: env(safe-area-inset-right, 0);
+    padding: 4px 16px 8px 4px;
     overscroll-behavior-x: contain;
 }
 
@@ -33,19 +32,23 @@
     display: grid;
     gap: var(--heatmap-gap, 3px);
     align-items: center;
-    min-width: min-content;
-    padding: 2px;
-    padding-right: 4px;
+    width: max-content;
+    padding: 4px 12px 4px 4px;
 }
 
+/* Semantic row wrappers must not break the grid layout. */
+.heatmap-row { display: contents; }
+
 .heatmap-day-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    line-height: var(--heatmap-cell-size, 24px);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pl-stone);
+    line-height: var(--heatmap-cell-size, 26px);
     text-align: end;
-    color: var(--mud-palette-text-secondary);
-    letter-spacing: 0.02em;
-    height: var(--heatmap-cell-size, 24px);
+    height: var(--heatmap-cell-size, 26px);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -53,11 +56,11 @@
 }
 
 button.heatmap-cell {
-    width: var(--heatmap-cell-size, 24px);
-    height: var(--heatmap-cell-size, 24px);
-    border: none;
-    background: transparent;
-    border-radius: 6px;
+    width: var(--heatmap-cell-size, 26px);
+    height: var(--heatmap-cell-size, 26px);
+    border: var(--hairline);
+    background: var(--pl-chip-2);
+    border-radius: var(--radius);
     box-sizing: border-box;
     padding: 0;
     margin: 0;
@@ -65,77 +68,84 @@ button.heatmap-cell {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     position: relative;
-    contain: paint layout;
-}
-
-/* The visible "dot": the button provides the full 24px touch target, the
-   pseudo-element draws the compact cell visual inside it. */
-button.heatmap-cell::before {
-    content: '';
-    position: absolute;
-    inset: 20%;
-    border-radius: 3px;
-    box-sizing: border-box;
-    background-color: var(--mud-palette-background-gray);
-    opacity: 0.62;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-text-primary) 15%, transparent);
-    transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1);
-    transform: translateZ(0);
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
 button.heatmap-cell:disabled {
     cursor: default;
 }
 
-button.heatmap-cell:hover::before {
-    transform: scale(1.25) translateZ(0);
+/* Extend the touch target into the grid gap without changing the visual cell */
+button.heatmap-cell::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
 }
 
-button.heatmap-cell:active::before {
-    transform: scale(1.35) translateZ(0);
+button.heatmap-cell:hover {
+    transform: scale(1.15);
+    z-index: 2;
 }
 
-button.heatmap-cell.heatmap-off::before {
-    background-color: var(--mud-palette-background-gray);
-    opacity: 0.62;
+button.heatmap-cell:active {
+    transform: scale(1.25);
+    z-index: 2;
 }
 
-button.heatmap-cell.heatmap-on::before {
-    background-color: var(--mud-palette-primary);
-    opacity: 0.9;
+button.heatmap-cell.heatmap-off {
+    background: var(--pl-chip-2);
+    border-color: var(--pl-hairline);
 }
 
-button.heatmap-cell.heatmap-missed::before {
-    border: 1.5px dashed var(--mud-palette-warning);
-    background-color: transparent;
-    opacity: 0.9;
+button.heatmap-cell.heatmap-on {
+    background: var(--pl-ink);
+    border-color: var(--pl-ink);
 }
 
-button.heatmap-cell.heatmap-scheduled::before {
-    border-radius: 50%;
+button.heatmap-cell.heatmap-scheduled {
+    border-style: dashed;
+    border-color: var(--pl-stone);
+}
+
+button.heatmap-cell.heatmap-planned {
+    background: var(--pl-chip-2);
+    border-color: var(--pl-stone);
 }
 
 button.heatmap-cell.heatmap-planned::before {
-    background-color: transparent;
-    border: 1.5px solid var(--mud-palette-primary);
+    content: '';
+    position: absolute;
+    inset: 32%;
     border-radius: 50%;
-    opacity: 0.9;
+    background: var(--pl-ink);
 }
 
-/* Today: a ring around the whole cell so the current day stands out
-   regardless of whether the dot is filled. */
+button.heatmap-cell.heatmap-missed {
+    border-color: var(--pl-err-text);
+    background: repeating-linear-gradient(-45deg, transparent 0 3px, color-mix(in srgb, var(--pl-err-text) 22%, transparent) 3px 5px);
+}
+
 button.heatmap-cell.heatmap-today {
-    box-shadow: inset 0 0 0 2px var(--mud-palette-text-primary);
+    box-shadow: inset 0 0 0 2px var(--pl-warn-text);
 }
 
-button.heatmap-cell.heatmap-selected::before {
-    box-shadow: 0 0 0 2px var(--mud-palette-primary);
+button.heatmap-cell.heatmap-selected {
+    border-color: var(--pl-ink);
+    box-shadow: inset 0 0 0 3px var(--pl-ink);
+}
+
+button.heatmap-cell.heatmap-today.heatmap-selected {
+    box-shadow: inset 0 0 0 2px var(--pl-ink), inset 0 0 0 4px var(--pl-warn-text);
 }
 
 @media (max-width: 576px) {
     .activity-heatmap {
-        --heatmap-cell-size: 24px;
+        --heatmap-cell-size: 28px;
         --heatmap-gap: 4px;
         gap: 6px;
     }
+}
+@media (hover: none) and (pointer: coarse) {
+    .activity-heatmap { --heatmap-cell-size: 32px; --heatmap-gap: 6px; }
+    button.heatmap-cell { min-width: 32px; min-height: 32px; }
 }

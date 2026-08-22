@@ -11,14 +11,14 @@
         <form @onsubmit="Confirm" @onsubmit:preventDefault>
             <MudStack Spacing="2" Class="py-2">
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                    @DateLabel — @UnitSuffix
+                    @DateLabel, @UnitSuffix
                 </MudText>
                 <MudTextField T="string"
                               Label="@("Bodyweight")"
-                              Variant="Variant.Filled"
+                              Variant="Variant.Outlined"
                               InputMode="@((InputMode)2)"
                               @bind-Value="_valueText"
-                              Placeholder="@("e.g. 80.5")"
+                              Placeholder="@("For example 80.5")"
                               enterkeyhint="done" />
             </MudStack>
             <div class="mud-dialog-actions">

@@ -83,6 +83,7 @@
     @if (_summary != null)
     {
         <MudPaper Class="pa-4 home-heatmap-panel" Elevation="0">
+            <div class="heatmap-legend" role="note" aria-label="Heatmap legend weeks 01 to 53, today hollow circle, scheduled dashed, missed error hatch"><span>WEEKS 01—53</span><span class="hm-key"><i class="hm-glyph hm-glyph--today"></i>TODAY</span><span class="hm-key"><i class="hm-glyph hm-glyph--scheduled"></i>SCHEDULED</span><span class="hm-key"><i class="hm-glyph hm-glyph--missed"></i>MISSED</span></div>
             <ActivityHeatmap CountsByDay="_activityByDay"
                              Weeks="@HomeStatsWeeks"
                              EndLocal="@_homeHeatmapEndLocal"
@@ -92,17 +93,35 @@
 
     <section aria-label="@("Your plans")">
         <div class="home-plans-header">
-            <MudText Typo="Typo.h2" Class="home-plans-header__title">@("Your plans")</MudText>
-            @if (_plans != null && _plans.Count > 0)
-            {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
-            }
+            <div class="home-plans-header__title-group">
+                <MudText Typo="Typo.h2" Class="home-plans-header__title">@("Your plans")</MudText>
+                @if (_plans != null && _plans.Count > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
+                }
+            </div>
+            <div class="home-plans-header__actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Class="home-plans-new-btn"
+                           OnClick="@(() => Navigation.NavigateTo(AppRoutes.PlanEditor))">
+                    @("New plan")
+                </MudButton>
+            </div>
         </div>
 
         @if (_plans == null || !_plans.Any())
         {
-            <EmptyState Message="@("No plans yet. Tap 'New plan' below to create your first workout plan.")"
+            <EmptyState Message="@("No plans yet. Create your first workout plan to get started.")"
                         Icon="@Icons.Material.Outlined.FitnessCenter">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(() => Navigation.NavigateTo(AppRoutes.PlanEditor))">
+                    @("New plan")
+                </MudButton>
             </EmptyState>
         }
         else
@@ -117,6 +136,7 @@
                     <PlanCard PlanName="@plan.Name"
                               ExerciseCount="@plan.Exercises.Count"
                               LastDoneLabel="@LastDoneLabelFor(plan.Id)"
+                              PlanIndex="@(i + 1)"
                               CanMoveUp="@(i > 0)"
                               CanMoveDown="@(i < sortedPlans.Count - 1)"
                               OnMoveUp="@(() => MovePlanAsync(plan.Id, -1))"
@@ -132,40 +152,13 @@
     }
 </MudStack>
 
-@* FABs: New Plan (bottom-right primary) and AI Chat (above it, if enabled) *@
-<button type="button"
-        class="app-fab app-fab--primary app-fab--br-1 app-fab--extended"
-        aria-label="@("New plan")"
-        @onclick="() => Navigation.NavigateTo(AppRoutes.PlanEditor)">
-    <MudIcon Icon="@Icons.Material.Filled.Add" />
-    <span class="app-fab__label">@("New plan")</span>
-</button>
-
-@if (_aiNeedsKeyHint)
-{
-    <MudAlert Severity="Severity.Warning" Class="home-ai-hint">
-        <div class="d-flex align-items-center gap-2">
-            <div class="flex-grow-1">
-                @("The AI assistant is enabled, but no API key is set yet.")
-            </div>
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Warning"
-                       Class="flex-shrink-0"
-                       OnClick="GoToAiSettings">
-                @("Open settings")
-            </MudButton>
-        </div>
-    </MudAlert>
-}
-
 @if (AiAssistant.GetSettings().Enabled)
 {
     <button type="button"
-            class="app-fab app-fab--secondary app-fab--br-2 app-fab--extended"
+            class="app-fab app-fab--secondary app-fab--br-1"
             aria-label="@("AI assistant")"
             @onclick="OpenAiChatAsync">
         <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
-        <span class="app-fab__label">@("AI assistant")</span>
     </button>
 }
 
@@ -494,22 +487,5 @@
         };
         await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
     }
-
-    private bool _aiNeedsKeyHint
-    {
-        get
-        {
-            var settings = AiAssistant.GetSettings();
-            return settings.Enabled
-                   && settings.Provider != AiProviderType.OllamaLocal
-                   && string.IsNullOrWhiteSpace(settings.ApiKey);
-        }
-    }
-
-    private void GoToAiSettings() => Navigation.NavigateTo(AppRoutes.Settings);
-
-
-
-
 }
 

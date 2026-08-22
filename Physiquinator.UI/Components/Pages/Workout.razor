@@ -41,7 +41,7 @@ else
             <MudAlert Severity="Severity.Warning" Class="mt-2">
                 <div class="d-flex align-center gap-2">
                     <div class="flex-grow-1">
-                        @("Enable \\\"Display over other apps\\\" so the floating rest timer shows when you leave the app.")
+                        @("Enable \"Display over other apps\" so the floating rest timer shows when you leave the app.")
                     </div>
                     <MudButton Variant="Variant.Text"
                                Color="Color.Warning"
@@ -53,7 +53,7 @@ else
             </MudAlert>
         }
 
-        <div class="workout-top">
+        <div class="workout-top @(SessionService.IsResting || _isRestComplete ? "workout-top--with-timer" : "")">
             @if (_sessionStartedAtUtc != default)
             {
                 <div class="workout-session-stats">
@@ -666,8 +666,9 @@ else
 
         SessionService.RemapExerciseIndexes(mapping);
 
-        // Keep only the top exercise expanded after a reorder.
-        _activeExerciseIndex = 0;
+        // Keep only the topmost upcoming exercise expanded after a reorder.
+        RefreshExerciseProgress();
+        _activeExerciseIndex = UpcomingExercises.FirstOrDefault()?.ExerciseIndex ?? -1;
 
         try
         {

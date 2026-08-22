@@ -5,6 +5,10 @@
 @inject WeightUnitService WeightUnitService
 
 <MudCard Class="@CardClass" @key="Exercise.Id" data-exercise-index="@ExerciseIndex">
+    <div class="exercise-card-edge-track" aria-hidden="true">
+        <div class="exercise-card-edge-fill @(IsCompleted ? "exercise-card-edge-fill--complete" : "")"
+             style="width: @(GetProgressValue(CompletedSetsCount, Exercise.TotalSetCount).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+    </div>
     <button type="button" class="@HeaderClass" @onclick="@OnHeaderClick"
             aria-expanded="@(IsExpanded ? "true" : "false")"
             aria-controls="@($"exercise-content-{ExerciseIndex}")">
@@ -30,7 +34,7 @@
             @if (CanMoveUp || CanMoveDown || !IsCompleted)
             {
                 <div @onclick:stopPropagation="true" class="exercise-more-menu">
-                    <MudMenu>
+                    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
                         <ActivatorContent>
                             <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
                                            Size="Size.Small"
@@ -64,9 +68,7 @@
     @if (IsExpanded && !IsCompleted)
     {
         <MudCardContent Class="pt-0" id="@($"exercise-content-{ExerciseIndex}")">
-            <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue(CompletedSetsCount, Exercise.TotalSetCount)" Class="mb-3" />
-
-                <div class="set-logging-rows">
+            <div class="set-logging-rows">
                     @{
                         var activeSetIndex = ActiveSetIndex >= Exercise.TotalSetCount ? 0 : ActiveSetIndex;
                         var inputs = GetInputs(ExerciseIndex, activeSetIndex);
@@ -76,41 +78,49 @@
                     }
 
                     <div class="set-active-panel">
-                        @if (isWarmupActive)
-                        {
-                            <span class="warmup-chip">Warm-up</span>
-                        }
-                        <div class="set-stepper-rows">
-                            @if (Exercise.LogType != ExerciseLogType.Duration)
+                        <div class="set-active-panel__header">
+                            @if (isWarmupActive)
                             {
-                                <SetMetricStepper Value="@ToDisplayWeight(inputs.Weight)"
-                                                  ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, ToKgWeight(val))))"
-                                                  Step="@WeightStep"
-                                                  Min="@WeightMin"
-                                                  IsInteger="false"
-                                                  Format="0.##"
-                                                  Compact="true"
-                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : UnitSuffix)'
-                                                  CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
-                                                  Placeholder="@ToDisplayWeight(defaultWeight)" />
+                                <span class="warmup-chip">@(string.Format("Warm-up {0}", activeSetIndex + 1))</span>
                             }
-                            <SetMetricStepper Value="@((double?)inputs.Reps)"
-                                              ValueChanged="@(val => OnRepsChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
-                                              Step="1"
-                                              Min="1"
-                                              IsInteger="true"
-                                              Format="0"
-                                              Compact="true"
-                                              Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "s" : "reps")'
-                                              Placeholder="@((double)defaultReps)" />
+                            else
+                            {
+                                <span class="set-active-panel__label">@(string.Format("Set {0}", activeSetIndex + 1))</span>
+                            }
                         </div>
-                        <button type="button"
-                                class="log-set-btn"
-                                @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, activeSetIndex)))"
-                                disabled="@IsCompleting"
-                                aria-label="Log set">
-                            <MudIcon Icon="@Icons.Material.Filled.Check" />
-                        </button>
+                        <div class="set-active-panel__controls">
+                            <div class="set-stepper-rows">
+                                @if (Exercise.LogType != ExerciseLogType.Duration)
+                                {
+                                    <SetMetricStepper Value="@ToDisplayWeight(inputs.Weight)"
+                                                      ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, ToKgWeight(val))))"
+                                                      Step="@WeightStep"
+                                                      Min="@WeightMin"
+                                                      IsInteger="false"
+                                                      Format="0.##"
+                                                      Compact="true"
+                                                      Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : UnitSuffix)'
+                                                      CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
+                                                      Placeholder="@ToDisplayWeight(defaultWeight)" />
+                                }
+                                <SetMetricStepper Value="@((double?)inputs.Reps)"
+                                                  ValueChanged="@(val => OnRepsChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
+                                                  Step="1"
+                                                  Min="1"
+                                                  IsInteger="true"
+                                                  Format="0"
+                                                  Compact="true"
+                                                  Unit='@(Exercise.LogType == ExerciseLogType.Duration ? "s" : "reps")'
+                                                  Placeholder="@((double)defaultReps)" />
+                            </div>
+                            <button type="button"
+                                    class="log-set-btn"
+                                    @onclick="@(() => OnToggleSet.InvokeAsync((ExerciseIndex, activeSetIndex)))"
+                                    disabled="@IsCompleting"
+                                    aria-label="@(string.Format("Log set {0} for {1}", activeSetIndex + 1, Exercise.Name))">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                            </button>
+                        </div>
                     </div>
                 </div>
         </MudCardContent>

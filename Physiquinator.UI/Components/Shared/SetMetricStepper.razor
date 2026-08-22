@@ -8,32 +8,12 @@
                 class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(-1))"
                 aria-label="@(string.Format("Decrease {0}", Label))">&#x2212;</button>
-        @if (_editing)
-        {
-            <div class="set-metric-stepper__edit-form">
-                <input @ref="_inputRef"
-                       class="set-metric-stepper__input set-metric-stepper__input--compact"
-                       type="number"
-                       inputmode="@InputMode"
-                       min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                       step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                       placeholder="@PlaceholderText"
-                       autocapitalize="off"
-                       autocomplete="off"
-                       spellcheck="false"
-                       enterkeyhint="done"
-                       aria-label="@EditInputAriaLabel"
-                       @bind="EditText"
-                       @bind:event="oninput"
-                       @onblur="CommitEdit"
-                       @onkeydown="OnEditKeyDown" />
-            </div>
-        }
-        else
-        {
+        <div class="set-metric-stepper__value-slot set-metric-stepper__value-slot--compact">
             <button @ref="_valueButtonRef"
                     type="button"
-                    class="set-metric-stepper__value set-metric-stepper__value--compact"
+                    class="set-metric-stepper__value set-metric-stepper__value--compact @(_editing ? "set-metric-stepper__value--hidden" : "")"
+                    aria-hidden="@_editing"
+                    tabindex="@(_editing ? -1 : 0)"
                     aria-label="@ValueButtonAriaLabel"
                     @onclick="StartEdit"
                     data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
@@ -46,7 +26,28 @@
                     <span class="set-metric-stepper__value-unit"> @Unit</span>
                 }
             </button>
-        }
+            @if (_editing)
+            {
+                <div class="set-metric-stepper__edit-form">
+                    <input @ref="_inputRef"
+                           class="set-metric-stepper__input set-metric-stepper__input--compact"
+                           type="number"
+                           inputmode="@InputMode"
+                           min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                           step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                           placeholder="@PlaceholderText"
+                           autocapitalize="off"
+                           autocomplete="off"
+                           spellcheck="false"
+                           enterkeyhint="done"
+                           aria-label="@EditInputAriaLabel"
+                           @bind="EditText"
+                           @bind:event="oninput"
+                           @onblur="CommitEdit"
+                           @onkeydown="OnEditKeyDown" />
+                </div>
+            }
+        </div>
         <button type="button"
                 class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
                 @onclick="@(() => Adjust(1))"
@@ -65,32 +66,12 @@ else
                        aria-label="@(string.Format("Decrease {0}", Label))">
                 &#x2212;
             </MudButton>
-            @if (_editing)
-            {
-                <div class="set-metric-stepper__edit-form">
-                    <input @ref="_inputRef"
-                           class="set-metric-stepper__input"
-                           type="number"
-                           inputmode="@InputMode"
-                           min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                           step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                           placeholder="@PlaceholderText"
-                           autocapitalize="off"
-                           autocomplete="off"
-                           spellcheck="false"
-                           enterkeyhint="done"
-                           aria-label="@EditInputAriaLabel"
-                           @bind="EditText"
-                           @bind:event="oninput"
-                           @onblur="CommitEdit"
-                           @onkeydown="OnEditKeyDown" />
-                </div>
-            }
-            else
-            {
+            <div class="set-metric-stepper__value-slot">
                 <button @ref="_valueButtonRef"
                         type="button"
-                        class="set-metric-stepper__value"
+                        class="set-metric-stepper__value @(_editing ? "set-metric-stepper__value--hidden" : "")"
+                        aria-hidden="@_editing"
+                        tabindex="@(_editing ? -1 : 0)"
                         aria-label="@ValueButtonAriaLabel"
                         @onclick="StartEdit"
                         data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
@@ -99,7 +80,28 @@ else
                         data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
                     @DisplayText
                 </button>
-            }
+                @if (_editing)
+                {
+                    <div class="set-metric-stepper__edit-form">
+                        <input @ref="_inputRef"
+                               class="set-metric-stepper__input"
+                               type="number"
+                               inputmode="@InputMode"
+                               min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               placeholder="@PlaceholderText"
+                               autocapitalize="off"
+                               autocomplete="off"
+                               spellcheck="false"
+                               enterkeyhint="done"
+                               aria-label="@EditInputAriaLabel"
+                               @bind="EditText"
+                               @bind:event="oninput"
+                               @onblur="CommitEdit"
+                               @onkeydown="OnEditKeyDown" />
+                    </div>
+                }
+            </div>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
@@ -265,7 +267,6 @@ else
         _hasTyped = false;
         _editing = true;
         _shouldFocusInput = true;
-        _jsInitialized = false;
     }
 
     private async Task CommitEdit()

@@ -1,6 +1,9 @@
 .plan-card {
     width: 100%;
-    border-radius: 16px;
+    border-radius: var(--radius);
+    border: var(--hairline);
+    background: var(--pl-chip);
+    box-shadow: none;
     contain: layout style;
     transition: border-color 150ms ease;
 }
@@ -16,8 +19,8 @@
 
 .plan-card-name {
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .plan-card__actions {

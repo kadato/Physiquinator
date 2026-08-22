@@ -41,9 +41,9 @@ else
                         <MudTextField T="string"
                                       Value="PlanName"
                                       ValueChanged="OnPlanNameChanged"
-                                      Variant="Variant.Filled"
+                                      Variant="Variant.Outlined"
                                       Label="@("Plan name")"
-                                      Placeholder="@("e.g. Push day")"
+                                      Placeholder="@("For example, push day")"
                                       Required="true"
                                       RequiredError="@("Plan name is required")"
                                       Immediate="true"
@@ -84,7 +84,7 @@ else
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="FocusAddExercise">
+                                   OnClick="OpenAddExerciseSheetAsync">
                             @("Add exercise")
                         </MudButton>
                     </EmptyState>
@@ -102,7 +102,6 @@ else
 
                 <form @onsubmit="AddExerciseAsync" @onsubmit:preventDefault class="plan-add-exercise">
                     <MudTextField @bind-Value="NewExerciseName"
-                                  @ref="_newExerciseField"
                                   id="new-exercise-input"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
@@ -137,7 +136,6 @@ else
     [Parameter]
     public Guid? PlanId { get; set; }
 
-    private MudTextField<string>? _newExerciseField;
     private bool _formValid;
     private bool _dirty;
     private bool _planLoadComplete;
@@ -240,10 +238,16 @@ else
         Navigation.NavigateTo(AppRoutes.Home);
     }
 
-    private async Task FocusAddExercise()
+    private async Task OpenAddExerciseSheetAsync()
     {
-        if (_newExerciseField != null)
-            await _newExerciseField.FocusAsync();
+        var exercise = new ExercisePlan
+        {
+            Name = "",
+            SetCount = DefaultSetCount,
+            Order = Exercises.Count,
+            RestIntervalSeconds = RestIntervalSeconds
+        };
+        await EditExerciseAsync(exercise, isNew: true, insertAtEnd: true);
     }
 
     private async Task AddExerciseAsync()

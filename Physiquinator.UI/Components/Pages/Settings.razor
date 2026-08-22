@@ -94,7 +94,7 @@
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSelect T="string"
-                               Variant="Variant.Filled"
+                               Variant="Variant.Outlined"
                                Label="@("Light or dark mode")"
                                Value="_preference"
                                ValueChanged="OnThemePreferenceChanged">
@@ -125,7 +125,7 @@
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudSelect T="WeightUnit"
-                               Variant="Variant.Filled"
+                               Variant="Variant.Outlined"
                                Label="@("Weight unit")"
                                Value="_weightUnit"
                                ValueChanged="OnWeightUnitChanged">
@@ -171,7 +171,7 @@
 
                     <MudSwitch T="bool"
                                Class="mt-3"
-                               Label="@("Sound & vibration")"
+                               Label="@("Sound and vibration")"
                                Disabled="!_restAlertsEnabled || !RestNotifications.SupportsNotifications"
                                Value="_restSoundVibrationEnabled"
                                ValueChanged="OnRestSoundVibrationChanged" />
@@ -199,13 +199,13 @@
                             @if (_overlayPermissionGranted)
                             {
                                 <MudText Typo="Typo.body2" Color="Color.Success" Class="mt-1">
-                                    @("Enabled - a draggable bubble shows the rest countdown over other apps while you train.")
+                                    @("When enabled, a draggable bubble shows the rest countdown over other apps while you train.")
                                 </MudText>
                             }
                             else
                             {
                                 <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
-                                    @("The floating bubble needs the \\\"Display over other apps\\\" permission. Without it, no bubble appears when you leave the app during a rest.")
+                                    @("The floating bubble needs the \"Display over other apps\" permission. Without it, no bubble appears when you leave the app during a rest.")
                                 </MudText>
                                 <MudButton Variant="Variant.Outlined"
                                            Color="Color.Primary"
@@ -339,7 +339,7 @@
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title">@("AI Assistant")</span>
-                            <span class="settings-panel__subtitle">@("Configure OpenAI / OpenRouter / Ollama API")</span>
+                            <span class="settings-panel__subtitle">@("Configure AI provider")</span>
                         </span>
                     </div>
                 </TitleContent>
@@ -364,7 +364,7 @@
                         <MudStack Spacing="3" Class="mt-3">
                             <MudSelect T="AiProviderType"
                                        Label="@("Provider preset")"
-                                       Variant="Variant.Filled"
+                                       Variant="Variant.Outlined"
                                        Value="_aiSettings.Provider"
                                        ValueChanged="OnAiProviderChanged">
                                 <MudSelectItem Value="AiProviderType.OpenAI">OpenAI (Official)</MudSelectItem>
@@ -376,13 +376,13 @@
 
                             <MudTextField T="string"
                                           Label="@("API Base URL")"
-                                          Variant="Variant.Filled"
+                                          Variant="Variant.Outlined"
                                           @bind-Value="_aiSettings.BaseUrl"
-                                          HelperText="@("Standard base URL (e.g. https://api.openai.com/v1)")" />
+                                          HelperText="@("Standard base URL, for example https://api.openai.com/v1")" />
 
                             <MudTextField T="string"
                                           Label="@("API Key")"
-                                          Variant="Variant.Filled"
+                                          Variant="Variant.Outlined"
                                           InputType="@(_showApiKey ? InputType.Text : InputType.Password)"
                                           Adornment="Adornment.End"
                                           AdornmentIcon="@(_showApiKey ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
@@ -400,15 +400,15 @@
 
                              <MudTextField T="string"
                                            Label="@("Model Name")"
-                                           Variant="Variant.Filled"
+                                           Variant="Variant.Outlined"
                                            @bind-Value="_aiSettings.ModelName"
-                                           HelperText="@("e.g. gpt-4o-mini, deepseek-v4-flash, kimi-k3. Free text always works.")" />
+                                           HelperText="@("For example gpt-4o-mini or deepseek-v4-flash. Any model name works.")" />
 
                              @if (_availableModels.Count > 0)
                              {
                                  <MudSelect T="string"
                                             Label="@("Fetched models")"
-                                            Variant="Variant.Filled"
+                                            Variant="Variant.Outlined"
                                             Placeholder="@("Pick from the models the provider returned")"
                                             Value="@_pickedFetchedModel"
                                             ValueChanged="OnFetchedModelPicked">
@@ -420,8 +420,8 @@
                              }
 
                             <MudTextField T="string"
-                                          Label="@("Custom instructions / prompt (optional)")"
-                                          Variant="Variant.Filled"
+                                          Label="@("Custom instructions (optional)")"
+                                          Variant="Variant.Outlined"
                                           Lines="2"
                                           @bind-Value="_aiSettings.CustomSystemPrompt"
                                           HelperText="@("Extra instructions passed to the AI assistant")" />
@@ -496,11 +496,11 @@
                         <MudAlert Severity="Severity.Info" Class="mb-3 settings-local-banner">
                             <div class="d-flex align-items-center gap-2">
                                 <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
-                                <span>@("All data stays on this device — no accounts, no cloud sync. Use export to back it up.")</span>
+                                <span>@("All data is stored locally on this device.")</span>
                             </div>
                         </MudAlert>
                         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @("Export") <strong>@("everything")</strong> @("— plans, workout history, bodyweight log, training schedule, and all settings — into one file. Import it to restore everything at once.")
+                            @("Export plans, workout history, bodyweight logs, schedule, and settings into a single backup file.")
                         </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
@@ -516,7 +516,7 @@
                     <MudDivider Class="my-4" />
 
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        @("Export all plans as JSON, or import a file you exported earlier.")
+                        @("Export or import workout plans as JSON.")
                     </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
@@ -535,7 +535,7 @@
                     }
 
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
-                        @("Export or import workout history JSON. Import merges by session and set id.")
+                        @("Export or import workout history JSON. Importing merges sessions by ID.")
                     </MudText>
                     <div class="settings-btn-group">
                         <MudButton Variant="Variant.Outlined"
@@ -581,10 +581,7 @@
                                    Value="_autoCheckEnabled"
                                    ValueChanged="OnAutoCheckEnabledChanged" />
                         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @("When on, the app checks GitHub for a newer release on startup and shows the update popup if one is available. Turn it off to never be notified about updates.")
-                        </MudText>
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @("New releases are published on GitHub and can be installed from here.")
+                            @("Check GitHub for new releases on startup and prompt when an update is available.")
                         </MudText>
                         <div class="settings-btn-group">
                             <MudButton Variant="Variant.Outlined"
@@ -637,14 +634,14 @@
                         <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title">@("Remove all data")</span>
-                            <span class="settings-panel__subtitle">@("Permanently deletes everything on this device")</span>
+                            <span class="settings-panel__subtitle">@("Permanently delete local data on this device")</span>
                         </span>
                     </div>
                 </TitleContent>
             <ChildContent>
                 <div class="settings-panel__content">
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        @("Permanently deletes every plan and workout log on this device. Export backups first if needed.")
+                        @("Permanently delete all plans, logs, and settings on this device. Export a backup first if you want to keep your data.")
                     </MudText>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Error"
@@ -1000,7 +997,7 @@
     {
         RestAlertSettings.SetSoundVibrationEnabled(enabled);
         _restSoundVibrationEnabled = enabled;
-        Snackbar.Add(enabled ? "Sound & vibration on." : "Sound & vibration off.", Severity.Success);
+        Snackbar.Add(enabled ? "Sound and vibration on." : "Sound and vibration off.", Severity.Success);
     }
 
     private void OnAutoCheckEnabledChanged(bool enabled)

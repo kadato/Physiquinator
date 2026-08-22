@@ -21,27 +21,17 @@
     </script>
     <style>
         html[data-theme="dark"] body {
-            background-color: #0B0C10 !important;
-            color: #F3F4F6;
+            background-color: #1A1B26 !important;
+            color: #C0CAF5;
         }
         html[data-theme="light"] body {
-            background-color: #F8F9FA !important;
-            color: #111827;
+            background-color: #D5D6DB !important;
+            color: #1A1B26;
         }
     </style>
-    <!-- Preload the Outfit font subsets so first text paint is not blocked -->
-    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    <link rel="preload" href="_content/Physiquinator.UI/fonts/outfit-latin-ext.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    <!-- Non-render-blocking CSS: load MudBlazor and app-overrides asynchronously to unblock first paint -->
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" media="print" onload="this.media='all'" />
-    <!-- Do not add ?query to href — MAUI static web assets match exact routes only -->
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" media="print" onload="this.media='all'" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" media="print" onload="this.media='all'" />
-    <noscript>
-        <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" media="all" />
-        <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" media="all" />
-        <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" media="all" />
-    </noscript>
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
     <style>
         /* MAUI WebView2 fallback — shell only if stylesheets fail to load */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; box-sizing: border-box; }
@@ -50,7 +40,7 @@
         .app-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; overflow: hidden; }
         .app-main-scroll { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
         .app-tab-bar { flex-shrink: 0; }
-        /* Startup splash fallback - full styling in app-overrides.css */
+        /* Startup splash fallback - full styling in app-overrides.css — tokens match PhysiquinatorThemes.cs */
         .app-splash {
             position: fixed;
             inset: 0;
@@ -63,8 +53,8 @@
             padding: 2rem;
             box-sizing: border-box;
             text-align: center;
-            background-color: #0B0C10;
-            color: #F3F4F6;
+            background-color: #1A1B26;
+            color: #C0CAF5;
         }
         .app-splash__logo {
             display: flex;
@@ -76,14 +66,14 @@
             height: 11.9rem;
         }
         .app-splash__logo svg g {
-            fill: #10B981;
+            fill: #7AA2F7;
         }
         html[data-theme="light"] .app-splash {
-            background-color: #F8F9FA;
-            color: #111827;
+            background-color: #D5D6DB;
+            color: #1A1B26;
         }
         html[data-theme="light"] .app-splash__logo svg g {
-            fill: #047857;
+            fill: #24283B;
         }
     </style>
     <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg" />
@@ -99,7 +89,7 @@
         <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
             <div class="app-splash__logo" aria-hidden="true">
                 <svg viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="#10B981" transform="translate(60,60) scale(10.5)">
+                    <g fill="#7AA2F7" transform="translate(60,60) scale(10.5)">
                         <circle cx="16" cy="5.6" r="3.4" />
                         <path d="M12.6,4.6 C12.6,2.3 14.1,1.2 16,1.2 C17.9,1.2 19.4,2.3 19.4,4.6 L19.4,5.6 C19.4,6.6 18.6,7.2 16,7.2 C13.4,7.2 12.6,6.6 12.6,5.6 Z" />
                         <path d="M13.6,10.4 C10,10.5 6.3,11.9 4.2,14.1 C3.3,15.3 3.3,16.4 4.3,17.6 L11.9,26.6 C12.6,27.6 13.4,28.3 14.6,28.9 H17.4 C18.6,28.3 19.4,27.6 20.1,26.6 L27.7,17.6 C28.7,16.4 28.7,15.3 27.8,14.1 C25.7,11.9 22,10.5 18.4,10.4 Z" />

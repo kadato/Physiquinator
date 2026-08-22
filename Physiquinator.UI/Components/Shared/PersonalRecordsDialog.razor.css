@@ -3,13 +3,13 @@
     align-items: center;
     gap: 12px;
     padding: 10px 4px;
-    border-radius: 12px;
+    border-radius: var(--radius);
     cursor: pointer;
 }
 
 .pr-dialog-row:hover,
 .pr-dialog-row:focus-visible {
-    background: color-mix(in srgb, var(--mud-palette-action-default-hover) 55%, transparent);
+    background: var(--pl-chip-2);
     outline: none;
 }
 

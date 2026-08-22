@@ -11,9 +11,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
-    background: rgba(var(--mud-palette-surface-rgb), 0.5);
-    border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
+    background: var(--pl-chip);
+    border: var(--hairline);
+    border-radius: var(--radius);
     margin-bottom: 8px;
 }
 
@@ -22,9 +22,10 @@
     padding: 2px 10px;
     font-size: 0.85rem;
     font-weight: 700;
-    border-radius: 12px;
-    background: var(--mud-palette-primary-hover);
-    color: var(--mud-palette-primary);
+    border-radius: var(--radius);
+    background: var(--pl-chip-2);
+    border: 1px solid var(--pl-hairline-strong);
+    color: var(--pl-ink);
 }
 
 .version-badge.new {
@@ -38,7 +39,7 @@
     padding: 12px 16px;
     background: rgba(var(--mud-palette-drawer-background-rgb), 0.3);
     border: 1px solid var(--mud-palette-lines-default);
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 /* Markdown rendered notes formatting */
@@ -81,12 +82,12 @@
     font-family: monospace;
     font-size: 0.85rem;
     background: rgba(var(--mud-palette-text-primary-rgb), 0.08);
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
 .markdown-body blockquote {
     padding-left: 12px;
-    border-left: 3px solid var(--mud-palette-primary);
+    border-left: 1px solid var(--hairline-strong, var(--mud-palette-lines-default));
     color: var(--mud-palette-text-secondary);
     margin: 8px 0;
 }

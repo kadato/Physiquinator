@@ -26,7 +26,7 @@ ShareCard.capture = async function (selector) {
         throw new Error('Share card element not found: ' + selector);
     }
 
-    // Wait for webfonts (Outfit) so the captured text does not reflow.
+    // Wait for webfonts so the captured text does not reflow.
     await document.fonts?.ready;
 
     const html2canvas = await loadHtml2Canvas();

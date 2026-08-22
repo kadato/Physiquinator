@@ -8,33 +8,42 @@
         }
     </div>
     <div class="heatmap-scroll" @ref="_heatmapScroll">
-        <div class="heatmap-grid" style="@_gridStyle">
+        @* Roving tabindex grid: one tab stop for the whole heatmap, arrows move
+           between days, Enter/Space activates. Future cells are skipped. *@
+        <div class="heatmap-grid" style="@_gridStyle" role="grid"
+             aria-label="@GridAriaLabel" @onkeydown="OnGridKeyDown">
             @for (var r = 0; r < 7; r++)
             {
                 var row = r;
-                @for (var c = 0; c < Weeks; c++)
-                {
-                    var col = c;
-                    var cellDate = GetCellDate(col, row);
-                    var isFuture = cellDate > _endLocal;
-                    var count = isFuture ? 0 : CountsByDay.GetValueOrDefault(cellDate, 0);
-                    var active = count > 0;
-                    var cellSchedule = GetScheduleForDate?.Invoke(cellDate);
-                    var isScheduled = cellSchedule?.Contains(cellDate.DayOfWeek) == true;
-                    var isMissed = isScheduled && !active && !isFuture;
-                    var cellState = GetCellState(isFuture, active, isScheduled);
-                    var title = GetCellTitle(cellDate, active, isMissed, cellSchedule);
-                    var isSelected = IsDaySelected?.Invoke(cellDate) ?? false;
-                    var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
-                    <button type="button"
-                            @key="cellDate"
-                            class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null)"
-                            title="@title"
-                            aria-label="@title"
-                            aria-pressed="@(isSelected ? "true" : "false")"
-                            disabled="@isFuture"
-                            @onclick="() => OnCellClickAsync(cellDate)"></button>
-                }
+                <div class="heatmap-row" role="row">
+                    @for (var c = 0; c < Weeks; c++)
+                    {
+                        var col = c;
+                        var idx = row * Weeks + col;
+                        var cellDate = GetCellDate(col, row);
+                        var isFuture = cellDate > _endLocal;
+                        var count = isFuture ? 0 : CountsByDay.GetValueOrDefault(cellDate, 0);
+                        var active = count > 0;
+                        var cellSchedule = GetScheduleForDate?.Invoke(cellDate);
+                        var isScheduled = cellSchedule?.Contains(cellDate.DayOfWeek) == true;
+                        var isMissed = isScheduled && !active && !isFuture;
+                        var cellState = GetCellState(isFuture, active, isScheduled);
+                        var title = GetCellTitle(cellDate, active, isMissed, cellSchedule);
+                        var isSelected = IsDaySelected?.Invoke(cellDate) ?? false;
+                        var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
+                        <button type="button"
+                                @key="cellDate"
+                                class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null)"
+                                data-hm-index="@idx"
+                                tabindex="@(_focusIndex == idx ? 0 : -1)"
+                                role="gridcell"
+                                title="@title"
+                                aria-label="@title"
+                                aria-selected="@(isSelected ? "true" : "false")"
+                                disabled="@isFuture"
+                                @onclick="() => OnCellClickAsync(cellDate)"></button>
+                    }
+                </div>
             }
         </div>
     </div>
@@ -78,6 +87,8 @@
     private DateOnly _leftMonday;
     private ElementReference _heatmapScroll;
     private string _gridStyle = "";
+    private int _focusIndex;
+    private bool _focusIndexInitialized;
 
     private IReadOnlyDictionary<DateOnly, int>? _prevCountsByDay;
     private int _prevWeeks;
@@ -116,7 +127,8 @@
         var mondayOfEndWeek = HeatmapGrid.GetMondayOfWeek(_endLocal);
         _leftMonday = mondayOfEndWeek.AddDays(-7 * (Weeks - 1));
         _gridStyle =
-            $"grid-template-columns: repeat({Weeks}, var(--heatmap-cell-size, 11px)); grid-template-rows: repeat(7, var(--heatmap-cell-size, 11px));";
+            $"grid-template-columns: repeat({Weeks}, var(--heatmap-cell-size, 26px)); grid-template-rows: repeat(7, var(--heatmap-cell-size, 26px));";
+        EnsureFocusIndex();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -128,6 +140,82 @@
         {
             await Task.Delay(50);
             await JSRuntime.InvokeVoidAsync("physiquinator.scrollHeatmapToEnd", _heatmapScroll);
+        }
+        catch
+        {
+            /* WebView / interop not ready */
+        }
+    }
+
+    private string GridAriaLabel =>
+        $"Activity heatmap, {Weeks} weeks. Use arrow keys to move between days, Enter to select.";
+
+    private static int RowFromMonday(DateOnly d) => ((int)d.DayOfWeek + 6) % 7;
+
+    private int IndexAt(int row, int col) => row * Weeks + col;
+
+    private bool IsCellEnabled(int index)
+    {
+        if (index < 0 || index >= 7 * Weeks) return false;
+        return GetCellDate(index % Weeks, index / Weeks) <= _endLocal;
+    }
+
+    /// <summary>Default focus lands on today's cell so one Tab reaches the present day.</summary>
+    private void EnsureFocusIndex()
+    {
+        if (_focusIndexInitialized && IsCellEnabled(_focusIndex))
+        {
+            _focusIndex = Math.Min(_focusIndex, 7 * Weeks - 1);
+            return;
+        }
+
+        var todayIdx = IndexAt(RowFromMonday(_endLocal), Weeks - 1);
+        _focusIndex = IsCellEnabled(todayIdx) ? todayIdx : LastEnabledIndex();
+        _focusIndexInitialized = true;
+    }
+
+    private int LastEnabledIndex()
+    {
+        var idx = 7 * Weeks - 1;
+        while (idx > 0 && !IsCellEnabled(idx)) idx--;
+        return idx;
+    }
+
+    private int ClampToEnabled(int index)
+    {
+        if (IsCellEnabled(index)) return index;
+        // Disabled cells sit only at the tail of the grid; walk back to the newest enabled day.
+        var idx = Math.Min(index, 7 * Weeks - 1);
+        while (idx > 0 && !IsCellEnabled(idx)) idx--;
+        return idx;
+    }
+
+    private async Task OnGridKeyDown(KeyboardEventArgs e)
+    {
+        var row = _focusIndex / Weeks;
+        var col = _focusIndex % Weeks;
+        var raw = e.Key switch
+        {
+            "ArrowLeft" => IndexAt(row, Math.Max(0, col - 1)),
+            "ArrowRight" => IndexAt(row, Math.Min(Weeks - 1, col + 1)),
+            "ArrowUp" => IndexAt(Math.Max(0, row - 1), col),
+            "ArrowDown" => IndexAt(Math.Min(6, row + 1), col),
+            "Home" => IndexAt(row, 0),
+            "End" => IndexAt(row, Weeks - 1),
+            _ => -1
+        };
+        if (raw < 0)
+            return;
+
+        var next = ClampToEnabled(raw);
+        if (next == _focusIndex)
+            return;
+
+        _focusIndex = next;
+        StateHasChanged();
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("physiquinator.focusHeatmapCell", _heatmapScroll, _focusIndex);
         }
         catch
         {

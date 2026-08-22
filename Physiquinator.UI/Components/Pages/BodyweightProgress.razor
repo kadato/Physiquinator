@@ -57,10 +57,7 @@ else
             </div>
 
             <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
-                <MudText Typo="Typo.h6" Class="settings-card__title mb-1">@("Trend")</MudText>
-                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-                    @("Logged weight over time.")
-                </MudText>
+                <MudText Typo="Typo.h6" Class="settings-card__title mb-2">@("Bodyweight")</MudText>
                 @if (_hasChartData)
                 {
                     <div class="bodyweight-chart">
@@ -76,7 +73,7 @@ else
                 else
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        @("Log your weight each day to see the trend here.")
+                        @("Log your weight to see the chart.")
                     </MudText>
                 }
             </MudPaper>
@@ -155,7 +152,7 @@ else
     private string[] _chartLabels = Array.Empty<string>();
     private ChartSeriesList _chartSeries = [];
     private LineChartOptions _chartOptions = new();
-    private string _chartHeightPx = "280px";
+    private string _chartHeightPx = "200px";
     private bool _hasChartData;
 
     private string TrendLabel
@@ -286,7 +283,7 @@ else
 
         var maxValue = values.DefaultIfEmpty(0).Max();
         var rotateXLabels = chronological.Count > 4;
-        _chartHeightPx = rotateXLabels ? "300px" : "280px";
+        _chartHeightPx = rotateXLabels ? "220px" : "200px";
         _chartOptions = new LineChartOptions
         {
             YAxisRequireZeroPoint = false,

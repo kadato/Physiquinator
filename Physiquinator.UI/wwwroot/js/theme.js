@@ -16,6 +16,64 @@
         }
     };
 
+    /** Move keyboard focus to a heatmap cell by its roving-tabindex index. */
+    window.physiquinator.focusHeatmapCell = (scrollEl, index) => {
+        try {
+            const root = scrollEl instanceof Element ? scrollEl : document.querySelector(".heatmap-scroll");
+            const cell = root && root.querySelector(`[data-hm-index="${index}"]`);
+            if (cell) {
+                cell.focus({ preventScroll: true });
+                cell.scrollIntoView({ block: "nearest", inline: "nearest" });
+            }
+        } catch {
+            /* ignore */
+        }
+    };
+
+    /** Skip link target: move real focus into main content. */
+    window.physiquinator.focusMain = () => {
+        try {
+            const main = document.getElementById("main-content");
+            if (main) {
+                main.focus({ preventScroll: false });
+            }
+        } catch {
+            /* ignore */
+        }
+    };
+
+    /** Park floating FABs off-screen while scrolling down; reveal on scroll up. */
+    window.physiquinator.initFabAutoHide = () => {
+        try {
+            if (window.__plFabHideInstalled) return;
+            window.__plFabHideInstalled = true;
+            const scroller = () => document.querySelector(".app-main-scroll");
+            let lastY = 0;
+            let ticking = false;
+            const update = () => {
+                ticking = false;
+                const el = scroller();
+                if (!el) return;
+                const y = el.scrollTop;
+                const down = y > lastY + 4;
+                const up = y < lastY - 4;
+                if ((down && y > 96) || up || y <= 96) {
+                    document.body.classList.toggle("fabs-away", down && y > 96);
+                }
+                lastY = y;
+            };
+            document.addEventListener("scroll", (e) => {
+                if (!e.target || !(e.target.classList && e.target.classList.contains("app-main-scroll"))) return;
+                if (!ticking) {
+                    ticking = true;
+                    requestAnimationFrame(update);
+                }
+            }, { capture: true, passive: true });
+        } catch {
+            /* ignore */
+        }
+    };
+
     /** Scroll an element or selector into view with a delay to accommodate visual viewport keyboard resizing */
     window.physiquinator.scrollSelectorIntoView = (elOrSelector) => {
         try {

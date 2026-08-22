@@ -1,4 +1,4 @@
-/* Layout shell — tab bar styles live in app-overrides.css for MAUI WebView */
+/* Layout shell. Tab bar styles live in app-overrides.css for MAUI WebView */
 .app-shell {
     display: flex;
     flex-direction: column;
@@ -25,17 +25,18 @@
     padding-left: var(--app-page-x) !important;
     padding-right: var(--app-page-x) !important;
     padding-top: var(--app-page-top) !important;
-    padding-bottom: var(--app-page-bottom-extra) !important;
+    padding-bottom: 84px !important;
     max-width: 600px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     overflow: visible !important;
 }
 
-/* Desktop & big screens: the nav pill moves to the top as a horizontal bar
-   (styled in app-overrides.css). The main scroll area needs no bottom
-   clearance there; app-overrides.css mirrors this. */
+/* Desktop & big screens: the nav pill moves to the top as a horizontal bar */
 @media (min-width: 960px) {
+    ::deep .app-page-container {
+        padding-bottom: 24px !important;
+    }
     .app-shell .app-main-scroll {
         padding-bottom: 0;
     }

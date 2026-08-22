@@ -12,9 +12,9 @@ namespace Physiquinator.Platforms.Android.Services;
 /// Android implementation of the workout timer surfaces. A foreground service
 /// (with the ongoing notification as its FGS notification) runs while a
 /// workout is active and hosts the floating overlay bubble. During rest the
-/// notification carries quick actions (+add, Skip); between sets it offers a
+/// notification carries quick actions (+add, Skip). Between sets it offers a
 /// Log set action. A native exact alarm (AlarmManager,
-/// survives Doze and process death) fires at rest end; its alert plays the
+/// survives Doze and process death) fires at rest end. Its alert plays the
 /// deep knock sound.
 /// </summary>
 public sealed class AndroidRestNotificationService(
@@ -65,7 +65,7 @@ public sealed class AndroidRestNotificationService(
     /// <summary>
     /// The floating rest-timer bubble requires "Display over other apps"
     /// (SYSTEM_ALERT_WINDOW). It can never be requested with a runtime
-    /// dialog; the user must toggle it from the system settings screen.
+    /// dialog. The user must toggle it from the system settings screen.
     /// </summary>
     public bool HasOverlayPermission() => Settings.CanDrawOverlays(_context);
 
@@ -229,7 +229,7 @@ public sealed class AndroidRestNotificationService(
             "Log set",
             BuildActionIntent(context, RestTimerActionReceiver.ActionLogSet, 9405)).Build();
 
-#pragma warning disable CA1422 // Pre-API-26 fallback is intentional (minSdk 24); guarded by SDK checks
+#pragma warning disable CA1422 // Pre-API-26 fallback is intentional (minSdk 24). Guarded by SDK checks
     internal static Notification BuildWorkoutNotification(Context context, WorkoutTimerState state, int addTimeSeconds)
     {
         var resting = state.RestEndsAtUtc != null;
@@ -318,11 +318,11 @@ public sealed class AndroidRestNotificationService(
         alertChannel.SetSound(global::Android.Net.Uri.Parse("android.resource://" + _context.PackageName + "/raw/rest_end_knock"), null);
         nm.CreateNotificationChannel(alertChannel);
 
-        // Silent variant of the rest-end channel (when sound & vibration is disabled).
+        // Silent variant of the rest-end channel (when sound and vibration is disabled).
         var silentAlert = new NotificationChannel(RestEndSilentChannelId, "Rest timer (silent)",
             NotificationImportance.Default)
         {
-            Description = "Silent rest-end notification when sound & vibration is turned off"
+            Description = "Silent rest-end notification when sound and vibration is turned off"
         };
         silentAlert.SetSound(null, null);
         silentAlert.EnableVibration(false);

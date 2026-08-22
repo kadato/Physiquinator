@@ -29,9 +29,9 @@ namespace Physiquinator.Platforms.Android.Services;
 /// runs only while the bubble is visible, so it stays accurate regardless of
 /// WebView suspension without waking the CPU for a workout held in the
 /// foreground. The overlay view is only
-/// shown while the app is backgrounded; the foreground service notification
+/// shown while the app is backgrounded. The foreground service notification
 /// stays up for the whole workout. Declared in AndroidManifest.xml
-/// (foregroundServiceType specialUse); <see cref="RegisterAttribute"/> pins
+/// (foregroundServiceType specialUse). <see cref="RegisterAttribute"/> pins
 /// the Java class name so the manifest entry resolves.
 /// </summary>
 [Register("physiquinator.RestOverlayService")]
@@ -119,7 +119,7 @@ public sealed class RestOverlayService : Service
                 // bubble countdown freezes for the rest of the workout.
                 System.Diagnostics.Debug.WriteLine($"RestOverlayService ticker failed: {ex}");
             }
-            // Only reschedule while the ticker is still wanted; StopTicker
+            // Only reschedule while the ticker is still wanted. StopTicker
             // must win even when it runs mid-tick.
             if (_tickerRunning)
                 _handler?.PostDelayed(tick, TickerIntervalMs);
@@ -614,7 +614,7 @@ public sealed class RestOverlayService : Service
 
     private void OnCloseClicked(object? sender, EventArgs e)
     {
-        // Dismiss the bubble; it comes back after the app is reopened.
+        // Dismiss the bubble. It comes back after the app is reopened.
         _dismissed = true;
         RemoveOverlayView();
     }

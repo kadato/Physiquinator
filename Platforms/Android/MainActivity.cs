@@ -43,7 +43,7 @@ public class MainActivity : MauiAppCompatActivity
     /// Tells the rest-timer overlay service that the app changed foreground
     /// state so it can show/hide the bubble and start/stop its ticker without
     /// polling. The service is already running as a foreground service for
-    /// the whole workout; starting it again while it is not running (no
+    /// the whole workout. Starting it again while it is not running (no
     /// workout) fails silently on Android 12+ from the background, which is
     /// the desired no-op.
     /// </summary>
@@ -58,8 +58,8 @@ public class MainActivity : MauiAppCompatActivity
         }
         catch (Exception)
         {
-            // No workout/service running, or background-start restriction;
-            // nothing to show.
+            // No workout/service running, or background-start restriction.
+            // Nothing to show.
         }
     }
 

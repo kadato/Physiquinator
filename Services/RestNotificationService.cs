@@ -16,7 +16,7 @@ public sealed class RestNotificationService(
     private readonly RestAlertSettingsService _settings = settings;
     private readonly TimeProvider _time = time;
 
-    /// <summary>Rest-end alerts only make sense on mobile platforms; desktop hosts are stubbed.</summary>
+    /// <summary>Rest-end alerts only make sense on mobile platforms. Desktop hosts are stubbed.</summary>
     private bool IsSupportedPlatform => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
 
     public const int ScheduledRestNotificationId = 9001;
@@ -44,7 +44,7 @@ public sealed class RestNotificationService(
         }
     }
 
-    // The floating rest-timer bubble is Android-only; Android registers
+    // The floating rest-timer bubble is Android-only. Android registers
     // AndroidRestNotificationService, so this implementation only reports the
     // overlay as available on platforms that could host one.
     public bool SupportsNotifications => IsSupportedPlatform;

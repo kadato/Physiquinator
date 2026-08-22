@@ -9,7 +9,7 @@ namespace Physiquinator.Platforms.Android.Services;
 /// (+add, Skip, Log set). Mutations go through
 /// <see cref="WorkoutSessionService"/> / <see cref="WorkoutQuickActionService"/>,
 /// which fire the session events so the coordinator re-syncs the
-/// notification, overlay and alarm. Declared in AndroidManifest.xml;
+/// notification, overlay and alarm. Declared in AndroidManifest.xml.
 /// <see cref="RegisterAttribute"/> pins the Java class name so the manifest
 /// entry resolves.
 /// </summary>

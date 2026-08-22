@@ -72,7 +72,7 @@ public static class SystemBarsHelper
             }
         }
 
-#pragma warning disable CA1422 // Obsolete on Android 35+; still correct for minSdk 24–34.
+#pragma warning disable CA1422 // Obsolete on Android 35+. Still correct for minSdk 24-34.
         window.SetStatusBarColor(Android.Graphics.Color.Transparent);
         window.SetNavigationBarColor(Android.Graphics.Color.Transparent);
 #pragma warning restore CA1422
@@ -80,7 +80,7 @@ public static class SystemBarsHelper
         if (OperatingSystem.IsAndroidVersionAtLeast(30))
         {
             // Window.InsetsController is implemented via DecorView.getWindowInsetsController() and throws
-            // if the decor view is not attached yet (e.g. MainPage.OnAppearing / theme sync during startup).
+            // if the decor view is not attached yet (for example, MainPage.OnAppearing / theme sync during startup).
             Android.Views.View decorView = window.DecorView;
             if (decorView == null)
             {
@@ -146,7 +146,7 @@ public static class SystemBarsHelper
 #elif IOS || MACCATALYST
     private static void ApplyApple(Color pageBackground, bool isDark)
     {
-        // iOS status bar is transparent; MainPage.BackgroundColor already fills the safe area.
+        // iOS status bar is transparent. MainPage.BackgroundColor already fills the safe area.
         // (PlatformConfiguration status-bar APIs here target NavigationPage luminosity, not arbitrary page fills.)
         _ = pageBackground;
         _ = isDark;

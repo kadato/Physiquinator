@@ -11,7 +11,7 @@ namespace Physiquinator.Services;
 
 /// <summary>
 /// Downloads and installs Physiquinator releases on the current platform.
-/// Android launches the APK installer via a content intent; Windows extracts the ZIP,
+/// Android launches the APK installer via a content intent. Windows extracts the ZIP,
 /// replaces the running app folder from a wait-and-restart updater script, then exits the app.
 /// </summary>
 public sealed class MauiAppUpdateInstaller : IAppUpdateInstaller

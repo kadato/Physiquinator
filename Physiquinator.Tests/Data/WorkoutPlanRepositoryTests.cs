@@ -24,9 +24,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         await _db.Database.CloseAsync();
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // Helpers
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     private static WorkoutPlan MakePlan(string name = "Plan A", int exerciseCount = 2) => new()
     {
@@ -38,9 +38,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
             .ToList()
     };
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // GetAllPlansAsync
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     [Fact]
     public async Task GetAllPlansAsync_ReturnsEmpty_WhenNoPlansSaved()
@@ -93,9 +93,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Assert.Equal([0, 1, 2], exercises.Select(e => e.Order));
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // GetPlanAsync
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     [Fact]
     public async Task GetPlanAsync_ReturnsNull_WhenPlanDoesNotExist()
@@ -164,9 +164,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Assert.Equal(ExerciseLogType.BodyweightReps, actual.LogType);
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // SavePlanAsync
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     [Fact]
     public async Task SavePlanAsync_PersistsPlan()
@@ -218,9 +218,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Assert.Equal(5, result!.DefaultSetCount);
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // DeletePlanAsync
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     [Fact]
     public async Task DeletePlanAsync_RemovesPlan()
@@ -273,9 +273,9 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Assert.Empty(all);
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     // ReorderPlansAsync
-    // ──────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
 
     [Fact]
     public async Task ReorderPlansAsync_PersistsNewSortOrder()

@@ -188,7 +188,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
     /// <summary>
     /// Re-indexes every completed set after the plan's exercise order changed
-    /// mid-session (old exercise index → new index). Used by mid-workout
+    /// mid-session (old exercise index to new index). Used by mid-workout
     /// reordering so completion state stays attached to the right exercise.
     /// </summary>
     public void RemapExerciseIndexes(IReadOnlyDictionary<int, int> mapping)

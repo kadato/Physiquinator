@@ -24,7 +24,7 @@ public sealed class AndroidRestNotificationService(
     public const int OngoingRestNotificationId = 9100;
     public const int ImmediateRestCompleteNotificationId = 9002;
     public const string OngoingChannelId = "physiquinator_rest_ongoing";
-    /// <summary>Silent low-importance channel for the mandatory FGS notification — invisible to the user.</summary>
+    /// <summary>Silent low-importance channel for the mandatory FGS notification, invisible to the user.</summary>
     public const string SilentOngoingChannelId = "physiquinator_rest_ongoing_silent";
     public const string RestEndChannelId = "physiquinator_rest";
     public const string RestEndSilentChannelId = "physiquinator_rest_silent";
@@ -294,7 +294,7 @@ public sealed class AndroidRestNotificationService(
         if (nm == null)
             return;
 
-        // Silent channel for the mandatory FGS notification — no sound, minimum importance.
+        // Silent channel for the mandatory FGS notification: no sound, minimum importance.
         var silentOngoing = new NotificationChannel(SilentOngoingChannelId, "Workout timer (background)",
             NotificationImportance.Min)
         {

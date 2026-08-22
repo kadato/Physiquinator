@@ -268,7 +268,7 @@ public sealed class RestTimerCoordinator : IDisposable
             return $"Next up: {exercise.Name}{setLabel}";
         }
 
-        return "Rest done — time for your next set.";
+        return "Rest done. Time for your next set.";
     }
 
     private void PersistSnapshot(WorkoutTimerState state)

@@ -107,7 +107,7 @@ public class AppInitializationServiceTests : IAsyncLifetime
         await _db.ClearAllUserDataAsync();
         _planService.InvalidatePlanCache();
 
-        // Re-init with a fresh AppInitializationService — should NOT re-seed because preference flags are still true
+        // Re-init with a fresh AppInitializationService, which should NOT re-seed because preference flags are still true
         AppInitializationService sut2 = CreateSut();
         await sut2.EnsureInitializedAsync();
 

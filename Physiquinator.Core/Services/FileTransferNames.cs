@@ -30,11 +30,11 @@ public static class FileTransferNames
         return result.ToString();
     }
 
-    /// <summary>Builds a timestamped JSON file name from a stem, e.g. "Push Day" → "Push_Day_20260101_120000.json".</summary>
+    /// <summary>Builds a timestamped JSON file name from a stem, e.g. "Push Day" becomes "Push_Day_20260101_120000.json".</summary>
     public static string JsonFileName(string stem, DateTimeOffset localNow) =>
         $"{stem}_{localNow:yyyyMMdd_HHmmss}.json";
 
-    /// <summary>Builds a timestamped PNG file name from a stem, e.g. "Push Day" → "Push_Day_20260101_120000.png".</summary>
+    /// <summary>Builds a timestamped PNG file name from a stem, e.g. "Push Day" becomes "Push_Day_20260101_120000.png".</summary>
     public static string PngFileName(string stem, DateTimeOffset localNow) =>
         $"{stem}_{localNow:yyyyMMdd_HHmmss}.png";
 }

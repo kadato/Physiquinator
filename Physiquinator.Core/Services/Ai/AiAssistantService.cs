@@ -213,7 +213,7 @@ public sealed class AiAssistantService(
     {
         assistantMessage.IsThinking = false;
         assistantMessage.IsError = true;
-        assistantMessage.Content = "AI Assistant is not configured. Please enable AI Assistant and provide an API Key in Settings.";
+        assistantMessage.Content = "AI assistant is not configured. Enable the assistant and enter an API key in Settings.";
         OnMessagesChanged?.Invoke();
     }
 
@@ -241,7 +241,7 @@ public sealed class AiAssistantService(
 
             if (executedToolCalls.Count == 0)
             {
-                // No tool calls — this is the final assistant response. Persist it to _apiHistory
+                // No tool calls, so this is the final assistant response. Persist it to _apiHistory
                 // so the next user turn has full context without re-referencing _messages.
                 _apiHistory.Add(new AiChatMessage
                 {

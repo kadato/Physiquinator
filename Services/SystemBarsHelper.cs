@@ -36,7 +36,7 @@ public static class SystemBarsHelper
 
     internal static bool IsDarkBackground(Color c)
     {
-        // sRGB luminance — matches ThemeService light/dark backgrounds.
+        // sRGB luminance, matches ThemeService light/dark backgrounds.
         var lum = (0.2126 * c.Red) + (0.7152 * c.Green) + (0.0722 * c.Blue);
         return lum < 0.45;
     }

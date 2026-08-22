@@ -32,7 +32,7 @@ public sealed class BackupRestoreServiceTests : IAsyncLifetime
         _planService = new WorkoutPlanService(_planRepo);
         _historyService = new WorkoutHistoryService(_historyRepo);
 
-        // Minimal UserProfileService — DemoProfileId, no actual DB path needed for tests.
+        // Minimal UserProfileService stub: DemoProfileId, no actual DB path needed for tests.
         var dbPathProvider = new LambdaDatabasePathProvider(_ => ":memory:");
         _profileService = new UserProfileService(_db, new WorkoutSessionService(TimeProvider.System), _prefs, dbPathProvider, TimeProvider.System);
 

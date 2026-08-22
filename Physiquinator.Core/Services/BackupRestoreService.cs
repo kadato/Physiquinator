@@ -9,11 +9,11 @@ namespace Physiquinator.Core.Services;
 /// restores it on import.
 ///
 /// What is included:
-/// • Workout plans  (WorkoutPlans + ExercisePlans tables)
-/// • Workout history  (WorkoutSessionLogs + WorkoutSetLogs tables)
-/// • Bodyweight log  (BodyweightLogs table)
-/// • Training-schedule history  (WorkoutScheduleHistory table)
-/// • All persisted app preferences  (theme, rest timer, AI settings, update settings, …)
+/// - Workout plans (WorkoutPlans + ExercisePlans tables)
+/// - Workout history (WorkoutSessionLogs + WorkoutSetLogs tables)
+/// - Bodyweight log (BodyweightLogs table)
+/// - Training-schedule history (WorkoutScheduleHistory table)
+/// - All persisted app preferences (theme, rest timer, AI settings, update settings, ...)
 ///
 /// Preference keys are stripped of their profile-ID suffix on export and re-applied on import,
 /// so a backup is always portable across devices and profiles.

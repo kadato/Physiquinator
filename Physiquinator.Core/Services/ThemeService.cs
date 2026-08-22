@@ -4,7 +4,7 @@ namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Theme for the Blazor UI. <see cref="IJSRuntime"/> must run on the Blazor
-/// dispatcher — do not marshal JS calls through a platform main thread.
+/// dispatcher. Do not marshal JS calls through a platform main thread.
 /// Platform-specific shell mutations (MAUI app theme, system bars) are
 /// provided by subclasses overriding the <c>Apply*/Sync*</c> hooks.
 /// </summary>

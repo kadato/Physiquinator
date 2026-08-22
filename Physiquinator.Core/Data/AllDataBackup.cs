@@ -27,7 +27,7 @@ public sealed class AllDataBackup
     /// <summary>
     /// Key/value map of every app preference that belongs to the active profile.
     /// Keys match the canonical values in <see cref="Services.PreferenceKeys"/> (without any
-    /// profile-ID suffix — suffixes are stripped on export and re-applied on import).
+    /// profile-ID suffix, which is stripped on export and re-applied on import).
     /// Unknown keys encountered during import are silently ignored, preserving forward compatibility.
     /// </summary>
     public Dictionary<string, string> Preferences { get; set; } = [];

@@ -200,5 +200,5 @@ dotnet_diagnostic.IDE0200.severity = error         # lambda can be simplified to
 dotnet_diagnostic.IDE0230.severity = error         # use UTF-8 string literal
 dotnet_diagnostic.IDE0290.severity = error         # use primary constructor
 
-# IDE0008 contradicts IDE0007 — prefer 'var' everywhere, so silence the explicit-type rule
+# IDE0008 contradicts IDE0007, so prefer 'var' everywhere and silence the explicit-type rule
 dotnet_diagnostic.IDE0008.severity = none

@@ -921,7 +921,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     /// <summary>
     /// Rewrites the exercise index of every set log of a session after the
-    /// exercise order changed mid-workout (old exercise index → new index).
+    /// exercise order changed mid-workout (old exercise index to new index).
     /// </summary>
     public async Task RemapSetLogExerciseIndexesAsync(string sessionId, IReadOnlyDictionary<int, int> mapping)
     {

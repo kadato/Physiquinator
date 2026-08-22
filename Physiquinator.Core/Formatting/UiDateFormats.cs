@@ -28,13 +28,9 @@ public static class UiDateFormats
         return DateOnlyCompact(d);
     }
 
-    public static string DateOnlyCompact(DateOnly date)
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        if (date.Year == today.Year)
-            return date.ToString("MM/dd", Invariant);
-        return date.ToString("yyyy/MM/dd", Invariant);
-    }
+    /// <summary>ISO 8601 compact date (yyyy-MM-dd): terminal-native, unambiguous, sorts naturally.</summary>
+    public static string DateOnlyCompact(DateOnly date) =>
+        date.ToString("yyyy-MM-dd", Invariant);
 
     /// <summary>Minimal date for chart X-axis (only month and day).</summary>
     public static string LocalDateChartAxis(DateTime utc) =>

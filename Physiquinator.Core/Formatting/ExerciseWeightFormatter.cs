@@ -40,12 +40,16 @@ public static class ExerciseWeightFormatter
 
     /// <summary>
     /// Formats a stored kilogram total with grouping and a non-breaking unit
-    /// suffix, e.g. "12,345.5 kg" or "27,215.7 lb". The non-breaking space
-    /// keeps the unit glued to the number so it never wraps onto its own row
-    /// inside a narrow stat card.
+    /// suffix, e.g. "12,346 kg" or "27,216 lb". Volumes are aggregates where
+    /// decimal precision reads as false accuracy, so they round to whole
+    /// units. The non-breaking space keeps the unit glued to the number so it
+    /// never wraps onto its own row inside a narrow stat card.
     /// </summary>
-    public static string FormatVolumeWithUnit(double kg, WeightUnit unit) =>
-        $"{FormatWeightGrouped(kg, unit)}\u00A0{UnitSuffix(unit)}";
+    public static string FormatVolumeWithUnit(double kg, WeightUnit unit)
+    {
+        var display = Math.Round(ToDisplay(kg, unit), MidpointRounding.AwayFromZero);
+        return $"{display.ToString("#,##0", s_invariant)}\u00A0{UnitSuffix(unit)}";
+    }
 
     /// <summary>
     /// Formats a bodyweight-relative offset for a set summary, e.g.

@@ -7,19 +7,15 @@ namespace Physiquinator.Tests.Formatting;
 public class UiDateFormatsTests
 {
     [Fact]
-    public void DateOnlyCompact_SameYear_OmitsYearWithMonthDayOrder()
+    public void DateOnlyCompact_AlwaysReturnsIsoYearMonthDay()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var result = UiDateFormats.DateOnlyCompact(today);
-        Assert.Equal(today.ToString("MM/dd", CultureInfo.InvariantCulture), result);
-    }
+        Assert.Equal(today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            UiDateFormats.DateOnlyCompact(today));
 
-    [Fact]
-    public void DateOnlyCompact_OtherYear_UsesYearMonthDayOrder()
-    {
-        DateOnly date = DateOnly.FromDateTime(DateTime.Today).AddYears(-1);
-        var result = UiDateFormats.DateOnlyCompact(date);
-        Assert.Equal(date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture), result);
+        DateOnly lastYear = today.AddYears(-1);
+        Assert.Equal(lastYear.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            UiDateFormats.DateOnlyCompact(lastYear));
     }
 
     [Fact]
@@ -51,20 +47,15 @@ public class UiDateFormatsTests
     }
 
     [Fact]
-    public void LocalDateTimeCompact_SameYearNotToday_ShowsMonthDayAndTime()
+    public void LocalDateTimeCompact_NotToday_ShowsIsoDateAndTime()
     {
         DateTime local = DateTime.Today.AddDays(-3).AddHours(9).AddMinutes(15);
         DateTime utc = local.ToUniversalTime();
-        var expectedDate = DateOnly.FromDateTime(local).ToString("MM/dd", CultureInfo.InvariantCulture);
+        var expectedDate = DateOnly.FromDateTime(local).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         Assert.Equal($"{expectedDate} 09:15", UiDateFormats.LocalDateTimeCompact(utc));
-    }
 
-    [Fact]
-    public void LocalDateTimeCompact_OtherYear_ShowsYearMonthDayAndTime()
-    {
-        DateTime local = DateTime.Today.AddYears(-2).AddHours(8);
-        DateTime utc = local.ToUniversalTime();
-        var expectedDate = DateOnly.FromDateTime(local).ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
-        Assert.Equal($"{expectedDate} 08:00", UiDateFormats.LocalDateTimeCompact(utc));
+        DateTime otherYear = DateTime.Today.AddYears(-2).AddHours(8);
+        var expectedOther = DateOnly.FromDateTime(otherYear).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        Assert.Equal($"{expectedOther} 08:00", UiDateFormats.LocalDateTimeCompact(otherYear.ToUniversalTime()));
     }
 }

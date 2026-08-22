@@ -25,7 +25,7 @@ public class HeatmapGridTests
 
         (DateTime utcStart, DateTime utcEndExclusive) = HeatmapGrid.GetHeatmapQueryUtcBounds(endLocal, weeks: 1);
 
-        // Grid starts on the Monday of that week; end is exclusive the day after endLocal.
+        // Grid starts on the Monday of that week. End is exclusive the day after endLocal.
         TimeZoneInfo tz = TimeZoneInfo.Local;
         DateTime expectedStart = TimeZoneInfo.ConvertTimeToUtc(
             new DateTime(2026, 8, 3, 0, 0, 0, DateTimeKind.Unspecified), tz);

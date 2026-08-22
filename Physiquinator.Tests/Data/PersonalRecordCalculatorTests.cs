@@ -115,7 +115,7 @@ public class PersonalRecordCalculatorTests
         Assert.Null(records.Entries.FirstOrDefault(e => e.Kind == ExerciseRecordKind.BestWeight));
         PersonalRecordEntry reps = Assert.Single(records.Entries, e => e.Kind == ExerciseRecordKind.MostReps);
         Assert.Equal(10, reps.Value);
-        // Volume needs both metrics; a reps-only set has no tonnage.
+        // Volume needs both metrics. A reps-only set has no tonnage.
         Assert.DoesNotContain(records.Entries, e => e.Kind == ExerciseRecordKind.BestVolume);
     }
 

@@ -8,7 +8,7 @@ public class ChartAxisScaleTests
     [Fact]
     public void SuggestYAxisMax_RoundsUpToMultipleOfFourTickSteps()
     {
-        // 95 * 1.05 = 99.75; step = ceil(99.75/4 rough ladder) -> 25; max = 4*25*ceil(99.75/100) = 100.
+        // 95 * 1.05 = 99.75. Step = ceil(99.75/4 rough ladder) -> 25. Max = 4*25*ceil(99.75/100) = 100.
         var scale = ChartAxisScale.SuggestYAxis(95);
         Assert.Equal(100, scale.Max);
         Assert.Equal(25, scale.TickStep);

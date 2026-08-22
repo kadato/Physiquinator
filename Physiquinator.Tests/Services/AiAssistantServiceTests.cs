@@ -93,7 +93,7 @@ public class AiAssistantServiceTests
         prefs.Set(PreferenceKeys.AiApiKey, string.Empty);
         await assistant.SendUserMessageAsync("Message for demo profile");
 
-        // Create a second profile and switch to it; its history starts empty.
+        // Create a second profile and switch to it. Its history starts empty.
         profileService.CreateProfile("Second");
         var secondProfileId = profileService.GetProfiles().First(p => p.Name == "Second").Id;
         await profileService.SwitchProfileAsync(secondProfileId);

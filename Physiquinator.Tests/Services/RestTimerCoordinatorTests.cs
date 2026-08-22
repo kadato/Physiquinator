@@ -208,7 +208,7 @@ public class RestTimerCoordinatorTests
         Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
-        // 40 seconds later the process restarts; only the snapshot survives.
+        // 40 seconds later the process restarts. Only the snapshot survives.
         // The page flow: capture, load the workout, restore.
         Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));
         var captured = restarted.Coordinator.CapturePendingSnapshot();
@@ -247,7 +247,7 @@ public class RestTimerCoordinatorTests
         Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(10);
 
-        // Fresh process; the OS-held alarm fires after the rest already ended.
+        // Fresh process. The OS-held alarm fires after the rest already ended.
         Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 30, DateTimeKind.Utc));
         restarted.Coordinator.HandleRestEndAlarmFired();
 
@@ -264,7 +264,7 @@ public class RestTimerCoordinatorTests
         Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
         fix.Session.StartRest(90);
 
-        // Process restarts; the user opens the workout page. The page captures
+        // Process restarts. The user opens the workout page. The page captures
         // the snapshot, loads the in-progress workout (ResumeWorkout) and only
         // then restores the rest.
         Fixture restarted = Restart(fix, new DateTime(2026, 1, 1, 12, 0, 40, DateTimeKind.Utc));

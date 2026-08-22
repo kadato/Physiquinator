@@ -215,7 +215,7 @@ public sealed class BackupRestoreServiceTests : IAsyncLifetime
 
         var result = await _sut.ImportAllDataAsync(json);
 
-        // Only the known key should be applied; the unknown one is silently dropped.
+        // Only the known key should be applied. The unknown one is silently dropped.
         Assert.Equal(1, result.PreferencesImported);
         Assert.Equal("gpt-4o", _prefs.Get(PreferenceKeys.AiModelName, string.Empty));
     }

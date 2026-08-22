@@ -370,7 +370,7 @@ public class WorkoutSessionServiceTests
         Assert.Equal(1, fired);
 
         // A steady countdown must not fire per tick (the UI countdown is
-        // JS-driven; the coordinator must not re-run platform work).
+        // JS-driven, so the coordinator must not re-run platform work).
         clock.Advance(TimeSpan.FromSeconds(30));
         Assert.False(svc.TickRest());
         Assert.Equal(1, fired);

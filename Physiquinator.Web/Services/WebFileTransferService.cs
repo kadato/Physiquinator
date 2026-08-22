@@ -2,7 +2,7 @@ using Physiquinator.Core.Services;
 
 namespace Physiquinator.Web.Services;
 
-/// <summary>Writes exported JSON to the server temp folder; import is not supported in the browser host.</summary>
+/// <summary>Writes exported JSON to the server temp folder. Import is not supported in the browser host.</summary>
 public sealed class WebFileTransferService(ILogger<WebFileTransferService> logger) : IFileTransferService
 {
     private static readonly string s_exportDir =

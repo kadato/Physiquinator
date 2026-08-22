@@ -1,6 +1,6 @@
 // Runs after blazor.web.js loads (autostart=false). Restores the account's databases
 // from IndexedDB before the first circuit starts, then boots Blazor.
-// Start Blazor immediately; restore runs in parallel so the server connection
+// Start Blazor immediately. Restore runs in parallel so the server connection
 // is not blocked by IndexedDB I/O (saves ~765ms on first load).
 
 // Start Blazor right away while the restore happens in the background.
@@ -48,7 +48,7 @@ async function authResult(response) {
             message = parsed.message;
         }
     } catch {
-        // not JSON; use the raw text
+        // not JSON. Use the raw text
     }
     return { ok: response.ok, status: response.status, message: message };
 }

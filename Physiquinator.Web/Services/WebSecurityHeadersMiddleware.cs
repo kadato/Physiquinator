@@ -7,7 +7,7 @@ namespace Physiquinator.Web.Services;
 /// </summary>
 public static class WebSecurityHeadersMiddleware
 {
-    // S7039 flags 'unsafe-inline' in style-src; it is required by the MudBlazor
+    // S7039 flags 'unsafe-inline' in style-src. It is required by the MudBlazor
     // component library (inline style attributes), and scripts remain fully
     // same-origin, which is what the policy is meant to constrain.
     // Google Fonts origins are allowed because app-overrides.css and index.html
@@ -31,7 +31,7 @@ public static class WebSecurityHeadersMiddleware
             context.Response.Headers["X-Content-Type-Options"] = "nosniff";
             context.Response.Headers["X-Frame-Options"] = "DENY";
             context.Response.Headers["Referrer-Policy"] = "no-referrer";
-#pragma warning disable S7039 // the CSP is defined above; S7039 re-flags the assignment site
+#pragma warning disable S7039 // the CSP is defined above. S7039 re-flags the assignment site
             context.Response.Headers["Content-Security-Policy"] = ContentSecurityPolicy;
 #pragma warning restore S7039
             context.Response.Headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=(), payment=(), usb=(), display-capture=()";

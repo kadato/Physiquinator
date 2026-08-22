@@ -47,7 +47,7 @@ public static class WebDbRestoreEndpoint
                     await File.WriteAllBytesAsync(stagingPath, bytes, context.RequestAborted);
                     File.Move(stagingPath, finalPath, overwrite: true);
 
-                    // The old WAL may reference frames from a different database file; discard it.
+                    // The old WAL may reference frames from a different database file. Discard it.
                     foreach (var sidecar in new[] { finalPath + "-wal", finalPath + "-shm" }.Where(File.Exists))
                     {
                         File.Delete(sidecar);
@@ -57,16 +57,16 @@ public static class WebDbRestoreEndpoint
                 }
                 catch (FormatException)
                 {
-                    // Invalid base64 in one file; keep restoring the others.
+                    // Invalid base64 in one file. Keep restoring the others.
                 }
                 catch (IOException ex)
                 {
-                    // Another circuit may hold the file open; it will retry on the next page load.
+                    // Another circuit may hold the file open. It will retry on the next page load.
                     return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    // File is locked by SQLite (WAL) or by AV; same retry semantics as IOException.
+                    // File is locked by SQLite (WAL) or by AV. Same retry semantics as IOException.
                     return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
                 }
             }

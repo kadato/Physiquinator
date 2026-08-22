@@ -63,7 +63,7 @@ public sealed class WebDbSyncService(
             }
             catch
             {
-                // Ignore close failures; the export continues with whatever was flushed.
+                // Ignore close failures. The export continues with whatever was flushed.
             }
         }
     }

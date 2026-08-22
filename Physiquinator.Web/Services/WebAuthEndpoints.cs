@@ -7,7 +7,7 @@ namespace Physiquinator.Web.Services;
 /// <summary>
 /// JSON-only auth endpoints for the Blazor login page. CSRF is mitigated by requiring
 /// an application/json content type (cross-origin form posts cannot set it, and the
-/// endpoints enable no CORS) plus SameSite=Lax cookies; login is rate limited.
+/// endpoints enable no CORS) plus SameSite=Lax cookies. Login is rate limited.
 /// </summary>
 public static class WebAuthEndpoints
 {

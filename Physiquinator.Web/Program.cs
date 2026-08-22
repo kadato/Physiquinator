@@ -13,7 +13,7 @@ using System.Threading.RateLimiting;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Container platforms (Render, Fly, ...) inject a PORT env var and route traffic
-// to it. Bind there so the platform proxy can reach Kestrel; fall back to
+// to it. Bind there so the platform proxy can reach Kestrel. Fall back to
 // ASPNETCORE_URLS when PORT is unset.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var containerPort))
@@ -60,7 +60,7 @@ builder.Services.AddPhysiquinatorServices(
 // Per-account database files: registered after Core's registration so they win.
 builder.Services.AddScoped<IDatabasePathProvider, WebUserDatabasePathProvider>();
 
-// Sign-out is web-only; registered after Core's no-op default so it wins.
+// Sign-out is web-only. Registered after Core's no-op default so it wins.
 builder.Services.AddScoped<IAccountService, WebAccountService>();
 
 builder.Services.AddSingleton<HttpClient>();

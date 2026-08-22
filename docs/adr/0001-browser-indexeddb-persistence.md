@@ -30,7 +30,7 @@ browser's IndexedDB:
 
 - Data survives server restarts and redeploys with no changes to the Core data layer.
 - Data is bound to a browser and an account, not to a device-independent server
-  store; two devices do not see each other's changes.
+  store, so two devices do not see each other's changes.
 - Up to 15 seconds of edits can be lost on abrupt tab close.
 - If the project ever needs true multi-device sync, the repository layer must be
   abstracted and backed by Postgres or an object store (see ADR 0002 for the

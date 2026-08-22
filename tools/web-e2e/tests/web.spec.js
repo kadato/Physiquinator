@@ -65,7 +65,7 @@ test('sign out returns to the login screen', async ({ page }) => {
     try {
         await page.getByRole('button', { name: 'Get started' }).click({ timeout: 5000 });
     } catch {
-        // No dialog; nothing to dismiss.
+        // No dialog. Nothing to dismiss.
     }
 
     // The Account panel lives on the Settings page: expand it, then sign out.
@@ -76,12 +76,12 @@ test('sign out returns to the login screen', async ({ page }) => {
     await expect(page.getByLabel('Username')).toBeVisible({ timeout: 30_000 });
 });
 
-// Dismisses the seeded-data onboarding dialog when it is up; no-op otherwise.
+// Dismisses the seeded-data onboarding dialog when it is up. No-op otherwise.
 async function dismissOnboarding(page) {
     try {
         await page.getByRole('button', { name: 'Get started' }).click({ timeout: 3000 });
     } catch {
-        // No dialog; nothing to dismiss.
+        // No dialog. Nothing to dismiss.
     }
 }
 

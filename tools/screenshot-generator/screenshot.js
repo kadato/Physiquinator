@@ -246,7 +246,7 @@ async function run() {
     startMockAiServer(9099);
 
     try {
-        // --- STANDARD SCREENS & AI CHAT ---
+        // --- Standard screens and AI chat ---
         console.log('--- STARTING SCREENSHOT CAPTURE ---');
         
         const normalPrefs = {

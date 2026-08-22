@@ -9,6 +9,11 @@
 # Playwright MCP page snapshots
 .playwright-mcp/
 
+# Design-review tool state and throwaway audit captures
+.impeccable/
+/audit-*.png
+/verify-*.png
+
 # User-specific files
 *.rsuser
 *.suo

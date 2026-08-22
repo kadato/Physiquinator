@@ -16,7 +16,8 @@ Add ASP.NET Core cookie authentication with a lightweight account store:
 
 - **Accounts**: `WebUserStore` keeps users in a small SQLite database with PBKDF2
   (100k iterations, SHA-256) password hashes. A demo account is seeded from
-  `AUTH_DEMO_USERNAME` / `AUTH_DEMO_PASSWORD` (default `demo` / `demo1234`).
+  `AUTH_DEMO_USERNAME` and `AUTH_DEMO_PASSWORD` (default username `demo`,
+  password `demo1234`).
 - **Session**: a SameSite=Lax, HTTPS-aware cookie, 30-day sliding expiration. Auth
   endpoints are JSON-only with no CORS, which blocks cross-origin form-based CSRF;
   login is rate limited.

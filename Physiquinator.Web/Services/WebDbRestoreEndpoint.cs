@@ -64,6 +64,11 @@ public static class WebDbRestoreEndpoint
                     // Another circuit may hold the file open; it will retry on the next page load.
                     return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
                 }
+                catch (UnauthorizedAccessException ex)
+                {
+                    // File is locked by SQLite (WAL) or by AV; same retry semantics as IOException.
+                    return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
+                }
             }
 
             return Results.Ok(new { restored });

@@ -1,94 +1,55 @@
-# Physiquinator - Windows Installation Guide
+# Install Physiquinator on Windows
 
-## System Requirements
+## System requirements
 
-- **Windows 10** (version 1809 or later) or **Windows 11**
-- **.NET 11 Desktop Runtime** (downloadable for free from Microsoft)
-- **64-bit (x64) processor**
+- Windows 10 (version 1809 or later) or Windows 11 (x64)
+- [.NET 11 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/11.0)
 
 ## Installation
 
-### Download and Install
+1. Install the .NET 11 Desktop Runtime:
+   - Download the installer: [.NET Desktop Runtime 11.0.x (x64)](https://dotnet.microsoft.com/download/dotnet/11.0).
+   - Run the installer and follow the prompts.
 
-1. **Download .NET 11 Desktop Runtime** (one-time, 5-minute setup)
-   - Visit: https://dotnet.microsoft.com/download/dotnet/11.0
-   - Download: ".NET Desktop Runtime 11.0.x (x64)"
-   - Install the downloaded file
-
-2. **Download Physiquinator**
-   - Download `Physiquinator-Windows.zip` from the [latest release](https://github.com/kadato/Physiquinator/releases/latest)
-   - Extract the ZIP file to any folder
-   - Run `Physiquinator.exe`
-
-**Package Details:**
-- Download size: 62 MB
-- Includes WindowsAppSDK runtime bundled
-- Requires .NET 11 Desktop Runtime (~55 MB, one-time install)
-
-## Why Do I Need .NET Runtime?
-
-.NET MAUI applications use the Mono runtime for cross-platform compatibility, which requires the .NET Desktop Runtime to be installed. This is the same for all .NET MAUI Windows apps. The runtime needs to be installed only once and works for all .NET 11 apps on your system.
+2. Download and run Physiquinator:
+   - Download `Physiquinator-Windows.zip` from the [latest GitHub release](https://github.com/kadato/Physiquinator/releases/latest).
+   - Extract the ZIP archive to a folder of your choice.
+   - Launch `Physiquinator.exe`.
 
 ## Troubleshooting
 
 ### "This application requires .NET Runtime"
-
-**Solution:** Install .NET 11 Desktop Runtime
-1. Visit: https://dotnet.microsoft.com/download/dotnet/11.0
-2. Download "Desktop Runtime" (x64)
-3. Install and restart the app
+The required desktop runtime is missing. Download and install [.NET 11 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/11.0), then restart the application.
 
 ### "The application failed to start"
+The Visual C++ redistributable may be missing. Install the [Visual C++ Redistributable (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe) and restart your computer.
 
-**Solution:** Install Visual C++ Redistributable
-1. Visit: https://aka.ms/vs/17/release/vc_redist.x64.exe
-2. Download and install
-3. Restart your computer
+### Application does not launch
+1. Right-click `Physiquinator.exe`, select **Properties**, check **Unblock** if present, and click **Apply**.
+2. If corporate security policies apply, verify that Windows Defender or third-party endpoint protection allows the binary to execute.
 
-### App doesn't start (no error)
+### Windows SmartScreen prompt
+If Windows displays "Windows protected your PC":
+1. Click **More info**.
+2. Click **Run anyway**.
 
-**Solutions:**
-1. Right-click `Physiquinator.exe` → Properties → Unblock → Apply
-2. Run as Administrator (right-click → Run as administrator)
-3. Check Windows Defender/Antivirus (it may be blocking the app)
+This prompt appears because the release binary is not signed with a commercial certificate.
 
-### SmartScreen Warning
-
-If you see "Windows protected your PC":
-1. Click "More info"
-2. Click "Run anyway"
-
-This happens because the app isn't signed with a code signing certificate.
-
-## Running from Source
-
-If you prefer to run from source:
+## Running from source
 
 ```powershell
-# Clone the repository
 git clone https://github.com/kadato/Physiquinator.git
 cd Physiquinator
-
-# Run the app
 dotnet run --framework net11.0-windows10.0.19041.0
 ```
 
 ## Features
 
-- 🏋️ Custom workout plan creation
-- ⏱️ Smart rest timer (in-app; background notifications are Android/iOS only)
-- 📊 Real-time progress tracking
-- 💾 Local SQLite storage (offline-first)
-- 📤 Export/Import workout plans (JSON)
-- 🎨 Modern dark theme UI
+See [Features](README.md#features) in the README for the full list.
 
 ## Support
 
-For issues or questions:
 - [GitHub Issues](https://github.com/kadato/Physiquinator/issues)
 - [Release Notes](https://github.com/kadato/Physiquinator/releases)
 
-## Building Your Own
-
-See [DOCKER.md](DOCKER.md) and [README.md](README.md) for build instructions.
 

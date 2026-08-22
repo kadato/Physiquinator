@@ -50,14 +50,14 @@
 </div>
 
 @code {
-    /// <summary>Monday (row 0) through Sunday (row 6); columns are weeks, oldest left.</summary>
+    /// <summary>Monday (row 0) through Sunday (row 6). Columns are weeks, oldest left.</summary>
     [Parameter]
     public IReadOnlyDictionary<DateOnly, int> CountsByDay { get; set; } = new Dictionary<DateOnly, int>();
 
     [Parameter]
     public int Weeks { get; set; } = 53;
 
-    /// <summary>Last calendar day included in the grid; future days in the last week render as planned outlines when scheduled.</summary>
+    /// <summary>Last calendar day included in the grid. Future days in the last week render as planned outlines when scheduled.</summary>
     [Parameter]
     public DateOnly? EndLocal { get; set; }
 
@@ -79,7 +79,7 @@
     [Parameter]
     public int SelectionVersion { get; set; }
 
-    /// <summary>Raised with the tapped day; the owner toggles it in its filter or selection state.</summary>
+    /// <summary>Raised with the tapped day. The owner toggles it in its filter or selection state.</summary>
     [Parameter]
     public EventCallback<DateOnly> DaySelectionChanged { get; set; }
 
@@ -184,7 +184,7 @@
     private int ClampToEnabled(int index)
     {
         if (IsCellEnabled(index)) return index;
-        // Disabled cells sit only at the tail of the grid; walk back to the newest enabled day.
+        // Disabled cells sit only at the tail of the grid. Walk back to the newest enabled day.
         var idx = Math.Min(index, 7 * Weeks - 1);
         while (idx > 0 && !IsCellEnabled(idx)) idx--;
         return idx;

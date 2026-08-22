@@ -191,7 +191,7 @@ else
                                 <span>
                                     @if (GetLogType(context.ExerciseName) == ExerciseLogType.Duration)
                                     {
-                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">—</MudText>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
                                     }
                                     else
                                     {
@@ -268,7 +268,7 @@ else
     @* Off-screen share card, captured to PNG by the Share button. *@
     <WorkoutShareCard PlanName="@_session.PlanName"
                       DateLabel="@ShareDateLabel"
-                      DurationLabel="@(DurationLabel ?? "—")"
+                      DurationLabel="@(DurationLabel ?? "-")"
                       VolumeLabel="@TotalVolumeLabel"
                       SetsLogged="@TotalSetCount"
                       Exercises="@ShareCardExercises" />
@@ -337,7 +337,7 @@ else
         {
             foreach (ExercisePlan exercise in _snapshot.Exercises)
             {
-                // First occurrence wins; malformed snapshots may repeat a name with different casing.
+                // First occurrence wins. Malformed snapshots may repeat a name with different casing.
                 _logTypesByExercise.TryAdd(exercise.Name, exercise.LogType);
                 _percentByExercise.TryAdd(exercise.Name, exercise.BodyweightPercent);
             }
@@ -633,7 +633,7 @@ else
 
     private string FormatReps(string exerciseName, int? reps)
     {
-        if (reps == null) return "—";
+        if (reps == null) return "-";
         var type = GetLogType(exerciseName);
         return type == ExerciseLogType.Duration ? $"{reps}s" : reps.Value.ToString();
     }
@@ -641,10 +641,10 @@ else
     private string FormatWeight(string exerciseName, double? weight)
     {
         var type = GetLogType(exerciseName);
-        if (type == ExerciseLogType.Duration) return "—";
+        if (type == ExerciseLogType.Duration) return "-";
         if (type == ExerciseLogType.BodyweightReps)
             return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
-        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "—";
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "-";
     }
 
     /// <summary>Builds a readable text summary of the session for sharing.</summary>

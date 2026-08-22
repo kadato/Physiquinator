@@ -485,7 +485,7 @@ else
     /// session's O(1) lookup instead of rebuilding a HashSet from the list.
     /// The split is exclusive: an exercise lives in exactly one section so it
     /// renders as a single card. Partially completed exercises stay in
-    /// "upcoming" (where their remaining sets are logged); the "Completed"
+    /// "upcoming" (where their remaining sets are logged). The "Completed"
     /// section lists only fully completed exercises. Otherwise the same
     /// exercise would render twice and both copies would share the active
     /// expansion state.
@@ -618,7 +618,7 @@ else
 
     /// <summary>
     /// Moves an exercise to a different position for the rest of this session
-    /// only. The plan on disk stays untouched; the session snapshot and every
+    /// only. The plan on disk stays untouched. The session snapshot and every
     /// logged set index are remapped so history stays consistent.
     /// </summary>
     private async Task MoveExerciseAsync(int fromIndex, int toIndex)
@@ -759,7 +759,7 @@ else
 
     /// <summary>
     /// Marks the remaining sets of an exercise as done without logging them,
-    /// e.g. when the machine is taken. Skipped sets are not written to history.
+    /// for example, when the machine is taken. Skipped sets are not written to history.
     /// </summary>
     private async Task SkipExerciseAsync((int ExerciseIndex, string ExerciseName) input)
     {
@@ -1044,7 +1044,7 @@ else
 
     /// <summary>
     /// Invoked from JS by the back guard (browser back, back gesture, Android
-    /// hardware back). Returns <c>true</c> when the user chose to leave; the
+    /// hardware back). Returns <c>true</c> when the user chose to leave. The
     /// session is kept in progress and can be resumed from Home.
     /// </summary>
     [JSInvokable]
@@ -1157,7 +1157,7 @@ else
 
     private async Task PlayRestCompleteAlertsAsync()
     {
-        // The knock is an in-app sound, so it follows the "Sound & vibration"
+        // The knock is an in-app sound, so it follows the "Sound and vibration"
         // setting only. Push notifications are a separate native concern and
         // are gated by RestAlertSettings.Enabled elsewhere.
         if (!RestAlertSettings.SoundVibrationEnabled)
@@ -1281,7 +1281,7 @@ else
                 FullWidth = true,
             };
 
-            // ShowAsync completes when the dialog opens; await Result so the
+            // ShowAsync completes when the dialog opens. Await Result so the
             // recap stays up until the user dismisses it instead of being
             // torn down by the navigation below.
             IDialogReference dialog = await DialogService.ShowAsync<WorkoutSummaryDialog>("Workout complete", parameters, options);
@@ -1309,7 +1309,7 @@ else
             var done = SessionService.TickRest();
             if (done)
             {
-                // TickRest clears IsResting; without this flag first, the timer block unmounts for one frame.
+                // TickRest clears IsResting. Without this flag first, the timer block unmounts for one frame.
                 _isRestComplete = true;
             }
 
@@ -1330,7 +1330,7 @@ else
         }
         catch (Exception ex)
         {
-            // Keep the tick chain alive; a single failed tick must not freeze
+            // Keep the tick chain alive. A single failed tick must not freeze
             // the countdown for the rest of the period.
             Logger.LogError(ex, "Rest tick failed");
             return false;
@@ -1399,7 +1399,7 @@ else
         }
         catch (InvalidOperationException)
         {
-            // No render handle available (e.g. prerendering)
+            // No render handle available (for example, prerendering)
         }
     }
 }

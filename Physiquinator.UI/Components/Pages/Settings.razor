@@ -781,7 +781,7 @@
         {
             var days = string.Join(", ", ScheduleDayOrder.Where(_scheduleDays.Contains).Select(AbbreviatedDayName));
             var next = WorkoutSchedule.NextWorkoutDay(DateOnly.FromDateTime(DateTime.Today));
-            var nextLabel = next is { } n ? $"{DayName(n.DayOfWeek)} {UiDateFormats.DateOnlyCompact(n)}" : "—";
+            var nextLabel = next is { } n ? $"{DayName(n.DayOfWeek)} {UiDateFormats.DateOnlyCompact(n)}" : "-";
             return string.Format("You train {0} day(s) per week: {1}. Next training day: {2}.", _scheduleDays.Count, days, nextLabel);
         }
     }

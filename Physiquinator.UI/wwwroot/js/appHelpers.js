@@ -57,7 +57,7 @@
     // window is no longer resized for the IME, so the WebView keeps its full
     // height and the keyboard would cover bottom-anchored chrome (nav pill,
     // FABs, undo button) and dialogs. Expose how much of the app the keyboard
-    // covers as --app-ime-inset plus the .app-ime-open root class; the CSS in
+    // covers as --app-ime-inset plus the .app-ime-open root class. The CSS in
     // app-overrides.css lifts the affected surfaces above it. When the WebView
     // resizes normally (adjustResize, iOS), visualViewport.height equals
     // innerHeight, the inset is 0 and nothing moves.

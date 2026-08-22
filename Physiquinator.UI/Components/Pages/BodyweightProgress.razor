@@ -137,7 +137,7 @@ else
     private const int ListPageSize = 50;
     private const string LoadMoreSentinelId = "bodyweight-load-more-sentinel";
 
-    /// <summary>Show per-entry dots only for sparse series; dense series render as a clean line.</summary>
+    /// <summary>Show per-entry dots only for sparse series. Dense series render as a clean line.</summary>
     private const int MaxChartMarkerEntries = 60;
 
     private bool _ready;
@@ -159,7 +159,7 @@ else
     {
         get
         {
-            if (_entries.Count < 2) return "—";
+            if (_entries.Count < 2) return "-";
             var diff = _entries[0].BodyweightKg - _entries[^1].BodyweightKg;
             var formatted = ExerciseWeightFormatter.FormatWeight(Math.Abs(diff), WeightUnitService.Current);
             var unit = ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current);

@@ -17,7 +17,7 @@ export function observe(sentinelId, dotNetRef, methodName) {
                 const more = await dotNetRef.invokeMethodAsync(methodName);
                 if (more) rearm();
             } catch {
-                // Interop teardown (e.g. navigation): stop observing.
+                // Interop teardown (for example, navigation): stop observing.
             }
         }
     }, { rootMargin: '240px 0px' });

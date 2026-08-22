@@ -252,7 +252,7 @@ else
 
     private string FormatSummaryBestValue()
     {
-        if (_rows.Count == 0) return "—";
+        if (_rows.Count == 0) return "-";
         if (_logType == ExerciseLogType.Duration)
         {
             var maxTime = _rows.Max(r => r.TotalReps);
@@ -264,7 +264,7 @@ else
 
     private string FormatSummaryVolumeValue()
     {
-        if (_rows.Count == 0) return "—";
+        if (_rows.Count == 0) return "-";
         var maxVol = _rows.Max(r => r.TotalVolumeKg);
         return ExerciseWeightFormatter.FormatWeightWithUnit(maxVol, WeightUnitService.Current);
     }
@@ -484,7 +484,7 @@ else
     {
         if (_logType == ExerciseLogType.BodyweightReps)
             return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
-        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "—";
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "-";
     }
 
     private bool _hasChartData;

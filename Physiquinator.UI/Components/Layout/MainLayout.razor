@@ -28,7 +28,7 @@
 <!-- STORY: Hybrid daily athlete sweeps the board in seconds: streak, this week, last, 53-week flap heatmap, plan cards as attempt forms. Then logs sets thumb-fast, watches seven-seg rest tick, sees PR as GOOD LIFT -->
 <!-- FIRST VIEWPORT: Sticky top rail 56px (PHYSIQUINATOR mono left, REST 01:14 amber center when live, ◯◯● lights right). Below, flap meet card (3 tiles) + flap heatmap micro-tiles, then triplicate plan cards with plate-color load dots + ink START foot -->
 <!-- FORM: Split-flap mechanical display + design-annual plate proofs, assigned #6, Tokyo Night palette, raised with zone tonal, hairline-edge, density-tier, damped-needle disciplines -->
-<!-- FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+<!-- FINISH: unreviewed and undocumented is unfinished. This build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
 @if (AppInit.IsReady)
 {
     <div class="@appShellClasses">
@@ -179,7 +179,7 @@ else
             }
             catch (JSDisconnectedException)
             {
-                // Circuit gone; scroll hiding is cosmetic only.
+                // Circuit gone. Scroll hiding is cosmetic only.
             }
         }
 
@@ -232,7 +232,7 @@ else
 
     private static bool ShouldShowBackFab(string path)
     {
-        // Root page: nothing to go back to; the nav pill already anchors the app.
+        // Root page: nothing to go back to. The nav pill already anchors the app.
         if (path.Length == 0)
             return false;
 
@@ -245,7 +245,7 @@ else
             return false;
 
         // Exclude the active workout route: leaving is guarded and End/Discard
-        // are the page's own controls; a back FAB would bypass the guard.
+        // are the page's own controls. A back FAB would bypass the guard.
         if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal))
             return false;
 
@@ -272,7 +272,7 @@ else
         }
         catch (JSDisconnectedException)
         {
-            // Circuit gone; nothing to focus.
+            // Circuit gone. Nothing to focus.
         }
     }
 

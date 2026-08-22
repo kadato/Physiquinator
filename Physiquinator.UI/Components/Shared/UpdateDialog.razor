@@ -96,7 +96,7 @@
         {
             var current = AppUpdateService.CurrentVersion;
             var published = Release.PublishedAt is { } p ? $" · {UiDateFormats.LocalDateCompact(p.DateTime)}" : "";
-            return $"{current} → {Release.Tag}{published}";
+            return $"{current} to {Release.Tag}{published}";
         }
     }
 

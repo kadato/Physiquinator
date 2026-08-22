@@ -28,7 +28,7 @@ async function requestWakeLock() {
             wakeLockSentinel = null;
         });
     } catch {
-        // Unsupported or denied; the screen just may sleep.
+        // Unsupported or denied. The screen just may sleep.
         wakeLockSentinel = null;
     }
 }
@@ -44,7 +44,7 @@ function releaseWakeLock() {
     wakeLockSentinel = null;
 }
 
-// Browsers drop the lock when the tab is hidden; re-request on return while
+// Browsers drop the lock when the tab is hidden. Re-request on return while
 // a workout still wants the screen on.
 document.addEventListener('visibilitychange', () => {
     if (keepScreenOnWanted && document.visibilityState === 'visible') {
@@ -77,7 +77,7 @@ export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs,
             restTotalMs = activeMs;
             restStartTime = performance.now() - fraction * activeMs;
         }
-        // A leftover chain (e.g. the page was disposed without stopRestTimer
+        // A leftover chain (for example, the page was disposed without stopRestTimer
         // being reached, then remounted) may still tick a stale dotNetRef.
         // Bump the generation to kill it and always reschedule with the new
         // reference, or the countdown freezes after navigation.
@@ -140,7 +140,7 @@ export function registerUndoKeyHandler(dotNetRef) {
         try {
             await dotNetRef.invokeMethodAsync('OnUndoKeyDown');
         } catch {
-            // transient interop failure (e.g. WebView teardown); ignore
+            // transient interop failure (for example, WebView teardown). Ignore
         }
     };
     window.addEventListener('keydown', undoKeyHandler, true);
@@ -154,7 +154,7 @@ export function unregisterUndoKeyHandler() {
 
 // ---- Active-workout back guard -------------------------------------------
 // A guard history entry is pushed while a workout runs. Browser back, the
-// MAUI WebView back mapping, or a back gesture pops it; the guard asks .NET
+// MAUI WebView back mapping, or a back gesture pops it. The guard asks .NET
 // whether to leave and re-arms itself when the user stays. The Android
 // activity consults window.physiquinatorBack.consume() for hardware back.
 const backGuardState = { physiquinatorBackGuard: true };
@@ -198,7 +198,7 @@ async function confirmLeaveWorkout() {
     try {
         return await backGuardRef.invokeMethodAsync('OnLeaveWorkoutRequested');
     } catch {
-        // Component torn down mid-prompt; do not trap the user.
+        // Component torn down mid-prompt. Do not trap the user.
         return true;
     }
 }
@@ -213,10 +213,10 @@ async function onBackGuardPopState() {
     // In-app Blazor navigation never fires popstate, so any pop while the
     // guard is armed is a user-initiated back press. The guard entry sits on
     // top of the workout entry (same URL), so the first pop lands on the
-    // workout entry itself — that is when the confirmation is shown.
+    // workout entry itself, and that is when the confirmation is shown.
     if (!backGuardActive) return;
     if (backGuardBusy) {
-        // A prompt is already open; keep the guard entry so the next back
+        // A prompt is already open. Keep the guard entry so the next back
         // cannot silently navigate past it.
         window.history.pushState(backGuardState, '');
         return;
@@ -231,7 +231,7 @@ async function onBackGuardPopState() {
 
 window.physiquinatorBack = {
     // Invoked from the Android activity on hardware back. Returns true when
-    // the guard took over (or is busy); false lets the system fall back to
+    // the guard took over (or is busy). False lets the system fall back to
     // its default back behavior.
     consume: function () {
         if (!backGuardActive) return false;
@@ -273,7 +273,7 @@ function scheduleTick(dotNetRef, intervalMs) {
             else
                 restTimerActive = false;
         } catch {
-            // A transient interop failure (e.g. the WebView was suspended
+            // A transient interop failure (for example, the WebView was suspended
             // while the app was backgrounded under the overlay) must not kill
             // the countdown permanently. Retry the next tick instead.
             if (restTimerActive && generation === chainGeneration)

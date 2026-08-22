@@ -12,7 +12,7 @@
 <main class="auth-shell">
     <MudPaper Elevation="6" Class="auth-card">
         <div class="auth-brand">Physiquinator</div>
-        <p class="auth-tagline">Workout tracking, an AI assistant, and an agent API - now with your own account.</p>
+        <p class="auth-tagline">Workout tracking, on-device AI assistance, and Model Context Protocol agent integration.</p>
 
         @if (!string.IsNullOrEmpty(_error))
         {
@@ -26,7 +26,7 @@
                    Class="mb-4"
                    Disabled="_busy"
                    OnClick="SubmitDemoAsync">
-            Try the demo
+            Explore demo
         </MudButton>
 
         <MudDivider Class="mb-4" />
@@ -36,6 +36,9 @@
                       Variant="Variant.Outlined"
                       Margin="Margin.Dense"
                       Class="mb-4"
+                      autocomplete="username"
+                      enterkeyhint="next"
+                      autocapitalize="off"
                       Disabled="_busy"
                       Immediate="true" />
         <MudTextField @bind-Value="_password"
@@ -44,6 +47,8 @@
                       Margin="Margin.Dense"
                       InputType="InputType.Password"
                       Class="mb-6"
+                      autocomplete="@(_mode == AuthMode.Register ? "new-password" : "current-password")"
+                      enterkeyhint="go"
                       Disabled="_busy"
                       Immediate="true"
                       @onkeydown="HandleEnterKey" />
@@ -53,14 +58,14 @@
                    FullWidth="true"
                    Disabled="_busy"
                    OnClick="SubmitAsync">
-            @(_mode == AuthMode.Login ? "Sign in" : "Create account")
+            @(_mode == AuthMode.Login ? "Sign in" : "Register")
         </MudButton>
 
         <MudButton Variant="Variant.Text"
                    FullWidth="true"
                    Disabled="_busy"
                    OnClick="ToggleModeAsync">
-            @(_mode == AuthMode.Login ? "New here? Create an account" : "Already registered? Sign in")
+            @(_mode == AuthMode.Login ? "Need an account? Register" : "Already registered? Sign in")
         </MudButton>
     </MudPaper>
 </main>
@@ -130,7 +135,7 @@
             if (!result.Ok)
             {
                 _error = string.IsNullOrWhiteSpace(result.Message)
-                    ? "The demo account is not available right now."
+                    ? "Demo account is unavailable."
                     : result.Message;
                 return;
             }
@@ -139,7 +144,7 @@
         }
         catch
         {
-            _error = "Could not reach the server. Please try again.";
+            _error = "Could not connect to the server.";
         }
         finally
         {
@@ -162,7 +167,7 @@
             if (!result.Ok)
             {
                 _error = string.IsNullOrWhiteSpace(result.Message)
-                    ? "Something went wrong."
+                    ? "Authentication failed."
                     : result.Message;
                 return;
             }
@@ -171,7 +176,7 @@
         }
         catch
         {
-            _error = "Could not reach the server. Please try again.";
+            _error = "Could not connect to the server.";
         }
         finally
         {

@@ -54,7 +54,7 @@ public sealed class BackupRestoreService(
         PreferenceKeys.AiApiKey,
         PreferenceKeys.AiModelName,
         PreferenceKeys.AiSystemPrompt,
-        // WorkoutScheduleDays is the legacy single-value preference; the full
+        // WorkoutScheduleDays is the legacy single-value preference. The full
         // history lives in the DB and is captured in AllDataBackup.Schedules.
         PreferenceKeys.WorkoutScheduleDays,
     ];
@@ -103,8 +103,8 @@ public sealed class BackupRestoreService(
     /// <summary>
     /// Reads every known preference key for the active profile, stripping the profile-ID suffix
     /// so the resulting dictionary uses bare base keys and is portable across profiles/devices.
-    /// Only keys that differ from their default (i.e. have an explicit stored value) are included;
-    /// keys that were never written are omitted so import does not overwrite defaults with defaults.
+    /// Only keys that differ from their default (that is, they have an explicit stored value) are included.
+    /// Keys that were never written are omitted so import does not overwrite defaults with defaults.
     /// </summary>
     private Dictionary<string, string> ReadAllPreferences()
     {

@@ -48,14 +48,14 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
     public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
 
-    /// <summary>Fired when rest expires while the app was not driving JS ticks (e.g. after resume from background).</summary>
+    /// <summary>Fired when rest expires while the app was not driving JS ticks (for example, after resume from background).</summary>
     public event EventHandler? RestCompletedWhileBackground;
 
     /// <summary>
     /// Fired on material rest state changes (start, reset, add, skip, cancel,
     /// restore, expiry) so platform surfaces such as the ongoing
     /// notification, floating overlay and exact alarm can stay in sync.
-    /// Not fired by the 500 ms internal tick or no-op mutations; the UI
+    /// Not fired by the 500 ms internal tick or no-op mutations. The UI
     /// countdown is driven by the JS bridge instead.
     /// </summary>
     public event EventHandler? RestStateChanged;

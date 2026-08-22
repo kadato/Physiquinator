@@ -3,7 +3,7 @@ namespace Physiquinator.Core.Services;
 /// <summary>
 /// Abstraction over persisted key/value preferences so the core layer stays
 /// platform-independent and testable. Production implementation backs onto
-/// MAUI <c>Preferences</c>; the screenshot tooling backs onto a JSON file.
+/// MAUI <c>Preferences</c>. The screenshot tooling backs onto a JSON file.
 /// </summary>
 public interface IAppPreferences
 {

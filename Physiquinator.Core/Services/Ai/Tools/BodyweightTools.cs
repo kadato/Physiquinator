@@ -67,7 +67,7 @@ public sealed class LogBodyweightTool(WorkoutHistoryRepository repository, UserP
         type = "object",
         properties = new
         {
-            bodyweightKg = new { type = "number", description = "Bodyweight in kilograms (e.g. 78.5)" },
+            bodyweightKg = new { type = "number", description = "Bodyweight in kilograms (for example, 78.5)" },
             date = new { type = "string", description = "ISO format date 'yyyy-MM-dd' (optional, defaults to today)" }
         },
         required = new[] { "bodyweightKg" }

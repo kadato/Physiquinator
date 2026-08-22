@@ -26,7 +26,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
         Preference = ReadStoredPreference();
     }
 
-    /// <summary>Resolves the OS-level appearance. Base returns dark; MAUI subclasses read the app theme.</summary>
+    /// <summary>Resolves the OS-level appearance. Base returns dark. MAUI subclasses read the app theme.</summary>
     protected virtual string GetSystemTheme() => ThemePreference.Dark;
 
     /// <summary>Pushes the current preference to the platform shell (no-op by default).</summary>
@@ -64,7 +64,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
 
     public string Preference { get; private set; }
 
-    /// <summary>Resolved on first access; falls back to the system theme when the preference is System.</summary>
+    /// <summary>Resolved on first access. Falls back to the system theme when the preference is System.</summary>
     public string EffectiveTheme
     {
         get => _effectiveTheme ??= Preference == ThemePreference.System ? GetSystemTheme() : Preference;

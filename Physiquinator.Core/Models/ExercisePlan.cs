@@ -28,7 +28,7 @@ public class ExercisePlan
 
     /// <summary>
     /// Share of the user's bodyweight counted toward volume for bodyweight
-    /// exercises, in percent (e.g. 65 for push-ups). Null means full
+    /// exercises, in percent (for example, 65 for push-ups). Null means full
     /// bodyweight (100%). Only used when <see cref="LogType"/> is
     /// <see cref="ExerciseLogType.BodyweightReps"/>.
     /// </summary>

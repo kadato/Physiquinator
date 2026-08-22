@@ -13,7 +13,7 @@ public static class ExerciseCatalog
     /// <summary>
     /// Bodyweight-percent values approximate the lifted mass as a share of
     /// bodyweight (push-ups ~65%, dips ~95%, pull-ups 100%). They are
-    /// starting points; users can adjust the share per exercise in the plan.
+    /// starting points. Users can adjust the share per exercise in the plan.
     /// </summary>
     public static IReadOnlyList<ExerciseCatalogEntry> All { get; } =
     [
@@ -125,7 +125,7 @@ public static class ExerciseCatalog
     }
 
     /// <summary>
-    /// Formats a bodyweight share for display, e.g. "65%" or "100%".
+    /// Formats a bodyweight share for display, for example, "65%" or "100%".
     /// </summary>
     public static string FormatShare(double? bodyweightPercent) =>
         bodyweightPercent is { } p

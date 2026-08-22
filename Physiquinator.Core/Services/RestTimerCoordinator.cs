@@ -55,7 +55,7 @@ public sealed class RestTimerCoordinator : IDisposable
 
     /// <summary>
     /// Hides any workout timer UI left over from a previous process instance.
-    /// Called once at app startup; the snapshot and alarm are left untouched
+    /// Called once at app startup. The snapshot and alarm are left untouched
     /// so a still-running rest keeps notifying even after process death.
     /// </summary>
     public void EnsureInitialState()
@@ -196,7 +196,7 @@ public sealed class RestTimerCoordinator : IDisposable
             _lastSyncedRestEndUtc = restEnd;
             _lastSyncedResting = _session.IsResting;
 
-            // Rest state survives process death; between-set state is rebuilt
+            // Rest state survives process death. Between-set state is rebuilt
             // from the persisted workout session, so only rest needs a snapshot.
             if (_session.IsResting)
                 PersistSnapshot(state);

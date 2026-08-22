@@ -12,7 +12,7 @@ namespace Physiquinator.Core.Services;
 /// </summary>
 public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 {
-    // Cache-busting query: the module's progress-bar logic evolved; older
+    // Cache-busting query: the module's progress-bar logic evolved. Older
     // WebView caches of the module would show a stale bar.
     private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=8";
 
@@ -32,7 +32,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
     /// <param name="remainingMs">Seconds left in the active rest.</param>
     /// <param name="activeDurationMs">Full interval of the active rest (for progress fraction).</param>
     /// <param name="continueMode">True when the rest is extended or synced (bar continues from its
-    /// current position); false for a fresh rest or reset (bar restarts).</param>
+    /// current position), false for a fresh rest or reset (bar restarts).</param>
     public Task StartTimerAsync<T>(DotNetObjectReference<T> dotNetRef, int tickIntervalMs, int remainingMs, int activeDurationMs, bool continueMode)
         where T : class =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("startRestTimer", dotNetRef, tickIntervalMs, remainingMs, activeDurationMs, continueMode));
@@ -101,7 +101,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         }
         catch (InvalidOperationException)
         {
-            // JS runtime not available (e.g. prerendering)
+            // JS runtime not available (for example, prerendering)
         }
     }
 }

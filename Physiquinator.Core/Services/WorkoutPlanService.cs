@@ -78,7 +78,7 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
 
     /// <summary>
     /// Imports a workout plan from a JSON string.
-    /// If the plan ID already exists, it will be updated; otherwise, a new plan is created.
+    /// If the plan ID already exists, it will be updated. Otherwise, a new plan is created.
     /// </summary>
     public async Task<WorkoutPlan> ImportPlanFromJsonAsync(string json)
     {

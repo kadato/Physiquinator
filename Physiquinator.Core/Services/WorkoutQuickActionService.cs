@@ -9,10 +9,10 @@ public enum QuickActionStatus
     /// <summary>No uncompleted set existed, nothing was logged.</summary>
     NothingToLog,
 
-    /// <summary>Set logged; the workout continues.</summary>
+    /// <summary>Set logged. The workout continues.</summary>
     Logged,
 
-    /// <summary>Set logged; it was the last set of the workout.</summary>
+    /// <summary>Set logged. It was the last set of the workout.</summary>
     WorkoutCompleted
 }
 
@@ -41,7 +41,7 @@ public sealed class WorkoutQuickActionService(
     /// <summary>Logs the next uncompleted set using the exercise defaults for weight and reps.</summary>
     public Task<QuickActionResult> LogNextSetAsync() => LogNextSetAsync(null, null);
 
-    /// <summary>Logs the next uncompleted set; explicit weight/reps override the exercise defaults.</summary>
+    /// <summary>Logs the next uncompleted set. Explicit weight/reps override the exercise defaults.</summary>
     public async Task<QuickActionResult> LogNextSetAsync(double? weightKg, int? reps)
     {
         WorkoutPlan? plan = session.CurrentPlan;
@@ -61,7 +61,7 @@ public sealed class WorkoutQuickActionService(
         double? loggedWeight = duration ? null : weightKg ?? exercise.DefaultWeightKg ?? 0.0;
         int? loggedReps = reps ?? exercise.DefaultReps ?? DefaultReps;
 
-        // Completing the last set ends the workout; stop any running rest.
+        // Completing the last set ends the workout. Stop any running rest.
         if (session.WouldCompleteWorkout(exerciseIndex, setIndex))
             session.SkipRest();
 

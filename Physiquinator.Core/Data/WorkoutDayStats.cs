@@ -27,10 +27,10 @@ public static class WorkoutDayStats
     }
 
     /// <summary>
-    /// Weeks are Monday–Sunday, matching the activity heatmap grid.
+    /// Weeks are Monday-Sunday, matching the activity heatmap grid.
     /// Session totals sum per-day counts from <paramref name="activityByDay"/> (multiple sessions on one day count separately).
-    /// When <paramref name="getSchedule"/> resolves a non-empty schedule for a date, streaks count completed scheduled days only;
-    /// non-scheduled (rest) days never break a streak. When it is null or returns an empty schedule, the legacy
+    /// When <paramref name="getSchedule"/> resolves a non-empty schedule for a date, streaks count completed scheduled days only.
+    /// Non-scheduled (rest) days never break a streak. When it is null or returns an empty schedule, the legacy
     /// calendar-day streak with a one-day grace period is used.
     /// </summary>
     public static WorkoutDaySummary Compute(

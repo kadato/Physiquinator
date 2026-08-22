@@ -47,7 +47,7 @@ public sealed class WorkoutHistoryService(WorkoutHistoryRepository repository)
 
         WorkoutHistoryBackup? backup = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.WorkoutHistoryBackup) ?? throw new InvalidOperationException("Failed to deserialize workout history from JSON.");
         if (backup.FormatVersion is < 1 or > SupportedFormatVersion)
-            throw new InvalidOperationException($"Unsupported history backup format version {backup.FormatVersion} (supported: 1–{SupportedFormatVersion}).");
+            throw new InvalidOperationException($"Unsupported history backup format version {backup.FormatVersion} (supported: 1-{SupportedFormatVersion}).");
 
         backup.Sessions ??= [];
         return backup;

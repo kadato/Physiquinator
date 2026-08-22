@@ -33,7 +33,7 @@ public sealed class AppDatabase
         }
         catch (Exception ex)
         {
-            // Ignore PRAGMA failures (e.g. for in-memory unit testing databases)
+            // Ignore PRAGMA failures (for example, for in-memory unit testing databases)
             System.Diagnostics.Debug.WriteLine(ex);
         }
 

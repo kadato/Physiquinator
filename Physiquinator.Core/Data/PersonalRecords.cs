@@ -30,7 +30,7 @@ public sealed record PersonalRecords(IReadOnlyList<PersonalRecordEntry> Entries)
 /// <summary>
 /// Computes personal records (PRs) for one exercise from raw set rows.
 /// Weight-based records (BestWeight, BestVolume) only apply to weighted log
-/// types; duration exercises track the longest set instead.
+/// types. Duration exercises track the longest set instead.
 /// </summary>
 public static class PersonalRecordCalculator
 {
@@ -62,8 +62,8 @@ public static class PersonalRecordCalculator
     }
 
     /// <summary>
-    /// Volume of a single set: reps × weight. Both metrics must be logged;
-    /// a set missing either contributes 0 (no tonnage can be attributed).
+    /// Volume of a single set: reps × weight. Both metrics must be logged.
+    /// A set missing either contributes 0 (no tonnage can be attributed).
     /// Bodyweight-relative exercises include the bodyweight share of the
     /// user's bodyweight when known (100% when no share is set).
     /// </summary>

@@ -30,17 +30,17 @@ public static class ExerciseWeightFormatter
     public static string FormatWeight(double kg, WeightUnit unit) =>
         ToDisplay(kg, unit).ToString(unit == WeightUnit.Pounds ? PoundsPattern : WeightPattern, s_invariant);
 
-    /// <summary>Formats a stored kilogram value with its unit suffix, e.g. "85 kg" or "187.4 lb".</summary>
+    /// <summary>Formats a stored kilogram value with its unit suffix, for example, "85 kg" or "187.4 lb".</summary>
     public static string FormatWeightWithUnit(double kg, WeightUnit unit) =>
         $"{FormatWeight(kg, unit)} {UnitSuffix(unit)}";
 
-    /// <summary>Formats a stored kilogram value with thousands grouping, e.g. "12,345.5".</summary>
+    /// <summary>Formats a stored kilogram value with thousands grouping, for example, "12,345.5".</summary>
     public static string FormatWeightGrouped(double kg, WeightUnit unit) =>
         ToDisplay(kg, unit).ToString(unit == WeightUnit.Pounds ? "#,##0.#" : "#,##0.##", s_invariant);
 
     /// <summary>
     /// Formats a stored kilogram total with grouping and a non-breaking unit
-    /// suffix, e.g. "12,346 kg" or "27,216 lb". Volumes are aggregates where
+    /// suffix, for example, "12,346 kg" or "27,216 lb". Volumes are aggregates where
     /// decimal precision reads as false accuracy, so they round to whole
     /// units. The non-breaking space keeps the unit glued to the number so it
     /// never wraps onto its own row inside a narrow stat card.
@@ -52,7 +52,7 @@ public static class ExerciseWeightFormatter
     }
 
     /// <summary>
-    /// Formats a bodyweight-relative offset for a set summary, e.g.
+    /// Formats a bodyweight-relative offset for a set summary, for example,
     /// "BW", "BW (85 kg)", "BW + 5 kg (90 kg) × 8 reps", "BW - 5 kg (80 kg) × 8 reps".
     /// </summary>
     /// <param name="offsetKg">Added load relative to bodyweight (0/null means bodyweight only).</param>

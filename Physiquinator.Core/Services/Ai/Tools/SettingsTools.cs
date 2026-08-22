@@ -121,7 +121,7 @@ public sealed class UpdateRestTimerSettingsTool(RestAlertSettingsService restSet
 public sealed class UpdateWorkoutScheduleTool(WorkoutScheduleService scheduleService) : IAiTool
 {
     public string Name => "update_workout_schedule";
-    public string Description => "Set scheduled weekly training days (e.g. ['Monday', 'Wednesday', 'Friday']).";
+    public string Description => "Set scheduled weekly training days (for example, ['Monday', 'Wednesday', 'Friday']).";
 
     public object ParametersSchema => new
     {
@@ -131,7 +131,7 @@ public sealed class UpdateWorkoutScheduleTool(WorkoutScheduleService scheduleSer
             days = new
             {
                 type = "array",
-                description = "List of day names (e.g. 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')",
+                description = "List of day names (for example, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')",
                 items = new { type = "string" }
             }
         },

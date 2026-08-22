@@ -64,7 +64,7 @@ public sealed class GetExerciseProgressionTool(WorkoutHistoryRepository reposito
         type = "object",
         properties = new
         {
-            exerciseName = new { type = "string", description = "Name of the exercise (e.g. 'Bench Press', 'Squat')" }
+            exerciseName = new { type = "string", description = "Name of the exercise (for example, 'Bench Press', 'Squat')" }
         },
         required = new[] { "exerciseName" }
     };

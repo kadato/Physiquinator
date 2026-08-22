@@ -17,7 +17,7 @@ public sealed class WorkoutStatsService(
     private (WorkoutDaySummary Summary, IReadOnlyDictionary<DateOnly, int> ActivityByDay)? _cache;
 
     /// <summary>
-    /// Loads session counts across the last <paramref name="weeks"/> weeks (Monday–Sunday grid,
+    /// Loads session counts across the last <paramref name="weeks"/> weeks (Monday-Sunday grid,
     /// ending on <paramref name="endLocal"/>) and derives the streak/week summary.
     /// When a workout schedule is configured, streaks count completed scheduled days only.
     /// Results are cached for the same parameters until <see cref="InvalidateCache"/> is called.

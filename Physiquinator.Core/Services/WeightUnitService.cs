@@ -4,7 +4,7 @@ namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Display unit for weights (kg or lb), stored per profile. Database storage
-/// stays in kilograms; the UI converts on display.
+/// stays in kilograms. The UI converts on display.
 /// </summary>
 public sealed class WeightUnitService(IAppPreferences preferences, UserProfileService profiles)
 {

@@ -105,7 +105,7 @@ public sealed class WorkoutScheduleService(
         }
     }
 
-    /// <summary>Scheduled training days for Today; empty when no schedule is configured.</summary>
+    /// <summary>Scheduled training days for Today. Empty when no schedule is configured.</summary>
     public IReadOnlySet<DayOfWeek> Days => GetScheduleForDate(DateOnly.FromDateTime(DateTime.Today));
 
     public bool IsSet => Days.Count > 0;
@@ -243,7 +243,7 @@ public sealed class WorkoutScheduleService(
         return result;
     }
 
-    /// <summary>Next scheduled day on or after <paramref name="from"/>; null when no schedule is configured.</summary>
+    /// <summary>Next scheduled day on or after <paramref name="from"/>. Null when no schedule is configured.</summary>
     public DateOnly? NextWorkoutDay(DateOnly from)
     {
         for (var i = 0; i < 7; i++)

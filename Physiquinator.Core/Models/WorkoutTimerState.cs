@@ -3,7 +3,7 @@ namespace Physiquinator.Core.Models;
 /// <summary>
 /// Snapshot of the active workout pushed to platform surfaces (ongoing
 /// notification, floating overlay) whenever it changes. Rest fields describe
-/// the running countdown when resting; the next-exercise fields describe the
+/// the running countdown when resting. The next-exercise fields describe the
 /// upcoming set so quick actions can log it from the background.
 /// </summary>
 public sealed record WorkoutTimerState(

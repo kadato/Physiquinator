@@ -6,7 +6,7 @@ namespace Physiquinator.Core.Services;
 /// </summary>
 public static class NotificationConstants
 {
-    /// <summary>Fallback workout name when no plan is loaded (e.g. cold-start alarm intents).</summary>
+    /// <summary>Fallback workout name when no plan is loaded (for example, cold-start alarm intents).</summary>
     public const string DefaultFallbackPlanName = "Physiquinator";
 
     /// <summary>Vibration pattern for the scheduled rest-end alert.</summary>

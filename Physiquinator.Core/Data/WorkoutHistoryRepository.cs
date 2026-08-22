@@ -249,7 +249,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     /// <summary>
     /// Last <paramref name="maxSessions"/> sessions for the plan that logged <paramref name="exerciseName"/>, newest first.
-    /// Volume is reps × weight (both must be logged); bodyweight-relative
+    /// Volume is reps × weight (both must be logged). Bodyweight-relative
     /// exercises include the bodyweight share of the user's bodyweight when known.
     /// </summary>
     public async Task<IReadOnlyList<ExerciseSessionProgressEntry>> GetExerciseSessionProgressAsync(
@@ -585,7 +585,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
     /// <summary>
     /// Merges backup rows by primary key (insert or replace). Sessions are written first, then sets.
-    /// Set rows are tied to <see cref="WorkoutSessionLogEntity.Id"/>; <see cref="WorkoutSetLogEntity.SessionId"/> is normalized from the session.
+    /// Set rows are tied to <see cref="WorkoutSessionLogEntity.Id"/>, and <see cref="WorkoutSetLogEntity.SessionId"/> is normalized from the session.
     /// </summary>
     public async Task ImportBackupAsync(WorkoutHistoryBackup backup)
     {

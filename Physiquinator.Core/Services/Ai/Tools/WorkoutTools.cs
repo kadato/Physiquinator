@@ -53,7 +53,7 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
         type = "object",
         properties = new
         {
-            name = new { type = StringType, description = "Name of the workout plan (e.g. 'Push A', 'Upper Body')" },
+            name = new { type = StringType, description = "Name of the workout plan (for example, 'Push A', 'Upper Body')" },
             exercises = new
             {
                 type = "array",
@@ -63,11 +63,11 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
                     type = "object",
                     properties = new
                     {
-                        name = new { type = StringType, description = "Exercise name (e.g. 'Bench Press')" },
-                        targetSets = new { type = "integer", description = "Number of sets (e.g. 3 or 4)" },
-                        targetReps = new { type = "integer", description = "Target reps per set (e.g. 8 or 10)" },
-                        targetWeightKg = new { type = "number", description = "Target weight in kg (optional, e.g. 80.0)" },
-                        restTimerSeconds = new { type = "integer", description = "Rest timer seconds (optional, e.g. 90)" }
+                        name = new { type = StringType, description = "Exercise name (for example, 'Bench Press')" },
+                        targetSets = new { type = "integer", description = "Number of sets (for example, 3 or 4)" },
+                        targetReps = new { type = "integer", description = "Target reps per set (for example, 8 or 10)" },
+                        targetWeightKg = new { type = "number", description = "Target weight in kg (optional, for example, 80.0)" },
+                        restTimerSeconds = new { type = "integer", description = "Rest timer seconds (optional, for example, 90)" }
                     },
                     required = new[] { NameProperty }
                 }

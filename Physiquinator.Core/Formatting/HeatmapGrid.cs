@@ -1,6 +1,6 @@
 namespace Physiquinator.Core.Formatting;
 
-/// <summary>Grid geometry for the activity heatmap (weeks run Monday–Sunday, oldest left).</summary>
+/// <summary>Grid geometry for the activity heatmap (weeks run Monday-Sunday, oldest left).</summary>
 public static class HeatmapGrid
 {
     public static DateOnly GetMondayOfWeek(DateOnly date)

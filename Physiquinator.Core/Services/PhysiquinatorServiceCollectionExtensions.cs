@@ -66,10 +66,10 @@ public static class PhysiquinatorServiceCollectionExtensions
         AddStatefulService<UserProfileService>();
         AddStatefulService<WeightUnitService>();
 
-        // Default no-op; hosted builds (web) override with a real implementation.
+        // Default no-op. Hosted builds (web) override with a real implementation.
         services.AddScoped<IAccountService, NoopAccountService>();
 
-        // AI Services & Tools (Registered as Scoped to safely consume scoped dependencies like ThemeService)
+        // AI services and tools (registered as scoped to safely consume scoped dependencies like ThemeService)
         services.AddScoped(sp => new OpenAiCompatibleClient(sp.GetService<HttpClient>() ?? new HttpClient()));
 
         services.AddScoped<IAiTool, GetWorkoutPlansTool>();

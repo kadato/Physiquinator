@@ -436,7 +436,7 @@ public sealed class AiAssistantService(
         // If we already have a persistent API history, update the system message and append the latest user message.
         if (_apiHistory.Count > 0)
         {
-            // Replace existing system message with fresh one (updated time, bodyweight, etc.)
+            // Replace existing system message with fresh one (updated time, bodyweight, and other live values).
             var fresh = new List<AiChatMessage> { systemMessage };
             fresh.AddRange(_apiHistory.Where(m => m.Role != AiMessageRole.System));
 

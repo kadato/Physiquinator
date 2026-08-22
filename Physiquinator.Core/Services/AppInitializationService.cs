@@ -46,7 +46,7 @@ public sealed class AppInitializationService(
                     NotifyProgress();
                 }
 
-                // History and extras are independent of each other; run in
+                // History and extras are independent of each other. Run in
                 // parallel so the total first-launch seeding time is the max
                 // rather than the sum.
                 var historyTask = demoSeeder.SeedDemoHistoryIfNeededAsync();

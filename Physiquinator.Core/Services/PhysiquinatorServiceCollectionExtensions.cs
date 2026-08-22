@@ -89,6 +89,7 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<IAiTool, CalculateProgressiveOverloadWorkflowTool>();
         services.AddScoped<AiToolRegistry>();
         services.AddScoped<AiAssistantService>();
+        services.AddScoped<AiClipboardBridgeService>();
 
         return services;
 

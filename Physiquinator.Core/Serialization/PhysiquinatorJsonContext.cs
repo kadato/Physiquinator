@@ -22,4 +22,8 @@ namespace Physiquinator.Core.Serialization;
 [JsonSerializable(typeof(AiChatMessage))]
 [JsonSerializable(typeof(List<AiChatMessage>))]
 [JsonSerializable(typeof(List<AiToolCallInfo>))]
+[JsonSerializable(typeof(AiBridgePayloadDto))]
+[JsonSerializable(typeof(List<AiBridgeActionDto>))]
+[JsonSerializable(typeof(AiBridgeActionDto))]
 public partial class PhysiquinatorJsonContext : JsonSerializerContext;
+

@@ -41,7 +41,7 @@ public sealed class WorkoutQuickActionService(
     /// <summary>Logs the next uncompleted set using the exercise defaults for weight and reps.</summary>
     public Task<QuickActionResult> LogNextSetAsync() => LogNextSetAsync(null, null);
 
-    /// <summary>Logs the next uncompleted set. Explicit weight/reps override the exercise defaults.</summary>
+    /// <summary>Logs the next uncompleted set. Explicit weight and reps override the exercise defaults.</summary>
     public async Task<QuickActionResult> LogNextSetAsync(double? weightKg, int? reps)
     {
         WorkoutPlan? plan = session.CurrentPlan;

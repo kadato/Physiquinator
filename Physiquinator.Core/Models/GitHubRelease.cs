@@ -12,7 +12,7 @@ public sealed record GitHubRelease(
     bool IsPrerelease,
     IReadOnlyList<GitHubReleaseAsset> Assets)
 {
-    /// <summary>Version parsed from the release tag (for example, "v1.2.0" to 1.2.0), or null when the tag is not a version.</summary>
+    /// <summary>Version parsed from the release tag, for example "v1.2.0" to 1.2.0, or null when the tag is not a version.</summary>
     public Version? Version => Version.TryParse(Tag.TrimStart('v', 'V'), out Version? parsed) ? parsed : null;
 
     /// <summary>True when this release is newer than the installed version.</summary>

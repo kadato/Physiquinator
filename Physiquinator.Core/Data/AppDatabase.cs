@@ -33,7 +33,7 @@ public sealed class AppDatabase
         }
         catch (Exception ex)
         {
-            // Ignore PRAGMA failures (for example, for in-memory unit testing databases)
+            // Ignore PRAGMA failures, for example for in-memory unit testing databases.
             System.Diagnostics.Debug.WriteLine(ex);
         }
 
@@ -48,7 +48,7 @@ public sealed class AppDatabase
 
     /// <summary>
     /// Closes the current connection and swaps in a new database file.
-    /// Serialized so concurrent switches (or switch vs. initialization) cannot race.
+    /// Serialized so concurrent switches or switch versus initialization cannot race.
     /// </summary>
     public async Task SwitchDatabaseAsync(string dbPath)
     {

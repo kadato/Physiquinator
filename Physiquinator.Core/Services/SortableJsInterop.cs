@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 namespace Physiquinator.Core.Services;
 
 /// <summary>
-/// Shared init/destroy plumbing for the drag-sort JS modules (home plan list and plan exercise list).
+/// Shared initialization and destruction plumbing for the drag-sort JS modules (home plan list and plan exercise list).
 /// Both modules follow the same contract: destroy first, then init(listId, dotNetRef), returning success.
 /// </summary>
 public static class SortableJsInterop

@@ -21,7 +21,7 @@ public class AiProviderSettingsTests
     public void OpenCode_defaults_point_at_a_real_catalog_entry()
     {
         // The OpenCode preset must use the provider's own model naming
-        // (for example, deepseek-v4-flash), not a made-up slug.
+        // For example deepseek-v4-flash, not a made-up slug.
         Assert.Equal("https://opencode.ai/zen/go/v1/chat/completions", AiProviderSettings.GetDefaultBaseUrl(AiProviderType.OpenCode));
         Assert.Equal("deepseek-v4-flash", AiProviderSettings.GetDefaultModel(AiProviderType.OpenCode));
     }

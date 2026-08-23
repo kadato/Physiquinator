@@ -101,7 +101,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
     }
 
     /// <summary>
-    /// Persists theme preference (system/light/dark), updates the webview <c>data-theme</c>, and the platform shell.
+    /// Persists theme preference (system, light, or dark), updates the webview <c>data-theme</c>, and the platform shell.
     /// </summary>
     public async Task SetPreferenceAsync(string preference)
     {

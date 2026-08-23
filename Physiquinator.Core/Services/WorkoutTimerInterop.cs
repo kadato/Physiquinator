@@ -101,7 +101,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         }
         catch (InvalidOperationException)
         {
-            // JS runtime not available (for example, prerendering)
+            // JS runtime not available, for example prerendering.
         }
     }
 }

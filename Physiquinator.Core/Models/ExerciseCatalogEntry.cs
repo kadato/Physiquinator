@@ -14,7 +14,7 @@ public sealed record ExerciseCatalogEntry(
 {
     /// <summary>
     /// Share of the user's bodyweight counted toward volume, in percent
-    /// (for example, 65 for push-ups, 100 for pull-ups). Null means full bodyweight.
+    /// for example 65 for push-ups and 100 for pull-ups. Null means full bodyweight.
     /// Only meaningful when <see cref="LogType"/> is <see cref="ExerciseLogType.BodyweightReps"/>.
     /// </summary>
     public double BodyweightShare => BodyweightPercent ?? 100;

@@ -82,7 +82,7 @@ public sealed class ChangeAppThemeTool(ThemeService themeService) : IAiTool
 public sealed class UpdateRestTimerSettingsTool(RestAlertSettingsService restSettings) : IAiTool
 {
     public string Name => "update_rest_timer_settings";
-    public string Description => "Toggle rest alert notifications/sounds and configure default rest timer add time in seconds (5-300).";
+    public string Description => "Toggle rest alert notifications and sounds and configure default rest timer add time in seconds, 5 to 300.";
 
     public object ParametersSchema => new
     {

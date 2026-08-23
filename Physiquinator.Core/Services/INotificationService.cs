@@ -40,7 +40,7 @@ public interface INotificationService
 
     /// <summary>
     /// Shows or updates the workout timer UI: an ongoing notification with
-    /// quick actions (pause/resume, add time, skip, log set) and a floating
+    /// quick actions (pause and resume, add time, skip, log set) and a floating
     /// overlay on platforms that support one. Active for the whole workout,
     /// not only while resting.
     /// </summary>

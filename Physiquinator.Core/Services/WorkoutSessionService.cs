@@ -48,7 +48,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     /// <summary>Duration in seconds of the active rest period (0 when not resting).</summary>
     public int ActiveRestDurationSeconds => _isResting ? _activeRestDurationSeconds : 0;
 
-    /// <summary>Fired when rest expires while the app was not driving JS ticks (for example, after resume from background).</summary>
+    /// <summary>Fired when rest expires while the app was not driving JS ticks, for example after resume from background.</summary>
     public event EventHandler? RestCompletedWhileBackground;
 
     /// <summary>
@@ -71,7 +71,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
     /// <summary>
     /// Raises <see cref="RestStateChanged"/> only when the rest state actually
-    /// changed since the last emission (rest started/stopped/reset/extended or
+    /// changed since the last emission (rest started, stopped, reset, extended, or
     /// restored). The 500 ms internal tick and no-op mutations stay silent, so
     /// subscribers such as <see cref="RestTimerCoordinator"/> do not re-run
     /// platform work (snapshot persist, exact-alarm re-arm, overlay restart)
@@ -331,7 +331,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
     /// <summary>
     /// Resets rest state without firing <see cref="RestStateChanged"/>. Used by
-    /// workout load (StartWorkout/ResumeWorkout) so a rest countdown that
+    /// workout load (StartWorkout and ResumeWorkout) so a rest countdown that
     /// survived process death is not torn down before the page restores it.
     /// </summary>
     private void ResetRestSilently()

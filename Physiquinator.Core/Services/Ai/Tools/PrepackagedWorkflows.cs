@@ -66,7 +66,7 @@ public sealed class GenerateDeloadPlanWorkflowTool(WorkoutPlanService planServic
 public sealed class CalculateProgressiveOverloadWorkflowTool(WorkoutHistoryRepository repository, WorkoutPlanService planService) : IAiTool
 {
     public string Name => "calculate_progressive_overload";
-    public string Description => "Pre-packaged workflow: Analyzes recent completed session performance and calculates recommended progressive overload target weights/reps per exercise.";
+    public string Description => "Pre-packaged workflow: Analyzes recent completed session performance and calculates recommended progressive overload target weights and reps per exercise.";
 
     public object ParametersSchema => new
     {

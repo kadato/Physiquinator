@@ -717,7 +717,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     }
 
     /// <summary>
-    /// Latest logged reps/weight for this exercise name under the same workout plan (any session, including the current one).
+    /// Latest logged reps and weight for this exercise name under the same workout plan (any session, including the current one).
     /// </summary>
     public async Task<LastSetMetrics?> GetLatestSetMetricsForExerciseAsync(Guid workoutPlanId, string exerciseName)
     {
@@ -848,7 +848,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             .DeleteAsync();
     }
 
-    /// <summary>Updates reps/weight of an already logged set (tap-to-edit during a workout).</summary>
+    /// <summary>Updates reps and weight of an already logged set (tap-to-edit during a workout).</summary>
     public async Task<bool> UpdateSetLogAsync(string sessionId, int exerciseIndex, int setIndex, int? reps, double? weightKg)
     {
         if (string.IsNullOrWhiteSpace(sessionId)) return false;

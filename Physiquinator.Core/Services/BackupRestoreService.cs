@@ -19,7 +19,7 @@ namespace Physiquinator.Core.Services;
 /// so a backup is always portable across devices and profiles.
 ///
 /// Adding a new preference in the future: add its base key to <see cref="KnownPreferenceBaseKeys"/>.
-/// Adding a new database table: add its export/import logic below (see "Plans" and "History" as examples).
+/// Adding a new database table: add its export and import logic below (see "Plans" and "History" as examples).
 /// </summary>
 public sealed class BackupRestoreService(
     IAppPreferences preferences,

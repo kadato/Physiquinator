@@ -171,18 +171,6 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            try
-            {
-                await JSRuntime.InvokeVoidAsync("physiquinator.initFabAutoHide");
-            }
-            catch (JSDisconnectedException)
-            {
-                // Circuit gone. Scroll hiding is cosmetic only.
-            }
-        }
-
         UpdateNavigationState();
     }
 

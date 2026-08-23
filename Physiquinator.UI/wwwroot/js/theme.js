@@ -42,38 +42,6 @@
         }
     };
 
-    /** Park floating FABs off-screen while scrolling down; reveal on scroll up. */
-    window.physiquinator.initFabAutoHide = () => {
-        try {
-            if (window.__plFabHideInstalled) return;
-            window.__plFabHideInstalled = true;
-            const scroller = () => document.querySelector(".app-main-scroll");
-            let lastY = 0;
-            let ticking = false;
-            const update = () => {
-                ticking = false;
-                const el = scroller();
-                if (!el) return;
-                const y = el.scrollTop;
-                const down = y > lastY + 4;
-                const up = y < lastY - 4;
-                if ((down && y > 96) || up || y <= 96) {
-                    document.body.classList.toggle("fabs-away", down && y > 96);
-                }
-                lastY = y;
-            };
-            document.addEventListener("scroll", (e) => {
-                if (!e.target || !(e.target.classList && e.target.classList.contains("app-main-scroll"))) return;
-                if (!ticking) {
-                    ticking = true;
-                    requestAnimationFrame(update);
-                }
-            }, { capture: true, passive: true });
-        } catch {
-            /* ignore */
-        }
-    };
-
     /** Scroll an element or selector into view with a delay to accommodate visual viewport keyboard resizing */
     window.physiquinator.scrollSelectorIntoView = (elOrSelector) => {
         try {

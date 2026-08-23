@@ -31,3 +31,20 @@ jobs:
 
     - name: Build MAUI Windows host
       run: dotnet publish Physiquinator.csproj -f net11.0-windows10.0.19041.0 --configuration Release -p:WindowsPackageType=None -o ./artifacts/windows-ci
+
+  build-wasm:
+    name: Build WebAssembly host
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+
+    - name: Install WebAssembly tools workload
+      run: dotnet workload install wasm-tools
+
+    - name: Publish WASM host
+      run: dotnet publish Physiquinator.Wasm/Physiquinator.Wasm.csproj --configuration Release -o ./artifacts/wasm-ci

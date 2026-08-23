@@ -1,0 +1,49 @@
+name: Deploy Web (Cloudflare Pages)
+
+# Builds the Blazor WebAssembly host and uploads the static output to
+# Cloudflare Pages via wrangler direct upload. Cloudflare never runs a build,
+# so the free tier's build quota stays untouched.
+#
+# One-time setup:
+#   1. Create an API token with "Cloudflare Pages: Edit" permission
+#   2. Add repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+
+    - name: Install WebAssembly tools workload
+      run: dotnet workload install wasm-tools
+
+    - name: Publish WASM host
+      run: dotnet publish Physiquinator.Wasm/Physiquinator.Wasm.csproj --configuration Release -o ./artifacts/wasm-publish
+
+    # .NET emits precompressed .br and .gz siblings. Pages compresses at the edge
+    # itself, so shipping them would only double the upload size.
+    - name: Remove precompressed duplicates
+      run: |
+        find ./artifacts/wasm-publish/wwwroot -type f \( -name '*.br' -o -name '*.gz' \) -delete
+        echo "File count: $(find ./artifacts/wasm-publish/wwwroot -type f | wc -l)"
+
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy ./artifacts/wasm-publish/wwwroot --project-name=physiquinator --commit-dirty=true

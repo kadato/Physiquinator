@@ -73,7 +73,7 @@ public sealed class RestOverlayService : Service
     private bool _wasForeground = true;
     private bool _stopping;
 
-    // Current weight/reps being edited in the overlay
+    // Current weight and reps being edited in the overlay
     private double _currentWeightKg;
     private int _currentReps;
     private int _trackedExerciseIndex = -1;
@@ -755,7 +755,7 @@ public sealed class RestOverlayService : Service
             var setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
 
-            // Reset weight/reps when exercise changes
+            // Reset weight and reps when exercise changes
             if (exerciseIndex != _trackedExerciseIndex)
             {
                 _trackedExerciseIndex = exerciseIndex;

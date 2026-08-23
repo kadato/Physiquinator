@@ -80,7 +80,7 @@ public static class SystemBarsHelper
         if (OperatingSystem.IsAndroidVersionAtLeast(30))
         {
             // Window.InsetsController is implemented via DecorView.getWindowInsetsController() and throws
-            // if the decor view is not attached yet (for example, MainPage.OnAppearing / theme sync during startup).
+            // If the decor view is not attached yet, for example MainPage.OnAppearing or theme sync during startup.
             Android.Views.View decorView = window.DecorView;
             if (decorView == null)
             {

@@ -74,7 +74,7 @@ builder.Services.AddScoped<WebDbSyncService>();
 
 builder.Services.AddHttpLogging(options =>
 {
-    // No headers/cookies in logs - the auth cookie must never be written to logs.
+    // No headers and cookies in logs - the auth cookie must never be written to logs.
     options.LoggingFields = HttpLoggingFields.RequestMethod
         | HttpLoggingFields.RequestPath
         | HttpLoggingFields.RequestQuery

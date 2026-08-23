@@ -10,7 +10,7 @@ namespace Physiquinator.Web.Mcp;
 /// Exposes the app's <see cref="IAiTool"/> registry as MCP tools.
 /// Tool names, descriptions, and JSON schemas are taken from the registry as-is,
 /// so the MCP surface stays in sync with the in-app assistant automatically.
-/// Destructive tools require explicit user confirmation via the multi-round-trip
+/// Destructive tools need explicit user confirmation via the multi-round-trip
 /// input_required pattern when the client supports it.
 /// </summary>
 public static class PhysiquinatorMcpTools

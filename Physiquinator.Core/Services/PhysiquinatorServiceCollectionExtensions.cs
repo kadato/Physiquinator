@@ -17,7 +17,8 @@ public static class PhysiquinatorServiceCollectionExtensions
         this IServiceCollection services,
         IAppPreferences preferences,
         IDatabasePathProvider databasePathProvider,
-        bool scopeStatefulServicesPerCircuit = false)
+        bool scopeStatefulServicesPerCircuit = false,
+        Func<IServiceProvider, AppDatabase>? appDatabaseFactory = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(preferences);
@@ -33,12 +34,23 @@ public static class PhysiquinatorServiceCollectionExtensions
                 sp.GetRequiredService<IDatabasePathProvider>().GetDatabasePath(
                     GetActiveProfileId(sp.GetRequiredService<IAppPreferences>()))));
         }
+        else if (appDatabaseFactory != null)
+        {
+            // Hosts that must defer opening the database, for example the
+            // WebAssembly host restoring files into its virtual filesystem,
+            // supply a factory. Construction then happens at first resolve.
+            services.AddSingleton(preferences);
+            services.AddSingleton(databasePathProvider);
+            services.TryAddSingleton(appDatabaseFactory);
+        }
         else
         {
             services.AddSingleton(preferences);
             services.AddSingleton(databasePathProvider);
             // Use TryAddSingleton so the MAUI host can pre-register AppDatabase
             // with the async SQLite-batteries task before reaching this helper.
+            // Note: the eager argument is evaluated even when registration is
+            // skipped, which is why deferred hosts pass appDatabaseFactory.
             services.TryAddSingleton(new AppDatabase(
                 databasePathProvider.GetDatabasePath(GetActiveProfileId(preferences))));
         }

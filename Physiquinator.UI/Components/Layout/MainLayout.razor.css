@@ -32,7 +32,7 @@
     overflow: visible !important;
 }
 
-/* Desktop & big screens: the nav pill moves to the top as a horizontal bar */
+/* Desktop and big screens: the nav pill moves to the top as a horizontal bar */
 @media (min-width: 960px) {
     ::deep .app-page-container {
         padding-bottom: 24px !important;

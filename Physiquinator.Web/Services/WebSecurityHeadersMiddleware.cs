@@ -10,15 +10,14 @@ public static class WebSecurityHeadersMiddleware
     // S7039 flags 'unsafe-inline' in style-src. It is required by the MudBlazor
     // component library (inline style attributes), and scripts remain fully
     // same-origin, which is what the policy is meant to constrain.
-    // Google Fonts origins are allowed because app-overrides.css and index.html
-    // load JetBrains Mono / Share Tech Mono from fonts.googleapis.com.
+    // All fonts are self-hosted under /fonts, so no font CDN origins are needed.
 #pragma warning disable S7039
     private const string ContentSecurityPolicy =
         "default-src 'self'; " +
         "script-src 'self'; " +
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
-        "font-src 'self' data: https://fonts.gstatic.com; " +
+        "font-src 'self' data:; " +
         "connect-src 'self' ws: wss:; " +
         "frame-ancestors 'none'; " +
         "base-uri 'self'; " +

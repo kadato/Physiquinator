@@ -14,12 +14,9 @@
         <div class="ai-chat-container">
             <!-- Header -->
             <div class="ai-chat-header">
-                <div class="ai-chat-header__title">
-                    <div class="ai-chat-header__badge" aria-hidden="true">
+                <div class="ai-chat-header__title" aria-hidden="true">
+                    <div class="ai-chat-header__badge">
                         <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold ai-chat-title">@("Physiquinator AI")</MudText>
                     </div>
                 </div>
 
@@ -335,7 +332,7 @@
                                     }
                                     else
                                     {
-                                        <span>@(string.Format("Apply {0} Action(s)", _parsedActions.Count(a => a.IsValid)))</span>
+                                        <span>@(string.Format("Apply {0} actions", _parsedActions.Count(a => a.IsValid)))</span>
                                     }
                                 </MudButton>
                             }
@@ -521,7 +518,7 @@
         else
         {
             var validCount = _parsedActions.Count(a => a.IsValid);
-            Snackbar.Add($"Found {validCount} valid action(s). Ready to apply.", Severity.Info);
+            Snackbar.Add($"Found {validCount} valid actions. Ready to apply.", Severity.Info);
         }
     }
 
@@ -537,7 +534,7 @@
 
             if (successCount > 0)
             {
-                Snackbar.Add($"Successfully applied {successCount} change(s) to Physiquinator!", Severity.Success);
+                Snackbar.Add($"Successfully applied {successCount} changes to Physiquinator!", Severity.Success);
             }
             else
             {

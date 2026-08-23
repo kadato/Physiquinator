@@ -327,7 +327,7 @@ else
         };
         var options = new DialogOptions
         {
-            CloseButton = true,
+            CloseButton = false,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };
@@ -472,7 +472,7 @@ else
         {
             ChartMetric.BestWeight => string.Format("Best weight ({0})", unitSuffix),
             ChartMetric.TotalReps => "Total reps",
-            ChartMetric.TotalTime => "Total duration (s)",
+            ChartMetric.TotalTime => "Total duration in seconds",
             _ => string.Format("Volume ({0})", unitSuffix)
         };
     }

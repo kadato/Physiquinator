@@ -20,22 +20,23 @@
                 var record = entry;
                 <button type="button"
                         class="pr-dialog-row"
+                        aria-label="@(string.Format("{0}, {1}, {2}. Opens the session", GetLabel(record.Kind), FormatValue(record), UiDateFormats.LocalDateCompact(record.CompletedAtUtc)))"
                         @onclick="() => OpenSession(record)">
-                    <MudIcon Icon="@GetIcon(record.Kind)" Class="pr-dialog-row__icon" />
-                    <div class="pr-dialog-row__main">
-                        <MudText Typo="Typo.body2">@GetLabel(record.Kind)</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                            @UiDateFormats.LocalDateCompact(record.CompletedAtUtc)
-                        </MudText>
-                    </div>
-                    <MudText Typo="Typo.subtitle2" Class="pr-dialog-row__value">@FormatValue(record)</MudText>
+                    <span class="pr-dialog-row__icon">
+                        <MudIcon Icon="@GetIcon(record.Kind)" />
+                    </span>
+                    <span class="pr-dialog-row__main">
+                        <span class="pr-dialog-row__label">@GetLabel(record.Kind)</span>
+                        <span class="pr-dialog-row__date">@UiDateFormats.LocalDateCompact(record.CompletedAtUtc)</span>
+                    </span>
+                    <span class="pr-dialog-row__value">@FormatValue(record)</span>
                     <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="pr-dialog-row__chevron" />
                 </button>
             }
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Close">@("Close")</MudButton>
+        <MudButton Variant="Variant.Outlined" Class="pr-dialog-close" OnClick="Close">@("Close")</MudButton>
     </DialogActions>
 </MudDialog>
 

@@ -14,29 +14,36 @@
                                  aria-hidden="true" />
                     </span>
                     <div class="rest-timer-complete-text">
-                        <span class="rest-timer-complete-title">TIME'S UP!</span>
+                        <span class="rest-timer-complete-title" style="font-family:'Chakra Petch','JetBrains Mono',sans-serif !important;">TIME'S UP!</span>
                         <span class="rest-timer-complete-subtitle">READY FOR NEXT SET</span>
                     </div>
                 </div>
             }
             else
             {
-                @* Ticking digits are aria-hidden: the live region below
-                   announces transitions instead of every second. *@
-                <div class='rest-timer-digits @DigitsClass' role="timer" aria-hidden="true">
+                @* Ticking digits are aria-hidden. The live region below announces transitions instead of every second.
+                   Chakra Petch Bold 700 uses fixed 1ch slots. Each digit has the same advance as a mono font.
+                   The timer shows no leading zeros. Its width adapts to the characters it needs. The whole group stays centered. *@
+                <div class='rest-timer-digits @DigitsClass' role="timer" aria-hidden="true" style="font-family:'Chakra Petch','JetBrains Mono',sans-serif !important; font-weight:700;">
                     @if (RestSecondsRemaining >= 60)
                     {
-                        <span class="rest-timer-unit rest-timer-unit--minutes">@FormatMinutes(RestSecondsRemaining)</span>
+                        @foreach (char c in MinutesText)
+                        {
+                            <span class="rest-timer-unit" aria-hidden="true">@c</span>
+                        }
                         <span class="rest-timer-separator" aria-hidden="true">
                             <span class="timer-dot"></span>
                             <span class="timer-dot"></span>
                         </span>
-                        <span class="rest-timer-unit rest-timer-unit--seconds-tens">@FormatSecondsTens(RestSecondsRemaining)</span>
-                        <span class="rest-timer-unit rest-timer-unit--seconds-units">@FormatSecondsUnits(RestSecondsRemaining)</span>
+                        <span class="rest-timer-unit" aria-hidden="true">@SecondsTensPadded</span>
+                        <span class="rest-timer-unit" aria-hidden="true">@SecondsUnitsPadded</span>
                     }
                     else
                     {
-                        <span class="rest-timer-unit">@FormatSecondsCompact(RestSecondsRemaining)</span>
+                        @foreach (char c in SecondsText)
+                        {
+                            <span class="rest-timer-unit" aria-hidden="true">@c</span>
+                        }
                     }
                 </div>
             }
@@ -73,8 +80,13 @@
     private const int ImminentRestThresholdSeconds = 10;
     private const int UrgentRestThresholdSeconds = 5;
 
-    /// <summary>Live seconds remaining, read from the session service on each render so the panel can re-render on its own timer ticks without the parent page re-rendering.</summary>
+    /// <summary>Live seconds that remain. The panel reads them from the session service on each render. It re-renders on its own timer ticks without asking the parent page to re-render.</summary>
     private int RestSecondsRemaining => SessionService.RestSecondsRemaining;
+
+    private string MinutesText => (RestSecondsRemaining / 60).ToString();
+    private string SecondsText => (RestSecondsRemaining % 60).ToString();
+    private string SecondsTensPadded => (RestSecondsRemaining % 60 / 10).ToString();
+    private string SecondsUnitsPadded => (RestSecondsRemaining % 60 % 10).ToString();
 
     private string? _liveStatus;
     private int _lastActiveDurationSeconds;
@@ -88,11 +100,11 @@
     [Parameter]
     public EventCallback OnSkip { get; set; }
 
-    /// <summary>Requests extra rest time in seconds (for example, 15 or 30) while the countdown runs.</summary>
+    /// <summary>Requests extra rest time in seconds, for example 15 or 30, while the countdown runs.</summary>
     [Parameter]
     public EventCallback<int> OnAddTime { get; set; }
 
-    /// <summary>Seconds added by the + button (user-configurable in Settings).</summary>
+    /// <summary>Seconds added by the + button. The user can change this in Settings.</summary>
     [Parameter]
     public int AddRestSeconds { get; set; } = 30;
 
@@ -177,12 +189,4 @@
         var s = seconds % 60;
         return $"{m}:{s:D2}";
     }
-
-    private static string FormatMinutes(int totalSeconds) => $"{totalSeconds / 60}";
-
-    private static string FormatSecondsTens(int totalSeconds) => $"{totalSeconds % 60 / 10}";
-
-    private static string FormatSecondsUnits(int totalSeconds) => $"{totalSeconds % 60 % 10}";
-
-    private static string FormatSecondsCompact(int totalSeconds) => $"{totalSeconds % 60}";
 }

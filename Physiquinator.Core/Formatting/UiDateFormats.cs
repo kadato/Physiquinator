@@ -2,7 +2,11 @@ using System.Globalization;
 
 namespace Physiquinator.Core.Formatting;
 
-/// <summary>Short date strings for dense mobile layouts (M/D when year is shown).</summary>
+/// <summary>
+/// Short date strings for dense mobile layouts. Month and day as M/d,
+/// with a two-digit year joining in (M/d/yy) when the date is not in the
+/// current year, and clock time alone for today.
+/// </summary>
 public static class UiDateFormats
 {
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
@@ -10,29 +14,32 @@ public static class UiDateFormats
     public static string LocalDateTimeCompact(DateTime utc)
     {
         DateTime l = utc.ToLocalTime();
-        DateTime today = DateTime.Today;
         var time = l.ToString("HH:mm", Invariant);
-        if (l.Date == today)
+        if (l.Date == DateTime.Today)
             return time;
-        var datePart = DateOnlyCompact(DateOnly.FromDateTime(l.Date));
-        return $"{datePart} {time}";
+        return $"{FormatDay(l)} {time}";
     }
 
     /// <summary>Clock time only (local), for tables where session date is shown elsewhere.</summary>
     public static string LocalTimeOnly(DateTime utc) =>
         utc.ToLocalTime().ToString("HH:mm", Invariant);
 
-    public static string LocalDateCompact(DateTime utc)
-    {
-        var d = DateOnly.FromDateTime(utc.ToLocalTime());
-        return DateOnlyCompact(d);
-    }
+    public static string LocalDateCompact(DateTime utc) =>
+        FormatDay(DateOnly.FromDateTime(utc.ToLocalTime()));
 
-    /// <summary>ISO 8601 compact date (yyyy-MM-dd): terminal-native, unambiguous, sorts naturally.</summary>
-    public static string DateOnlyCompact(DateOnly date) =>
-        date.ToString("yyyy-MM-dd", Invariant);
+    /// <summary>Month and day as M/d, a two-digit year joins in for other years.</summary>
+    public static string DateOnlyCompact(DateOnly date) => FormatDay(date);
 
-    /// <summary>Minimal date for chart X-axis (only month and day).</summary>
+    /// <summary>Minimal date for chart X-axis (month and day as M/d).</summary>
     public static string LocalDateChartAxis(DateTime utc) =>
-        utc.ToLocalTime().ToString("MM/dd", Invariant);
+        utc.ToLocalTime().ToString("M/d", Invariant);
+
+    private static string FormatDay(DateTime value) =>
+        value.ToString(ValueFormat(value.Year), Invariant);
+
+    private static string FormatDay(DateOnly value) =>
+        value.ToString(ValueFormat(value.Year), Invariant);
+
+    private static string ValueFormat(int year) =>
+        year == DateTime.Today.Year ? "M/d" : "M/d/yy";
 }

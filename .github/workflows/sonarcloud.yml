@@ -41,8 +41,8 @@ jobs:
           /d:sonar.cs.vstest.reportsPaths="**/test-results.trx"
 
     - name: Restore
-      # The MAUI app targets (android/ios/maccatalyst) cannot build on Linux,
-      # so restore only the sonar-wired projects (same set as the build step).
+      # The MAUI app targets android, ios, and maccatalyst cannot build on Linux,
+      # so restore only the sonar-wired projects. This is the same set as the build step.
       run: |
         dotnet restore Physiquinator.Core/Physiquinator.Core.csproj
         dotnet restore Physiquinator.UI/Physiquinator.UI.csproj
@@ -50,9 +50,9 @@ jobs:
         dotnet restore Physiquinator.Tests/Physiquinator.Tests.csproj
 
     - name: Build
-      # The MAUI app targets (android/ios/maccatalyst) cannot build on Linux,
-      # and SonarAnalyzer is only wired into the non-MAUI projects
-      # (see Directory.Build.props), so analysis covers those projects.
+      # The MAUI app targets android, ios, and maccatalyst cannot build on Linux,
+      # and SonarAnalyzer is only wired into the non-MAUI projects.
+      # See Directory.Build.props. Analysis covers those projects.
       run: |
         dotnet build Physiquinator.Core/Physiquinator.Core.csproj --configuration Release --no-restore
         dotnet build Physiquinator.UI/Physiquinator.UI.csproj --configuration Release --no-restore

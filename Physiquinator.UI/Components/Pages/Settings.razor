@@ -180,7 +180,7 @@
                     </MudText>
 
                     <MudStack Spacing="0" Class="mt-4">
-                        <SetMetricStepper Label="@("Add rest time (s)")"
+                        <SetMetricStepper Label="@("Add rest time in seconds")"
                                           @bind-Value="_addTimeSecondsValue"
                                           Step="5"
                                           Min="5"
@@ -367,10 +367,10 @@
                                        Variant="Variant.Outlined"
                                        Value="_aiSettings.Provider"
                                        ValueChanged="OnAiProviderChanged">
-                                <MudSelectItem Value="AiProviderType.OpenAI">OpenAI (Official)</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.OpenRouter">OpenRouter (Claude, Llama, DeepSeek)</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenAI">OpenAI Official</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenRouter">OpenRouter for Claude, Llama, DeepSeek</MudSelectItem>
                                 <MudSelectItem Value="AiProviderType.OpenCode">OpenCode</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.OllamaLocal">Ollama / Local (http://localhost:11434/v1)</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OllamaLocal">Ollama Local at http://localhost:11434/v1</MudSelectItem>
                                 <MudSelectItem Value="AiProviderType.Custom">Custom OpenAI-Compatible API</MudSelectItem>
                             </MudSelect>
 
@@ -420,11 +420,11 @@
                              }
 
                             <MudTextField T="string"
-                                          Label="@("Custom instructions (optional)")"
+                                          Label="@("Custom instructions")"
                                           Variant="Variant.Outlined"
                                           Lines="2"
                                           @bind-Value="_aiSettings.CustomSystemPrompt"
-                                          HelperText="@("Extra instructions passed to the AI assistant")" />
+                                          HelperText="@("Extra instructions passed to the AI assistant. Optional.")" />
 
                             <div class="settings-btn-group mt-2">
                                 <MudButton Variant="Variant.Filled"
@@ -782,7 +782,7 @@
             var days = string.Join(", ", ScheduleDayOrder.Where(_scheduleDays.Contains).Select(AbbreviatedDayName));
             var next = WorkoutSchedule.NextWorkoutDay(DateOnly.FromDateTime(DateTime.Today));
             var nextLabel = next is { } n ? $"{DayName(n.DayOfWeek)} {UiDateFormats.DateOnlyCompact(n)}" : "-";
-            return string.Format("You train {0} day(s) per week: {1}. Next training day: {2}.", _scheduleDays.Count, days, nextLabel);
+            return string.Format("You train {0} days per week: {1}. Next training day: {2}.", _scheduleDays.Count, days, nextLabel);
         }
     }
 
@@ -1082,7 +1082,7 @@
             }
 
             await RefreshPlanCountAsync();
-            Snackbar.Add(string.Format("Imported {0} plan(s).", importedCount), Severity.Success);
+            Snackbar.Add(string.Format("Imported {0} plans.", importedCount), Severity.Success);
         }
         catch (Exception ex)
         {
@@ -1131,7 +1131,7 @@
 
             var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
             await RefreshHistoryCountAsync();
-            Snackbar.Add(string.Format("Imported {0} workout(s) and {1} set log(s).", sessions, sets), Severity.Success);
+            Snackbar.Add(string.Format("Imported {0} workouts and {1} set logs.", sessions, sets), Severity.Success);
         }
         catch (Exception ex)
         {
@@ -1185,7 +1185,7 @@
             await RefreshPlanCountAsync();
             await RefreshHistoryCountAsync();
             Snackbar.Add(
-                string.Format("Restored {0} plan(s), {1} workout(s), {2} set(s), {3} schedule entry(s), {4} setting(s).",
+                string.Format("Restored {0} plans, {1} workouts, {2} sets, {3} schedule entries, {4} settings.",
                     result.PlansImported, result.SessionsImported, result.SetsImported,
                     result.SchedulesImported, result.PreferencesImported),
                 Severity.Success);

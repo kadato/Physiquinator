@@ -40,7 +40,7 @@
                        T="ExerciseLogType">
                 <MudSelectItem Value="ExerciseLogType.WeightAndReps">@("Weight and reps")</MudSelectItem>
                 <MudSelectItem Value="ExerciseLogType.BodyweightReps">@("Bodyweight (reps)")</MudSelectItem>
-                <MudSelectItem Value="ExerciseLogType.Duration">@("Duration (s)")</MudSelectItem>
+                <MudSelectItem Value="ExerciseLogType.Duration">@("Duration in seconds")</MudSelectItem>
             </MudSelect>
 
             <SetMetricStepper Label="@("Sets")"
@@ -60,7 +60,7 @@
                               IsInteger="true"
                               Format="0"
                               InputMode="numeric" />
-            <SetMetricStepper Label="@("Rest (s)")"
+            <SetMetricStepper Label="@("Rest in seconds")"
                               Value="_restSeconds"
                               ValueChanged="OnRestSecondsChanged"
                               Step="5"
@@ -83,7 +83,7 @@
                 <MudSelectItem Value="@("D")">D</MudSelectItem>
             </MudSelect>
             <SetMetricStepper @key="@($"reps-stepper-{_logType}")"
-                              Label="@(_logType == ExerciseLogType.Duration ? "Default duration (s)" : "Default reps")"
+                              Label="@(_logType == ExerciseLogType.Duration ? "Default duration in seconds" : "Default reps")"
                               Value="_defaultReps"
                               ValueChanged="OnDefaultRepsChanged"
                               Step="1"

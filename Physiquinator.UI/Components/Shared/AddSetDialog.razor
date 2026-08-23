@@ -36,7 +36,7 @@
                 }
 
                 <MudTextField T="string"
-                              Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "Duration (s)" : "Reps")"
+                              Label="@(GetLogType(_exerciseName) == ExerciseLogType.Duration ? "Duration in seconds" : "Reps")"
                               Variant="Variant.Outlined"
                               InputMode="InputMode.numeric"
                               @bind-Value="_repsText"

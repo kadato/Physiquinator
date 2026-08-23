@@ -33,14 +33,13 @@
                         var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                         <button type="button"
                                 @key="cellDate"
-                                class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null)"
+                                class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null) @(isFuture ? "heatmap-future" : null)"
                                 data-hm-index="@idx"
                                 tabindex="@(_focusIndex == idx ? 0 : -1)"
                                 role="gridcell"
                                 title="@title"
                                 aria-label="@title"
                                 aria-selected="@(isSelected ? "true" : "false")"
-                                disabled="@isFuture"
                                 @onclick="() => OnCellClickAsync(cellDate)"></button>
                     }
                 </div>
@@ -157,7 +156,7 @@
     private bool IsCellEnabled(int index)
     {
         if (index < 0 || index >= 7 * Weeks) return false;
-        return GetCellDate(index % Weeks, index / Weeks) <= _endLocal;
+        return true;
     }
 
     /// <summary>Default focus lands on today's cell so one Tab reaches the present day.</summary>
@@ -266,7 +265,6 @@
 
     private async Task OnCellClickAsync(DateOnly cellDate)
     {
-        if (cellDate > _endLocal) return;
         if (!DaySelectionChanged.HasDelegate) return;
         await DaySelectionChanged.InvokeAsync(cellDate);
     }

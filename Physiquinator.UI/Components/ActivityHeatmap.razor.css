@@ -93,8 +93,14 @@ button.heatmap-cell:active {
 }
 
 button.heatmap-cell.heatmap-off {
-    background: var(--pl-chip-2);
+    background: var(--pl-paper-2);
     border-color: var(--pl-hairline);
+}
+
+button.heatmap-cell.heatmap-future.heatmap-off {
+    opacity: 0.55;
+    border-style: dashed;
+    border-color: var(--pl-hairline-strong);
 }
 
 button.heatmap-cell.heatmap-on {
@@ -102,36 +108,41 @@ button.heatmap-cell.heatmap-on {
     border-color: var(--pl-ink);
 }
 
+button.heatmap-cell.heatmap-on.heatmap-future {
+    opacity: 0.85;
+}
+
 button.heatmap-cell.heatmap-scheduled {
-    border-style: dashed;
-    border-color: var(--pl-stone);
+    border: 1.5px dashed var(--pl-stone-2);
+    background: var(--pl-paper-2);
 }
 
 button.heatmap-cell.heatmap-planned {
-    background: var(--pl-chip-2);
-    border-color: var(--pl-stone);
+    background: var(--pl-chip);
+    border: 1.5px dashed var(--pl-stone);
 }
 
 button.heatmap-cell.heatmap-planned::before {
     content: '';
     position: absolute;
-    inset: 32%;
+    inset: 30%;
     border-radius: 50%;
     background: var(--pl-ink);
+    opacity: 0.95;
 }
 
 button.heatmap-cell.heatmap-missed {
-    border-color: var(--pl-err-text);
-    background: repeating-linear-gradient(-45deg, transparent 0 3px, color-mix(in srgb, var(--pl-err-text) 22%, transparent) 3px 5px);
+    border: 1.5px solid var(--pl-err-text);
+    background: repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 34%, transparent) 2px 5px);
 }
 
 button.heatmap-cell.heatmap-today {
-    box-shadow: inset 0 0 0 2px var(--pl-warn-text);
+    box-shadow: inset 0 0 0 2px var(--pl-warn-text), 0 0 0 1px var(--pl-paper);
 }
 
 button.heatmap-cell.heatmap-selected {
     border-color: var(--pl-ink);
-    box-shadow: inset 0 0 0 3px var(--pl-ink);
+    box-shadow: inset 0 0 0 2.5px var(--pl-ink);
 }
 
 button.heatmap-cell.heatmap-today.heatmap-selected {

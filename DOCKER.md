@@ -45,7 +45,7 @@ Example GitHub Actions step:
 - **Android SDK:** API 35-36 (Android 15)
 - **Build Tools:** 35.0.0, 36.0.0
 - **JDK:** OpenJDK 17
-- **Output:** Unsigned/Signed APK for testing and distribution
+- **Output:** Unsigned or signed APK for testing and distribution
  
 ## Troubleshooting
  

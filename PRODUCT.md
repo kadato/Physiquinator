@@ -35,7 +35,7 @@ Those 15 assistant tools (create and edit plans, log bodyweight, pull history st
 ## Operating context
 
 **Where and how the app is used:**
-- Between sets: standing over a barbell, timer counting down, adding weight/reps via a stepper that must work with a thumb and survive a sweaty tap.
+- Between sets: standing over a barbell, timer counting down, adding weight and reps via a stepper that must work with a thumb and survive a sweaty tap.
 - Between sessions: reviewing the 53-week activity grid, per-exercise progression charts, session summaries with volume and PRs, bodyweight trends.
 - Between apps: on Android the rest timer lives as a draggable floating overlay in a foreground service, with optional sound, vibration, and exact alarms that survive Doze, visible while the user is in Spotify, timer, or camera.
 - On the web: cookie-authenticated, per-account SQLite databases mirrored to IndexedDB while the page is open, served behind HTTPS with rate limiting and `/healthz`.
@@ -70,7 +70,7 @@ Those 15 assistant tools (create and edit plans, log bodyweight, pull history st
 
 **Explicitly undecided:**
 - Next AI model policy and pricing.
-- Future sync or team/sharing scope (out of scope for this world).
+- Future sync or team and sharing scope (out of scope for this world).
 
 ## Brand commitments
 
@@ -82,7 +82,7 @@ Those 15 assistant tools (create and edit plans, log bodyweight, pull history st
 ## Evidence on hand
 
 - Repo: `Physiquinator.slnx` with projects `Core`, `UI` (Razor class library), `Web` (ASP.NET Core + MCP at `/mcp`), `Tests` (xUnit), `Physiquinator` (MAUI shell).
-- Current theme: `Physiquinator.UI/PhysiquinatorThemes.cs` (PaletteLight Teal `#0F766E`, PaletteDark Volt `#10B981` + Cobalt/Magenta accents, 16px radius) and `wwwroot/css/app-overrides.css` (~1900 lines: nav pill, FAB system, home hero, heatmap, rest timer panel, stepper).
+- Current theme: `Physiquinator.UI/PhysiquinatorThemes.cs` (PaletteLight Teal `#0F766E`, PaletteDark Volt `#10B981` with Cobalt and Magenta accents, 16px radius) and `wwwroot/css/app-overrides.css` (~1900 lines: nav pill, FAB system, home hero, heatmap, rest timer panel, stepper).
 - Screens in `docs/`: `rest-timer-*.png`, `home-*.png`, `ai-chat-*.png`, `history-*.png`, `session-details-*.png`, `exercise-progression-*.png`, `create-plan-*.png`, `edit-plan-*.png`, `settings-*.png` (light + dark).
 - Live verification: MAUI shell `MainLayout.razor` with adaptive nav pill (`Home`/`History`/`Settings`), immersive shell variants, splash screen, update dialog.
 - No fabricated claims exist to preserve. Any marketing proof (metrics, testimonials, case studies) must be authored as clearly synthetic or sourced.

@@ -112,7 +112,7 @@ It also ships a **web client with a Model Context Protocol (MCP) server**, so an
 - Full parity with external AI agents via MCP (see [Agent API](#agent-api-mcp)).
  
 ### Workout plans and live tracking
-- Configurable plans with custom exercises, rest intervals, and target sets/reps.
+- Configurable plans with custom exercises, rest intervals, and target sets and reps.
 - Three logging types per exercise: weight and reps, bodyweight reps with an optional added-weight offset, or plain duration.
 - Bodyweight share for calisthenics: volume counts a configurable percentage of your logged bodyweight, pre-filled from a built-in catalog (push-ups 65%, pull-ups 100%). Weighted variations such as weighted pull-ups add their plate load on top.
 - Real-time set logging with weight and rep steppers, undo support, and completion summaries with total volume and newly achieved personal records.
@@ -158,6 +158,19 @@ Run it locally with `dotnet run --project Physiquinator.Web`. The `/mcp` endpoin
 
 ---
 
+## Browser client (static)
+
+`Physiquinator.Wasm` compiles the same Blazor UI to WebAssembly so it runs entirely in the browser with zero server. There are no accounts and no cold starts. Data lives in real SQLite executing in WebAssembly, with e_sqlite3 linked via native dependencies, restored from browser Cache Storage on boot and written back by a 20-second autosave plus pagehide hooks. The browser is the source of truth. JSON backup and restore remain the cross-device bridge.
+
+Run it locally with `dotnet run --project Physiquinator.Wasm` (requires the `wasm-tools` workload). Publish a static bundle with `dotnet publish -c Release`, then serve the `wwwroot` output from any static file server or deploy `.github/workflows/deploy-web.yml`, which uploads it to Cloudflare Pages via wrangler. Notes:
+
+- Data is per-browser. Clearing site data deletes your history, so use Settings export regularly.
+- AI providers must send CORS headers for direct browser calls. Ollama needs `OLLAMA_ORIGINS` configured.
+- The MCP endpoint is not part of this host. Use `Physiquinator.Web` for agent access.
+- `tools/web-e2e/wasm-persist-e2e.mjs` verifies persistence end to end.
+
+---
+
 ## Architecture
 
 Five projects sharing a common domain model and service layer:
@@ -168,6 +181,7 @@ Five projects sharing a common domain model and service layer:
 | `Physiquinator.UI` | Blazor Hybrid UI (Razor class library): pages, components, and theming |
 | `Physiquinator` | .NET MAUI host for Android, iOS, macOS, and Windows |
 | `Physiquinator.Web` | ASP.NET Core web host: browser-rendered UI and MCP endpoint |
+| `Physiquinator.Wasm` | Blazor WebAssembly host: fully local static build |
 | `Physiquinator.Tests` | xUnit test suite covering repositories, services, and the MCP surface |
 
 Key design points:
@@ -184,7 +198,7 @@ Key design points:
 - **.NET 11** with **.NET MAUI** (Android, iOS, macOS, Windows) and **Blazor Hybrid**
 - **[MudBlazor](https://mudblazor.com/)** Material Design components and **[Markdig](https://github.com/xoofx/markdig)** for AI response rendering
 - **[SQLite](https://www.sqlite.org/)** via [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) - local, offline-first storage
-- OpenAI-compatible client (SSE streaming, tool-call loops) and [ModelContextProtocol.AspNetCore](https://github.com/modelcontextprotocol/csharp-sdk) MCP server
+- OpenAI-compatible client with SSE streaming and tool-call loops and [ModelContextProtocol.AspNetCore](https://github.com/modelcontextprotocol/csharp-sdk) MCP server
 - [Plugin.LocalNotification](https://github.com/thudugala/Plugin.LocalNotification), MAUI Essentials, and Android foreground services
 - GitHub Actions workflows for CI, SonarCloud analysis, and signed releases, plus Playwright for E2E tests and screenshot generation
 
@@ -218,10 +232,11 @@ To build the Android APK without installing an Android SDK, see [DOCKER.md](DOCK
 
 ## Testing and CI
 
-- **xUnit tests** covering repositories, workout/session/history services, stats, formatting, the AI tool registry, and the MCP surface
-- **CI on every push and PR**: restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`)
+- **xUnit tests** covering repositories, workout, session, and history services, stats, formatting, the AI tool registry, and the MCP surface
+- **CI on every push and PR**: restore, build, test, and `dotnet format` verification (`.github/workflows/ci.yml`), including a Release publish of the WebAssembly host
 - **SonarCloud** analysis with coverage (`.github/workflows/sonarcloud.yml`)
 - **Tag-based releases** (`v*`): a signed Android APK and Windows package are published automatically (`.github/workflows/release.yml`)
+- **Web deploy**: `v*` tags and manual runs publish the WebAssembly build to Cloudflare Pages (`.github/workflows/deploy-web.yml`)
 - **Web E2E**: Playwright suite in `tools/web-e2e` covering registration, seeded plans, and the IndexedDB sync roundtrip. Start the web host on port 8080, then run the tests:
   ```bash
   dotnet run --project Physiquinator.Web --urls http://localhost:8080

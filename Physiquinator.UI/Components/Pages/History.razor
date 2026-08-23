@@ -27,7 +27,7 @@
     <MudText Typo="Typo.body2" Class="mud-text-secondary">
         @(_selectMode
             ? "Tap days on the grid to select every session logged on those days, then delete them together."
-            : "Tap a day on the grid to filter the list. Each square is one calendar day; weeks run Monday to Sunday.")
+            : "Tap a day on the grid to filter the list. Each square is one calendar day. Weeks run Monday to Sunday.")
     </MudText>
 
     @if (_sessions == null || _activityByDay == null || _listSessions == null || _summary == null)
@@ -130,13 +130,50 @@
                 </button>
             </div>
         }
+        else if (_selectMode && _selectedSessionIds.Count > 0)
+        {
+            <div class="history-filter-bar history-filter-bar--selection" role="group" aria-label="Selected days">
+                <span class="history-filter-bar__label">@("Selected")</span>
+                @foreach (var day in _selectDaySessionsCache.Keys.OrderBy(d => d))
+                {
+                    var sessions = _selectDaySessionsCache[day];
+                    var allSel = sessions.Count > 0 && sessions.All(s => _selectedSessionIds.Contains(s.Id));
+                    if (!allSel) continue;
+                    <span class="history-filter-chip history-filter-chip--selected">
+                        <span class="history-filter-chip__label">@UiDateFormats.DateOnlyCompact(day)</span>
+                        <button type="button"
+                                class="history-filter-chip__remove"
+                                aria-label='@(string.Format("Remove {0}", UiDateFormats.DateOnlyCompact(day)))'
+                                @onclick="() => ToggleDaySessionSelectionAsync(day)">
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                        </button>
+                    </span>
+                }
+                @foreach (var sid in _selectedSessionIds.ToList())
+                {
+                    var s = _sessions?.FirstOrDefault(x => x.Id == sid) ?? _listSessions?.FirstOrDefault(x => x.Id == sid);
+                    if (s == null) continue;
+                    var day = DateOnly.FromDateTime(s.StartedAtUtc.ToLocalTime());
+                    if (_selectDaySessionsCache.ContainsKey(day)) continue;
+                    <span class="history-filter-chip history-filter-chip--selected">
+                        <span class="history-filter-chip__label">@($"{s.PlanName} · {UiDateFormats.DateOnlyCompact(day)}")</span>
+                        <button type="button"
+                                class="history-filter-chip__remove"
+                                aria-label="Remove"
+                                @onclick="() => ToggleSelect(sid)">
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                        </button>
+                    </span>
+                }
+            </div>
+        }
 
-        @if (!_sessions.Any())
+        @if (_sessions != null && !_sessions.Any())
         {
             <EmptyState Message="@("No logged workouts yet. Start a plan from home.")"
                         Icon="@Icons.Material.Outlined.History" />
         }
-        else if (!_listSessions.Any() && _selectedDays.Count > 0)
+        else if (_listSessions != null && !_listSessions.Any() && _selectedDays.Count > 0)
         {
             <EmptyState Message="@("No workouts logged on these days.")"
                         Icon="@Icons.Material.Outlined.CalendarMonth">
@@ -204,7 +241,7 @@
                                         @UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)
                                         @if (s.EndedAtUtc != null)
                                         {
-                                            <span> · @UiDateFormats.LocalDateTimeCompact(s.EndedAtUtc.Value)</span>
+                                            <span> · @(FormatSessionEnd(s.StartedAtUtc, s.EndedAtUtc.Value))</span>
                                         }
                                         else
                                         {
@@ -260,6 +297,12 @@
 </MudStack>
 
 @code {
+    /// <summary>End label for a session card: time-only when it ended on the start day.</summary>
+    private static string FormatSessionEnd(DateTime startUtc, DateTime endUtc) =>
+        endUtc.ToLocalTime().Date == startUtc.ToLocalTime().Date
+            ? UiDateFormats.LocalTimeOnly(endUtc)
+            : UiDateFormats.LocalDateTimeCompact(endUtc);
+
     private const int HeatmapWeeks = 53;
     private const int SessionPageSize = 50;
     private const string LoadMoreSentinelId = "history-load-more-sentinel";
@@ -454,7 +497,7 @@
 
         var confirmed = await DialogService.ConfirmAsync(
             "Delete workouts?",
-            string.Format("Delete {0} session(s) and all their logged sets? You can undo this for a short time after.", _selectedSessionIds.Count),
+            string.Format("Delete {0} sessions and all their logged sets? You can undo this for a short time after.", _selectedSessionIds.Count),
             confirmText: "Delete",
             confirmColor: Color.Error);
 

@@ -36,22 +36,10 @@ else if (_session == null)
 else
 {
     <MudStack Spacing="3" Class="app-fab-page-padding">
-        <MudPaper Class="pa-4 settings-card" Elevation="0">
-            <MudText Typo="Typo.h5" Class="settings-card__title">@_session.PlanName</MudText>
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                @(string.Format("Started {0}", UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc)))
-            </MudText>
-            @if (_session.EndedAtUtc != null)
-            {
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                    @(string.Format("Ended {0}", UiDateFormats.LocalDateTimeCompact(_session.EndedAtUtc.Value)))
-                </MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">@("In progress")</MudText>
-            }
-            <div class="d-flex align-items-center gap-2 mt-2">
+        <MudPaper Class="pa-3 settings-card" Elevation="0">
+            <MudText Typo="Typo.h6" Class="settings-card__title">@_session.PlanName</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@SessionRangeLabel</MudText>
+            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
                 @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
                 {
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@(() => ContinueWorkout(activePlanId))">
@@ -84,7 +72,7 @@ else
 
         @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
         {
-            <MudPaper Class="pa-4 settings-card" Elevation="0">
+            <MudPaper Class="pa-3 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
                     <MudText Typo="Typo.h6" Class="settings-card__title">@("Progress by exercise")</MudText>
@@ -107,7 +95,7 @@ else
 
         @if (_snapshot != null)
         {
-            <MudPaper Class="pa-4 settings-card" Elevation="0">
+            <MudPaper Class="pa-3 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
                     <MudText Typo="Typo.h6" Class="settings-card__title">@("Plan when you trained")</MudText>
@@ -128,8 +116,8 @@ else
         }
         else
         {
-            <MudPaper Elevation="0" Class="premium-table">
-                <div class="pa-4 pb-1 d-flex align-center justify-space-between">
+            <MudPaper Elevation="0" Class="premium-table history-detail-table">
+                <div class="pa-3 pb-1 d-flex align-center justify-space-between">
                     <MudText Typo="Typo.h6">@("Sets")</MudText>
                     @if (_sets.Any())
                     {
@@ -676,6 +664,24 @@ else
     private string ShareDateLabel => _session == null
         ? ""
         : UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc);
+
+    /// <summary>One compact line for start and end. The end shows time only on the same day.</summary>
+    private string SessionRangeLabel
+    {
+        get
+        {
+            if (_session == null) return "";
+
+            var start = UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc);
+            if (_session.EndedAtUtc is not { } ended)
+                return string.Format("Started {0}", start);
+
+            var end = ended.ToLocalTime().Date == _session.StartedAtUtc.ToLocalTime().Date
+                ? UiDateFormats.LocalTimeOnly(ended)
+                : UiDateFormats.LocalDateTimeCompact(ended);
+            return string.Format("{0} - {1}", start, end);
+        }
+    }
 
     private IReadOnlyList<WorkoutShareCard.ShareCardExercise> ShareCardExercises =>
         [.. _sets

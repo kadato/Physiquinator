@@ -42,7 +42,7 @@
 
         <!-- CS1591: XML doc comments are not required for an application project -->
         <NoWarn>$(NoWarn);CS1591;XA0141</NoWarn>
-        <DefaultItemExcludes>$(DefaultItemExcludes);Physiquinator.Core\**;Physiquinator.UI\**;Physiquinator.Tests\**;Physiquinator.Web\**;artifacts\**;tools\**</DefaultItemExcludes>
+        <DefaultItemExcludes>$(DefaultItemExcludes);Physiquinator.Core\**;Physiquinator.UI\**;Physiquinator.Tests\**;Physiquinator.Web\**;Physiquinator.Wasm\**;artifacts\**;tools\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <!-- Debug Configuration: Optimize for fast deployment -->
@@ -150,6 +150,10 @@
       <Content Remove="Physiquinator.Web\**" />
       <None Remove="Physiquinator.Web\**" />
       <EmbeddedResource Remove="Physiquinator.Web\**" />
+      <Compile Remove="Physiquinator.Wasm\**" />
+      <Content Remove="Physiquinator.Wasm\**" />
+      <None Remove="Physiquinator.Wasm\**" />
+      <EmbeddedResource Remove="Physiquinator.Wasm\**" />
       <Compile Remove="artifacts\**" />
       <Content Remove="artifacts\**" />
       <None Remove="artifacts\**" />

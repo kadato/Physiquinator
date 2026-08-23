@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Physiquinator</title>
+    <base href="/" />
+    <script>
+        (function () {
+            const key = "physiquinator-theme-preference";
+            const preference = localStorage.getItem(key) || "system";
+            const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            let theme;
+            if (preference === "system") {
+                theme = isDark ? "dark" : "light";
+            } else {
+                theme = preference;
+            }
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
+    <style>
+        html[data-theme="dark"] body {
+            background-color: #1A1B26 !important;
+            color: #C0CAF5;
+        }
+        html[data-theme="light"] body {
+            background-color: #D5D6DB !important;
+            color: #1A1B26;
+        }
+    </style>
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=16" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
+    <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="_content/Physiquinator.UI/favicon.png" />
+</head>
+
+<body>
+    <div id="app">
+        <p class="wasm-boot-status">Loading Physiquinator...</p>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- sortable.min.js and html2canvas.min.js are lazy-loaded on demand -->
+    <script defer src="_content/Physiquinator.UI/js/theme.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/stepperDrag.js"></script>
+    <script defer src="_content/Physiquinator.UI/js/appHelpers.js"></script>
+    <script defer src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="js/wasm-files.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>

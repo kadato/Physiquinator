@@ -1,0 +1,42 @@
+@using Microsoft.JSInterop
+@using Physiquinator.UI
+
+@if (_ready)
+{
+    <Routes />
+}
+else
+{
+    <p class="wasm-boot-status">@_status</p>
+}
+
+@code {
+    private bool _ready;
+    private readonly string _status = "Preparing your local database...";
+
+    [Inject]
+    private WasmDbPersistence Persistence { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Restore every saved profile database into the wasm filesystem BEFORE
+        // any component resolves AppDatabase and opens SQLite.
+        await Persistence.RestoreAllAsync();
+
+        // Keep Cache Storage close-to-latest: periodic autosave plus hooks on
+        // pagehide and tab hide for best-effort final saves.
+        _ = StartAutosaveLoopAsync();
+        await Persistence.InstallPageHideSaveHookAsync();
+
+        _ready = true;
+    }
+
+    private async Task StartAutosaveLoopAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+        while (await timer.WaitForNextTickAsync())
+        {
+            await Persistence.SaveAllAsync();
+        }
+    }
+}

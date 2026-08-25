@@ -229,7 +229,7 @@ dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj
 
 Requires the [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0) (pinned in `global.json`) and the MAUI workload.
 
-To build the Android APK without installing an Android SDK, see [DOCKER.md](DOCKER.md). To regenerate the screenshots in `docs/`, run `tools/screenshot-generator/run.ps1`.
+To build the Android APK without installing an Android SDK, see [DOCKER.md](DOCKER.md). To regenerate the screenshots in `docs/` on any OS, build `Physiquinator.Web` once and run `node tools/screenshot-generator/screenshot-web.js`.
 
 ---
 

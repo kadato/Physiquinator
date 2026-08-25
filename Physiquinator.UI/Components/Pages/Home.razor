@@ -22,12 +22,7 @@
 <PageTitle>@("Home")</PageTitle>
 
 <MudStack Spacing="3" Class="home-page app-fab-page-padding" aria-busy="@_isLoading">
-    <PageHeader Title="Physiquinator" Class="home-header">
-        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                       aria-label="Refresh"
-                       Disabled="@_isLoading"
-                       OnClick="RefreshAsync" />
-    </PageHeader>
+    <PageHeader Title="Physiquinator" Class="home-header" />
 
 
     @if (_isLoading)
@@ -227,22 +222,6 @@
         _inProgressPlanId = _inProgressSession?.TryGetPlanId();
         _lastSessionByPlan = await lastDoneTask;
         _isLoading = false;
-    }
-
-    private async Task RefreshAsync()
-    {
-        _isLoading = true;
-        StateHasChanged();
-        try
-        {
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Could not refresh: {0}", ex.Message), Severity.Error);
-            _isLoading = false;
-            StateHasChanged();
-        }
     }
 
     private async Task StartWorkoutAsync(Guid planId, string planName)

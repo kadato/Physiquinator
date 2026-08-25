@@ -1,32 +1,31 @@
+using Microsoft.JSInterop;
 using Physiquinator.Core.Services;
 
 namespace Physiquinator.Web.Services;
 
-/// <summary>Writes exported JSON to the server temp folder. Import is not supported in the browser host.</summary>
-public sealed class WebFileTransferService(ILogger<WebFileTransferService> logger) : IFileTransferService
+/// <summary>
+/// Browser file transfer: exports download straight to the visitor's device and
+/// imports open the platform file picker. The JS side lives in wwwroot/js/fileTransfer.js.
+/// </summary>
+public sealed class WebFileTransferService(IJSRuntime jsRuntime) : IFileTransferService
 {
-    private static readonly string s_exportDir =
-        Path.Combine(Path.GetTempPath(), "physiquinator-web", "exports");
+    private const string PickerAccept = ".json,application/json";
 
-    public async Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan")
-    {
-        Directory.CreateDirectory(s_exportDir);
-        var path = Path.Combine(s_exportDir, fileName);
-        await File.WriteAllTextAsync(path, json);
-        logger.LogInformation("Exported {File} to {Path}", fileName, path);
-    }
+    public Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan") =>
+        jsRuntime.InvokeVoidAsync("physiquinatorFiles.download", fileName, json).AsTask();
 
-    public async Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share")
-    {
-        Directory.CreateDirectory(s_exportDir);
-        var path = Path.Combine(s_exportDir, fileName);
-        await File.WriteAllBytesAsync(path, pngBytes);
-        logger.LogInformation("Exported image {File} to {Path}", fileName, path);
-    }
+    public Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share") =>
+        jsRuntime.InvokeVoidAsync("physiquinatorFiles.downloadBytes", fileName, Convert.ToBase64String(pngBytes)).AsTask();
 
-    public Task<string?> PickJsonAsync(string pickerTitle)
+    public async Task<string?> PickJsonAsync(string pickerTitle)
     {
-        logger.LogWarning("JSON import is not supported in the browser debug host.");
-        return Task.FromResult<string?>(null);
+        try
+        {
+            return await jsRuntime.InvokeAsync<string?>("physiquinatorFiles.pickText", PickerAccept);
+        }
+        catch (JSDisconnectedException)
+        {
+            return null;
+        }
     }
 }

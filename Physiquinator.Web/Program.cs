@@ -66,7 +66,8 @@ builder.Services.AddScoped<IAccountService, WebAccountService>();
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
-builder.Services.AddSingleton<IFileTransferService, WebFileTransferService>();
+// Scoped: the file picker and downloads need the circuit's JS runtime.
+builder.Services.AddScoped<IFileTransferService, WebFileTransferService>();
 
 builder.Services.AddSingleton<IAppUpdateService, NoopAppUpdateService>();
 

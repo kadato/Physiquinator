@@ -26,6 +26,9 @@ public sealed class AppDatabase
         try
         {
             // Execute PRAGMAs safely. Some pragmas return row values and must use ExecuteScalarAsync.
+            // busy_timeout makes concurrent writers (multiple circuits or tabs) wait
+            // for the lock instead of failing with "database is locked" on contact.
+            await _database.ExecuteScalarAsync<string>("PRAGMA busy_timeout = 5000;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA journal_mode = WAL;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA synchronous = NORMAL;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA temp_store = MEMORY;").ConfigureAwait(false);

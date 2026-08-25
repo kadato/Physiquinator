@@ -1,26 +1,31 @@
-
 <MudCard Class="plan-card" Elevation="0" data-plan-index="@(PlanIndex.ToString("D2"))">
+    <div class="plan-card__header-bar">
+        <div class="plan-card__header-left">
+            <span class="plan-card__index-tag" aria-hidden="true">/@PlanIndex.ToString("D2")</span>
+            <span class="plan-card__meta-chip">@ExerciseCountLabel</span>
+            @if (!string.IsNullOrEmpty(LastDoneLabel))
+            {
+                <span class="plan-card__last-done-chip">@LastDoneLabel</span>
+            }
+        </div>
+        <button type="button"
+                class="plan-card-handle"
+                aria-label="@(string.Format("Drag to reorder {0}", PlanName))">
+            <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
+        </button>
+    </div>
     <MudCardContent Class="plan-card__content">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2" Class="plan-card__row">
-            <button type="button"
-                    class="plan-card-handle"
-                    aria-label="@(string.Format("Drag to reorder {0}", PlanName))">
-                <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Medium" />
-            </button>
-            <MudStack Spacing="0" Class="plan-card__info">
+        <div class="plan-card__body">
+            <div class="plan-card__info">
                 <MudText Typo="Typo.subtitle1" Class="plan-card-name">@PlanName</MudText>
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__meta">
-                    <span class="mono-token" aria-hidden="true">@PlanIndex.ToString("D2") • @ExerciseCountLabel</span>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@LastDoneSuffix.TrimStart(' ', '·')</MudText>
-                </MudStack>
-            </MudStack>
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="plan-card__actions">
-                <MudIconButton Icon="@Icons.Material.Filled.PlayArrow"
-                               Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               Class="plan-card-icon-btn plan-card__start"
-                               aria-label="@(string.Format("Start {0}", PlanName))"
-                               OnClick="OnStart" />
+            </div>
+            <div class="plan-card__actions">
+                <button type="button"
+                        class="plan-card-icon-btn plan-card__start"
+                        aria-label="@(string.Format("Start {0}", PlanName))"
+                        @onclick="OnStart">
+                    <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+                </button>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Class="plan-card-icon-btn"
                                aria-label="@(string.Format("Edit {0}", PlanName))"
@@ -35,8 +40,8 @@
                     <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">@("Export")</MudMenuItem>
                     <MudMenuItem Icon="@Icons.Material.Outlined.DeleteOutline" IconColor="Color.Error" OnClick="OnDelete">@("Delete")</MudMenuItem>
                 </MudMenu>
-            </MudStack>
-        </MudStack>
+            </div>
+        </div>
     </MudCardContent>
 </MudCard>
 
@@ -56,7 +61,4 @@
 
     private string ExerciseCountLabel =>
         ExerciseCount == 1 ? "1 exercise" : string.Format("{0} exercises", ExerciseCount);
-
-    private string LastDoneSuffix =>
-        string.IsNullOrEmpty(LastDoneLabel) ? "" : $" · {LastDoneLabel}";
 }

@@ -1,15 +1,106 @@
 .plan-card {
     width: 100%;
-    border-radius: var(--radius);
-    border: var(--hairline);
-    background: var(--pl-chip);
-    box-shadow: none;
+    border-radius: var(--radius) !important;
+    border: 1.5px solid var(--hairline-strong) !important;
+    background: var(--pl-chip) !important;
+    box-shadow: none !important;
     contain: layout style;
-    transition: border-color 150ms ease;
+    transition: border-color 150ms ease, background 150ms ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.plan-card:hover {
+    border-color: var(--pl-yellow) !important;
+}
+
+.plan-card__header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--pl-chip-2);
+    border-bottom: var(--hairline-strong);
+}
+
+.plan-card__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.plan-card__index-tag {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--pl-purple);
+}
+
+.plan-card__meta-chip {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    background: rgba(158, 206, 106, 0.08);
+    border: 1.5px solid rgba(158, 206, 106, 0.4);
+    color: var(--pl-success);
+}
+
+.plan-card__last-done-chip {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    background: rgba(224, 175, 104, 0.12);
+    border: 1.5px solid var(--pl-yellow);
+    color: var(--pl-warn-text);
+}
+
+.plan-card-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border: none;
+    background: transparent;
+    color: var(--pl-stone);
+    cursor: grab;
+    touch-action: none;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.plan-card-handle:active {
+    cursor: grabbing;
+}
+
+.plan-card-handle .mud-icon-root {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
 }
 
 .plan-card__content {
-    padding: 0.875rem 1rem !important;
+    padding: 10px 12px !important;
+}
+
+.plan-card__body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .plan-card__info {
@@ -18,16 +109,57 @@
 }
 
 .plan-card-name {
+    font-family: var(--font-display) !important;
+    font-size: 1.0625rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.015em !important;
+    line-height: 1.25 !important;
     overflow: hidden;
     word-break: break-word;
     white-space: normal;
+    color: var(--pl-ink) !important;
 }
 
 .plan-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     flex-shrink: 0;
 }
 
 .plan-card-icon-btn {
-    min-width: 44px !important;
-    min-height: 44px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: var(--radius) !important;
+    border: 1.5px solid var(--hairline-strong) !important;
+    background: var(--pl-chip-2) !important;
+    color: var(--pl-ink) !important;
 }
+
+.plan-card-icon-btn .mud-icon-root {
+    color: var(--pl-ink) !important;
+    fill: var(--pl-ink) !important;
+}
+
+.plan-card-icon-btn.plan-card__start {
+    background: #FAFF00 !important;
+    background-color: #FAFF00 !important;
+    color: #000000 !important;
+    border: 1.5px solid #000000 !important;
+    position: relative !important;
+    box-shadow: 0 0 10px rgba(250, 255, 0, 0.25) !important;
+}
+
+.plan-card-icon-btn.plan-card__start .mud-icon-root {
+    color: #000000 !important;
+    fill: #000000 !important;
+}
+
+.plan-card-icon-btn.plan-card__start:hover {
+    filter: brightness(1.12);
+    background: #FAFF00 !important;
+    box-shadow: 0 0 14px rgba(250, 255, 0, 0.5) !important;
+}
+

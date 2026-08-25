@@ -212,6 +212,7 @@ else
         if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal)) return false;
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal)) return false;
         if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal)) return false;
+        if (path == "ai" || path == "assistant") return false;
         return true;
     }
 

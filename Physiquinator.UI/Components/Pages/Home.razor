@@ -97,7 +97,7 @@
                 <MudText Typo="Typo.h2" Class="home-plans-header__title">@("Your plans")</MudText>
                 @if (_plans != null && _plans.Count > 0)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_plans.Count</MudChip>
+                    <span class="home-plans-count-chip">@_plans.Count</span>
                 }
             </div>
             <div class="home-plans-header__actions">
@@ -158,7 +158,7 @@
             class="app-fab app-fab--secondary app-fab--br-1"
             aria-label="@("AI assistant")"
             @onclick="OpenAiChatAsync">
-        <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+        <MudIcon Icon="@Icons.Material.Filled.Memory" />
     </button>
 }
 
@@ -475,17 +475,9 @@
         _dotNetRef?.Dispose();
     }
 
-    private async Task OpenAiChatAsync()
+    private void OpenAiChatAsync()
     {
-        var options = new DialogOptions
-        {
-            CloseButton = false,
-            CloseOnEscapeKey = true,
-            NoHeader = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true
-        };
-        await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
+        Navigation.NavigateTo(AppRoutes.Ai);
     }
 }
 

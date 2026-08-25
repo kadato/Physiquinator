@@ -8,6 +8,7 @@ public static class AppRoutes
     public const string Settings = "/settings";
     public const string PlanEditor = "/plan";
     public const string Bodyweight = "/history/bodyweight";
+    public const string Ai = "/ai";
 
     /// <summary>Base-relative route prefix for the active workout page (no leading slash).</summary>
     public const string WorkoutRoutePrefix = "workout/";

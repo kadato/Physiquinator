@@ -16,7 +16,7 @@
             <div class="ai-chat-header">
                 <div class="ai-chat-header__title" aria-hidden="true">
                     <div class="ai-chat-header__badge">
-                        <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
                     </div>
                 </div>
 
@@ -42,15 +42,13 @@
                 <div class="ai-chat-header__actions">
                     @if (_activeTab == 0)
                     {
-                        <MudIconButton Icon="@Icons.Material.Outlined.DeleteSweep"
-                                       aria-label="@("Clear history")"
-                                       Size="Size.Small"
-                                       OnClick="ClearHistory" />
+                        <button type="button" class="ai-header-btn" aria-label="@("Clear history")" @onclick="ClearHistory">
+                            <MudIcon Icon="@Icons.Material.Outlined.DeleteSweep" Size="Size.Small" />
+                        </button>
                     }
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   aria-label="@("Close")"
-                                   Size="Size.Small"
-                                   OnClick="Close" />
+                    <button type="button" class="ai-header-btn" aria-label="@("Close")" @onclick="Close">
+                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                    </button>
                 </div>
             </div>
 
@@ -84,7 +82,7 @@
                     @if (AiAssistant.Messages.Count == 0)
                     {
                         <div class="ai-chat-empty">
-                            <MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Large" Color="Color.Primary" Class="mb-1" />
+                            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Large" Color="Color.Primary" Class="mb-1" />
                             <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@("Ask anything")</MudText>
                         </div>
                     }
@@ -105,7 +103,7 @@
                             {
                                 <div class="@GetAssistantClass(msg)">
                                     <div class="ai-msg__avatar" aria-hidden="true">
-                                        <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
                                     </div>
                                     <div class="ai-msg__body">
                                         <div class="ai-msg__bubble">
@@ -150,22 +148,22 @@
                     }
                 </div>
 
-                <!-- Quick action chips, shown only while the chat is still empty -->
+                <!-- Quick action buttons, shown only while the chat is still empty -->
                 @if (AiAssistant.Messages.Count == 0)
                 {
                     <div class="ai-chat-quick-actions">
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnProgressiveOverloadClick" Class="ai-chat-quick-chip">
-                            @("Progressive overload")
-                        </MudChip>
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnPerformanceStatsClick" Class="ai-chat-quick-chip">
-                            @("Performance stats")
-                        </MudChip>
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnLogBodyweightClick" Class="ai-chat-quick-chip">
-                            @("Log bodyweight")
-                        </MudChip>
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@IsApiKeyMissing" OnClick="OnDeloadPlanClick" Class="ai-chat-quick-chip">
-                            @("Deload plan")
-                        </MudChip>
+                        <button type="button" class="ai-quick-btn ai-quick-btn--cyan" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
+                            <span>@("Progressive Overload")</span>
+                        </button>
+                        <button type="button" class="ai-quick-btn ai-quick-btn--magenta" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
+                            <span>@("Performance Stats")</span>
+                        </button>
+                        <button type="button" class="ai-quick-btn ai-quick-btn--yellow" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
+                            <span>@("Deload Plan")</span>
+                        </button>
+                        <button type="button" class="ai-quick-btn ai-quick-btn--green" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
+                            <span>@("Workout Advice")</span>
+                        </button>
                     </div>
                 }
 
@@ -173,7 +171,7 @@
                 <div class="ai-chat-input">
                     <div class="ai-chat-composer">
                         <div class="ai-chat-input__field">
-                            <MudTextField @ref="_inputField" T="string" Variant="Variant.Text" Placeholder="@("Ask…")"
+                            <MudTextField @ref="_inputField" T="string" Variant="Variant.Text" Placeholder="@("Ask anything…")"
                                           Immediate="true"
                                           @bind-Value="_inputText"
                                           OnKeyDown="HandleKeyDown"
@@ -198,8 +196,8 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Send"
                                            Color="Color.Primary"
                                            Variant="Variant.Filled"
-                                            aria-label="@("Send message")"
-                                            title="@("Send message")"
+                                           aria-label="@("Send message")"
+                                           title="@("Send message")"
                                            Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
                                            OnClick="SendMessageAsync"
                                            Class="ai-chat-send-button" />
@@ -628,8 +626,8 @@
     private async Task OnPerformanceStatsClick() =>
         await SendPrompt("Show my current workout stats and recent performance.");
 
-    private async Task OnLogBodyweightClick() =>
-        await SendPrompt("Log my bodyweight for today and show my recent trends.");
+    private async Task OnWorkoutAdviceClick() =>
+        await SendPrompt("Analyze my training volume and recommend recovery adjustments.");
 
     private async Task OnDeloadPlanClick() =>
         await SendPrompt("Create a deload version of my primary workout plan.");

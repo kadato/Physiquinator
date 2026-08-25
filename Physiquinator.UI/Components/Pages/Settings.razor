@@ -55,7 +55,7 @@
                 aria-selected="@(_activeTabIndex == 1)"
                 class="settings-tab @(_activeTabIndex == 1 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 1">
-            <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
             <span>@("AI")</span>
         </button>
         <button type="button"
@@ -336,7 +336,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="true">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SmartToy" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title">@("AI Assistant")</span>
                             <span class="settings-panel__subtitle">@("Configure AI provider")</span>
@@ -958,17 +958,9 @@
         }
     }
 
-    private async Task OpenAiChat()
+    private void OpenAiChat()
     {
-        var options = new DialogOptions
-        {
-            CloseButton = false,
-            CloseOnEscapeKey = true,
-            NoHeader = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true
-        };
-        await DialogService.ShowAsync<AiChatModal>("Physiquinator AI", options);
+        Navigation.NavigateTo(AppRoutes.Ai);
     }
 
 

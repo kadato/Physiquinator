@@ -222,6 +222,9 @@ dotnet run --project Physiquinator.Web
 
 # Run the tests
 dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj
+
+# Enable format checks and commit linting (one time)
+./install-hooks.sh
 ```
 
 Requires the [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0) (pinned in `global.json`) and the MAUI workload.

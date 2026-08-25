@@ -165,7 +165,7 @@ else
 
 @if (_undoVisible)
 {
-    <MudIconButton Class="workout-undo-btn"
+    <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1 workout-undo-fab"
                    Icon="@Icons.Material.Filled.Restore"
                    OnClick="UndoLastSetCoreAsync"
                    aria-label="@("Undo last set")" />
@@ -180,7 +180,7 @@ else
 
     private const int DefaultReps = 10;
     private const int RestTickIntervalMs = 1000;
-    private const int UndoToastDurationMs = 4000;
+    private const int UndoToastDurationMs = 8000;
 
     private bool _isRestComplete;
     private bool _overlayPermissionMissing;
@@ -895,6 +895,7 @@ else
             null,
             TimeSpan.FromMilliseconds(UndoToastDurationMs),
             Timeout.InfiniteTimeSpan);
+        _ = InvokeAsync(StateHasChanged);
     }
 
     /// <summary>

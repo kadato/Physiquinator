@@ -1,10 +1,10 @@
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="@($"page-header mb-3 {Class}".Trim())">
-    <MudText Typo="Typo.h1" Class="@($"flex-grow-1 {TitleClass}".Trim())">@Title</MudText>
+<div class="@($"page-header mb-3 {Class}".Trim())">
+    <MudText Typo="Typo.h1" Class="@($"page-header__title {TitleClass}".Trim())">@Title</MudText>
     @if (ChildContent != null)
     {
-        <MudStack Row="true" Spacing="1">@ChildContent</MudStack>
+        <div class="page-header__actions d-flex align-center gap-1">@ChildContent</div>
     }
-</MudStack>
+</div>
 
 @code {
     [Parameter]

@@ -26,7 +26,7 @@
                 }
                 <div class="workout-summary-stat">
                     <span class="workout-summary-stat__value">@SetsLogged</span>
-                    <span class="workout-summary-stat__label">@("Sets logged")</span>
+                    <span class="workout-summary-stat__label">@(SetsLogged == 1 ? "Set logged" : "Sets logged")</span>
                 </div>
             </div>
 

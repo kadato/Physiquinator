@@ -73,10 +73,6 @@ else
             </MudSelect>
         </MudStack>
 
-        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            @SessionCountLabel
-        </MudText>
-
         @if (!_rows.Any())
         {
             <EmptyState Message="@("No sets logged for this exercise on this plan yet.")"
@@ -273,18 +269,6 @@ else
     {
         if (_rows.Count == 0) return "0";
         return _rows.Sum(r => (long)r.TotalReps).ToString("N0", CultureInfo.InvariantCulture);
-    }
-
-    private string SessionCountLabel
-    {
-        get
-        {
-            if (_range == ExerciseProgressRange.All && _rows.Count >= AllTimeMaxSessions)
-                return string.Format("Showing the {0} most recent sessions", AllTimeMaxSessions);
-            return _rows.Count == 1
-                ? "1 session with this exercise"
-                : string.Format("{0} sessions with this exercise", _rows.Count);
-        }
     }
 
     private IReadOnlyList<ChartMetric> MetricOptions => _logType switch

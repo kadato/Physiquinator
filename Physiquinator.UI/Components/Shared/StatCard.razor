@@ -1,5 +1,5 @@
 <MudPaper Class="stat-card" Elevation="0">
-    <span @key="@Value" class="stat-card__value flap-tick @ValueClass">@Value</span>
+    <span @key="@DisplayValue" class="stat-card__value flap-tick @ValueClass">@DisplayValue</span>
     <span class="stat-card__label">@Label</span>
 </MudPaper>
 
@@ -12,4 +12,9 @@
 
     [Parameter]
     public string? ValueClass { get; set; }
+
+    // Formatters glue units to numbers with a no-break space ("9,002 kg").
+    // Inside a narrow centered card that forces a mid-unit break, so the
+    // card wraps at the space instead.
+    private string DisplayValue => Value.Replace("\u00A0", " ");
 }

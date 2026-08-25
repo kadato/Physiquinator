@@ -24,7 +24,11 @@ if (!string.IsNullOrEmpty(port) && int.TryParse(port, out var containerPort))
 Batteries_V2.Init();
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    // JS interop results travel inbound over the circuit and default to a 32 KB
+    // cap. The session share card returns a base64 PNG data URL several times
+    // that size, and JSON backup imports can reach megabytes, so raise it.
+    .AddHubOptions(options => options.MaximumReceiveMessageSize = 8 * 1024 * 1024);
 
 builder.Services.AddMudServices(config =>
 {

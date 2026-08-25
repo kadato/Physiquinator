@@ -16,6 +16,7 @@
 @inject TimeProvider TimeProvider
 @inject WeightUnitService WeightUnitService
 @inject WorkoutStatsService StatsService
+@inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
 <PageTitle>@(SessionService.CurrentPlan?.Name ?? "Workout")</PageTitle>
@@ -78,7 +79,7 @@ else
                                 IsRestComplete="_isRestComplete"
                                 AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
                                 OnReset="ResetRest"
-                                OnSkip="SkipRest"
+                                OnSkip="SkipRestFromPanel"
                                 OnAddTime="AddRestTime" />
             }
         </div>
@@ -868,6 +869,7 @@ else
             _lastRestDurationSeconds = exercise.RestIntervalSeconds;
             SessionService.StartRest(exercise.RestIntervalSeconds);
             await StartJsTimerAsync();
+            await ScrollRestTimerIntoViewAsync();
 
             // Auto accordion transition
             if (SessionService.IsExerciseDone(exerciseIndex))
@@ -1026,6 +1028,24 @@ else
         _undoTimer = null;
     }
 
+    /// <summary>
+    /// Scrolls the active exercise card back into view once rest ends. The
+    /// rest panel occupies flow space, so the user may have scrolled during a
+    /// long rest; the next check button returns under the thumb.
+    /// </summary>
+    private async Task ScrollActiveCardIntoViewAsync()
+    {
+        if (_disposed || _activeExerciseIndex < 0) return;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("physiquinator.scrollExerciseCardIntoView", _activeExerciseIndex);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Scroll active card into view failed");
+        }
+    }
+
     private void OnUndoTimerElapsed()
     {
         _ = InvokeAsync(() =>
@@ -1098,6 +1118,25 @@ else
         await SafeStateHasChangedAsync();
     }
 
+    /// <summary>
+    /// Rest just started from a logged set: frame the timer. Inserting the
+    /// panel pushes the list down, so without this the timer can sit above
+    /// the viewport on a scrolled page. block:nearest is a no-op when the
+    /// timer is already fully visible (the common top-of-page case).
+    /// </summary>
+    private async Task ScrollRestTimerIntoViewAsync()
+    {
+        if (_disposed) return;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("physiquinator.scrollRestTimerIntoView");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Scroll rest timer into view failed");
+        }
+    }
+
     private async Task ResetRest()
     {
         if (_disposed) return;
@@ -1127,6 +1166,16 @@ else
         _isRestComplete = false;
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
+    }
+
+    /// <summary>
+    /// User-initiated skip from the rest panel. After the panel unmounts,
+    /// bring the active set back under the thumb.
+    /// </summary>
+    private async Task SkipRestFromPanel()
+    {
+        await SkipRest();
+        await ScrollActiveCardIntoViewAsync();
     }
 
     private async Task AddRestTime(int seconds)
@@ -1224,6 +1273,7 @@ else
                 _isRestComplete = true;
                 await SafeStateHasChangedAsync();
                 await PlayRestCompleteAlertsAsync();
+                await ScrollActiveCardIntoViewAsync();
                 await SafeStateHasChangedAsync();
             }
             catch (Exception ex)
@@ -1324,6 +1374,7 @@ else
             if (done)
             {
                 await PlayRestCompleteAlertsAsync();
+                await ScrollActiveCardIntoViewAsync();
                 return true;
             }
 

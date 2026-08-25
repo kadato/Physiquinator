@@ -58,6 +58,34 @@
         }
     };
 
+    /** Bring the active exercise card back under the thumb when rest ends. */
+    window.physiquinator.scrollExerciseCardIntoView = (exerciseIndex) => {
+        try {
+            const el = document.querySelector(`[data-exercise-index="${exerciseIndex}"]`);
+            if (!el) return;
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+        } catch {
+            /* ignore */
+        }
+    };
+
+    /** Frame the rest timer when it takes the stage after a logged set.
+        Double rAF waits one paint so the panel exists before measuring.
+        block:nearest scrolls only when the timer is not already visible. */
+    window.physiquinator.scrollRestTimerIntoView = () => {
+        try {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const el = document.querySelector(".workout-top");
+                if (!el) return;
+                const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
+            }));
+        } catch {
+            /* ignore */
+        }
+    };
+
     const storageKey = "physiquinator-theme-preference";
     let dotNetRef = null;
     let mediaQuery = null;

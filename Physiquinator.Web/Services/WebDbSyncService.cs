@@ -50,21 +50,28 @@ public sealed class WebDbSyncService(
     /// <summary>Flushes WAL frames into the main file so the exported copy is complete.</summary>
     private static async Task CheckpointAsync(string dbPath)
     {
-        var connection = new SQLiteAsyncConnection(dbPath);
-        try
+        // Must be a private, non-pooled connection. SQLiteAsyncConnection draws
+        // from a pool keyed by path, so closing one here also kills the live
+        // circuit connections for the same file and their next query fails
+        // with "SafeHandle cannot be null".
+        await Task.Run(() =>
         {
-            await connection.ExecuteScalarAsync<string>("PRAGMA wal_checkpoint(TRUNCATE)");
-        }
-        finally
-        {
+            var db = new SQLiteConnection(dbPath);
             try
             {
-                await connection.CloseAsync();
+                db.ExecuteScalar<string>("PRAGMA wal_checkpoint(TRUNCATE)");
             }
-            catch
+            finally
             {
-                // Ignore close failures. The export continues with whatever was flushed.
+                try
+                {
+                    db.Close();
+                }
+                catch
+                {
+                    // Ignore close failures. The export continues with whatever was flushed.
+                }
             }
-        }
+        }).ConfigureAwait(false);
     }
 }

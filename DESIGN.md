@@ -12,16 +12,16 @@ colors:
   hairline: "#282B42"
   hairline-strong: "#414770"
   volt-yellow: "#FAFF00"
-  tokyo-blue: "#7AA2F7"
-  neon-cyan: "#7DCFFF"
-  electric-violet: "#BB9AF7"
+  tokyo-blue: "#4D7FFF"
+  neon-cyan: "#00E5FF"
+  electric-violet: "#C084FC"
   cyber-magenta: "#FF0055"
-  toxic-green: "#9ECE6A"
+  toxic-green: "#A3E635"
   signal-amber: "#E0AF68"
   plate-red: "#FF0055"
-  plate-blue: "#7AA2F7"
+  plate-blue: "#4D7FFF"
   plate-gold: "#FAFF00"
-  plate-green: "#9ECE6A"
+  plate-green: "#A3E635"
 typography:
   display:
     fontFamily: "'Departure Mono', 'JetBrains Mono', ui-monospace, monospace"
@@ -53,6 +53,13 @@ typography:
     fontWeight: 900
     lineHeight: 0.88
     fontFeature: "tnum, lnum"
+  scale:
+    micro: "11px"
+    body: "14px"
+    name: "16px"
+    header: "18px"
+    stat: "22px"
+    hero: "33px"
 rounded:
   none: "0px"
 spacing:
@@ -154,19 +161,20 @@ Tokyo Night: a deep blue-violet night ground with periwinkle ink, punctuated by 
 
 ### Primary
 
-- **Volt Yellow** (#FAFF00 dark / #D97706 light): the live wire. Rest timer digits, primary buttons, NEW PLAN, active AI tabs, in-progress badges. At most one volt surface per viewport region; its rarity is the point.
-- **Tokyo Blue** (#7AA2F7 dark / #2563EB light): the active-state accent. Bottom pill and rail active tabs, primary MudBlazor actions, chart lines, focused stat values. Colorblind-safe against every other accent.
+- **Volt Yellow** (#FAFF00 dark / #D81B60 hot magenta light): the live wire and the active state. Rest timer digits and edge track, primary buttons, NEW PLAN, active tabs everywhere (nav pill, settings tabs, metric tabs, schedule days, filter chips), in-progress badges, heatmap today ring. At most one volt surface per viewport region; its rarity is the point.
+- **Volt Fill** (#FAFF00 dark / #1E5EFF electric blue light): large-area volt fills only (CTA ramps, FABs, active tabs, user chat bubbles). Text sits on the `--pl-volt-fg` token: ink on neon yellow in dark, white on blue in light (5.1:1). Borders on filled controls stay ink via `--pl-volt-edge` in both themes. Small volt-colored text uses the text-safe token.
+- **Circuit Blue** (#4D7FFF dark / #1E5EFF light): the primary-action accent for MudBlazor filled actions and chart lines. Colorblind-safe against every other accent. In light it shares a hue with the volt fill, so blue owns "action" end to end.
 
 ### Secondary
 
-- **Electric Violet** (#BB9AF7 dark / #7C3AED light): the seal. Proof marks, PR celebration, tertiary chart series.
-- **Neon Cyan** (#7DCFFF dark / #0284C7 light): scheduled and informational states, heatmap planned dots, secondary chart series.
+- **Electric Violet** (#C084FC dark / #7C3AED light): the seal. Proof marks, PR celebration, tertiary chart series.
+- **Neon Cyan** (#00E5FF dark / #0891B2 light): scheduled and informational states, heatmap planned dots, secondary chart series.
 
 ### Tertiary
 
-- **Toxic Green** (#9ECE6A dark / #16A34A light): success and completed heatmap cells.
+- **Acid Green** (#A3E635 dark / #65A30D light): success, completed heatmap cells, completed set pills.
 - **Cyber Magenta** (#FF0055 dark / #E11D48 light): errors, destructive confirmations, urgent timer.
-- **Signal Amber** (#E0AF68 dark / #D97706 light): warnings and warm-up badges. In light mode amber and volt collapse into one rich yellow (#D97706) because the neon pair fails contrast on white.
+- **Signal Amber** (#E0AF68 dark / #D97706 light): warnings and warm-up badges. In light mode amber and volt collapse toward one rich yellow because the neon pair fails contrast on white.
 
 ### Neutral
 
@@ -182,7 +190,7 @@ Tokyo Night: a deep blue-violet night ground with periwinkle ink, punctuated by 
 
 ### Plate load colors
 
-Plate dots encode barbell load with shape plus hue: **Plate Red** (#FF0055 / #E11D48) solid 25, **Plate Blue** (#7AA2F7 / #2563EB) double-ring 20, **Plate Gold** (#FAFF00 / #D97706) hatched 15, **Plate Green** (#9ECE6A / #16A34A) solid 10. Each dot carries its number as text; hue is reinforcement, never the message.
+Plate dots encode barbell load with shape plus hue: **Plate Red** (#FF0055 / #E11D48) solid 25, **Plate Blue** (#4D7FFF / #1E5EFF) double-ring 20, **Plate Gold** (#FAFF00 / #D97706) hatched 15, **Plate Green** (#A3E635 / #65A30D) solid 10. Each dot carries its number as text; hue is reinforcement, never the message.
 
 ### Named Rules
 
@@ -194,9 +202,9 @@ Plate dots encode barbell load with shape plus hue: **Plate Red** (#FF0055 / #E1
 
 ### Light theme mapping
 
-The light theme keeps every role and swaps the night for paper: ground #D5D6DB, chip #FFFFFF, wells #E9EBF3, recessed cells #DFE1EA, deep recess #CBCCD6, ink #1A1B26, stone #565A6E, hairlines #B4B8C5 and #9AA0B5. Neons drop to their AA-safe light variants listed above. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.07).
+The light theme keeps every role and swaps the night for warm print stock: ground #E5E1D2 bone paper, chip #FFFFFF (a white plate laid on the bone), wells #F0EDE2, raised paper #EFECE0, deep recess #D8D3C0, ink #1A1B26, warm slate #565349, hairlines #C6C1AB and #A39D82. Accents go vibrant: electric blue #1E5EFF owns fills and active states under white text, hot magenta #D81B60 drives the timer digits and first stat, electric purple #7C3AED and vivid red #E11D48 carry the tertiary roles, and acid lime #65A30D keeps success. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.26), which lands the 24px checker at the same perceived weight as dark. The page aurora: candle white top, violet whisper bottom corner.
 
-**The Visible-Ladder Rule.** Surface steps must be tellable apart in both themes, not just in dark. In light, chip (#FFFFFF) and chip-well (#E9EBF3) differ by about 7 luminance points so card header bars, wells, steppers, and table heads read as their own layer. If two adjacent steps look identical, deepen the lower one.
+**The Visible-Ladder Rule.** Surface steps must be tellable apart in both themes, not just in dark. In light, chip (#FFFFFF) and chip-well (#F0EDE2) differ by about 6 luminance points so card header bars, wells, steppers, and table heads read as their own layer. If two adjacent steps look identical, deepen the lower one.
 
 ## Typography
 
@@ -242,15 +250,18 @@ A phone-width column in a chrome that swaps by breakpoint. The page container ma
 
 ## Elevation & Depth
 
-Flat by doctrine. Depth comes from hairlines, surface steps (void, well, chip, chip-well), and the grid underlay, never from cast shadows. MudBlazor's elevation shadows are globally suppressed on buttons, papers, cards, dialogs, popovers, and FABs, and every glow (volt halos, blurred title halos, rail light glows) was removed in August 2026: edges are sharp, period.
+The world is print, so depth comes from registration, not optics. Since August 2026 plates cast hard offset shadows with zero blur, and blurred shadows stay banned.
 
-The only shadow devices left are zero-blur inset rings:
-
-- **Inset selection ring** (`inset 0 0 0 2.5px`): selected heatmap cells and focused states. Drawn inside the plate, no blur.
+- **Plate shadows.** Solid, zero-blur offsets in one shadow voice per theme: deep ink `#1B1E33` on paper in light, pure black on void in dark. Three thick sizes carry hierarchy: sm 3px for small controls (active tabs, chips, bubbles), md 5px for cards and panels, lg 8px for floating chrome (nav pill) and overlays (dialogs). Shadows pair with a 1px inset top bevel highlight (`rgba(255,255,255,0.65)` light, `rgba(192,202,245,0.07)` dark) so plates read as machined stock.
+- **Press physics.** Volt CTAs sit on an sm shadow and translate 3px into it on press; FABs sit on md and translate the full 5px. The surface physically drops.
+- **Interactive lift.** Clickable cards (plan, session, exercise picker) translate 2px up-left on hover while their offset grows to 7px.
+- **Fused blocks.** The workout stats plate and rest timer panel fuse into one unit during a session; the parent `.workout-top--with-timer` casts the single shadow so the seam never double-stacks.
+- **Shader washes.** Static, decorative gradients sit under content: one aurora radial per corner on the page grounds (blue/violet dark, candle white and violet light), and CRT scanlines over the splash screen. The timer surface stays clean: no scanlines, no text effects, urgency is color plus the pre-existing pulse alone.
+- **Contrast opt-out.** `prefers-contrast: more` strips every plate shadow; separation returns to borders alone.
 
 ### Named Rules
 
-**The No-Shadow Rule.** Surfaces are flat at rest and flat on hover, including FABs. If a layer needs separation, give it a hairline or a surface step. No blurred shadows, no glows, no backdrop blur anywhere.
+**The Hard-Offset Rule.** Every shadow is a solid-color offset with zero blur. If a shadow has a blur radius or a soft edge, delete it. MudBlazor's default elevation shadows stay globally suppressed.
 
 **The Sharp-Edges Rule.** Every drawn effect is zero-blur and text carries no shadow at all: no outlines, no halos. Rings and hatches use hard offsets only. If a shadow has a blur radius, delete it.
 
@@ -269,7 +280,7 @@ Glyphs are drawn, never typed: heatmap legend keys, load dots, hatches, and regi
 - **Shape:** radius 0, 1.5px hairline-strong border, 44px minimum height.
 - **Primary:** volt yellow fill (#FAFF00), #10111A text, 1.5px #10111A border in dark. Light theme keeps the volt fill with an ink border.
 - **Secondary:** chip-well fill, ink text, hairline-strong border. Hover shifts to chip with a volt border.
-- **Accent:** Tokyo blue fill (#7AA2F7) with #10111A text for primary MudBlazor actions in dark.
+- **Accent:** Circuit blue fill (#4D7FFF) with #10111A text for primary MudBlazor actions in dark.
 - **Type treatment:** 11px, weight 700, uppercase, +0.12em tracking. No sentence-case buttons.
 - **Error confirm:** light is white on #BE123C (6.4:1), dark is #10111A on #FF0055 (4.8:1). Both audited; do not trust library defaults for filled error buttons.
 - **Focus:** 2px outline, ink in light and volt in dark.
@@ -299,7 +310,7 @@ Outlined style: chip fill, 1.5px hairline-strong border, radius 0, 44px minimum 
 
 ### Navigation
 
-Bottom pill on phones, top rail at 769px and up (see Layout). Tabs are 44px-plus rows of icon over 11px uppercase mono labels. The active tab fills with Tokyo blue and #10111A text; inactive tabs are stone on chip. The rail adds three 8px registration lights (red, cyan, amber) as pure set dressing.
+Bottom pill on phones, top rail at 769px and up (see Layout). Tabs are 44px-plus rows of icon over 11px uppercase mono labels. The active tab fills volt (#FAFF00 dark, #FFD600 light) with #10111A text; inactive tabs are stone on chip. The rail adds three 8px registration lights (red, cyan, amber) as pure set dressing.
 
 ### Tabs (segmented)
 
@@ -315,7 +326,7 @@ Header row on chip-well with 11px uppercase mono labels at +0.12em and a hairlin
 
 ### Heatmap (signature)
 
-53-week activity grid of 26px cells with 3px gaps. States are drawn shapes: off (flat well), done (toxic green fill), scheduled (dashed stone border), planned (chip with cyan center dot), missed (red hatch), today (volt inset ring), selected (ink inset ring). Day labels are 11px uppercase mono. The legend uses drawn key glyphs, and the grid is a roving-tabindex `role="grid"`: one tab stop, arrow keys walk cells, future cells are skipped, focus lands on today.
+53-week activity grid of 26px cells with 3px gaps. States are drawn shapes: off (flat well), done (acid green fill), scheduled (dashed stone border), planned (chip with cyan center dot), missed (red hatch), today (volt inset ring), selected (ink inset ring). Day labels are 11px uppercase mono. The legend uses drawn key glyphs, and the grid is a roving-tabindex `role="grid"`: one tab stop, arrow keys walk cells, future cells are skipped, focus lands on today.
 
 ### Rest timer (signature)
 
@@ -340,7 +351,7 @@ A 400px light-mode plate rendered off-screen (fixed at -9999px, opacity 0) and c
 
 ### Don't:
 
-- **Don't** introduce shadows, glows, or blur for depth or decoration; use hairlines and surface steps. Everything stays sharp.
+- **Don't** introduce blurred shadows, glows, or backdrop blur for depth or decoration. Depth is hard offset plate shadows, hairlines, bevels, and surface steps (see Elevation and Depth). Everything stays sharp.
 - **Don't** round any corner; radius stays 0.
 - **Don't** add a second type family, italics, or non-tabular numerals.
 - **Don't** rely on hue alone for state, and don't use font-dependent Unicode glyphs for status; draw them.

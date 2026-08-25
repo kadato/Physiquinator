@@ -27,13 +27,16 @@
                         var cellSchedule = GetScheduleForDate?.Invoke(cellDate);
                         var isScheduled = cellSchedule?.Contains(cellDate.DayOfWeek) == true;
                         var isMissed = isScheduled && !active && !isFuture;
+                        // Quiet coaching: only misses inside the last week carry
+                        // the error-red hatch; older misses fade to a stone hatch.
+                        var isRecentMiss = isMissed && cellDate >= _endLocal.AddDays(-6);
                         var cellState = GetCellState(isFuture, active, isScheduled);
                         var title = GetCellTitle(cellDate, active, isMissed, cellSchedule);
                         var isSelected = IsDaySelected?.Invoke(cellDate) ?? false;
                         var isToday = cellDate == DateOnly.FromDateTime(DateTime.Today);
                         <button type="button"
                                 @key="cellDate"
-                                class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isScheduled ? "heatmap-scheduled" : null) @(isFuture ? "heatmap-future" : null)"
+                                class="heatmap-cell @cellState @(isSelected ? "heatmap-selected" : null) @(isToday ? "heatmap-today" : null) @(isMissed ? "heatmap-missed" : null) @(isRecentMiss ? "heatmap-missed--recent" : null) @(isScheduled ? "heatmap-scheduled" : null) @(isFuture ? "heatmap-future" : null)"
                                 data-hm-index="@idx"
                                 tabindex="@(_focusIndex == idx ? 0 : -1)"
                                 role="gridcell"

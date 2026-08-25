@@ -15,13 +15,15 @@
         <div class="header-left">
             @if (IsCompleted)
             {
-                <span class="completed-icon mr-2" aria-hidden="true">
+                <span class="completed-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.Check" />
                 </span>
+                <span class="exercise-index-tag" aria-hidden="true">/@((ExerciseIndex + 1).ToString("D2"))</span>
                 <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@Exercise.Name</MudText>
             }
             else
             {
+                <span class="exercise-index-tag" aria-hidden="true">/@((ExerciseIndex + 1).ToString("D2"))</span>
                 <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@Exercise.Name</MudText>
             }
         </div>

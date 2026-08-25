@@ -1,6 +1,6 @@
 .set-completed-row {
     padding: 10px 0;
-    border-bottom: 1px solid var(--mud-palette-divider);
+    border-bottom: var(--hairline);
 }
 
 .set-completed-row:last-child {
@@ -14,11 +14,12 @@
 }
 
 .set-completed-row__label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--mud-palette-text-secondary);
+    color: var(--pl-stone);
 }
 
 .exercise-accordion-header {
@@ -28,10 +29,12 @@
     text-align: inherit;
     font: inherit;
     color: inherit;
+    cursor: pointer;
 }
 
 .exercise-accordion-header:focus-visible {
-    outline: 2px solid var(--mud-palette-primary);
+    outline: 2px solid var(--pl-focus);
     outline-offset: -2px;
     border-radius: var(--radius);
 }
+

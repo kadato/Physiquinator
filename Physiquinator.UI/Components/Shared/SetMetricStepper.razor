@@ -59,13 +59,10 @@ else
     <MudStack Class="set-metric-stepper" Spacing="1">
         <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
         <div class="set-metric-stepper__row">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       Class="set-metric-stepper__btn set-metric-stepper__btn--dec"
-                       OnClick="@(() => Adjust(-1))"
-                       aria-label="@(string.Format("Decrease {0}", Label))">
-                &#x2212;
-            </MudButton>
+            <button type="button"
+                    class="set-metric-stepper__btn set-metric-stepper__btn--dec"
+                    @onclick="@(() => Adjust(-1))"
+                    aria-label="@(string.Format("Decrease {0}", Label))">&#x2212;</button>
             <div class="set-metric-stepper__value-slot">
                 <button @ref="_valueButtonRef"
                         type="button"
@@ -102,13 +99,10 @@ else
                     </div>
                 }
             </div>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       Class="set-metric-stepper__btn set-metric-stepper__btn--inc"
-                       OnClick="@(() => Adjust(1))"
-                       aria-label="@(string.Format("Increase {0}", Label))">
-                +
-            </MudButton>
+            <button type="button"
+                    class="set-metric-stepper__btn set-metric-stepper__btn--inc"
+                    @onclick="@(() => Adjust(1))"
+                    aria-label="@(string.Format("Increase {0}", Label))">&#x2B;</button>
         </div>
     </MudStack>
 }

@@ -30,7 +30,7 @@ MudBlazor theme mirrors the world:
 - **Settings:** The page has the top rail and search. Then it shows six expansion panels for Appearance, Units, Rest timer, User profiles, Workout schedule, and Account. Each panel has a 44px icon, hairline, and 0 radius.
 - **Plan:** The header shows Edit plan. Then the plan details card shows a Plan name input with a filled slot at #E1E2E7, DEFAULT SETS and REST steppers with 44px minus and plus and a 20px value. Then the exercise list shows a handle at 44px, chevron, and 8px dot matrix.
 - **Workout:** Session stats bar shows ELAPSED and TIME and VOLUME as a flap bar with a divider hairline. Then the exercise accordion shows names at 18px 800 with 44px steppers and a 44px Log set button. Then the rest timer panel shows a clean chip surface. Its digits are Chakra Petch Bold 700 at 4.2 to 5.8rem. Each digit sits in a fixed 1ch slot so the timer acts like a mono font and never shifts when the digit changes. The color is ink and shifts to amber and then to error red when time is short. A 6px edge track fills with scaleX.
-- **Dialogs and snackbars:** 0 radius, hairline-strong border, overlay at rgba 12,13,15 at 0.56 with blur 2px, and mono titles.
+- **Dialogs and snackbars:** 0 radius, hairline-strong border, overlay at rgba 12,13,15 at 0.56 with blur 2px, and mono titles. Dialogs center vertically when they fit the viewport and pin to the top only once they fill the space, which is when they would otherwise slide behind the floating FABs. The container reserves 76px of bottom padding so a full-height dialog always clears the dialog FABs.
 
 ## Colorblind and contrast checks
 

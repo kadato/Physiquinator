@@ -6,9 +6,13 @@
 
 <MudDialog Class="plan-exercise-sheet">
     <TitleContent>
-        <div class="d-flex align-items-center gap-3">
-            <MudIcon Icon="@(IsNew ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">@(IsNew ? "Add exercise" : "Edit exercise")</MudText>
+        <div class="dialog-header-bar">
+            <div class="dialog-header-bar__left">
+                <span class="dialog-title-icon-box">
+                    <MudIcon Icon="@(IsNew ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Size="Size.Small" />
+                </span>
+                <span class="dialog-header-bar__title">@(IsNew ? "Add exercise" : "Edit exercise")</span>
+            </div>
         </div>
     </TitleContent>
     <DialogContent>
@@ -121,27 +125,22 @@
                 </MudText>
             }
 
-                <div class="plan-exercise-sheet__footer">
-                    @if (IsNew)
-                    {
-                        <MudButton Variant="Variant.Text"
-                                   FullWidth="true"
-                                   OnClick="Cancel">
-                            @("Cancel")
-                        </MudButton>
-                    }
-                    <MudButton Color="Color.Primary"
-                               Variant="Variant.Filled"
-                               FullWidth="true"
-                               ButtonType="ButtonType.Submit"
-                               Disabled="@ConfirmDisabled">
-                        @(IsNew ? "Save exercise" : "Done")
-                    </MudButton>
-                </div>
             </MudStack>
         </form>
     </DialogContent>
 </MudDialog>
+
+@* Fixed floating FABs in screen corners for this modal *@
+<MudIconButton Class="dialog-fab app-fab app-fab--secondary app-fab--bl-1"
+               Icon="@Icons.Material.Filled.ArrowBack"
+               OnClick="Cancel"
+               aria-label="@("Cancel")" />
+
+<MudIconButton Class="dialog-fab app-fab app-fab--primary app-fab--br-1"
+               Icon="@Icons.Material.Filled.Check"
+               OnClick="Confirm"
+               Disabled="@ConfirmDisabled"
+               aria-label="@(IsNew ? "Add exercise" : "Save exercise")" />
 
 @code {
     [CascadingParameter]

@@ -2,6 +2,16 @@
 @inject WeightUnitService WeightUnitService
 
 <MudDialog>
+    <TitleContent>
+        <div class="dialog-header-bar">
+            <div class="dialog-header-bar__left">
+                <span class="dialog-title-icon-box">
+                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" />
+                </span>
+                <span class="dialog-header-bar__title">@("Personal records")</span>
+            </div>
+        </div>
+    </TitleContent>
     <DialogContent>
         <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
             @(string.Format("All-time bests for {0} on this plan.", ExerciseName))

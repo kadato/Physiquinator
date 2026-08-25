@@ -9,8 +9,8 @@
         <MudText Typo="Typo.body1">@Message</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">@CancelText</MudButton>
-        <MudButton Color="@ConfirmColor" Variant="Variant.Filled" OnClick="Confirm">@ConfirmText</MudButton>
+        <MudButton Variant="Variant.Outlined" Class="dialog-cancel-btn" OnClick="Cancel">@CancelText</MudButton>
+        <MudButton Color="@ConfirmColor" Variant="Variant.Filled" Class="dialog-confirm-btn" OnClick="Confirm">@ConfirmText</MudButton>
     </DialogActions>
 </MudDialog>
 

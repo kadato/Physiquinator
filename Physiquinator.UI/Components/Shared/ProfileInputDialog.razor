@@ -1,14 +1,24 @@
 
 <MudDialog>
+    <TitleContent>
+        <div class="dialog-header-bar">
+            <div class="dialog-header-bar__left">
+                <span class="dialog-title-icon-box">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                </span>
+                <span class="dialog-header-bar__title">@("Profile")</span>
+            </div>
+        </div>
+    </TitleContent>
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault>
-            <MudTextField T="string" Variant="Variant.Outlined" Label="@("Profile name")" Value="@Name" ValueChanged="OnNameChanged" Required="true" Immediate="true" AutoFocus="true"
+            <MudTextField T="string" Variant="Variant.Outlined" Label="@("Profile name")" Value="@Name" ValueChanged="OnNameChanged" Immediate="true" AutoFocus="true"
                           autocapitalize="words" autocomplete="off" enterkeyhint="done" />
         </form>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">@("Cancel")</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirm" Disabled="@string.IsNullOrWhiteSpace(Name)">@("Save")</MudButton>
+        <MudButton Variant="Variant.Outlined" Class="dialog-cancel-btn" OnClick="Cancel">@("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Class="dialog-confirm-btn" OnClick="Confirm" Disabled="@string.IsNullOrWhiteSpace(Name)">@("Save")</MudButton>
     </DialogActions>
 </MudDialog>
 

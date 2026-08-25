@@ -2,9 +2,13 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="d-flex align-items-center gap-3">
-            <MudIcon Icon="@Icons.Material.Filled.Download" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">@Title</MudText>
+        <div class="dialog-header-bar">
+            <div class="dialog-header-bar__left">
+                <span class="dialog-title-icon-box">
+                    <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" />
+                </span>
+                <span class="dialog-header-bar__title">@Title</span>
+            </div>
         </div>
     </TitleContent>
     <DialogContent>
@@ -24,8 +28,8 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">@("Cancel")</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="Confirm">
+        <MudButton Variant="Variant.Outlined" Class="dialog-cancel-btn" OnClick="Cancel">@("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="dialog-confirm-btn" StartIcon="@Icons.Material.Filled.Download" OnClick="Confirm">
             @("Import")
         </MudButton>
     </DialogActions>

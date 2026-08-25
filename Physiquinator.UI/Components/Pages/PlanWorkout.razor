@@ -35,7 +35,9 @@ else
     <MudForm @bind-IsValid="_formValid">
         <MudStack Spacing="3" Class="plan-editor-stack">
             <section class="plan-section">
-                <MudText Typo="Typo.overline" Class="plan-section__label">@("Plan details")</MudText>
+                <div class="plan-section-header">
+                    <span class="plan-section-header__title">@("Plan details")</span>
+                </div>
                 <MudPaper Class="plan-details-card plan-section__card pa-3" Elevation="0">
                     <MudStack Spacing="2">
                         <MudTextField T="string"
@@ -75,7 +77,9 @@ else
             </section>
 
             <section class="plan-section">
-                <MudText Typo="Typo.overline" Class="plan-section__label">@("Exercises")</MudText>
+                <div class="plan-section-header">
+                    <span class="plan-section-header__title">@("Exercises")</span>
+                </div>
 
                 @if (!Exercises.Any())
                 {
@@ -304,10 +308,10 @@ else
         };
         var options = new DialogOptions
         {
-            CloseButton = true,
+            CloseButton = false,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
-            Position = DialogPosition.BottomCenter,
+            Position = DialogPosition.TopCenter,
         };
 
         var dialog = await DialogService.ShowAsync<PlanExerciseSheet>(

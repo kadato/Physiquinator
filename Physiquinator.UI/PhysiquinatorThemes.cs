@@ -12,21 +12,21 @@ public static class PhysiquinatorThemes
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#24283B", // Tokyo Night ink - deep navy for primary actions, 12:1 on paper
-            PrimaryContrastText = "#D5D6DB",
-            Secondary = "#34548A", // Tokyo Night blue desaturated for light, distinct from success
-            Tertiary = "#5A3E8C", // muted purple
-            Success = "#33635C", // Tokyo Night green darkened for light bg, distinct from error
-            Info = "#34548A",
+            Primary = "#1E5EFF", // electric blue for primary actions, white text 5.1:1
+            PrimaryContrastText = "#FFFFFF",
+            Secondary = "#7C3AED", // electric purple
+            Tertiary = "#D81B60", // hot magenta
+            Success = "#4D7C0F", // acid lime darkened for light bg, distinct from error
+            Info = "#1E5EFF",
             Warning = "#8F5E15",
-            Error = "#8C4351", // Tokyo Night red darkened for light bg, paired with icon
-            Background = "#D5D6DB", // Tokyo Night Light bg
-            Surface = "#E9E9ED", // chip slightly lighter than bg
-            AppbarBackground = "#D5D6DB",
+            Error = "#BE123C", // vivid red, paired with icon
+            Background = "#E5E1D2", // warm bone plate stock
+            Surface = "#F0EDE2", // warm well, matches --pl-chip-2
+            AppbarBackground = "#E5E1D2",
             TextPrimary = "#1A1B26", // near-black navy, 14:1 on bg
-            TextSecondary = "#565A6E", // 6.2:1 on bg, passes AA
-            LinesDefault = "#B4B8C5", // hairline 1px
-            Divider = "#C7CAD5",
+            TextSecondary = "#565349", // warm slate, ~5.9:1 on bone, passes AA
+            LinesDefault = "#C6C1AB", // warm hairline 1px
+            Divider = "#D8D3C0",
         },
         PaletteDark = new PaletteDark()
         {

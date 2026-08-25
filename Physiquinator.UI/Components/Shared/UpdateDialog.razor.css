@@ -59,9 +59,9 @@
     color: var(--mud-palette-text-primary);
 }
 
-.markdown-body h1 { font-size: 1.2rem; }
-.markdown-body h2 { font-size: 1.05rem; }
-.markdown-body h3 { font-size: 0.95rem; }
+.markdown-body h1 { font-size: 18px; }
+.markdown-body h2 { font-size: 16px; }
+.markdown-body h3 { font-size: 14px; }
 
 .markdown-body p {
     margin-bottom: 8px;

@@ -44,9 +44,9 @@
 }
 
 .pr-dialog-row__icon ::deep .mud-icon-root {
-    font-size: 20px !important;
-    width: 20px !important;
-    height: 20px !important;
+    font-size: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
 }
 
 .pr-dialog-row__main {
@@ -80,7 +80,7 @@
     flex-shrink: 0;
     white-space: nowrap;
     font-weight: 700;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
     color: var(--pl-ink);
 }
@@ -91,7 +91,7 @@
 }
 
 .pr-dialog-close.mud-button-root {
-    min-height: 36px !important;
+    min-height: 44px !important;
     padding: 0 16px !important;
     border: var(--hairline-strong) !important;
     border-radius: var(--radius) !important;

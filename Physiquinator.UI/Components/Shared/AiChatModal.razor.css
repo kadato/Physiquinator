@@ -65,10 +65,10 @@
 }
 
 ::deep .ai-chat-header__actions .mud-icon-button {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: var(--radius) !important;
     border: var(--hairline-strong);
     background: var(--pl-chip);
@@ -128,7 +128,6 @@
 .ai-api-key-banner {
     background: var(--pl-chip);
     border: 1.5px solid var(--hairline-strong);
-    border-left: 4px solid var(--pl-yellow);
     border-radius: var(--radius);
     padding: 10px 12px;
     margin-top: 8px;
@@ -340,10 +339,10 @@
 }
 
 .ai-header-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: var(--radius);
     border: var(--hairline-strong);
     background: var(--pl-chip);
@@ -384,57 +383,57 @@
     cursor: not-allowed;
 }
 .ai-quick-btn--cyan {
-    border: 1.5px solid #0284C7;
-    background: rgba(2, 132, 199, 0.12);
-    color: #0369A1;
+    border: 1.5px solid var(--pl-cyan);
+    background: color-mix(in srgb, var(--pl-cyan) 12%, transparent);
+    color: var(--pl-cyan-text);
 }
 .ai-quick-btn--cyan:hover:not(:disabled) {
-    background: rgba(2, 132, 199, 0.22);
+    background: color-mix(in srgb, var(--pl-cyan) 22%, transparent);
 }
 .ai-quick-btn--magenta {
-    border: 1.5px solid #BE123C;
-    background: rgba(190, 18, 60, 0.12);
-    color: #BE123C;
+    border: 1.5px solid var(--pl-error);
+    background: color-mix(in srgb, var(--pl-error) 12%, transparent);
+    color: var(--pl-error);
 }
 .ai-quick-btn--magenta:hover:not(:disabled) {
-    background: rgba(190, 18, 60, 0.22);
+    background: color-mix(in srgb, var(--pl-error) 22%, transparent);
 }
 .ai-quick-btn--yellow {
-    border: 1.5px solid #10111A;
+    border: 1.5px solid var(--pl-volt-fg);
     background: var(--pl-yellow);
-    color: #10111A;
+    color: var(--pl-volt-fg);
 }
 .ai-quick-btn--yellow:hover:not(:disabled) {
     filter: brightness(1.1);
 }
 .ai-quick-btn--green {
-    border: 1.5px solid #15803D;
-    background: rgba(21, 128, 61, 0.12);
-    color: #15803D;
+    border: 1.5px solid var(--pl-success);
+    background: color-mix(in srgb, var(--pl-success) 12%, transparent);
+    color: var(--pl-success);
 }
 .ai-quick-btn--green:hover:not(:disabled) {
-    background: rgba(21, 128, 61, 0.22);
+    background: color-mix(in srgb, var(--pl-success) 22%, transparent);
 }
 
 html[data-theme="dark"] .ai-quick-btn--cyan {
-    border: 1.5px solid rgba(125, 207, 255, 0.6);
-    background: rgba(125, 207, 255, 0.15);
+    border: 1.5px solid color-mix(in srgb, var(--pl-cyan) 60%, transparent);
+    background: color-mix(in srgb, var(--pl-cyan) 15%, transparent);
     color: var(--pl-cyan);
 }
 html[data-theme="dark"] .ai-quick-btn--magenta {
-    border: 1.5px solid rgba(255, 0, 85, 0.6);
-    background: rgba(255, 0, 85, 0.15);
-    color: #FF7597;
+    border: 1.5px solid color-mix(in srgb, var(--pl-magenta) 60%, transparent);
+    background: color-mix(in srgb, var(--pl-magenta) 15%, transparent);
+    color: var(--pl-err-text);
 }
 html[data-theme="dark"] .ai-quick-btn--yellow {
-    border: 1.5px solid #FFE600;
-    background: #FFE600;
-    color: #10111A;
+    border: 1.5px solid var(--pl-volt-fg);
+    background: var(--pl-yellow);
+    color: var(--pl-volt-fg);
     font-weight: 900;
 }
 html[data-theme="dark"] .ai-quick-btn--green {
-    border: 1.5px solid rgba(158, 206, 106, 0.6);
-    background: rgba(158, 206, 106, 0.15);
+    border: 1.5px solid color-mix(in srgb, var(--pl-success) 60%, transparent);
+    background: color-mix(in srgb, var(--pl-success) 15%, transparent);
     color: var(--pl-success);
 }
 
@@ -476,7 +475,7 @@ html[data-theme="dark"] .ai-quick-btn--green {
 
 ::deep .ai-chat-textfield input {
     font-family: var(--font-body);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.5;
     color: var(--pl-ink);
     padding: 10px 0;

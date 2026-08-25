@@ -17,14 +17,13 @@
     width: fit-content;
     max-width: 100%;
     flex-grow: 0;
-    padding: 6px 12px;
-    background: var(--pl-chip);
-    border: 1.5px solid var(--hairline-strong);
+    background: transparent;
+    border: none;
     border-radius: var(--radius);
     box-sizing: border-box;
     box-shadow: none;
     font-family: var(--font-display) !important;
-    font-size: 20px !important;
+    font-size: 22px !important;
     font-weight: 900 !important;
     letter-spacing: 0.02em !important;
     line-height: 1.1 !important;

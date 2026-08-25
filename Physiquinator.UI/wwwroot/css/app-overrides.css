@@ -32,49 +32,55 @@
    TYPE: Departure Mono everywhere with JetBrains Mono secondary. Tabular numerals enforced everywhere.
 */
 :root {
-  --pl-paper: #D5D6DB; /* Tokyo Night Light ground */
-  --pl-paper-2: #DFE1EA;
-  --pl-paper-3: #CBCCD6;
+  --pl-paper: #E5E1D2; /* warm bone plate stock */
+  --pl-paper-2: #EFECE0;
+  --pl-paper-3: #D8D3C0;
   --pl-ink: #1A1B26; /* deep navy ink */
   --pl-ink-2: #24283B;
-  --pl-stone: #565A6E;
-  --pl-stone-2: #787C99;
-  --pl-hairline: #B4B8C5;
-  --pl-hairline-strong: #9AA0B5;
-  --pl-chip: #FFFFFF; /* surface */
-  --pl-chip-2: #E9EBF3; /* well, clearly a step down from chip */
+  --pl-stone: #565349; /* warm slate */
+  --pl-stone-2: #7A7565;
+  --pl-hairline: #C6C1AB;
+  --pl-hairline-strong: #A39D82;
+  --pl-chip: #FFFFFF; /* white plate laid on bone paper */
+  --pl-chip-2: #F0EDE2; /* warm well, clearly a step down from chip */
   --pl-rubber: #1A1B26;
   --pl-rubber-2: #24283B;
   --pl-rubber-3: #1F2335;
 
   /* Accent variants reserved for small text and small glyphs, where the
      vibrant accent tokens fall below 4.5:1 on chip surfaces in light mode. */
-  --pl-yellow-text: #9A4700;
+  --pl-yellow-text: #A11060;
   --pl-purple-text: #6D28D9;
   --pl-cyan-text: #0369A1;
   --pl-success-text: #166534;
 
-  /* High-voltage Cyberpunk Accents */
-  --pl-yellow: #D97706; /* rich cyber yellow for light mode */
-  --pl-yellow-bg: #FEF3C7;
+  /* High-voltage Accents: vibrant blue, magenta, red for light mode */
+  --pl-yellow: #D81B60; /* hot magenta: timer digits, first stat, warm accents */
+  --pl-yellow-bg: #FCE7F3;
   --pl-purple: #7C3AED; /* electric purple */
-  --pl-magenta: #D81B60; /* bold magenta */
-  --pl-cyan: #0284C7;
+  --pl-magenta: #E11D48; /* vivid red */
+  --pl-cyan: #0891B2;
   --pl-amber: #D97706;
   --pl-amber-ink: #5A3E1A;
   --pl-plate-red: #E11D48;
-  --pl-plate-blue: #2563EB;
+  --pl-plate-blue: #1E5EFF;
   --pl-plate-gold: #D97706;
-  --pl-plate-green: #16A34A;
-  --pl-success: #15803D;
+  --pl-plate-green: #65A30D;
+  --pl-success: #65A30D;
   --pl-error: #BE123C;
   --pl-seal: #7C3AED;
-  --pl-dot: rgba(26, 27, 38, 0.05);
-  --pl-grid-line: rgba(26, 27, 38, 0.07);
+  --pl-dot: rgba(26, 27, 38, 0.12);
+  --pl-grid-line: rgba(26, 27, 38, 0.26);
 
-  /* Accent pair for primary buttons & active indicators */
-  --pl-accent-bg: var(--pl-ink);
-  --pl-accent-fg: var(--pl-paper);
+  /* Accent pair for primary buttons & active indicators: electric blue */
+  --pl-accent-bg: #1E5EFF;
+  --pl-accent-fg: #FFFFFF;
+
+  /* Text ink for volt-filled controls: white on the blue fill in light,
+     ink on neon yellow in dark */
+  --pl-volt-fg: #FFFFFF;
+  /* Border ink for volt-filled controls: ink frame in both themes */
+  --pl-volt-edge: #10111A;
 
   /* Status colors */
   --pl-warn-text: #B45309;
@@ -120,33 +126,36 @@ html[data-theme="dark"] {
   --pl-dot: rgba(192, 202, 245, 0.04);
   --pl-grid-line: rgba(192, 202, 245, 0.05);
 
-  /* High-voltage Cyberpunk Neons */
+  /* High-voltage Acid Neons */
   --pl-yellow: #FAFF00; /* vibrant electric yellow */
   --pl-yellow-bg: rgba(250, 255, 0, 0.16);
-  --pl-purple: #BB9AF7; /* electric violet */
+  --pl-purple: #C084FC; /* electric violet */
   --pl-magenta: #FF0055; /* cyber hot magenta / red */
-  --pl-cyan: #7DCFFF;
+  --pl-cyan: #00E5FF;
   --pl-amber: #FAFF00;
   --pl-plate-red: #FF0055;
-  --pl-plate-blue: #7AA2F7;
+  --pl-plate-blue: #4D7FFF;
   --pl-plate-gold: #FAFF00;
-  --pl-plate-green: #9ECE6A;
-  --pl-success: #9ECE6A;
+  --pl-plate-green: #A3E635;
+  --pl-success: #A3E635;
   --pl-error: #FF0055;
-  --pl-seal: #BB9AF7;
+  --pl-seal: #C084FC;
 
-  /* Electric Tokyo Night blue / yellow for primary controls */
-  --pl-accent-bg: #7AA2F7;
+  /* Electric acid blue / yellow for primary controls */
+  --pl-accent-bg: #4D7FFF;
   --pl-accent-fg: #10111A;
+
+  /* Ink for volt-filled controls (buttons, FABs, active tabs) in both themes */
+  --pl-volt-fg: #10111A;
   --pl-warn-text: #FAFF00;
-  --pl-ok-text: #9ECE6A;
+  --pl-ok-text: #A3E635;
   --pl-err-text: #FF5C7A;
   --pl-focus: #FAFF00;
   --pl-amber-ink: #FAFF00;
   --pl-yellow-text: #FAFF00;
-  --pl-purple-text: #BB9AF7;
-  --pl-cyan-text: #7DCFFF;
-  --pl-success-text: #9ECE6A;
+  --pl-purple-text: #C084FC;
+  --pl-cyan-text: #00E5FF;
+  --pl-success-text: #A3E635;
 }
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
@@ -159,7 +168,7 @@ html, body, #app, button, input, select, textarea, .mud-typography, .mud-button,
 }
 #app { display:flex; flex-direction:column; flex:1 1 0%; min-height:0; overflow:hidden; }
 ::selection { background: var(--pl-ink); color: var(--pl-paper); }
-html[data-theme="dark"] ::selection { background: #7AA2F7; color: #10111A; }
+html[data-theme="dark"] ::selection { background: #4D7FFF; color: #10111A; }
 :focus-visible { outline: 2px solid var(--pl-focus); outline-offset: 2px; }
 * { scrollbar-color: var(--pl-hairline-strong) transparent; scrollbar-width: thin; }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -193,7 +202,7 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 .mud-icon-button { display:inline-flex !important; align-items:center !important; justify-content:center !important; width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; padding:0 !important; border-radius:var(--radius) !important; font-size:1.25rem !important; color:inherit; transition:transform 100ms ease, background 120ms ease; }
 .mud-icon-button:active { transform:scale(0.96); }
 .mud-icon-button .mud-icon-root { font-size:20px !important; width:20px !important; height:20px !important; color:inherit; }
-.mud-icon-button.mud-icon-button-size-small { width:36px !important; height:36px !important; min-width:36px !important; min-height:36px !important; }
+.mud-icon-button.mud-icon-button-size-small { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; }
 .mud-icon-button.mud-icon-button-size-small .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
 .mud-icon-button.mud-icon-button-size-large .mud-icon-root { font-size:24px !important; width:24px !important; height:24px !important; }
 /* No-shadow material rule: kill MudBlazor's default elevation on buttons and papers. */
@@ -257,18 +266,18 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
   color: var(--pl-yellow) !important;
 }
 .app-fab--primary {
-  background: #FAFF00 !important;
-  background-color: #FAFF00 !important;
-  color: #000000 !important;
-  border: 1.5px solid #000000 !important;
+  background: var(--pl-volt-fill) !important;
+  background-color: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
 }
 .app-fab--primary .mud-icon-root {
-  color: #000000 !important;
-  fill: #000000 !important;
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
 }
 .app-fab--primary:hover {
   filter: brightness(1.12) !important;
-  background-color: #FAFF00 !important;
+  background-color: var(--pl-yellow) !important;
 }
 .app-fab--primary:disabled,
 .app-fab:disabled {
@@ -285,20 +294,10 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
   fill: var(--pl-stone) !important;
 }
 
-html[data-theme="light"] .app-fab--primary {
-  background: #FAFF00 !important;
-  background-color: #FAFF00 !important;
-  color: #000000 !important;
-  border: 1.5px solid #000000 !important;
-}
-html[data-theme="light"] .app-fab--primary .mud-icon-root {
-  color: #000000 !important;
-  fill: #000000 !important;
-}
 html[data-theme="light"] .app-fab--secondary {
   background: #FFFFFF !important;
   color: #1A1B26 !important;
-  border: 1.5px solid #9AA0B5 !important;
+  border: 1.5px solid #A39D82 !important;
 }
 html[data-theme="light"] .app-fab--secondary .mud-icon-root {
   color: #1A1B26 !important;
@@ -473,9 +472,9 @@ h1:focus-visible,
   border: 1.5px solid var(--hairline-strong) !important;
   border-radius: var(--radius) !important;
   color: var(--pl-ink) !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  padding: 0 10px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 12px !important;
 }
 .page-header .mud-button:hover,
 .page-header .mud-icon-button:hover {
@@ -518,22 +517,17 @@ h1:focus-visible,
 .home-hero.mud-paper {
   position: relative;
   padding: 16px !important;
-  border: 1.5px solid #D97706 !important;
+  border: 1.5px solid var(--pl-volt-fill) !important;
   border-radius: var(--radius) !important;
-  background: color-mix(in srgb, #D97706 8%, var(--pl-chip)) !important;
+  background: color-mix(in srgb, var(--pl-yellow) 8%, var(--pl-chip)) !important;
   box-shadow: none !important;
   overflow: hidden;
 }
-html[data-theme="dark"] .home-hero.mud-paper {
-  border-color: var(--pl-yellow) !important;
-  background: color-mix(in srgb, var(--pl-yellow) 8%, var(--pl-chip)) !important;
-}
-.home-hero__label { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:#10111A; background:var(--pl-yellow); padding:4px 8px; border-radius:var(--radius); border:1px solid #10111A; }
-html[data-theme="dark"] .home-hero__label { background:var(--pl-yellow); color:#10111A; border:1px solid #FFE600; }
-.home-hero__dot { width:7px; height:7px; border-radius:50%; background:#10111A; animation:live-pulse 1.4s ease-in-out infinite; }
+.home-hero__label { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-volt-fg); background:var(--pl-volt-fill); padding:4px 8px; border-radius:var(--radius); border:1px solid var(--pl-volt-edge); box-shadow:var(--pl-plate-shadow-sm); }
+.home-hero__dot { width:7px; height:7px; border-radius:50%; background:var(--pl-volt-fg); animation:live-pulse 1.4s ease-in-out infinite; }
 .home-hero__title { font-family:var(--font-display) !important; font-size:22px !important; font-weight:800 !important; letter-spacing:0.02em !important; text-transform:uppercase !important; margin:8px 0 12px !important; color:var(--pl-ink); }
-.home-hero__continue.mud-button-root { min-height:44px !important; border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; letter-spacing:0.12em !important; text-transform:uppercase !important; font-weight:800 !important; background:var(--pl-yellow) !important; color:#10111A !important; border:1.5px solid #10111A !important; }
-.home-hero__discard.mud-icon-button { position:absolute !important; top:8px !important; right:8px !important; width:32px !important; height:32px !important; border-radius:var(--radius) !important; border:var(--hairline) !important; background:var(--pl-chip) !important; color:var(--pl-error) !important; }
+.home-hero__continue.mud-button-root { min-height:44px !important; border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; letter-spacing:0.12em !important; text-transform:uppercase !important; font-weight:800 !important; background:var(--pl-volt-fill) !important; color:var(--pl-volt-fg) !important; border:1.5px solid var(--pl-volt-edge) !important; }
+.home-hero__discard.mud-icon-button { position:absolute !important; top:8px !important; right:8px !important; width:44px !important; height:44px !important; border-radius:var(--radius) !important; border:var(--hairline) !important; background:var(--pl-chip) !important; color:var(--pl-error) !important; }
 
 .home-overview { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin:0; }
 @media (min-width:960px) { .home-overview--with-hero { grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); align-items:stretch; } .home-overview--with-hero .home-stats .stat-card.mud-paper { min-height:96px; } }
@@ -543,11 +537,11 @@ html[data-theme="dark"] .home-hero__label { background:var(--pl-yellow); color:#
 .home-plans-count-chip {
   display:inline-flex; align-items:center; justify-content:center; height:24px; min-width:24px; padding:0 8px;
   font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em;
-  background:#1A1B26; color:#FFE600; border:1.5px solid #1A1B26;
+  background:var(--pl-ink); color:var(--pl-yellow); border:1.5px solid var(--pl-ink);
   border-radius:var(--radius);
 }
-html[data-theme="dark"] .home-plans-count-chip { background:#FFE600; color:#10111A; border:1.5px solid #FFE600; font-weight:900; }
-.home-plans-new-btn.mud-button-root { background:var(--pl-yellow) !important; color:#10111A !important; border:1.5px solid #10111A !important; font-family:var(--font-mono) !important; font-weight:800 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
+html[data-theme="dark"] .home-plans-count-chip { background:var(--pl-yellow); color:var(--pl-volt-fg); border:1.5px solid var(--pl-yellow); font-weight:900; }
+.home-plans-new-btn.mud-button-root { background:var(--pl-volt-fill) !important; color:var(--pl-volt-fg) !important; border:1.5px solid var(--pl-volt-edge) !important; font-family:var(--font-mono) !important; font-weight:800 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
 .home-heatmap-panel.mud-paper, .history-heatmap-panel.mud-paper { overflow:hidden; max-width:100%; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; position:relative; padding:12px !important; }
 .heatmap-legend { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--pl-stone); padding-bottom:10px; margin-bottom:10px; border-bottom:var(--hairline); }
 @media (min-width:960px) { .home-heatmap-panel.mud-paper { width:fit-content; margin-inline:auto; padding:14px 16px !important; } }
@@ -566,10 +560,11 @@ button.heatmap-cell.heatmap-on.heatmap-future { opacity:0.85; }
 button.heatmap-cell.heatmap-scheduled { border:1.5px dashed var(--pl-stone-2); background:var(--pl-paper-2); }
 button.heatmap-cell.heatmap-planned { background:var(--pl-chip); border:1.5px dashed var(--pl-stone); }
 button.heatmap-cell.heatmap-planned::before { content:''; position:absolute; inset:30%; border-radius:50%; background:var(--pl-cyan); opacity:0.95; }
-button.heatmap-cell.heatmap-missed { border:1.5px solid var(--pl-err-text); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 34%, transparent) 2px 5px); }
-button.heatmap-cell.heatmap-today { box-shadow:inset 0 0 0 2px var(--pl-yellow), 0 0 0 1px var(--pl-paper); outline:none; }
+button.heatmap-cell.heatmap-missed { border:1.5px solid var(--pl-stone-2); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 34%, transparent) 2px 5px); }
+button.heatmap-cell.heatmap-missed--recent { border:1.5px solid var(--pl-err-text); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 34%, transparent) 2px 5px); }
+button.heatmap-cell.heatmap-today { box-shadow:inset 0 0 0 2px var(--pl-volt-fill), 0 0 0 1px var(--pl-paper); outline:none; }
 button.heatmap-cell.heatmap-selected { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 2.5px var(--pl-ink); }
-button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5px var(--pl-ink), inset 0 0 0 4.5px var(--pl-yellow); }
+button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5px var(--pl-ink), inset 0 0 0 4.5px var(--pl-volt-fill); }
 .home-plan-list { display:flex; flex-direction:column; gap:8px; }
 .plan-card.mud-card { width:100%; overflow:hidden; border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; position:relative; }
 .plan-card__content { padding:10px 12px !important; display:flex; flex-direction:column; gap:8px; }
@@ -650,9 +645,9 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 .history-session-card__badge-inprogress {
   font-family:var(--font-mono); font-size:0.6875rem; font-weight:800;
   letter-spacing:0.1em; text-transform:uppercase;
-  color:#10111A; background:var(--pl-yellow);
+  color:var(--pl-volt-fg); background:var(--pl-volt-fill);
   padding:2px 8px; border-radius:var(--radius);
-  border:1px solid #10111A;
+  border:1px solid var(--pl-volt-edge);
 }
 
 .history-session-card__right {
@@ -675,7 +670,7 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
   color:var(--pl-error) !important;
 }
 .history-action-btn--delete:hover {
-  background:var(--pl-error) !important; color:#10111A !important;
+  background:var(--pl-error) !important; color:#FFFFFF !important;
   border-color:var(--pl-error) !important;
 }
 .history-action-btn--chevron {
@@ -690,8 +685,8 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
   height:36px; padding:0 12px;
   font-family:var(--font-mono); font-size:0.6875rem; font-weight:800;
   letter-spacing:0.08em; text-transform:uppercase;
-  background:var(--pl-yellow); color:#10111A;
-  border:1.5px solid #10111A; border-radius:var(--radius);
+  background:var(--pl-volt-fill); color:var(--pl-volt-fg);
+  border:1.5px solid var(--pl-volt-edge); border-radius:var(--radius);
   cursor:pointer; transition:all 120ms ease;
 }
 .history-card-continue-btn:hover { filter:brightness(1.08); }
@@ -767,7 +762,7 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 .rest-timer-controls .mud-icon-button[aria-label*="Pause"] { background:color-mix(in srgb, var(--pl-amber) 14%, var(--pl-chip-2)) !important; border-color:var(--pl-warn-text) !important; color:var(--pl-amber-ink) !important; }
 .rest-timer-controls .mud-button { height:44px !important; min-width:0 !important; flex:1 1 auto; border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; font-weight:700 !important; letter-spacing:0.12em !important; text-transform:uppercase !important; border:1.5px solid var(--hairline-strong) !important; box-shadow:none !important; }
 .rest-timer-edge-track { flex-shrink:0; height:6px; margin:0; background:var(--pl-dot); border-top:var(--hairline); position:relative; overflow:hidden; }
-.rest-timer-edge-fill { width:100%; height:100%; background:var(--pl-ink); border-radius:0; transform:scaleX(0); transform-origin:left; will-change:transform;}
+.rest-timer-edge-fill { width:100%; height:100%; background:var(--pl-volt-fill); border-radius:0; transform:scaleX(0); transform-origin:left; will-change:transform;}
 .rest-timer-edge-fill--imminent { background:var(--pl-warn-text); }
 .rest-timer-edge-fill--urgent { background:var(--pl-err-text); animation:urgent-pulse 1.2s infinite alternate; }
 @keyframes urgent-pulse { 0%{filter:brightness(1)} 100%{filter:brightness(1.18)} }
@@ -1174,13 +1169,13 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
   min-width: 32px;
   min-height: 32px;
   border-radius: var(--radius);
-  background: var(--pl-yellow);
-  color: #10111A !important;
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg) !important;
   flex-shrink: 0;
 }
 .dialog-title-icon-box .mud-icon-root {
-  color: #10111A !important;
-  fill: #10111A !important;
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
   font-size: 18px !important;
   width: 18px !important;
   height: 18px !important;
@@ -1197,9 +1192,9 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
   font-weight: 800 !important;
   letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  background: var(--pl-yellow) !important;
-  color: #10111A !important;
-  border: 1.5px solid #10111A !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 120ms ease;
@@ -1249,22 +1244,22 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
 button.plan-card__start,
 .plan-card-icon-btn.plan-card__start,
 .plan-card__start {
-  background: #FAFF00 !important;
-  background-color: #FAFF00 !important;
-  color: #000000 !important;
-  border: 1.5px solid #000000 !important;
+  background: var(--pl-volt-fill) !important;
+  background-color: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   border-radius: var(--radius) !important;
 }
 .mud-icon-button.plan-card__start .mud-icon-root,
 .plan-card-icon-btn.plan-card__start .mud-icon-root,
 .plan-card__start .mud-icon-root {
-  color: #000000 !important;
-  fill: #000000 !important;
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
 }
 .plan-card__start:hover,
 .plan-card-icon-btn.plan-card__start:hover {
   filter: brightness(1.12) !important;
-  background-color: #FAFF00 !important;
+  background-color: var(--pl-yellow) !important;
 }
 
 /* Rest Timer Panel & Controls */
@@ -1318,7 +1313,7 @@ button.plan-card__start,
 .home-plans-header { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; margin-bottom:8px !important; }
 .home-plans-header__title-group { display:flex; align-items:center; gap:8px; }
 .home-plans-header__actions { display:flex; align-items:center; gap:8px; }
-.home-plans-new-btn.mud-button-root { height:36px !important; min-height:36px !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; font-weight:700 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
+.home-plans-new-btn.mud-button-root { height:44px !important; min-height:44px !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; font-weight:700 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
 .home-plans-ai-btn.mud-button-root { height:36px !important; min-height:36px !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; font-weight:700 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; border:var(--hairline-strong) !important; }
 
 /* Bodyweight card on history page: premium plate with aligned header and log row */
@@ -1354,9 +1349,9 @@ button.plan-card__start,
   min-width: 48px;
   min-height: 48px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--pl-yellow);
-  background: var(--pl-yellow);
-  color: #10111A;
+  border: 1.5px solid var(--pl-volt-edge);
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
   cursor: pointer;
   padding: 0;
   transition: transform 100ms ease, background 120ms ease, opacity 120ms ease;
@@ -1476,7 +1471,7 @@ html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#7
 }
 .plan-exercise-row__text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .plan-exercise-row__name { font-family: var(--font-display) !important; font-size: 16px !important; font-weight: 800 !important; letter-spacing: -0.015em !important; color: var(--pl-ink) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.plan-exercise-row__chip--superset { font-family: var(--font-mono) !important; font-size: 0.6875rem !important; font-weight: 800 !important; padding: 2px 6px !important; border-radius: var(--radius) !important; background: var(--pl-yellow) !important; color: #10111A !important; text-transform: uppercase !important; }
+.plan-exercise-row__chip--superset { font-family: var(--font-mono) !important; font-size: 0.6875rem !important; font-weight: 800 !important; padding: 2px 6px !important; border-radius: var(--radius) !important; background: var(--pl-volt-fill) !important; color: var(--pl-volt-fg) !important; text-transform: uppercase !important; }
 .plan-exercise-row__summary { font-family: var(--font-mono) !important; font-size: 0.6875rem !important; letter-spacing: 0.04em !important; color: var(--pl-stone) !important; }
 .plan-exercise-row__chevron { color: var(--pl-stone) !important; flex-shrink: 0; }
 .plan-exercise-row__chevron .mud-icon-root { font-size: 18px !important; width: 18px !important; height: 18px !important; }
@@ -1527,20 +1522,10 @@ html[data-theme="light"] .exercise-index-tag {
 .completed-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--radius) !important; background:var(--pl-success); color:var(--pl-ink) !important; flex-shrink:0; }
 html[data-theme="dark"] .completed-icon { color:var(--pl-rubber) !important; }
 .completed-icon .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; }
-.page-header h1,
-.page-header .mud-typography-h1 {
-  font-family: var(--font-display) !important;
-  font-size: 22px !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.02em !important;
-  line-height: 1 !important;
-  text-transform: uppercase !important;
-  color: var(--pl-ink) !important;
-}
 .exercise-name { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:-0.015em !important; line-height:1.2 !important; color:var(--pl-ink) !important; }
 .workout-superset-badge { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; padding:0 8px; border-radius:var(--radius); background:var(--pl-amber); color:#10111A; box-sizing:border-box; }
 html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
-.exercise-more-menu .mud-icon-button { width:36px !important; height:36px !important; min-width:36px !important; min-height:36px !important; border:1.5px solid var(--hairline-strong) !important; background:var(--pl-chip-2); color:var(--pl-ink) !important; border-radius:var(--radius) !important; box-sizing:border-box; }
+.exercise-more-menu .mud-icon-button { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; border:1.5px solid var(--hairline-strong) !important; background:var(--pl-chip-2); color:var(--pl-ink) !important; border-radius:var(--radius) !important; box-sizing:border-box; }
 .exercise-more-menu .mud-icon-button .mud-icon-root { color:var(--pl-ink) !important; fill:var(--pl-ink) !important; }
 .set-progress-pill { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; padding:0 10px; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap; box-sizing:border-box; }
 .set-progress-pill--completed { background:var(--pl-success) !important; color:#10111A !important; border-color:var(--pl-success) !important; font-weight:800 !important; }
@@ -1560,10 +1545,10 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
   align-self: stretch;
   height: auto;
   min-height: 90px;
-  border: 1.5px solid #000000 !important;
-  background: #FAFF00 !important;
-  background-color: #FAFF00 !important;
-  color: #000000 !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  background: var(--pl-volt-fill) !important;
+  background-color: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
   cursor: pointer;
   padding: 0;
   transition: all 120ms ease;
@@ -1578,7 +1563,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
   filter: brightness(1.15);
 }
 .log-set-btn:active { transform:scale(0.96); }
-.log-set-btn .mud-icon-root { font-size:32px !important; width:32px !important; height:32px !important; color:#000000 !important; fill:#000000 !important; font-weight:900; }
+.log-set-btn .mud-icon-root { font-size:32px !important; width:32px !important; height:32px !important; color:var(--pl-volt-fg) !important; fill:var(--pl-volt-fg) !important; font-weight:900; }
 .warmup-chip { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:2px 6px; border-radius:var(--radius); background:color-mix(in srgb, var(--pl-amber) 20%, transparent); color:var(--pl-warn-text); border:1px solid var(--pl-warn-text); white-space:nowrap; }
 .warmup-chip--row { margin-right:6px; }
 .set-completed-row { display:flex; flex-direction:column; gap:6px; padding:10px 0; border-bottom:var(--hairline); }
@@ -1587,6 +1572,10 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .set-completed-row__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--pl-stone); }
 .set-completed-row .set-stepper-rows { display:flex; flex-direction:column !important; gap:8px !important; width:100%; }
 .workout-top { display:flex; flex-direction:column; gap:8px; }
+/* The rest panel reserves its slot in the flow. Stats plate and timer read as
+   one machined block; rest start scrolls the timer into view and rest end
+   scrolls the active set back (Workout.razor), so the shift is always the
+   thing the user is about to look at. */
 .workout-top--with-timer { gap:0; }
 .workout-top--with-timer .workout-session-stats { border-bottom:none !important; border-bottom-left-radius:0 !important; border-bottom-right-radius:0 !important; }
 .workout-top--with-timer .rest-timer-panel { border-top:none !important; border-top-left-radius:0 !important; border-top-right-radius:0 !important; }
@@ -1626,9 +1615,6 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
-html[data-theme="light"] .workout-session-stat__value {
-  color: #D97706 !important;
-}
 .workout-session-stat__label {
   font-family: var(--font-mono) !important;
   font-size: 0.6875rem !important;
@@ -1644,9 +1630,9 @@ html[data-theme="light"] .workout-session-stat__value {
 .workout-session-stat-divider { display:none; }
 
 .workout-actions-row .premium-btn-filled {
-  background: var(--pl-yellow) !important;
-  color: #10111A !important;
-  border: 1.5px solid #10111A !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   border-radius: var(--radius) !important;
   font-family: var(--font-mono) !important;
   font-weight: 800 !important;
@@ -1657,9 +1643,9 @@ html[data-theme="light"] .workout-session-stat__value {
   filter: brightness(1.15);
 }
 .workout-actions-row .premium-btn-error-outlined {
-  border: 1.5px solid #FF0055 !important;
-  color: #FF0055 !important;
-  background: color-mix(in srgb, #FF0055 12%, var(--pl-chip-2)) !important;
+  border: 1.5px solid var(--pl-error) !important;
+  color: var(--pl-error) !important;
+  background: color-mix(in srgb, var(--pl-error) 12%, var(--pl-chip-2)) !important;
   border-radius: var(--radius) !important;
   font-family: var(--font-mono) !important;
   font-weight: 800 !important;
@@ -1854,9 +1840,9 @@ html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important
 .heatmap-legend { display:flex; flex-wrap:wrap; align-items:center; column-gap:12px; row-gap:4px; }
 .hm-key { display:inline-flex; align-items:center; gap:5px; }
 .hm-glyph { display:inline-block; width:10px; height:10px; flex-shrink:0; border-radius:var(--radius); }
-.hm-glyph--today { border-radius:50%; border:2px solid var(--pl-amber); background:transparent; box-shadow:0 0 0 1px var(--pl-paper); }
+.hm-glyph--today { border-radius:50%; border:2px solid var(--pl-volt-fill); background:transparent; box-shadow:0 0 0 1px var(--pl-paper); }
 .hm-glyph--scheduled { border:1.5px dashed var(--pl-stone-2); background:var(--pl-paper-2); }
-.hm-glyph--missed { border:1.5px solid var(--pl-err-text); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 34%, transparent) 2px 5px); }
+.hm-glyph--missed { border:1.5px solid var(--pl-stone-2); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 34%, transparent) 2px 5px); }
 
 .mono-token { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-stone); }
 
@@ -1878,8 +1864,8 @@ html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important
 .skip-link:focus { width:auto; height:auto; clip-path:none; }
 .hairline { height:1px; background:var(--pl-hairline); border:none; margin:12px 0; }
 .dot-matrix { background-image:radial-gradient(circle, var(--pl-dot) 1px, transparent 1.25px); background-size:8px 8px; }
-.page-header .mud-typography-h1 { font-family:var(--font-display) !important; font-size:22px !important; font-weight:800 !important; letter-spacing:-0.02em !important; }
-.page-header.home-header .mud-typography-h1 { font-size:22px !important; }
+/* PageHeader title sizing lives in PageHeader.razor.css (22px display role,
+   +0.02em tracking per DESIGN.md). No global override here on purpose. */
 .mud-paper, .mud-card, .mud-dialog, .mud-snackbar, .mud-chip, .mud-button-root, .mud-input-outlined-border { border-radius:var(--radius) !important; }
 .mud-button-root:focus-visible, .mud-icon-button:focus-visible { outline:2px solid var(--pl-ink) !important; outline-offset:2px !important; }
 html[data-theme="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
@@ -1953,9 +1939,9 @@ html body span.rest-timer-complete-title {
   align-items: flex-end;
 }
 .ai-msg--user .ai-msg__bubble {
-  background: var(--pl-yellow);
-  color: #10111A;
-  border: 1.5px solid #10111A;
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
+  border: 1.5px solid var(--pl-volt-edge);
   border-radius: var(--radius);
   padding: 10px 14px;
   font-weight: 600;
@@ -2030,24 +2016,25 @@ html body span.rest-timer-complete-title {
   border-color: var(--pl-yellow);
 }
 .ai-quick-btn--cyan {
-  background: color-mix(in srgb, #00D4FF 15%, var(--pl-chip));
-  border-color: #00D4FF;
-  color: var(--pl-ink);
+  background: color-mix(in srgb, var(--pl-cyan) 15%, var(--pl-chip));
+  border-color: var(--pl-cyan);
+  color: var(--pl-cyan-text);
 }
+html[data-theme="dark"] .ai-quick-btn--cyan { color: var(--pl-cyan); }
 .ai-quick-btn--magenta {
-  background: color-mix(in srgb, #FF0055 15%, var(--pl-chip));
-  border-color: #FF0055;
-  color: var(--pl-ink);
+  background: color-mix(in srgb, var(--pl-error) 15%, var(--pl-chip));
+  border-color: var(--pl-error);
+  color: var(--pl-err-text);
 }
 .ai-quick-btn--yellow {
-  background: color-mix(in srgb, #FFE600 15%, var(--pl-chip));
-  border-color: #FFE600;
-  color: var(--pl-ink);
+  background: var(--pl-volt-fill);
+  border-color: var(--pl-volt-edge);
+  color: var(--pl-volt-fg);
 }
 .ai-quick-btn--green {
-  background: color-mix(in srgb, #10B981 15%, var(--pl-chip));
-  border-color: #10B981;
-  color: var(--pl-ink);
+  background: color-mix(in srgb, var(--pl-success) 15%, var(--pl-chip));
+  border-color: var(--pl-success);
+  color: var(--pl-success-text);
 }
 .ai-chat-input {
   position: sticky;
@@ -2072,9 +2059,9 @@ html body span.rest-timer-complete-title {
   width: 44px !important;
   height: 44px !important;
   min-width: 44px !important;
-  background: var(--pl-yellow) !important;
-  color: #10111A !important;
-  border: 1.5px solid #10111A !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   border-radius: var(--radius) !important;
 }
 .ai-chat-send-button:hover {
@@ -2109,8 +2096,8 @@ html body span.rest-timer-complete-title {
   min-width: 28px;
   min-height: 28px;
   border-radius: var(--radius);
-  background: var(--pl-yellow);
-  color: #10111A;
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 900;
@@ -2173,8 +2160,8 @@ html body span.rest-timer-complete-title {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 800;
-  background: var(--pl-yellow);
-  color: #10111A;
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
   border-radius: var(--radius);
   margin-left: 8px;
 }
@@ -2278,15 +2265,15 @@ html body span.rest-timer-complete-title {
   border-color: var(--hairline-strong) !important;
 }
 .ai-mode-tab--active {
-  background: #FAFF00 !important;
-  background-color: #FAFF00 !important;
-  color: #000000 !important;
-  border-color: #000000 !important;
+  background: var(--pl-yellow) !important;
+  background-color: var(--pl-yellow) !important;
+  color: var(--pl-volt-fg) !important;
+  border-color: var(--pl-volt-edge) !important;
   font-weight: 900 !important;
 }
 .ai-mode-tab--active .mud-icon-root {
-  color: #000000 !important;
-  fill: #000000 !important;
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
 }
 .ai-clear-btn {
   align-self: stretch;
@@ -2398,9 +2385,9 @@ html body span.rest-timer-complete-title {
   width: 40px !important;
   border-radius: var(--radius) !important;
   flex-shrink: 0;
-  background: var(--pl-yellow) !important;
-  color: #10111A !important;
-  border: 1.5px solid #10111A !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
 }
 .ai-bridge-container {
   display: flex;
@@ -2424,8 +2411,8 @@ html body span.rest-timer-complete-title {
   width: 28px;
   height: 28px;
   border-radius: var(--radius);
-  background: var(--pl-yellow);
-  color: #10111A;
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
   font-family: var(--font-mono);
   font-weight: 800;
   font-size: 0.6875rem;
@@ -2434,8 +2421,8 @@ html body span.rest-timer-complete-title {
   flex-shrink: 0;
 }
 .ai-bridge-step-badge .mud-icon-root {
-  color: #10111A !important;
-  fill: #10111A !important;
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
 }
 .ai-bridge-prompt-preview {
   max-height: 180px;
@@ -2452,6 +2439,318 @@ html body span.rest-timer-complete-title {
   color: var(--pl-ink);
 }
 
+
+/* ==================================================================
+   PLATE DEPTH PASS, August 2026.
+   Print-registration depth joins the system. Plates cast HARD offset
+   shadows with zero blur, matching the Sharp-Edges Rule. Blurred
+   shadows and glows stay banned. New devices:
+   - Plate shadows: sm 2px, md 3px, lg 6px, solid ink or void.
+   - Machined bevel: 1px inset top highlight on raised plates.
+   - Volt fill token: large-area fills only, always under ink text.
+   - Shader washes: aurora grounds, CRT scanlines on the timer and
+     splash, hazard stripe march on the urgent timer track, and an
+     off-register ink split on the timer digits.
+   - Press physics: volt CTAs translate into their shadow on press.
+   ================================================================== */
+:root {
+  --pl-plate-shadow-color: #1B1E33; /* deep ink plate shadow for paper */
+  --pl-plate-shadow-sm: 3px 3px 0 var(--pl-plate-shadow-color);
+  --pl-plate-shadow-md: 5px 5px 0 var(--pl-plate-shadow-color);
+  --pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);
+  --pl-bevel-highlight: rgba(255, 255, 255, 0.65);
+  --pl-volt-fill: #1E5EFF; /* electric blue fill, light mode; pairs with white text */
+}
+html[data-theme="dark"] {
+  --pl-plate-shadow-color: #000000;
+  --pl-plate-shadow-sm: 2px 2px 0 #000000;
+  --pl-plate-shadow-md: 3px 3px 0 #000000;
+  --pl-plate-shadow-lg: 6px 6px 0 #000000;
+  --pl-bevel-highlight: rgba(192, 202, 245, 0.07);
+  --pl-volt-fill: #FAFF00;
+}
+
+/* Aurora grounds: one cool wash per theme under the 24px grid. Static, cheap,
+   decorative only. */
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .app-main-scroll {
+  background-image:
+    radial-gradient(1000px 500px at 85% -8%, rgba(122, 162, 247, 0.08), transparent 62%),
+    radial-gradient(800px 460px at 4% 108%, rgba(187, 154, 247, 0.06), transparent 62%),
+    linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
+}
+html[data-theme="light"] .app-shell,
+html[data-theme="light"] .app-main-scroll {
+  background-image:
+    radial-gradient(1200px 560px at 50% -12%, rgba(255, 250, 235, 0.4), transparent 65%),
+    radial-gradient(900px 520px at 100% 112%, rgba(124, 58, 237, 0.05), transparent 60%),
+    linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
+}
+
+/* Raised plates: cards, panels, toolbars. Bevel plus offset, never blur. */
+.plate-card,
+.stat-card.mud-paper,
+.home-hero.mud-paper,
+.plan-card.mud-card,
+.history-session-card,
+.bodyweight-panel.mud-paper,
+.rest-timer-panel.mud-paper,
+.workout-session-stats,
+.exercise-progress-chart,
+.bodyweight-chart-panel,
+.history-heatmap-panel.mud-paper,
+.home-heatmap-panel.mud-paper,
+.activity-heatmap-card,
+.settings-card.mud-paper,
+.settings-panel.mud-expand-panel,
+.plan-details-card,
+.home-plans-header,
+.history-filter-bar,
+.ai-chat-messages,
+.ai-chat-input,
+.ai-bridge-card {
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight), var(--pl-plate-shadow-md) !important;
+}
+
+/* Interactive plates lift toward the reader on hover. */
+.plan-card.mud-card,
+.history-session-card,
+.progress-exercise-card {
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 150ms ease, background 120ms ease;
+}
+.plan-card.mud-card:hover,
+.history-session-card:hover,
+.progress-exercise-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight), 7px 7px 0 var(--pl-plate-shadow-color) !important;
+}
+
+/* Fused workout block: stats plate and timer read as one mounted unit, so the
+   pair casts a single shadow from the parent instead of stacking two. */
+.workout-top--with-timer .workout-session-stats,
+.workout-top--with-timer .rest-timer-panel.mud-paper {
+  box-shadow: none !important;
+}
+.workout-top--with-timer {
+  box-shadow: var(--pl-plate-shadow-md);
+}
+
+/* Floating chrome casts the deepest shadow: pill, FABs, undo. */
+.app-nav-pill__inner {
+  box-shadow: var(--pl-plate-shadow-lg) !important;
+}
+.app-fab {
+  box-shadow: var(--pl-plate-shadow-md) !important;
+}
+.app-fab:active {
+  transform: translate(5px, 5px) !important;
+  box-shadow: none !important;
+}
+.app-fab:disabled,
+.app-fab--primary:disabled {
+  box-shadow: none !important;
+}
+.workout-undo-fab {
+  box-shadow: var(--pl-plate-shadow-md) !important;
+}
+.workout-undo-fab:active {
+  transform: translate(5px, 5px);
+  box-shadow: none !important;
+}
+
+/* Volt CTA sheen: vertical fill ramp on the volt-fill token, mini plate
+   shadow, and press physics that collapse the offset. Ink borders unchanged. */
+.log-set-btn,
+.home-hero__continue.mud-button-root,
+.home-plans-new-btn.mud-button-root,
+.plan-sheet-save-btn,
+.bodyweight-log-row__log-btn,
+.ai-chat-send-button,
+.history-card-continue-btn,
+.app-fab--primary,
+.dialog-title-icon-box {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 52%,
+    color-mix(in srgb, var(--pl-volt-fill) 86%, #000000) 100%
+  ) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  transition: transform 100ms ease, box-shadow 100ms ease, filter 120ms ease;
+}
+.log-set-btn:active,
+.home-hero__continue.mud-button-root:active,
+.home-plans-new-btn.mud-button-root:active,
+.plan-sheet-save-btn:active,
+.bodyweight-log-row__log-btn:active,
+.ai-chat-send-button:active,
+.history-card-continue-btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
+
+/* Active segmented tabs share the volt sheen at tab scale. */
+.ai-mode-tab--active {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 52%,
+    color-mix(in srgb, var(--pl-volt-fill) 86%, #000000) 100%
+  ) !important;
+  box-shadow: var(--pl-plate-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Active states are volt, everywhere: nav tab, segmented tabs, schedule days,
+   filter chips. One live color owns "you are here" in both themes. */
+.app-nav-tab--active {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 82%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 100%
+  ) !important;
+  color: var(--pl-volt-fg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.settings-tab--active,
+.settings-tab--active:hover,
+.exercise-metric-tab--active,
+.settings-schedule-day[aria-pressed="true"],
+.history-filter-chip--selected {
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border-color: var(--pl-volt-edge) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+.history-filter-chip--selected .history-filter-chip__label,
+.history-filter-chip--selected .history-filter-chip__remove {
+  color: var(--pl-volt-fg) !important;
+}
+
+/* Checked switch track picks up the same volt ramp. */
+.mud-switch-span:has(.mud-checked) .mud-switch-track {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 100%
+  ) !important;
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+
+/* Table heads: machined band instead of a flat well. */
+.infinite-table-head,
+.mud-table .mud-table-head .mud-table-cell {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-chip-2) 55%, var(--pl-chip)) 0%,
+    var(--pl-chip-2) 100%
+  ) !important;
+}
+
+/* Overlays: dialogs deepest, snackbars and menus mid. */
+.mud-dialog {
+  box-shadow: var(--pl-plate-shadow-lg) !important;
+}
+.mud-snackbar {
+  box-shadow: var(--pl-plate-shadow-md) !important;
+}
+.mud-popover.mud-popover-open {
+  box-shadow: var(--pl-plate-shadow-md) !important;
+}
+
+/* Focused inputs get a hard volt ring, zero blur. */
+.mud-input-control.mud-input-focused .mud-input-outlined-border {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pl-yellow) 28%, transparent);
+}
+
+/* Home hero: hazard wash over the plate. Stripes stay under the ink border
+   and clear of the label and CTA, which carry the solid volt. */
+.home-hero.mud-paper {
+  background-image:
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--pl-volt-fill) 8%, transparent) 0 12px,
+      transparent 12px 26px
+    ),
+    linear-gradient(150deg, color-mix(in srgb, var(--pl-volt-fill) 16%, transparent) 0%, transparent 58%) !important;
+  background-color: var(--pl-chip) !important;
+}
+
+/* Stat value plates: duotone ramps, one accent per card, graded strip. */
+.stat-card:nth-child(1) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-yellow) 34%, transparent) 0%, color-mix(in srgb, var(--pl-yellow) 10%, transparent) 80%) !important;
+}
+.stat-card:nth-child(2) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-cyan) 32%, transparent) 0%, color-mix(in srgb, var(--pl-cyan) 9%, transparent) 80%) !important;
+}
+.stat-card:nth-child(3) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-purple) 32%, transparent) 0%, color-mix(in srgb, var(--pl-purple) 9%, transparent) 80%) !important;
+}
+.stat-card:nth-child(4) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-success) 32%, transparent) 0%, color-mix(in srgb, var(--pl-success) 9%, transparent) 80%) !important;
+}
+/* Light mode only: the neon yellow fails 3:1 on its own tint, so the first
+   card's value drops to the AA-safe yellow text token. */
+html[data-theme="light"] .stat-card:nth-child(1) .stat-card__value {
+  color: var(--pl-yellow-text);
+}
+
+/* Heatmap done cells: machined gloss over the green fill. */
+button.heatmap-cell.heatmap-on {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%) !important;
+}
+
+/* Colored load dots get a painted lip. */
+.load-dot--25, .load-dot--20, .load-dot--15, .load-dot--10 {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Urgent edge track: solid error red with the pre-existing pulse. */
+
+/* AI surfaces: user bubble rides the volt sheen, empty-state plate gets the
+   dot matrix and a mini shadow. */
+.ai-msg--user .ai-msg__bubble {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 100%
+  );
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+.ai-chat-empty__icon-plate {
+  background-image: radial-gradient(circle, var(--pl-dot) 1px, transparent 1.25px);
+  background-size: 8px 8px;
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+
+/* Splash carries the scanlines too, so the terminal is on before the app is. */
+.app-splash {
+  position: relative;
+  overflow: hidden;
+}
+.app-splash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(192, 202, 245, 0.05) 2px 3px);
+}
+
+/* Forced more-contrast mode: plates go flat, depth returns to borders. */
+@media (prefers-contrast:more) {
+  .plate-card, .stat-card.mud-paper, .home-hero.mud-paper, .plan-card.mud-card,
+  .history-session-card, .bodyweight-panel.mud-paper, .rest-timer-panel.mud-paper,
+  .workout-session-stats, .exercise-progress-chart, .bodyweight-chart-panel,
+  .history-heatmap-panel.mud-paper, .home-heatmap-panel.mud-paper,
+  .activity-heatmap-card, .settings-card.mud-paper, .settings-panel.mud-expand-panel,
+  .plan-details-card, .home-plans-header, .history-filter-bar, .ai-chat-messages,
+  .ai-chat-input, .ai-bridge-card, .app-nav-pill__inner, .app-fab, .workout-undo-fab,
+  .mud-dialog, .mud-snackbar, .mud-popover.mud-popover-open {
+    box-shadow: none !important;
+  }
+  .workout-top--with-timer { box-shadow: none; }
+}
 
 /* Big screens: the pill stays the one chrome, centered, and FABs anchor to
    the centered 640px content column instead of the viewport edges. */

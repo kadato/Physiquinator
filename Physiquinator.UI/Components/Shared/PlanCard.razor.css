@@ -110,7 +110,7 @@
 
 .plan-card-name {
     font-family: var(--font-display) !important;
-    font-size: 1.0625rem !important;
+    font-size: 1rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.015em !important;
     line-height: 1.25 !important;
@@ -128,10 +128,10 @@
 }
 
 .plan-card-icon-btn {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: var(--radius) !important;
     border: 1.5px solid var(--hairline-strong) !important;
     background: var(--pl-chip-2) !important;
@@ -144,20 +144,20 @@
 }
 
 .plan-card-icon-btn.plan-card__start {
-    background: #FAFF00 !important;
-    background-color: #FAFF00 !important;
-    color: #000000 !important;
-    border: 1.5px solid #000000 !important;
+    background: var(--pl-yellow) !important;
+    background-color: var(--pl-yellow) !important;
+    color: var(--pl-volt-fg) !important;
+    border: 1.5px solid var(--pl-volt-fg) !important;
     position: relative !important;
 }
 
 .plan-card-icon-btn.plan-card__start .mud-icon-root {
-    color: #000000 !important;
-    fill: #000000 !important;
+    color: var(--pl-volt-fg) !important;
+    fill: var(--pl-volt-fg) !important;
 }
 
 .plan-card-icon-btn.plan-card__start:hover {
     filter: brightness(1.12);
-    background: #FAFF00 !important;
+    background: var(--pl-yellow) !important;
 }
 

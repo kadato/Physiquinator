@@ -1,43 +1,6 @@
-/* Layout shell. Tab bar styles live in app-overrides.css for MAUI WebView */
+/* Layout shell skeleton. Every chrome, page-container, pill, and FAB style
+   lives in app-overrides.css so all hosts render from one source. This file
+   only carries what is unique to the MainLayout element. */
 .app-shell {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
     max-height: 100%;
-    overflow: hidden;
-    background-color: var(--mud-palette-background);
-}
-
-.app-main-scroll {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Page container values match app-overrides.css so the web build and the
-   MAUI WebView render the same layout. Desktop keeps the phone-width
-   container; FABs are aligned to it in app-overrides.css. */
-::deep .app-page-container {
-    padding-left: var(--app-page-x) !important;
-    padding-right: var(--app-page-x) !important;
-    padding-top: var(--app-page-top) !important;
-    padding-bottom: 84px !important;
-    max-width: 600px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    overflow: visible !important;
-}
-
-/* Desktop and big screens: the nav pill moves to the top as a horizontal bar */
-@media (min-width: 960px) {
-    ::deep .app-page-container {
-        padding-bottom: 24px !important;
-    }
-    .app-shell .app-main-scroll {
-        padding-bottom: 0;
-    }
 }

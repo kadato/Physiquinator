@@ -14,14 +14,14 @@
                                  aria-hidden="true" />
                     </span>
                     <div class="rest-timer-complete-text">
-                        <span class="rest-timer-complete-title" style="font-family:'Chakra Petch','JetBrains Mono',sans-serif !important;">TIME'S UP!</span>
+                        <span class="rest-timer-complete-title" style="font-family:'Departure Mono','JetBrains Mono',monospace !important;">TIME'S UP!</span>
                         <span class="rest-timer-complete-subtitle">READY FOR NEXT SET</span>
                     </div>
                 </div>
             }
             else
             {
-                <div class='rest-timer-digits @DigitsClass' role="timer" aria-hidden="true" style="font-family:'Chakra Petch','JetBrains Mono',sans-serif !important; font-weight:700;">
+                <div class='rest-timer-digits @DigitsClass' role="timer" aria-hidden="true" style="font-family:'Departure Mono','JetBrains Mono',monospace !important; font-weight:700;">
                     @if (RestSecondsRemaining >= 60)
                     {
                         @foreach (char c in MinutesText)

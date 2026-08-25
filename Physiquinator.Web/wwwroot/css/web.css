@@ -21,8 +21,8 @@
 }
 
 .auth-brand {
-    font-family: 'Chakra Petch', 'JetBrains Mono', monospace;
-    font-size: 1.5rem;
+    font-family: 'Departure Mono', 'JetBrains Mono', monospace;
+    font-size: 1.375rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -30,16 +30,16 @@
 }
 
 .auth-tagline {
-    font-family: 'Chakra Petch', 'JetBrains Mono', monospace;
+    font-family: 'Departure Mono', 'JetBrains Mono', monospace;
     color: var(--mud-palette-text-secondary);
-    font-size: 0.8125rem;
+    font-size: 0.6875rem;
     line-height: 1.5;
     margin: 0.25rem 0 1.5rem;
     letter-spacing: 0.04em;
 }
 
 .auth-hint {
-    font-family: 'Chakra Petch', 'JetBrains Mono', monospace;
+    font-family: 'Departure Mono', 'JetBrains Mono', monospace;
     color: var(--mud-palette-text-secondary);
     font-size: 0.6875rem;
     text-align: center;

@@ -34,7 +34,7 @@
 
 .plan-card__index-tag {
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: 0.6875rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     color: var(--pl-purple);
@@ -42,26 +42,26 @@
 
 .plan-card__meta-chip {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 2px 8px;
     border-radius: var(--radius);
-    background: rgba(158, 206, 106, 0.08);
-    border: 1.5px solid rgba(158, 206, 106, 0.4);
+    background: rgba(158, 206, 106, 0.14);
+    border: 1.5px solid rgba(158, 206, 106, 0.55);
     color: var(--pl-success);
 }
 
 .plan-card__last-done-chip {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 2px 8px;
     border-radius: var(--radius);
-    background: rgba(224, 175, 104, 0.12);
+    background: rgba(224, 175, 104, 0.18);
     border: 1.5px solid var(--pl-yellow);
     color: var(--pl-warn-text);
 }
@@ -149,7 +149,6 @@
     color: #000000 !important;
     border: 1.5px solid #000000 !important;
     position: relative !important;
-    box-shadow: 0 0 10px rgba(250, 255, 0, 0.25) !important;
 }
 
 .plan-card-icon-btn.plan-card__start .mud-icon-root {
@@ -160,6 +159,5 @@
 .plan-card-icon-btn.plan-card__start:hover {
     filter: brightness(1.12);
     background: #FAFF00 !important;
-    box-shadow: 0 0 14px rgba(250, 255, 0, 0.5) !important;
 }
 

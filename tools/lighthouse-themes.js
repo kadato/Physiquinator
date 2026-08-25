@@ -4,18 +4,19 @@ const { execSync } = require('node:child_process');
 const fs = require('node:fs');
 const nodePath = require('node:path');
 
-const BASE_URL = 'http://localhost:5200';
-const OUTPUT_DIR = nodePath.join(__dirname, '..', 'artifacts', 'lighthouse-themes');
+const BASE_URL = process.env.LH_BASE_URL ?? 'http://127.0.0.1:5149';
+const OUTPUT_DIR = process.env.LH_OUTPUT_DIR ?? nodePath.join(__dirname, '..', 'artifacts', 'lighthouse-themes');
 
 const PAGES = [
   { name: 'home', path: '/' },
   { name: 'settings', path: '/settings' },
   { name: 'history', path: '/history' },
-  { name: 'history-detail', path: '/history/123' },
+  { name: 'history-detail', path: '/history/efbeadde-0000-0000-6e00-000000000000' },
   { name: 'bodyweight', path: '/history/bodyweight' },
-  { name: 'exercise-progress', path: '/history/exercise-progress/00000000-0000-0000-0000-000000000001/Bench%20Press' },
-  { name: 'plan-editor', path: '/plan' },
-  { name: 'workout', path: '/workout/00000000-0000-0000-0000-000000000001' },
+  { name: 'exercise-progress', path: '/history/exercise-progress/dead0000-0000-4000-8000-000000000001/Bench%20Press' },
+  { name: 'plan-editor', path: '/plan/dead0000-0000-4000-8000-000000000001' },
+  { name: 'workout', path: '/workout/dead0000-0000-4000-8000-000000000001?forceNew=true' },
+  { name: 'ai', path: '/ai' },
   { name: 'error', path: '/Error' },
 ];
 
@@ -46,7 +47,7 @@ function auditPage(pg, theme) {
 
   process.stdout.write(`  ${tag}... `);
 
-  const chromeFlags = ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', theme.flag].join(' ');
+  const chromeFlags = ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', theme.flag].join(' ');
 
   try {
     runLighthouse(url, jsonPath, chromeFlags);

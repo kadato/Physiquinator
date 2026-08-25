@@ -120,13 +120,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseStaticFiles();
+app.MapStaticAssets();
+
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 app.UsePhysiquinatorMcpApiKey();
-
-app.MapStaticAssets();
 
 // Add aggressive caching for fingerprinted static assets (JS, CSS, fonts, images)
 // MapStaticAssets already fingerprints URLs, so long cache lifetimes are safe.
@@ -137,7 +138,7 @@ app.Use(async (context, next) =>
     var isStaticAsset = path.StartsWith("/_content/", StringComparison.Ordinal)
         || path.StartsWith("/css/", StringComparison.Ordinal)
         || path.StartsWith("/js/", StringComparison.Ordinal);
-    if (isStaticAsset && context.Response.Headers.CacheControl.Count == 0)
+    if (isStaticAsset && context.Response.StatusCode == 200 && context.Response.Headers.CacheControl.Count == 0)
     {
         context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
     }

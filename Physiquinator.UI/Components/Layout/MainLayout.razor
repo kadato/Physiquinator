@@ -71,6 +71,10 @@
             </MudContainer>
         </main>
 
+        @* Paper fade under the fixed chrome so scrolling rows exit cleanly
+           instead of colliding with the pill and FABs. *@
+        <div class="app-chrome-fade" aria-hidden="true"></div>
+
         @if (ShouldShowBackFab())
         {
             <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1 app-fab--back"

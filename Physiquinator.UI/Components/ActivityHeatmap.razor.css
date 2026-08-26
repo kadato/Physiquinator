@@ -133,15 +133,16 @@ button.heatmap-cell.heatmap-planned::before {
 
 /* Missed scheduled days: stone hatch so old misses stop shouting. Only the
    last week (heatmap-missed--recent) keeps the error-red hatch. Shape stays
-   the hatch in both, so the legend key still reads. */
+   the hatch in both, so the legend key still reads. The hatch prints light
+   (20 percent) so a wall of misses recedes behind the done cells. */
 button.heatmap-cell.heatmap-missed {
     border: 1.5px solid var(--pl-stone-2);
-    background: repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 34%, transparent) 2px 5px);
+    background: repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 20%, transparent) 2px 6px);
 }
 
 button.heatmap-cell.heatmap-missed--recent {
     border: 1.5px solid var(--pl-err-text);
-    background: repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 34%, transparent) 2px 5px);
+    background: repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-err-text) 26%, transparent) 2px 6px);
 }
 
 button.heatmap-cell.heatmap-today {

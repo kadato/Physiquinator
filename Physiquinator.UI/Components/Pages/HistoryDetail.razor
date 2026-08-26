@@ -37,7 +37,7 @@ else
 {
     <MudStack Spacing="3" Class="app-fab-page-padding">
         <MudPaper Class="pa-3 settings-card" Elevation="0">
-            <MudText Typo="Typo.h6" Class="settings-card__title">@_session.PlanName</MudText>
+            <MudText Typo="Typo.h2" Class="settings-card__title">@_session.PlanName</MudText>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">@SessionRangeLabel</MudText>
             <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
                 @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
@@ -75,7 +75,7 @@ else
             <MudPaper Class="pa-3 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h6" Class="settings-card__title">@("Progress by exercise")</MudText>
+                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Progress by exercise")</MudText>
                 </div>
                 <div class="progress-exercise-grid">
                     @foreach (var name in _distinctExerciseNames)
@@ -98,7 +98,7 @@ else
             <MudPaper Class="pa-3 settings-card" Elevation="0">
                 <div class="settings-card__header">
                     <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h6" Class="settings-card__title">@("Plan when you trained")</MudText>
+                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Plan when you trained")</MudText>
                 </div>
                 @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
                 {
@@ -118,7 +118,7 @@ else
         {
             <MudPaper Elevation="0" Class="premium-table history-detail-table">
                 <div class="pa-3 pb-1 d-flex align-center justify-space-between">
-                    <MudText Typo="Typo.h6">@("Sets")</MudText>
+                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Sets")</MudText>
                     @if (_sets.Any())
                     {
                         @if (_editMode)

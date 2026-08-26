@@ -12,8 +12,8 @@ public static class PhysiquinatorThemes
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#1E5EFF", // electric blue for primary actions, white text 5.1:1
-            PrimaryContrastText = "#FFFFFF",
+            Primary = "#FAFF00", // volt fill, identical to dark: ink text on it keeps 15:1
+            PrimaryContrastText = "#10111A",
             Secondary = "#7C3AED", // electric purple
             Tertiary = "#D81B60", // hot magenta
             Success = "#4D7C0F", // acid lime darkened for light bg, distinct from error
@@ -30,8 +30,8 @@ public static class PhysiquinatorThemes
         },
         PaletteDark = new PaletteDark()
         {
-            Primary = "#7AA2F7", // Tokyo Night blue - primary, 6.1:1 on bg, colorblind safe (blue)
-            PrimaryContrastText = "#1A1B26",
+            Primary = "#FAFF00", // volt, same role as light: one signature hue per theme
+            PrimaryContrastText = "#10111A",
             Secondary = "#7DCFFF", // cyan
             Tertiary = "#BB9AF7", // magenta
             Success = "#9ECE6A", // green, distinct luminance from blue

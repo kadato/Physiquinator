@@ -237,11 +237,10 @@ else
         var any = false;
         foreach (var (key, value) in _sessionSets)
         {
-            var (exerciseIndex, setIndex) = key;
+            var (exerciseIndex, _) = key;
             if (exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count) continue;
             var exercise = plan.Exercises[exerciseIndex];
             if (exercise.LogType == ExerciseLogType.Duration) continue;
-            if (setIndex < exercise.WarmupSetCount) continue;
             total += PersonalRecordCalculator.ComputeVolume(value.Reps, value.Weight, exercise.LogType, _bodyweightKg, exercise.BodyweightPercent);
             any = true;
         }
@@ -1309,9 +1308,8 @@ else
             Logger.LogError(ex, "History EndSession error");
         }
 
-        _historySessionId = null;
-        SessionService.EndWorkout();
-
+        // Session state stays alive until the recap closes, so the dialog
+        // never hangs over the "no active workout" empty state.
         if (summaryPrs != null)
         {
             var parameters = new DialogParameters<WorkoutSummaryDialog>
@@ -1343,6 +1341,8 @@ else
             Snackbar.Add("No sets were logged, so nothing was saved.", Severity.Info);
         }
 
+        _historySessionId = null;
+        SessionService.EndWorkout();
         Navigation.NavigateTo(AppRoutes.Home);
     }
 

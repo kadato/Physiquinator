@@ -69,7 +69,7 @@
                 <div class="home-stats">
                     <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@("Streak")" />
                     <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@("This week")" />
-                    <StatCard Value="@LastSessionLabel" Label="@("Last time")" ValueClass="stat-card__value--date" />
+                    <StatCard Value="@LastSessionLabel" Label="@LastSessionDateLabel" ValueClass="stat-card__value--name" />
                 </div>
             }
         </section>
@@ -174,10 +174,28 @@
     private int _lastSortableCount = -1;
     private bool _sortableReady;
 
-    private string LastSessionLabel =>
+    /// <summary>Last session's plan name, so Home answers "what did I do" at a glance.</summary>
+    private string LastSessionLabel
+    {
+        get
+        {
+            if (_lastSession == null)
+                return "Never";
+
+            var planId = _lastSession.TryGetPlanId();
+            var planName = planId != Guid.Empty
+                ? (_plans ?? []).FirstOrDefault(p => p.Id == planId)?.Name
+                : null;
+            return planName ?? UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime()));
+        }
+    }
+
+    private string LastSessionDateLabel =>
         _lastSession == null
-            ? "Never"
-            : UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime()));
+            ? "Last time"
+            : string.Format(
+                "Last {0}",
+                UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_lastSession.StartedAtUtc.ToLocalTime())));
 
     private string LastDoneLabelFor(Guid planId) =>
         _lastSessionByPlan.TryGetValue(planId.ToString(), out var lastUtc)

@@ -80,7 +80,7 @@
                     <div class="ai-chat-empty__icon-plate">
                         <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Large" Color="Color.Primary" />
                     </div>
-                    <MudText Typo="Typo.h6" Class="font-weight-bold mt-2">@("Ask anything")</MudText>
+                    <MudText Typo="Typo.h2" Class="ai-chat-empty__title mt-2">@("Ask anything")</MudText>
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">@("Ask for workout routines, progressive overload advice, deload plans, or volume analysis.")</MudText>
                 </div>
             }
@@ -150,16 +150,16 @@
         @if (AiService.Messages.Count == 0)
         {
             <div class="ai-chat-quick-actions mb-3">
-                <button type="button" class="ai-quick-btn ai-quick-btn--cyan" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
+                <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
                     <span>@("Progressive Overload")</span>
                 </button>
-                <button type="button" class="ai-quick-btn ai-quick-btn--magenta" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
+                <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
                     <span>@("Performance Stats")</span>
                 </button>
-                <button type="button" class="ai-quick-btn ai-quick-btn--yellow" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
+                <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
                     <span>@("Deload Plan")</span>
                 </button>
-                <button type="button" class="ai-quick-btn ai-quick-btn--green" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
+                <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
                     <span>@("Workout Advice")</span>
                 </button>
             </div>

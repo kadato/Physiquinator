@@ -12,6 +12,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Interactive only: the static prerender pass runs before the browser has
+        // had its say, and the restore must stay available to that first load.
+        // The interactive circuit is the moment pooled SQLite handles exist and
+        // the server copy becomes the fresher one, so browser restores stop here.
+        // RendererInfo comes from ComponentBase.
+        if (RendererInfo.IsInteractive)
+            WebDbRestoreEndpoint.MarkCircuitsStarted();
+
         try
         {
             await AppInit.EnsureInitializedAsync();

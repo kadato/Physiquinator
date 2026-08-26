@@ -48,15 +48,17 @@
   --pl-rubber-3: #1F2335;
 
   /* Accent variants reserved for small text and small glyphs, where the
-     vibrant accent tokens fall below 4.5:1 on chip surfaces in light mode. */
-  --pl-yellow-text: #A11060;
+     vibrant accent tokens fall below 4.5:1 on chip surfaces in light mode.
+     Volt prints as deep olive ink on paper; the fill stays bright volt. */
+  --pl-yellow-text: #6E6400;
   --pl-purple-text: #6D28D9;
   --pl-cyan-text: #0369A1;
   --pl-success-text: #166534;
 
-  /* High-voltage Accents: vibrant blue, magenta, red for light mode */
-  --pl-yellow: #D81B60; /* hot magenta: timer digits, first stat, warm accents */
-  --pl-yellow-bg: #FCE7F3;
+  /* High-voltage Accents. Volt yellow keeps the signature in light mode:
+     fills stay #FAFF00 under ink text, text-sized volt prints as #6E6400. */
+  --pl-yellow: #6E6400; /* printed volt ink: timer digits, first stat, warm accents */
+  --pl-yellow-bg: rgba(250, 255, 0, 0.30);
   --pl-purple: #7C3AED; /* electric purple */
   --pl-magenta: #E11D48; /* vivid red */
   --pl-cyan: #0891B2;
@@ -72,13 +74,13 @@
   --pl-dot: rgba(26, 27, 38, 0.12);
   --pl-grid-line: rgba(26, 27, 38, 0.26);
 
-  /* Accent pair for primary buttons & active indicators: electric blue */
-  --pl-accent-bg: #1E5EFF;
-  --pl-accent-fg: #FFFFFF;
+  /* Accent pair for primary buttons & active indicators: volt fill, ink text,
+     identical to dark so the signature survives the theme switch */
+  --pl-accent-bg: #FAFF00;
+  --pl-accent-fg: #10111A;
 
-  /* Text ink for volt-filled controls: white on the blue fill in light,
-     ink on neon yellow in dark */
-  --pl-volt-fg: #FFFFFF;
+  /* Text ink for volt-filled controls: ink on neon yellow in both themes */
+  --pl-volt-fg: #10111A;
   /* Border ink for volt-filled controls: ink frame in both themes */
   --pl-volt-edge: #10111A;
 
@@ -141,8 +143,8 @@ html[data-theme="dark"] {
   --pl-error: #FF0055;
   --pl-seal: #C084FC;
 
-  /* Electric acid blue / yellow for primary controls */
-  --pl-accent-bg: #4D7FFF;
+  /* Electric acid volt for primary controls, same as light: one signature */
+  --pl-accent-bg: #FAFF00;
   --pl-accent-fg: #10111A;
 
   /* Ink for volt-filled controls (buttons, FABs, active tabs) in both themes */
@@ -199,15 +201,17 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 .app-page-container { padding-left: var(--page-x) !important; padding-right: var(--page-x) !important; padding-top: 16px !important; padding-bottom: 24px !important; max-width: var(--page-max) !important; margin-inline:auto !important; }
 .mud-icon-root { user-select:none; width:1em; height:1em; display:inline-block; fill:currentColor; flex-shrink:0; }
 .mud-icon-root.mud-svg-icon { width:1em; height:1em; }
-.mud-icon-button { display:inline-flex !important; align-items:center !important; justify-content:center !important; width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; padding:0 !important; border-radius:var(--radius) !important; font-size:1.25rem !important; color:inherit; transition:transform 100ms ease, background 120ms ease; }
+.mud-icon-button { display:inline-flex !important; align-items:center !important; justify-content:center !important; width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; padding:0 !important; border-radius:var(--radius) !important; font-size:1.25rem !important; color:inherit; background:var(--pl-chip-2); border:1.5px solid var(--hairline-strong); transition:transform 100ms ease, background 120ms ease; }
+.mud-icon-button:hover { background:var(--pl-chip) !important; border-color:var(--pl-yellow) !important; }
 .mud-icon-button:active { transform:scale(0.96); }
 .mud-icon-button .mud-icon-root { font-size:20px !important; width:20px !important; height:20px !important; color:inherit; }
 .mud-icon-button.mud-icon-button-size-small { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; }
 .mud-icon-button.mud-icon-button-size-small .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
 .mud-icon-button.mud-icon-button-size-large .mud-icon-root { font-size:24px !important; width:24px !important; height:24px !important; }
-/* No-shadow material rule: kill MudBlazor's default elevation on buttons and papers. */
+/* No-shadow material rule: kill MudBlazor's default soft elevation on buttons
+   and papers. The plate pass later in this file re-adds hard offset shadows. */
 .mud-button-root, .mud-button-root:hover, .mud-button-root:focus-visible,
-.mud-paper, .mud-paper:hover, .mud-icon-button:hover { box-shadow:none !important; }
+.mud-paper, .mud-paper:hover { box-shadow:none !important; }
 .mud-button-icon-start, .mud-button-icon-end { display:inline-flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0; }
 .mud-button-icon-start .mud-icon-root, .mud-button-icon-end .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
 .mud-menu-item .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; margin-right:8px; flex-shrink:0; }
@@ -419,14 +423,16 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 0 !important;
-  margin-bottom: 12px !important;
+  padding: 2px 0 6px !important;
+  margin-bottom: 14px !important;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-sizing: border-box;
   box-shadow: none !important;
   width: 100% !important;
+  gap: 8px !important;
+  overflow: visible !important;
 }
 .page-header .page-header__title,
 .page-header .mud-typography-h1,
@@ -437,20 +443,26 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
   width: fit-content !important;
   max-width: 100% !important;
   flex-grow: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: none !important;
+  padding: 9px 14px !important;
+  background: var(--pl-volt-fill) !important;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 88%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 56%,
+    color-mix(in srgb, var(--pl-volt-fill) 92%, #000000) 100%
+  ) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   border-radius: var(--radius) !important;
   font-family: var(--font-display) !important;
   font-size: 22px !important;
   font-weight: 900 !important;
   letter-spacing: 0.02em !important;
-  line-height: 1.1 !important;
+  line-height: 1 !important;
   text-transform: uppercase !important;
-  color: var(--pl-ink) !important;
+  color: var(--pl-volt-fg) !important;
   margin: 0 !important;
   box-sizing: border-box !important;
-  box-shadow: none !important;
+  box-shadow: 5px 5px 0 var(--pl-plate-shadow-color) !important;
 }
 .home-header .home-header__title {
   font-size: 22px !important;
@@ -464,7 +476,6 @@ h1:focus-visible,
 .mud-typography-h1:focus,
 .mud-typography-h1:focus-visible {
   outline: none !important;
-  box-shadow: none !important;
 }
 .page-header .mud-button,
 .page-header .mud-icon-button {
@@ -508,10 +519,11 @@ h1:focus-visible,
 .stat-card.mud-paper:hover { border-color:var(--pl-yellow) !important; }
 .stat-card__value { display:grid; place-items:center; place-content:center; text-align:center; padding:4px 6px; font-family:var(--font-display); font-weight:800; line-height:1.1; letter-spacing:0.02em; font-variant-numeric:tabular-nums; color:var(--pl-ink); white-space:normal; overflow-wrap:anywhere; font-size:1.375rem; min-height:0; }
 .stat-card:nth-child(1) .stat-card__value { color:var(--pl-yellow); background:color-mix(in srgb, var(--pl-yellow) 12%, transparent); }
-.stat-card:nth-child(2) .stat-card__value { color:var(--pl-cyan); background:color-mix(in srgb, var(--pl-cyan) 12%, transparent); }
-.stat-card:nth-child(3) .stat-card__value { color:var(--pl-purple); background:color-mix(in srgb, var(--pl-purple) 12%, transparent); }
-.stat-card:nth-child(4) .stat-card__value { color:var(--pl-success); background:color-mix(in srgb, var(--pl-success) 12%, transparent); }
+.stat-card:nth-child(2) .stat-card__value { color:var(--pl-cyan-text); background:color-mix(in srgb, var(--pl-cyan) 12%, transparent); }
+.stat-card:nth-child(3) .stat-card__value { color:var(--pl-purple-text); background:color-mix(in srgb, var(--pl-purple) 12%, transparent); }
+.stat-card:nth-child(4) .stat-card__value { color:var(--pl-success-text); background:color-mix(in srgb, var(--pl-success) 12%, transparent); }
 .stat-card__value--date { font-size:1.375rem !important; font-family:var(--font-display) !important; letter-spacing:0.02em; font-weight:800; }
+.stat-card__value--name { font-size:1rem !important; font-family:var(--font-display) !important; letter-spacing:0.02em; font-weight:800; line-height:1.2; }
 .stat-card__label { display:grid; place-items:center; text-align:center; padding:4px 6px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; line-height:1; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-ink); background:transparent; border-top:var(--hairline-strong); }
 
 .home-hero.mud-paper {
@@ -537,10 +549,9 @@ h1:focus-visible,
 .home-plans-count-chip {
   display:inline-flex; align-items:center; justify-content:center; height:24px; min-width:24px; padding:0 8px;
   font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em;
-  background:var(--pl-ink); color:var(--pl-yellow); border:1.5px solid var(--pl-ink);
-  border-radius:var(--radius);
+  background:var(--pl-volt-fill); color:var(--pl-volt-fg); border:1.5px solid var(--pl-volt-edge);
+  border-radius:var(--radius); font-weight:900;
 }
-html[data-theme="dark"] .home-plans-count-chip { background:var(--pl-yellow); color:var(--pl-volt-fg); border:1.5px solid var(--pl-yellow); font-weight:900; }
 .home-plans-new-btn.mud-button-root { background:var(--pl-volt-fill) !important; color:var(--pl-volt-fg) !important; border:1.5px solid var(--pl-volt-edge) !important; font-family:var(--font-mono) !important; font-weight:800 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
 .home-heatmap-panel.mud-paper, .history-heatmap-panel.mud-paper { overflow:hidden; max-width:100%; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; position:relative; padding:12px !important; }
 .heatmap-legend { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--pl-stone); padding-bottom:10px; margin-bottom:10px; border-bottom:var(--hairline); }
@@ -694,7 +705,7 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 .rest-timer-panel--active.mud-paper { padding:0 !important; }
 .rest-timer-digits { display:flex; justify-content:center; align-items:center; gap:0; width:100%; min-width:220px; margin:0; padding:12px 0 8px; font-family:var(--font-display) !important; font-weight:900 !important; font-variant-numeric:tabular-nums lining-nums; font-feature-settings:"tnum" 1, "lnum" 1; font-kerning:none; font-variant-ligatures:none; font-synthesis:none; font-size:clamp(4.8rem, 20vw, 6.8rem) !important; font-size:clamp(77px, round(20vw, 11px), 110px) !important; line-height:0.88 !important; letter-spacing:-0.03em; color:var(--pl-yellow) !important; transform:translateZ(0); transition:color 220ms ease; }
 .rest-timer-digits--imminent { color:var(--pl-magenta) !important; }
-.rest-timer-digits--urgent { color:#FF0055 !important; animation:urgent-pulse 1.2s infinite alternate; }
+.rest-timer-digits--urgent { color:var(--pl-error) !important; animation:urgent-pulse 1.2s infinite alternate; }
 .rest-timer-unit { display:inline-flex; justify-content:center; align-items:center; width:1ch; min-width:1ch; max-width:1ch; text-align:center; letter-spacing:0; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; font-kerning:none; }
 .rest-timer-separator { display:inline-flex !important; flex-direction:column !important; justify-content:center !important; align-items:center !important; gap:8px !important; margin:0 8px !important; vertical-align:middle !important; height:auto !important; }
 .timer-dot { display:block !important; width:8px !important; height:8px !important; background:currentColor !important; border-radius:1px !important; opacity:0.95 !important; }
@@ -937,30 +948,30 @@ html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
    Class-level rules (steppers etc.) still win over this element selector. */
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]),
 textarea { font-size:max(16px, 1em); }
-.mud-dialog { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; overflow:hidden; }
+.mud-dialog { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow: var(--pl-plate-shadow-lg) !important; overflow:hidden; }
 /* Dialog footers center their actions: with one or two buttons the centered
    row reads as a deliberate close bar instead of a stray corner button. */
 .mud-dialog-actions { justify-content:center !important; padding:8px 16px 12px !important; }
 .mud-dialog-title { font-family:var(--font-display) !important; font-weight:800 !important; letter-spacing:-0.015em !important; border-bottom:var(--hairline); padding-bottom:10px !important; }
 .mud-dialog-content { padding-top:12px !important; }
 
-/* Transparent overlay for popovers/menus, dark backdrop only for dialogs */
+/* Transparent overlay for popovers/menus, dark backdrop only for dialogs. No blur, sharp brutalist plates. */
 .mud-overlay { background:transparent !important; backdrop-filter:none !important; }
 .mud-dialog-container + .mud-overlay,
 .mud-overlay:has(.mud-dialog),
-.mud-dialog-provider .mud-overlay { background:color-mix(in srgb, var(--pl-rubber) 75%, transparent) !important; backdrop-filter:blur(2px) !important; }
+.mud-dialog-provider .mud-overlay { background:color-mix(in srgb, var(--pl-rubber) 72%, transparent) !important; backdrop-filter:none !important; }
 
 /* Instant, perfectly anchored Popovers / Three-dot Menus */
 .mud-popover-provider .mud-popover {
   transition: opacity 50ms ease !important;
   animation: none !important;
   transform: none !important;
-  box-shadow: none !important;
 }
 .mud-popover.mud-popover-open {
   border: 1.5px solid var(--hairline-strong) !important;
   border-radius: var(--radius) !important;
   background: var(--pl-chip) !important;
+  box-shadow: var(--pl-plate-shadow-md) !important;
   z-index: 1400 !important;
 }
 .mud-popover .mud-list {
@@ -976,8 +987,10 @@ textarea { font-size:max(16px, 1em); }
   color: var(--pl-ink) !important;
   min-height: 38px !important;
   padding: 6px 12px !important;
+  border-bottom: 1px solid var(--pl-hairline);
   transition: all 100ms ease !important;
 }
+.mud-popover .mud-list-item:last-child { border-bottom: none; }
 .mud-popover .mud-list-item:hover {
   background: var(--pl-chip-2) !important;
   color: var(--pl-yellow) !important;
@@ -1207,34 +1220,37 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
   cursor: not-allowed;
 }
 
-/* Plan Editor Section Headers */
+/* Plan Editor Section Headers: brutalist plate titles with hard shadow and acid edge */
 .plan-section-header {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 0 !important;
+  padding: 2px 0 4px !important;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 10px !important;
   width: 100% !important;
 }
 .plan-section-header__title {
   display: inline-flex !important;
   align-items: center !important;
   width: fit-content !important;
-  padding: 5px 10px !important;
-  background: var(--pl-chip-2) !important;
-  border: 1.5px solid var(--hairline-strong) !important;
+  padding: 7px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 4px solid var(--pl-cyan) !important;
   border-radius: var(--radius) !important;
   font-family: var(--font-display) !important;
-  font-size: 0.875rem !important;
-  font-weight: 800 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
   letter-spacing: 0.04em !important;
+  line-height: 1 !important;
   text-transform: uppercase !important;
   color: var(--pl-ink) !important;
-  margin: 0 !important;
+  margin: 0 6px 6px 0 !important;
   box-sizing: border-box !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
 
 .plan-card__start.mud-button-root,
@@ -1300,7 +1316,7 @@ button.plan-card__start,
 .exercise-card-edge-fill { height:100%; background:var(--pl-ink); transition:width 240ms cubic-bezier(0.4, 0, 0.2, 1); }
 .exercise-card-edge-fill--complete { background:var(--pl-ok-text) !important; }
 
-.mud-snackbar { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; color:var(--pl-ink) !important; box-shadow:none !important; min-width:min(320px,calc(100vw - 24px)); }
+.mud-snackbar { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; color:var(--pl-ink) !important; box-shadow: var(--pl-plate-shadow-md) !important; min-width:min(320px,calc(100vw - 24px)); }
 .plan-details-card { border:var(--hairline-strong) !important; background:var(--pl-chip) !important; border-radius:var(--radius) !important; box-shadow:none !important; overflow:hidden; }
 .plan-details-card .mud-input-filled .mud-input-slot { background:var(--pl-chip-2) !important; border-radius:var(--radius) !important; border:var(--hairline) !important; }
 
@@ -1522,7 +1538,7 @@ html[data-theme="light"] .exercise-index-tag {
 .completed-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--radius) !important; background:var(--pl-success); color:var(--pl-ink) !important; flex-shrink:0; }
 html[data-theme="dark"] .completed-icon { color:var(--pl-rubber) !important; }
 .completed-icon .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; }
-.exercise-name { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:-0.015em !important; line-height:1.2 !important; color:var(--pl-ink) !important; }
+.exercise-name { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:-0.015em !important; line-height:1.2 !important; color:var(--pl-ink) !important; text-transform:none !important; }
 .workout-superset-badge { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; padding:0 8px; border-radius:var(--radius); background:var(--pl-amber); color:#10111A; box-sizing:border-box; }
 html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .exercise-more-menu .mud-icon-button { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; border:1.5px solid var(--hairline-strong) !important; background:var(--pl-chip-2); color:var(--pl-ink) !important; border-radius:var(--radius) !important; box-sizing:border-box; }
@@ -1533,7 +1549,6 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .set-logging-rows { display:flex; flex-direction:column; gap:6px !important; padding-top:0 !important; }
 .set-active-panel { display:flex; flex-direction:column; gap:6px !important; padding:10px 12px !important; background:var(--pl-chip-2); border:1.5px solid var(--hairline-strong); border-radius:var(--radius); position:relative; }
 .set-active-panel__header { display:flex; align-items:center; margin-bottom:2px !important; }
-.set-active-panel__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--pl-yellow-text); }
 .set-active-panel__controls { display:flex; align-items:stretch; gap:8px; width:100%; }
 .set-stepper-rows { display:flex; flex-direction:column !important; gap:6px !important; flex:1; min-width:0; }
 .log-set-btn {
@@ -1628,41 +1643,11 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
   border: 1px solid var(--hairline);
 }
 .workout-session-stat-divider { display:none; }
-
-.workout-actions-row .premium-btn-filled {
-  background: var(--pl-volt-fill) !important;
-  color: var(--pl-volt-fg) !important;
-  border: 1.5px solid var(--pl-volt-edge) !important;
-  border-radius: var(--radius) !important;
-  font-family: var(--font-mono) !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-}
-.workout-actions-row .premium-btn-filled:hover {
-  filter: brightness(1.15);
-}
-.workout-actions-row .premium-btn-error-outlined {
-  border: 1.5px solid var(--pl-error) !important;
-  color: var(--pl-error) !important;
-  background: color-mix(in srgb, var(--pl-error) 12%, var(--pl-chip-2)) !important;
-  border-radius: var(--radius) !important;
-  font-family: var(--font-mono) !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-  min-height: 44px !important;
-  box-shadow: none !important;
-}
-.workout-actions-row .premium-btn-error-outlined:hover {
-  background: color-mix(in srgb, #FF0055 24%, var(--pl-chip-2)) !important;
-  filter: brightness(1.1);
-}
 .settings-card.mud-paper { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; }
 /* Detail-page card headers share one aligned title row everywhere. */
 .settings-card__header { display:flex; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
 .settings-card__header .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; color:var(--pl-stone) !important; flex-shrink:0; }
-.settings-card__title { font-family:var(--font-display) !important; font-size:1rem !important; font-weight:700 !important; letter-spacing:-0.01em !important; line-height:1.25 !important; margin:0 !important; color:var(--pl-ink); }
+.settings-card__title { font-family:var(--font-display) !important; font-size:1rem !important; font-weight:800 !important; letter-spacing:0.02em !important; line-height:1.25 !important; margin:0 !important; color:var(--pl-ink); }
 .settings-panel__icon { background:transparent !important; border:none !important; color:var(--pl-stone) !important; }
 
 /* Settings section tabs, premium wrapping segmented control */
@@ -1678,7 +1663,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .settings-panel__icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; flex-shrink:0; color:var(--pl-stone); }
 .settings-panel__icon .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
 .settings-panel__text { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
-.settings-panel__title { font-family:var(--font-display); font-size:15px; font-weight:800; letter-spacing:-0.015em; color:var(--pl-ink); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.settings-panel__title { font-family:var(--font-display); font-size:1rem; font-weight:800; letter-spacing:0.02em; text-transform:uppercase; color:var(--pl-ink); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .settings-panel__subtitle { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--pl-stone); line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .settings-panel__content { display:flex; flex-direction:column; gap:10px; padding-top:6px; }
 .settings-panels { display:flex; flex-direction:column; gap:8px; }
@@ -1774,9 +1759,6 @@ html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-
   transition: background 120ms ease;
   color: var(--pl-ink) !important;
 }
-.infinite-table-row:nth-child(even) {
-  background: color-mix(in srgb, var(--pl-chip-2) 40%, transparent);
-}
 .infinite-table-row:hover {
   background: color-mix(in srgb, var(--pl-yellow) 10%, var(--pl-chip-2)) !important;
 }
@@ -1808,7 +1790,7 @@ html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-
   border:var(--hairline-strong) !important;
   border-radius:0px !important;
   background:var(--pl-chip) !important;
-  box-shadow:none !important;
+  box-shadow: var(--pl-plate-shadow-md) !important;
 }
 .mud-popover .mud-list { background:var(--pl-chip) !important; padding:4px 0 !important; }
 .mud-popover .mud-list-item { font-family:var(--font-mono) !important; font-size:0.875rem !important; font-weight:600 !important; color:var(--pl-ink) !important; min-height:40px !important; }
@@ -1842,9 +1824,12 @@ html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important
 .hm-glyph { display:inline-block; width:10px; height:10px; flex-shrink:0; border-radius:var(--radius); }
 .hm-glyph--today { border-radius:50%; border:2px solid var(--pl-volt-fill); background:transparent; box-shadow:0 0 0 1px var(--pl-paper); }
 .hm-glyph--scheduled { border:1.5px dashed var(--pl-stone-2); background:var(--pl-paper-2); }
-.hm-glyph--missed { border:1.5px solid var(--pl-stone-2); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 34%, transparent) 2px 5px); }
+.hm-glyph--missed { border:1.5px solid var(--pl-stone-2); background:repeating-linear-gradient(-45deg, transparent 0 2px, color-mix(in srgb, var(--pl-stone-2) 20%, transparent) 2px 6px); }
 
 .mono-token { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-stone); }
+
+/* AI empty-state heading: same voice as the plate headers. */
+.ai-chat-empty__title { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:0.02em !important; text-transform:uppercase !important; color:var(--pl-ink) !important; }
 
 /* The one authored motion moment (DESIGN.md): a 120ms split-flap tick.
    Applied to numeric values whose element is re-keyed on change so the
@@ -1869,8 +1854,9 @@ html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important
 .mud-paper, .mud-card, .mud-dialog, .mud-snackbar, .mud-chip, .mud-button-root, .mud-input-outlined-border { border-radius:var(--radius) !important; }
 .mud-button-root:focus-visible, .mud-icon-button:focus-visible { outline:2px solid var(--pl-ink) !important; outline-offset:2px !important; }
 html[data-theme="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
-.plan-card { content-visibility:auto; contain-intrinsic-size:auto 88px; }
-.history-session-card { content-visibility:auto; contain-intrinsic-size:auto 68px; }
+/* content-visibility removed: it deferred paint of plate shadows on scroll, making box shadows appear delayed */
+.plan-card { contain-intrinsic-size:auto 88px; }
+.history-session-card { contain-intrinsic-size:auto 68px; }
 .visually-hidden { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
 /* Universal Departure Mono typography: cyberpunk brutalist field computer */
@@ -2015,27 +2001,8 @@ html body span.rest-timer-complete-title {
   transform: translateY(-1px);
   border-color: var(--pl-yellow);
 }
-.ai-quick-btn--cyan {
-  background: color-mix(in srgb, var(--pl-cyan) 15%, var(--pl-chip));
-  border-color: var(--pl-cyan);
-  color: var(--pl-cyan-text);
-}
-html[data-theme="dark"] .ai-quick-btn--cyan { color: var(--pl-cyan); }
-.ai-quick-btn--magenta {
-  background: color-mix(in srgb, var(--pl-error) 15%, var(--pl-chip));
-  border-color: var(--pl-error);
-  color: var(--pl-err-text);
-}
-.ai-quick-btn--yellow {
-  background: var(--pl-volt-fill);
-  border-color: var(--pl-volt-edge);
-  color: var(--pl-volt-fg);
-}
-.ai-quick-btn--green {
-  background: color-mix(in srgb, var(--pl-success) 15%, var(--pl-chip));
-  border-color: var(--pl-success);
-  color: var(--pl-success-text);
-}
+/* One quiet chip for all quick prompts: the prompt text is the signal, not
+   a four-color rainbow. Volt appears only on hover, as everywhere else. */
 .ai-chat-input {
   position: sticky;
   bottom: 0;
@@ -2455,19 +2422,29 @@ html[data-theme="dark"] .ai-quick-btn--cyan { color: var(--pl-cyan); }
    ================================================================== */
 :root {
   --pl-plate-shadow-color: #1B1E33; /* deep ink plate shadow for paper */
-  --pl-plate-shadow-sm: 3px 3px 0 var(--pl-plate-shadow-color);
-  --pl-plate-shadow-md: 5px 5px 0 var(--pl-plate-shadow-color);
-  --pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);
+  --pl-plate-shadow-sm: 4px 4px 0 var(--pl-plate-shadow-color);
+  --pl-plate-shadow-md: 6px 6px 0 var(--pl-plate-shadow-color);
+  --pl-plate-shadow-lg: 10px 10px 0 var(--pl-plate-shadow-color);
   --pl-bevel-highlight: rgba(255, 255, 255, 0.65);
-  --pl-volt-fill: #1E5EFF; /* electric blue fill, light mode; pairs with white text */
+  --pl-volt-fill: #FAFF00; /* volt fill in light too; ink text keeps 15:1 on it */
 }
 html[data-theme="dark"] {
-  --pl-plate-shadow-color: #000000;
-  --pl-plate-shadow-sm: 2px 2px 0 #000000;
-  --pl-plate-shadow-md: 3px 3px 0 #000000;
-  --pl-plate-shadow-lg: 6px 6px 0 #000000;
+  --pl-plate-shadow-color: #1B1E33;
+  --pl-plate-shadow-sm: 4px 4px 0 #1B1E33;
+  --pl-plate-shadow-md: 6px 6px 0 #1B1E33;
+  --pl-plate-shadow-lg: 10px 10px 0 #1B1E33;
   --pl-bevel-highlight: rgba(192, 202, 245, 0.07);
   --pl-volt-fill: #FAFF00;
+}
+/* System dark fallback before JS sets data-theme: shadows paint correctly on first frame */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pl-plate-shadow-color: #1B1E33;
+    --pl-plate-shadow-sm: 4px 4px 0 #1B1E33;
+    --pl-plate-shadow-md: 6px 6px 0 #1B1E33;
+    --pl-plate-shadow-lg: 10px 10px 0 #1B1E33;
+    --pl-bevel-highlight: rgba(192, 202, 245, 0.07);
+  }
 }
 
 /* Aurora grounds: one cool wash per theme under the 24px grid. Static, cheap,
@@ -2511,20 +2488,22 @@ html[data-theme="light"] .app-main-scroll {
 .ai-chat-messages,
 .ai-chat-input,
 .ai-bridge-card {
-  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight), var(--pl-plate-shadow-md) !important;
+  box-shadow: var(--pl-plate-shadow-md) !important;
 }
 
-/* Interactive plates lift toward the reader on hover. */
+/* Interactive plates lift toward the reader on hover. Box-shadow is now instant so shadows never render delayed. */
 .plan-card.mud-card,
 .history-session-card,
 .progress-exercise-card {
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 150ms ease, background 120ms ease;
+  transition: transform 120ms ease, border-color 150ms ease, background 120ms ease;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 .plan-card.mud-card:hover,
 .history-session-card:hover,
 .progress-exercise-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight), 7px 7px 0 var(--pl-plate-shadow-color) !important;
+  transform: translate3d(-2px, -2px, 0);
+  box-shadow: 7px 7px 0 var(--pl-plate-shadow-color) !important;
 }
 
 /* Fused workout block: stats plate and timer read as one mounted unit, so the
@@ -2566,6 +2545,7 @@ html[data-theme="light"] .app-main-scroll {
 .home-hero__continue.mud-button-root,
 .home-plans-new-btn.mud-button-root,
 .plan-sheet-save-btn,
+.plan-card-icon-btn.plan-card__start,
 .bodyweight-log-row__log-btn,
 .ai-chat-send-button,
 .history-card-continue-btn,
@@ -2578,12 +2558,13 @@ html[data-theme="light"] .app-main-scroll {
     color-mix(in srgb, var(--pl-volt-fill) 86%, #000000) 100%
   ) !important;
   box-shadow: var(--pl-plate-shadow-sm) !important;
-  transition: transform 100ms ease, box-shadow 100ms ease, filter 120ms ease;
+  transition: transform 100ms ease, filter 120ms ease;
 }
 .log-set-btn:active,
 .home-hero__continue.mud-button-root:active,
 .home-plans-new-btn.mud-button-root:active,
 .plan-sheet-save-btn:active,
+.plan-card-icon-btn.plan-card__start:active,
 .bodyweight-log-row__log-btn:active,
 .ai-chat-send-button:active,
 .history-card-continue-btn:active {
@@ -2599,7 +2580,7 @@ html[data-theme="light"] .app-main-scroll {
     var(--pl-volt-fill) 52%,
     color-mix(in srgb, var(--pl-volt-fill) 86%, #000000) 100%
   ) !important;
-  box-shadow: var(--pl-plate-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  box-shadow: var(--pl-plate-shadow-sm)!important;
 }
 
 /* Active states are volt, everywhere: nav tab, segmented tabs, schedule days,
@@ -2648,7 +2629,8 @@ html[data-theme="light"] .app-main-scroll {
   ) !important;
 }
 
-/* Overlays: dialogs deepest, snackbars and menus mid. */
+/* Overlays: dialogs deepest, snackbars and menus mid. Bevel plus hard offset,
+   never blur. */
 .mud-dialog {
   box-shadow: var(--pl-plate-shadow-lg) !important;
 }
@@ -2657,6 +2639,48 @@ html[data-theme="light"] .app-main-scroll {
 }
 .mud-popover.mud-popover-open {
   box-shadow: var(--pl-plate-shadow-md) !important;
+}
+
+/* ==================================================================
+   BUTTON PLATE PASS. Every button is a machined plate: bevel, hard
+   offset shadow, and press physics that drop it into the shadow.
+   Text buttons stay flat (they are links, not plates). Disabled
+   buttons stay flat. prefers-contrast:more strips it all below.
+   ================================================================== */
+.mud-button-filled:not(.mud-button-filled-disabled),
+.mud-button-outlined:not(.mud-button-outlined-disabled),
+.mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab) {
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+.mud-button-filled:not(.mud-button-filled-disabled):active,
+.mud-button-outlined:not(.mud-button-outlined-disabled):active,
+.mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+}
+
+/* Copy Share and PR buttons: Text variant premium plates were missing the machined shadow. All premium-btn and related table buttons now carry the same plate. */
+.premium-btn.mud-button-root,
+.exercise-progress-table__open.mud-icon-button,
+.pr-dialog-close.mud-button-root,
+.history-detail-table__btn.mud-icon-button {
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+}
+.premium-btn.mud-button-root:hover,
+.exercise-progress-table__open.mud-icon-button:hover,
+.pr-dialog-close.mud-button-root:hover,
+.history-detail-table__btn.mud-icon-button:hover {
+  background: var(--pl-chip) !important;
+  border-color: var(--pl-yellow) !important;
+}
+.premium-btn.mud-button-root:active,
+.exercise-progress-table__open.mud-icon-button:active,
+.pr-dialog-close.mud-button-root:active,
+.history-detail-table__btn.mud-icon-button:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
 }
 
 /* Focused inputs get a hard volt ring, zero blur. */
@@ -2691,7 +2715,9 @@ html[data-theme="light"] .app-main-scroll {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-success) 32%, transparent) 0%, color-mix(in srgb, var(--pl-success) 9%, transparent) 80%) !important;
 }
 /* Light mode only: the neon yellow fails 3:1 on its own tint, so the first
-   card's value drops to the AA-safe yellow text token. */
+   card's value drops to the AA-safe yellow text token. Volt now prints as
+   #6E6400 in light, which passes on the tint directly; the override stays
+   harmless because it resolves to the same printed volt ink. */
 html[data-theme="light"] .stat-card:nth-child(1) .stat-card__value {
   color: var(--pl-yellow-text);
 }
@@ -2746,7 +2772,9 @@ button.heatmap-cell.heatmap-on {
   .activity-heatmap-card, .settings-card.mud-paper, .settings-panel.mud-expand-panel,
   .plan-details-card, .home-plans-header, .history-filter-bar, .ai-chat-messages,
   .ai-chat-input, .ai-bridge-card, .app-nav-pill__inner, .app-fab, .workout-undo-fab,
-  .mud-dialog, .mud-snackbar, .mud-popover.mud-popover-open {
+  .mud-dialog, .mud-snackbar, .mud-popover.mud-popover-open,
+  .mud-button-filled, .mud-button-outlined, .mud-icon-button,
+  .workout-actions-row .premium-btn-filled, .workout-actions-row .premium-btn-error-outlined {
     box-shadow: none !important;
   }
   .workout-top--with-timer { box-shadow: none; }
@@ -2782,4 +2810,414 @@ button.heatmap-cell.heatmap-on {
     left: calc(50% - 320px - 64px) !important;
     bottom: 16px !important;
   }
+}
+
+/* CHROME CLEARANCE: bottom fade removed per brutalist request. Crisp hard edges, no gradient haze.
+   The sticky session strip and the nav pill cast their own hard shadows, so no fade is needed. */
+.app-chrome-fade {
+  display: none !important;
+}
+
+/* Session end controls stay reachable: the Discard/End strip pins to the
+   bottom of the scroll while its content scrolls past. Machined plate strip,
+   volt END dominant, red DISCARD quiet on the left. */
+.workout-actions-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 22;
+  display: flex !important;
+  gap: 8px !important;
+  margin: 16px calc(-1 * var(--page-x)) 0 !important;
+  padding: 10px var(--page-x) calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  background: var(--pl-chip);
+  border-top: var(--hairline-strong);
+}
+.workout-actions-row .premium-btn {
+  min-height: 48px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: var(--radius) !important;
+}
+.workout-actions-row .premium-btn-filled {
+  flex: 1 1 auto !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+.workout-actions-row .premium-btn-filled:hover {
+  filter: brightness(1.12);
+}
+.workout-actions-row .premium-btn-filled:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+}
+.workout-actions-row .premium-btn-error-outlined {
+  flex: 0 0 auto !important;
+  min-width: 116px;
+  border: 1.5px solid var(--pl-error) !important;
+  color: var(--pl-err-text) !important;
+  background: var(--pl-chip) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+.workout-actions-row .premium-btn-error-outlined:hover {
+  background: var(--pl-error) !important;
+  color: #FFFFFF !important;
+}
+html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
+  color: #10111A !important;
+}
+.workout-actions-row .premium-btn-error-outlined:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+}
+
+/* MudBlazor expand panels animate margin and min-height, which thrashes
+   layout on low-end phones. Collapse snaps; opacity carries the change. */
+.mud-expand-panel,
+.mud-expand-panel .mud-collapse-container,
+.mud-expand-panel .mud-collapse-wrapper {
+  transition: opacity 150ms ease !important;
+}
+
+/* Volt primary reaches MudBlazor controls. Check glyphs and switch thumbs
+   print in the volt foreground ink so they stay visible on the volt fill
+   in both themes (library defaults assume a dark primary). */
+.mud-checkbox .mud-checkbox-ex-checkpath,
+.mud-radio .mud-checkbox-ex-checkpath {
+  fill: var(--pl-volt-fg) !important;
+}
+.mud-switch.mud-checked .mud-switch-thumb {
+  background: var(--pl-volt-fg) !important;
+  color: var(--pl-volt-fill) !important;
+}
+.mud-switch.mud-checked .mud-switch-track {
+  background-color: var(--pl-volt-fill) !important;
+}
+.mud-switch.mud-checked .mud-switch-track .mud-switch-thumb,
+.mud-switch.mud-checked:hover .mud-switch-thumb {
+  color: var(--pl-volt-fg) !important;
+}
+
+/* ==================================================================
+   TITLE BRUTALIST PASS: primary and section headings become machined
+   plates with hard shadows. Menu and card names stay typographic to
+   avoid overuse. Diagram titles get clearance for their shadow.
+   ================================================================== */
+.home-plans-header__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 7px 12px !important;
+  background: var(--pl-chip) !important;
+  background-image: none !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 4px solid var(--pl-volt-fill) !important;
+  border-radius: var(--radius) !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 6px !important;
+  margin-right: 6px !important;
+}
+/* Diagram and section plates: give the shadow room to breathe */
+.bodyweight-panel__title,
+.settings-card__title,
+.exercise-progress-chart .settings-card__title,
+.history-detail-table .settings-card__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 7px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-radius: var(--radius) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 10px !important;
+  margin-right: 8px !important;
+}
+.bodyweight-panel__title {
+  border-left: 4px solid var(--pl-success) !important;
+  font-size: 16px !important;
+}
+/* Settings panel headers: hard offset with clearance, parent overflow made visible so shadow never clips */
+.settings-panel__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 5px 10px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 3px solid var(--pl-purple) !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-display) !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.1 !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 4px !important;
+  margin-right: 6px !important;
+  transition: none !important;
+}
+.settings-panel.mud-expand-panel,
+.settings-panel.mud-expand-panel .mud-expand-panel-header {
+  overflow: visible !important;
+}
+.settings-panel.mud-expand-panel .mud-expand-panel-header {
+  padding-bottom: 8px !important;
+  padding-right: 10px !important;
+}
+.settings-panel__subtitle {
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+}
+.mud-dialog-title .mud-typography-h6,
+.dialog-header-bar__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 7px 12px !important;
+  background: var(--pl-volt-fill) !important;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 88%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 58%,
+    color-mix(in srgb, var(--pl-volt-fill) 92%, #000000) 100%
+  ) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-display) !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  color: var(--pl-volt-fg) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+.mud-dialog-title {
+  background: var(--pl-chip-2) !important;
+  border-bottom: 1.5px solid var(--pl-hairline-strong) !important;
+  padding: 10px 12px !important;
+}
+.ai-chat-empty__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 7px 14px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 4px solid var(--pl-cyan) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+  font-size: 18px !important;
+}
+/* Card and row names: subtle plates with hard offset, always visible, not just on click */
+.plan-card-name,
+.history-session-card__title,
+.plan-exercise-row__name,
+.exercise-accordion-header .exercise-name {
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+}
+.plan-card-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px 8px !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 3px !important;
+  margin-right: 6px !important;
+  transition: none !important;
+}
+.history-session-card__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px 8px !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 3px solid var(--pl-cyan) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  margin-bottom: 3px !important;
+  margin-right: 6px !important;
+  transition: none !important;
+}
+.plan-exercise-row__name {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px 8px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 3px solid var(--pl-purple) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  margin-bottom: 3px !important;
+  margin-right: 6px !important;
+  transition: none !important;
+}
+.exercise-accordion-header .exercise-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-left: 3px solid var(--pl-success) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  font-weight: 800 !important;
+  font-size: 18px !important;
+  margin-bottom: 3px !important;
+  margin-right: 6px !important;
+  transition: none !important;
+}
+.plan-card.mud-card,
+.history-session-card {
+  overflow: visible !important;
+}
+.plan-card__content,
+.history-session-card__inner {
+  overflow: visible !important;
+}
+.infinite-table-head {
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+  border-bottom-width: 2px !important;
+}
+.history-detail-table .settings-card__title,
+.exercise-progress-chart .settings-card__title {
+  border-left: 4px solid var(--pl-cyan) !important;
+}
+/* Exercise header names reuse the plate defined above; keep consistent depth */
+.plan-details-card .settings-card__title {
+  border-left-color: var(--pl-cyan) !important;
+}
+
+/* History select controls: hard offset only for instant paint */
+.history-select-bar,
+.history-filter-bar {
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 14px !important;
+  margin-right: 6px !important;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+}
+.history-filter-bar.history-filter-bar--selection {
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+.history-select-toggle.mud-button-root,
+.history-select-bar__btn {
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+}
+/* MudSelects reached from history (exercise progress, bodyweight) get a plate only when on those pages */
+.exercise-progress-controls .mud-input-control .mud-input-outlined-border,
+.bodyweight-range-row .mud-input-control .mud-input-outlined-border {
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+.exercise-progress-controls .mud-input-control,
+.bodyweight-range-row .mud-input-control {
+  margin-bottom: 10px !important;
+  margin-right: 6px !important;
+}
+/* Diagram and chart plates need room for inner title shadows */
+.exercise-progress-chart,
+.bodyweight-chart-panel,
+.home-heatmap-panel.mud-paper,
+.history-heatmap-panel.mud-paper,
+.bodyweight-panel.mud-paper,
+.settings-card.mud-paper {
+  overflow: visible !important;
+}
+.exercise-progress-chart .exercise-progress-chart__plot,
+.bodyweight-chart-panel .bodyweight-chart {
+  overflow: visible !important;
+}
+
+/* Instant plate shadows: static titles never transition so shadow paints on first frame.
+   Interactive cards keep only transform/background transitions, never box-shadow. */
+:where(.page-header__title,
+.home-plans-header__title,
+.bodyweight-panel__title,
+.settings-card__title,
+.plan-section-header__title,
+.mud-dialog-title .mud-typography-h6,
+.dialog-header-bar__title,
+.ai-chat-empty__title) {
+  transition: none !important;
+}
+:where(.history-select-bar,
+.history-filter-bar,
+.history-select-bar__btn,
+.history-select-toggle,
+.settings-tab,
+.settings-schedule-day,
+.exercise-metric-tab,
+.progress-exercise-card,
+.ai-quick-btn,
+.history-filter-chip) {
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease !important;
+}
+:where(.plan-card.mud-card,
+.history-session-card,
+.progress-exercise-card) {
+  transition: transform 120ms ease, border-color 150ms ease, background-color 120ms ease !important;
+}
+
+/* Fallback hard shadow via pseudo-element for titles where box-shadow is clipped by overflow:hidden ancestors.
+   Box-shadow is kept as primary, pseudo-element ensures visibility even if ancestor clips. */
+.page-header__title,
+.home-plans-header__title,
+.bodyweight-panel__title,
+.settings-card__title,
+.plan-section-header__title,
+.history-session-card__title,
+.plan-card-name,
+.settings-panel__title,
+.exercise-accordion-header .exercise-name,
+.plan-exercise-row__name {
+  position: relative !important;
+}
+.page-header__title::after,
+.home-plans-header__title::after,
+.bodyweight-panel__title::after,
+.settings-card__title::after,
+.plan-section-header__title::after,
+.history-session-card__title::after,
+.plan-card-name::after,
+.settings-panel__title::after,
+.exercise-accordion-header .exercise-name::after,
+.plan-exercise-row__name::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pl-plate-shadow-color);
+  border-radius: var(--radius);
+  z-index: -1;
+  pointer-events: none;
+  transform: translate(4px, 4px);
+}
+.page-header__title::after {
+  transform: translate(5px, 5px);
+}
+.history-session-card__title::after,
+.plan-card-name::after,
+.plan-exercise-row__name::after,
+.exercise-accordion-header .exercise-name::after,
+.settings-panel__title::after {
+  transform: translate(3px, 3px);
 }

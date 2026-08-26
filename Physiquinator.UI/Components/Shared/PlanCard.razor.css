@@ -61,9 +61,9 @@
     text-transform: uppercase;
     padding: 2px 8px;
     border-radius: var(--radius);
-    background: rgba(224, 175, 104, 0.18);
-    border: 1.5px solid var(--pl-yellow);
-    color: var(--pl-warn-text);
+    background: color-mix(in srgb, var(--pl-success) 14%, transparent);
+    border: 1.5px solid var(--pl-success);
+    color: var(--pl-success-text);
 }
 
 .plan-card-handle {
@@ -144,10 +144,10 @@
 }
 
 .plan-card-icon-btn.plan-card__start {
-    background: var(--pl-yellow) !important;
-    background-color: var(--pl-yellow) !important;
+    background: var(--pl-volt-fill) !important;
+    background-color: var(--pl-volt-fill) !important;
     color: var(--pl-volt-fg) !important;
-    border: 1.5px solid var(--pl-volt-fg) !important;
+    border: 1.5px solid var(--pl-volt-edge) !important;
     position: relative !important;
 }
 
@@ -158,6 +158,6 @@
 
 .plan-card-icon-btn.plan-card__start:hover {
     filter: brightness(1.12);
-    background: var(--pl-yellow) !important;
+    background: var(--pl-volt-fill) !important;
 }
 

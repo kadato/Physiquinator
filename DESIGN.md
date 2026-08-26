@@ -161,9 +161,9 @@ Tokyo Night: a deep blue-violet night ground with periwinkle ink, punctuated by 
 
 ### Primary
 
-- **Volt Yellow** (#FAFF00 dark / #D81B60 hot magenta light): the live wire and the active state. Rest timer digits and edge track, primary buttons, NEW PLAN, active tabs everywhere (nav pill, settings tabs, metric tabs, schedule days, filter chips), in-progress badges, heatmap today ring. At most one volt surface per viewport region; its rarity is the point.
-- **Volt Fill** (#FAFF00 dark / #1E5EFF electric blue light): large-area volt fills only (CTA ramps, FABs, active tabs, user chat bubbles). Text sits on the `--pl-volt-fg` token: ink on neon yellow in dark, white on blue in light (5.1:1). Borders on filled controls stay ink via `--pl-volt-edge` in both themes. Small volt-colored text uses the text-safe token.
-- **Circuit Blue** (#4D7FFF dark / #1E5EFF light): the primary-action accent for MudBlazor filled actions and chart lines. Colorblind-safe against every other accent. In light it shares a hue with the volt fill, so blue owns "action" end to end.
+- **Volt Yellow** (#FAFF00, both themes): the live wire and the active state. Rest timer digits and edge track, primary buttons, NEW PLAN, active tabs everywhere (nav pill, settings tabs, metric tabs, schedule days, filter chips), in-progress badges, heatmap today ring. In light, text-sized volt prints as #6E6400 (see the light theme mapping). At most one volt surface per viewport region; its rarity is the point.
+- **Volt Fill** (#FAFF00, both themes): large-area volt fills only (CTA ramps, FABs, active tabs, user chat bubbles). Text sits on the `--pl-volt-fg` token: ink on neon yellow in both themes (about 15:1). Borders on filled controls stay ink via `--pl-volt-edge` in both themes. Small volt-colored text uses the text-safe token.
+- **Circuit Blue** (#4D7FFF dark / #1E5EFF light): the data and information accent for chart lines, selection highlights, and informational states. Colorblind-safe against every other accent. It no longer owns actions; volt does.
 
 ### Secondary
 
@@ -202,7 +202,7 @@ Plate dots encode barbell load with shape plus hue: **Plate Red** (#FF0055 / #E1
 
 ### Light theme mapping
 
-The light theme keeps every role and swaps the night for warm print stock: ground #E5E1D2 bone paper, chip #FFFFFF (a white plate laid on the bone), wells #F0EDE2, raised paper #EFECE0, deep recess #D8D3C0, ink #1A1B26, warm slate #565349, hairlines #C6C1AB and #A39D82. Accents go vibrant: electric blue #1E5EFF owns fills and active states under white text, hot magenta #D81B60 drives the timer digits and first stat, electric purple #7C3AED and vivid red #E11D48 carry the tertiary roles, and acid lime #65A30D keeps success. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.26), which lands the 24px checker at the same perceived weight as dark. The page aurora: candle white top, violet whisper bottom corner.
+The light theme keeps every role and swaps the night for warm print stock: ground #E5E1D2 bone paper, chip #FFFFFF (a white plate laid on the bone), wells #F0EDE2, raised paper #EFECE0, deep recess #D8D3C0, ink #1A1B26, warm slate #565349, hairlines #C6C1AB and #A39D82. Volt survives the switch, in two prints: fills stay #FAFF00 under #10111A ink text (buttons, FABs, active tabs, chips in both themes), and text-sized volt prints as #6E6400 deep olive-volt ink (timer digits, first stat value, volt borders and hover accents), which lands about 6:1 on white. The timer edge track and TIME'S UP plate carry the bright fill so the surface still glows. Accents go vibrant: electric purple #7C3AED and vivid red #E11D48 carry the tertiary roles, teal #0369A1 and leaf #166534 print the data accents, and acid lime #65A30D keeps success. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.26), which lands the 24px checker at the same perceived weight as dark. The page aurora: candle white top, violet whisper bottom corner.
 
 **The Visible-Ladder Rule.** Surface steps must be tellable apart in both themes, not just in dark. In light, chip (#FFFFFF) and chip-well (#F0EDE2) differ by about 6 luminance points so card header bars, wells, steppers, and table heads read as their own layer. If two adjacent steps look identical, deepen the lower one.
 
@@ -280,7 +280,7 @@ Glyphs are drawn, never typed: heatmap legend keys, load dots, hatches, and regi
 - **Shape:** radius 0, 1.5px hairline-strong border, 44px minimum height.
 - **Primary:** volt yellow fill (#FAFF00), #10111A text, 1.5px #10111A border in dark. Light theme keeps the volt fill with an ink border.
 - **Secondary:** chip-well fill, ink text, hairline-strong border. Hover shifts to chip with a volt border.
-- **Accent:** Circuit blue fill (#4D7FFF) with #10111A text for primary MudBlazor actions in dark.
+- **Accent:** volt fill with ink text for primary MudBlazor actions, identical in both themes.
 - **Type treatment:** 11px, weight 700, uppercase, +0.12em tracking. No sentence-case buttons.
 - **Error confirm:** light is white on #BE123C (6.4:1), dark is #10111A on #FF0055 (4.8:1). Both audited; do not trust library defaults for filled error buttons.
 - **Focus:** 2px outline, ink in light and volt in dark.
@@ -300,7 +300,7 @@ Glyphs are drawn, never typed: heatmap legend keys, load dots, hatches, and regi
 - **Border:** 1.5px hairline-strong frame.
 - **Shadow:** none.
 - **Padding:** 10 to 16px.
-- **Stat card:** white (light) or chip (dark) plate in two rows. The value sits on a plate tinted 12 percent with its own accent, and the label below the hairline divider is a plain 11px uppercase ink stamp, no plate, no shadow. Accents run yellow, cyan, violet, green by card position, so a KPI row reads as a graded strip rather than four identical boxes.
+- **Stat card:** white (light) or chip (dark) plate in two rows. The value sits on a plate tinted 12 percent with its own accent, and the label below the hairline divider is a plain 11px uppercase ink stamp, no plate, no shadow. Values print in the text-safe accent of their card (volt ink, teal, purple, leaf), never the raw neon, so every value clears 4.5:1 on its tint in both themes. Accents run yellow, cyan, violet, green by card position, so a KPI row reads as a graded strip rather than four identical boxes.
 - **Plan card:** handle, name (16px 800), load dots, and a 44px accent START control. The whole card is a reorderable plate.
 - **Session card:** title, mono subtitle with time and duration badges, delete and chevron actions. Hover shifts border to volt.
 
@@ -326,11 +326,31 @@ Header row on chip-well with 11px uppercase mono labels at +0.12em and a hairlin
 
 ### Heatmap (signature)
 
-53-week activity grid of 26px cells with 3px gaps. States are drawn shapes: off (flat well), done (acid green fill), scheduled (dashed stone border), planned (chip with cyan center dot), missed (red hatch), today (volt inset ring), selected (ink inset ring). Day labels are 11px uppercase mono. The legend uses drawn key glyphs, and the grid is a roving-tabindex `role="grid"`: one tab stop, arrow keys walk cells, future cells are skipped, focus lands on today.
+53-week activity grid of 26px cells with 3px gaps. States are drawn shapes: off (flat well), done (acid green fill), scheduled (dashed stone border), planned (chip with cyan center dot), missed (stone hatch at 20 percent, error-red hatch for the most recent week only), today (volt inset ring), selected (ink inset ring). Day labels are 11px uppercase mono. The legend uses drawn key glyphs, and the grid is a roving-tabindex `role="grid"`: one tab stop, arrow keys walk cells, future cells are skipped, focus lands on today.
 
 ### Rest timer (signature)
 
-The page's hero. Digits render in Departure Mono at clamp(4.8rem, 20vw, 6.8rem), weight 900, line-height 0.88, each digit in a fixed 1ch slot. Color walks volt to magenta to red as time runs out, with a 220ms color transition and a 1.2s urgent pulse under 10 seconds. A 6px edge track fills via composited scaleX. Controls are 44px secondary buttons: +30s, reset, skip. On completion the panel flips to a green-tinted plate with a 70px "TIME'S UP!" stamp.
+The page's hero. Digits render in Departure Mono at clamp(4.8rem, 20vw, 6.8rem), weight 900, line-height 0.88, each digit in a fixed 1ch slot. Color walks volt to magenta to red as time runs out (in light the volt step prints as #6E6400 and the final red is #BE123C), with a 220ms color transition and a 1.2s urgent pulse under 10 seconds. A 6px edge track fills via composited scaleX. Controls are 44px secondary buttons: +30s, reset, skip. On completion the panel flips to a green-tinted plate with a 70px "TIME'S UP!" stamp.
+
+### Workout logging (signature)
+
+The steppers pre-fill last session's numbers for each set; the app never re-displays those numbers as text, so nothing on the panel says the same thing twice. The active panel carries no set label: the counter pill on the exercise header (3/6) and the edge track already say where you are, and warm-up sets keep their amber chip. The Discard and End controls live on a sticky machined strip at the scroll bottom, so ending a session never requires scrolling past the last exercise.
+
+### Session summary (signature)
+
+Finishing a workout opens a plate, not a stock dialog: volt trophy box beside "WORKOUT COMPLETE!" and the plan name, three stat plates in the home-strip anatomy (duration, volume, sets), personal records as drawn volt star marks with exercise and record text, and one volt BACK TO HOME action. Sessions without records say so in a quiet dashed stamp. The session state stays alive behind the plate until it is dismissed, so the dialog never hangs over an empty shell.
+
+### Chrome clearance
+
+A paper fade (96px, solid gradient to the page ground, no blur) sits under the fixed nav pill and FABs so scrolling rows exit cleanly; `prefers-contrast: more` removes it.
+
+### Button and overlay plates
+
+Every button is a machined plate: filled and outlined MudBlazor buttons and all icon buttons carry the 1px inset bevel plus a hard sm offset shadow, and press physics translate them 2px into the shadow. Icon buttons without an explicit surface get a chip-well plate with a hairline-strong border, so the shadow never floats on air. Text buttons stay flat; they are links, not plates. Dialogs cast the lg plate shadow, snackbars and popover menus the md, each with the bevel. Menu lists divide their items with 1px hairlines. `prefers-contrast: more` strips every one of these shadows and returns separation to borders alone.
+
+### Title ladder
+
+One ladder, everywhere: page titles 22px 900 uppercase; section and panel titles on plates 18px 800 uppercase; card and accordion titles 16px 800 uppercase with 0.02em tracking; subtitles and micro-labels 11px stone uppercase mono. Exercise and plan names stay sentence case at 18px and 16px respectively.
 
 ### Share card
 

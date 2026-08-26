@@ -1,0 +1,186 @@
+/* Workout summary plate: the finish is a plate proof, not a default dialog.
+   Stat values sit on accent-tinted plates like the home stat strip; PR marks
+   are drawn volt boxes with labels, never color alone. */
+
+.wsd__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.wsd__title-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.wsd__title-icon .mud-icon-root {
+    font-size: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
+}
+
+.wsd__title-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.wsd__title-heading {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--pl-ink);
+}
+
+.wsd__title-plan {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pl-stone);
+}
+
+/* Stat plates: same two-row anatomy as the home strip. */
+.wsd__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 4px 0 12px;
+}
+
+.wsd__stat {
+    display: grid;
+    grid-template-rows: 1fr 28px;
+    min-height: 72px;
+    border: 1.5px solid var(--pl-hairline-strong);
+    border-radius: var(--radius);
+    background: var(--pl-chip);
+    overflow: hidden;
+}
+
+.wsd__stat-value {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 4px 6px;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums lining-nums;
+    overflow-wrap: anywhere;
+    color: var(--pl-ink);
+}
+
+.wsd__stat-value--duration {
+    color: var(--pl-yellow);
+    background: color-mix(in srgb, var(--pl-yellow) 12%, transparent);
+}
+
+.wsd__stat-value--volume {
+    color: var(--pl-cyan-text);
+    background: color-mix(in srgb, var(--pl-cyan) 12%, transparent);
+    font-size: 1rem;
+}
+
+.wsd__stat-value--sets {
+    color: var(--pl-purple-text);
+    background: color-mix(in srgb, var(--pl-purple) 12%, transparent);
+}
+
+.wsd__stat-label {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 2px 4px;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pl-ink);
+    border-top: var(--hairline-strong);
+}
+
+/* PR rows: drawn volt mark plus exercise and record text. */
+.wsd__prs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1.5px solid var(--pl-hairline-strong);
+    border-radius: var(--radius);
+    background: var(--pl-chip-2);
+}
+
+.wsd__prs-overline {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pl-stone);
+}
+
+.wsd__pr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wsd__pr-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: var(--radius);
+    background: var(--pl-volt-fill);
+    color: var(--pl-volt-fg);
+    border: 1.5px solid var(--pl-volt-edge);
+}
+
+.wsd__pr-mark .mud-icon-root {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--pl-volt-fg) !important;
+    fill: var(--pl-volt-fg) !important;
+}
+
+.wsd__pr-text {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--pl-ink);
+    min-width: 0;
+}
+
+.wsd__pr-text strong {
+    font-weight: 800;
+}
+
+.wsd__pr-detail {
+    color: var(--pl-stone);
+}
+
+.wsd__no-prs {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1.5px dashed var(--pl-hairline-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--pl-stone);
+}

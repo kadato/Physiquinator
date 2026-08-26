@@ -10,12 +10,28 @@ public static class WebDbRestoreEndpoint
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    /// <summary>
+    /// Flipped once the first interactive Blazor circuit has started in this process. From that
+    /// moment the on-disk databases are open (or were opened) by pooled SQLite
+    /// connections, and the server's copy is newer than or equal to anything the
+    /// browser could push. Restoring past this point replaces the file out from
+    /// under those pooled handles and silently orphans every later write, so the
+    /// endpoint declines instead. A fresh process resets the flag, which is the
+    /// one case the restore exists for: a freshly restarted dyno.
+    /// </summary>
+    public static bool CircuitsHaveStarted { get; private set; }
+
+    public static void MarkCircuitsStarted() => CircuitsHaveStarted = true;
+
     public static IEndpointConventionBuilder MapPhysiquinatorBrowserDbRestore(
         this IEndpointRouteBuilder endpoints,
         string pattern = "/api/db/restore")
     {
         return endpoints.MapPost(pattern, async (HttpContext context) =>
         {
+            if (CircuitsHaveStarted)
+                return Results.Ok(new { restored = 0 });
+
             BrowserDbRestoreRequest? request;
             try
             {

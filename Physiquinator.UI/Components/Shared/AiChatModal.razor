@@ -152,16 +152,16 @@
                 @if (AiAssistant.Messages.Count == 0)
                 {
                     <div class="ai-chat-quick-actions">
-                        <button type="button" class="ai-quick-btn ai-quick-btn--cyan" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
+                        <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
                             <span>@("Progressive Overload")</span>
                         </button>
-                        <button type="button" class="ai-quick-btn ai-quick-btn--magenta" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
+                        <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
                             <span>@("Performance Stats")</span>
                         </button>
-                        <button type="button" class="ai-quick-btn ai-quick-btn--yellow" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
+                        <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
                             <span>@("Deload Plan")</span>
                         </button>
-                        <button type="button" class="ai-quick-btn ai-quick-btn--green" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
+                        <button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
                             <span>@("Workout Advice")</span>
                         </button>
                     </div>

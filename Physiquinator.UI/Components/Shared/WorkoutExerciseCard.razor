@@ -19,12 +19,12 @@
                     <MudIcon Icon="@Icons.Material.Filled.Check" />
                 </span>
                 <span class="exercise-index-tag" aria-hidden="true">/@((ExerciseIndex + 1).ToString("D2"))</span>
-                <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold text-decoration-line-through">@Exercise.Name</MudText>
+                <MudText Typo="Typo.h2" Class="exercise-name font-weight-bold text-decoration-line-through">@Exercise.Name</MudText>
             }
             else
             {
                 <span class="exercise-index-tag" aria-hidden="true">/@((ExerciseIndex + 1).ToString("D2"))</span>
-                <MudText Typo="Typo.h6" Class="exercise-name font-weight-bold">@Exercise.Name</MudText>
+                <MudText Typo="Typo.h2" Class="exercise-name font-weight-bold">@Exercise.Name</MudText>
             }
         </div>
         <div class="header-right">
@@ -84,10 +84,6 @@
                             @if (isWarmupActive)
                             {
                                 <span class="warmup-chip">@(string.Format("Warm-up {0}", activeSetIndex + 1))</span>
-                            }
-                            else
-                            {
-                                <span class="set-active-panel__label">@(string.Format("Set {0}", activeSetIndex + 1))</span>
                             }
                         </div>
                         <div class="set-active-panel__controls">

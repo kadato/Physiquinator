@@ -40,29 +40,32 @@
             padding: 2rem;
             box-sizing: border-box;
             text-align: center;
-            background-color: #0E0F17;
-            color: #C0CAF5;
+            background-color: #FAFF00;
+            color: #10111A;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        .app-splash__logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
         .app-splash__logo svg {
-            width: 11.9rem;
-            height: 11.9rem;
-        }
-        .app-splash__logo svg g {
-            fill: #7AA2F7;
+            width: min(68vmin, 320px);
+            height: min(68vmin, 320px);
+            display: block;
         }
         html[data-theme="light"] .app-splash {
-            background-color: #D5D6DB;
-            color: #1A1B26;
-        }
-        html[data-theme="light"] .app-splash__logo svg g {
-            fill: #24283B;
+            background-color: #FAFF00;
+            color: #10111A;
         }
         #app:has(> :not(.app-splash)) .app-splash {
             display: none;
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css?v=9.7.0" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=55" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=63" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
     <link rel="stylesheet" href="css/web.css" />
     <style>
@@ -73,9 +76,9 @@
         .app-main-scroll { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
         .app-tab-bar { flex-shrink: 0; }
     </style>
-    <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="_content/Physiquinator.UI/favicon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="_content/Physiquinator.UI/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg?v=2" />
+    <link rel="icon" type="image/png" sizes="32x32" href="_content/Physiquinator.UI/favicon.png?v=2" />
+    <link rel="apple-touch-icon" sizes="180x180" href="_content/Physiquinator.UI/apple-touch-icon.png?v=2" />
 </head>
 
 <body>
@@ -83,11 +86,14 @@
     <div id="app">
         <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
             <div class="app-splash__logo" aria-hidden="true">
-                <svg viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="#7AA2F7" transform="translate(60,60) scale(10.5)">
-                        <circle cx="16" cy="5.6" r="3.4" />
-                        <path d="M12.6,4.6 C12.6,2.3 14.1,1.2 16,1.2 C17.9,1.2 19.4,2.3 19.4,4.6 L19.4,5.6 C19.4,6.6 18.6,7.2 16,7.2 C13.4,7.2 12.6,6.6 12.6,5.6 Z" />
-                        <path d="M13.6,10.4 C10,10.5 6.3,11.9 4.2,14.1 C3.3,15.3 3.3,16.4 4.3,17.6 L11.9,26.6 C12.6,27.6 13.4,28.3 14.6,28.9 H17.4 C18.6,28.3 19.4,27.6 20.1,26.6 L27.7,17.6 C28.7,16.4 28.7,15.3 27.8,14.1 C25.7,11.9 22,10.5 18.4,10.4 Z" />
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physiquinator">
+                    <g fill="#414770" transform="translate(10,10)">
+                        <rect x="224" y="94" width="64" height="82"/>
+                        <polygon points="136,186 376,186 304,418 208,418"/>
+                    </g>
+                    <g fill="#10111A">
+                        <rect x="224" y="94" width="64" height="82"/>
+                        <polygon points="136,186 376,186 304,418 208,418"/>
                     </g>
                 </svg>
             </div>

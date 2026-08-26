@@ -3,5 +3,8 @@
     <color name="colorPrimary">#2959aa</color>
     <color name="colorPrimaryDark">#1f2335</color>
     <color name="colorAccent">#7aa2f7</color>
-    <color name="maui_splash_icon_color">#047857</color>
+    <color name="maui_splash_icon_color">#10111A</color>
+    <color name="maui_splash_shadow_color">#414770</color>
+    <color name="maui_splash_color">#0E0F17</color>
+    <color name="maui_splash_plate_color">#FAFF00</color>
 </resources>

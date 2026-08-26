@@ -117,11 +117,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#047857" />
+        <!-- App Icon - 06 Square Bald Big: volt #FAFF00 plate, #10111A ink figure, #414770 10px violet-grey shadow -->
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#FAFF00" />
 
-        <!-- Splash Screen (light theme background; dark theme override in Platforms\Android\Resources\values-night) -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#F8F9FA" BaseSize="128,128" />
+        <!-- Splash Screen - void background with volt plate centered: matches app shell void + yellow plate -->
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0E0F17" BaseSize="168,168" />
 
         <!-- Images -->
         <MauiImage Include="Resources\Images\*" />

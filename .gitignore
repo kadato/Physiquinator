@@ -489,3 +489,4 @@ $RECYCLE.BIN/
 
 # VS lscache files
 *.lscache
+.wrangler/

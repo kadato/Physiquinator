@@ -494,6 +494,14 @@ h1:focus-visible,
 }
 @keyframes fab-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
 .home-page { display:flex; flex-direction:column; gap:16px; }
+.app-fab-page-padding {
+  padding-bottom: 72px !important;
+}
+@media (min-width: 769px) {
+  .app-fab-page-padding {
+    padding-bottom: 32px !important;
+  }
+}
 .home-header { margin-bottom:0 !important; }
 /* Cards, Panels, and Surfaces */
 .stat-card.mud-paper,
@@ -1019,7 +1027,7 @@ textarea { font-size:max(16px, 1em); }
   border-radius: var(--radius) !important;
   background: var(--pl-chip) !important;
   box-shadow: var(--pl-plate-shadow-md) !important;
-  z-index: 1400 !important;
+  z-index: 2100 !important;
 }
 .mud-popover .mud-list {
   background: var(--pl-chip) !important;
@@ -2715,6 +2723,22 @@ html[data-theme="light"] .app-main-scroll {
 .mud-popover.mud-popover-open {
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
+/* Snackbars clear the fixed bottom nav pill so toasts never cover navigation */
+.mud-snackbar-location-bottom-left,
+.mud-snackbar-location-bottom-center,
+.mud-snackbar-location-bottom-right,
+.mud-snackbar-location-bottom-left .mud-snackbar,
+.mud-snackbar-location-bottom-center .mud-snackbar,
+.mud-snackbar-location-bottom-right .mud-snackbar {
+  bottom: calc(56px + 12px + 16px + env(safe-area-inset-bottom,0px)) !important;
+}
+@media (min-width: 769px) {
+  .mud-snackbar-location-bottom-left,
+  .mud-snackbar-location-bottom-center,
+  .mud-snackbar-location-bottom-right {
+    bottom: 16px !important;
+  }
+}
 
 /* ==================================================================
    BUTTON PLATE PASS. Every button is a machined plate: bevel, hard
@@ -3297,10 +3321,24 @@ html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
 .exercise-progress-chart,
 .bodyweight-chart-panel {
   overflow: visible !important;
+  max-width: 100%;
 }
-.exercise-progress-chart .exercise-progress-chart__plot,
-.bodyweight-chart-panel .bodyweight-chart {
-  overflow: visible !important;
+@media (min-width: 481px) {
+  .exercise-progress-chart .exercise-progress-chart__plot,
+  .bodyweight-chart-panel .bodyweight-chart {
+    overflow: visible !important;
+  }
+}
+@media (max-width: 480px) {
+  .exercise-progress-chart .exercise-progress-chart__plot,
+  .bodyweight-chart-panel .bodyweight-chart {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px;
+    max-width: 100%;
+  }
 }
 
 /* Instant plate shadows: static titles never transition so shadow paints on first frame.

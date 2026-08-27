@@ -58,13 +58,14 @@
         }
     };
 
-    /** Bring the active exercise card back under the thumb when rest ends. */
+    /** Bring the active exercise card back under the thumb when rest ends.
+        nearest avoids the page jumping to center when the card is already visible. */
     window.physiquinator.scrollExerciseCardIntoView = (exerciseIndex) => {
         try {
             const el = document.querySelector(`[data-exercise-index="${exerciseIndex}"]`);
             if (!el) return;
             const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+            el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
         } catch {
             /* ignore */
         }
@@ -196,12 +197,12 @@
             this.destroy();
             this.sortable = Sortable.create(el, {
                 handle: ".plan-exercise-handle",
-                animation: 150,
-                delay: 80,
+                animation: 0,
+                delay: 140,
                 delayOnTouchOnly: true,
-                touchStartThreshold: 6,
+                touchStartThreshold: 12,
                 forceFallback: true,
-                fallbackTolerance: 8,
+                fallbackTolerance: 12,
                 swapThreshold: 0.65,
                 scroll: true,
                 bubbleScroll: true,
@@ -240,12 +241,12 @@
             this.destroy();
             this.sortable = Sortable.create(el, {
                 handle: ".plan-card-handle",
-                animation: 150,
-                delay: 80,
+                animation: 0,
+                delay: 140,
                 delayOnTouchOnly: true,
-                touchStartThreshold: 6,
+                touchStartThreshold: 12,
                 forceFallback: true,
-                fallbackTolerance: 8,
+                fallbackTolerance: 12,
                 swapThreshold: 0.65,
                 scroll: true,
                 bubbleScroll: true,

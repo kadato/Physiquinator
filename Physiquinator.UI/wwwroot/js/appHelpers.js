@@ -61,18 +61,27 @@
     // app-overrides.css lifts the affected surfaces above it. When the WebView
     // resizes normally (adjustResize, iOS), visualViewport.height equals
     // innerHeight, the inset is 0 and nothing moves.
+    var imeRaf = 0;
+    var lastInset = -1;
     function updateImeInset() {
         var vv = window.visualViewport;
         if (!vv) return;
-        var inset = Math.max(0, Math.round(window.innerHeight - vv.height));
-        document.documentElement.style.setProperty('--app-ime-inset', inset + 'px');
-        document.documentElement.classList.toggle('app-ime-open', inset > 24);
+        var inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+        // Only update when the inset actually changed by more than 1px, to avoid
+        // visualViewport scroll jitter from thrashing --app-ime-inset on every scroll tick.
+        if (Math.abs(inset - lastInset) <= 1) return;
+        lastInset = inset;
+        if (imeRaf) cancelAnimationFrame(imeRaf);
+        imeRaf = requestAnimationFrame(function () {
+            imeRaf = 0;
+            document.documentElement.style.setProperty('--app-ime-inset', inset + 'px');
+            document.documentElement.classList.toggle('app-ime-open', inset > 24);
+        });
     }
 
     var vv = window.visualViewport;
     if (vv) {
         vv.addEventListener('resize', updateImeInset);
-        vv.addEventListener('scroll', updateImeInset);
     }
     updateImeInset();
 })();

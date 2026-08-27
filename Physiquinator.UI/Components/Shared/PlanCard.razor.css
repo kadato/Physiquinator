@@ -51,7 +51,7 @@
     border-radius: var(--radius);
     background: rgba(158, 206, 106, 0.14);
     border: 1.5px solid rgba(158, 206, 106, 0.55);
-    color: var(--pl-success);
+    color: var(--pl-success-text);
 }
 
 .plan-card__last-done-chip {

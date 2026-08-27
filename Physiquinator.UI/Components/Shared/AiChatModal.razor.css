@@ -409,7 +409,7 @@
 .ai-quick-btn--green {
     border: 1.5px solid var(--pl-success);
     background: color-mix(in srgb, var(--pl-success) 12%, transparent);
-    color: var(--pl-success);
+    color: var(--pl-success-text);
 }
 .ai-quick-btn--green:hover:not(:disabled) {
     background: color-mix(in srgb, var(--pl-success) 22%, transparent);
@@ -434,7 +434,7 @@ html[data-theme="dark"] .ai-quick-btn--yellow {
 html[data-theme="dark"] .ai-quick-btn--green {
     border: 1.5px solid color-mix(in srgb, var(--pl-success) 60%, transparent);
     background: color-mix(in srgb, var(--pl-success) 15%, transparent);
-    color: var(--pl-success);
+    color: var(--pl-success-text);
 }
 
 /* ---- Composer ---- */

@@ -84,4 +84,37 @@
         vv.addEventListener('resize', updateImeInset);
     }
     updateImeInset();
+
+    // Fix MudBlazor's internal icon buttons that lack an accessible name.
+    // The autocomplete dropdown toggle (mud-icon-button-edge-end) renders as a
+    // plain <button> with an SVG icon and no aria-label, which fails axe
+    // button-name and Lighthouse accessibility. Add a label when missing.
+    function fixMudIconButtons(root) {
+        try {
+            var scope = root && root.querySelectorAll ? root : document;
+            scope.querySelectorAll('button.mud-icon-button-edge-end:not([aria-label])').forEach(function (btn) {
+                // Mark as toggle for the autocomplete/adornment that opened it.
+                // Visible text is not required when aria-label is present.
+                btn.setAttribute('aria-label', 'Toggle');
+            });
+            // Also cover MudAutocomplete's clear button if present
+            scope.querySelectorAll('button.mud-icon-button.mud-input-adornment-icon-button:not([aria-label])').forEach(function (btn) {
+                if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', 'Clear');
+            });
+        } catch {}
+    }
+    fixMudIconButtons(document);
+    try {
+        var observer = new MutationObserver(function (mutations) {
+            for (var i=0;i<mutations.length;i++) {
+                var m = mutations[i];
+                if (m.type === 'childList') {
+                    m.addedNodes.forEach(function (n) {
+                        if (n.nodeType === 1) fixMudIconButtons(n);
+                    });
+                }
+            }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+    } catch {}
 })();

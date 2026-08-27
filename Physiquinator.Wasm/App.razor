@@ -21,36 +21,157 @@ else
             </svg>
         </div>
         <p class="app-splash__status">@_status</p>
+        @if (_error != null)
+        {
+            <p class="app-splash__error" style="max-width:32rem;color:#7a1f1f;background:#fff3f3;border:1px solid #e0a0a0;padding:0.75rem;border-radius:0.5rem;">@_error</p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+                <button class="app-splash__retry" @onclick="RetryAsync" style="padding:0.6rem 1rem;border:1px solid #10111A;background:#fff;color:#10111A;cursor:pointer;">Retry</button>
+                <button class="app-splash__clear" @onclick="ClearAndReloadAsync" style="padding:0.6rem 1rem;border:1px solid #10111A;background:#10111A;color:#FAFF00;cursor:pointer;">Clear local data and reload</button>
+            </div>
+        }
     </output>
 }
 
 @code {
     private bool _ready;
-    private readonly string _status = "Preparing your local database...";
+    private bool _initializing;
+    private string _status = "Preparing your local database...";
+    private string? _error;
 
     [Inject]
     private WasmDbPersistence Persistence { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
-    {
-        // Restore every saved profile database into the wasm filesystem BEFORE
-        // any component resolves AppDatabase and opens SQLite.
-        await Persistence.RestoreAllAsync();
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
 
-        // Keep Cache Storage close-to-latest: periodic autosave plus hooks on
-        // pagehide and tab hide for best-effort final saves.
+    [Inject]
+    private ILogger<App> Logger { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _initializing)
+        {
+            return;
+        }
+        _initializing = true;
+        await InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        _error = null;
+        _status = "Preparing your local database...";
+        await InvokeAsync(StateHasChanged);
+
+        bool restoreOk = false;
+        try
+        {
+            // Never brick the app: bound the restore to 12s. A hang here was
+            // the hard-refresh forever spinner.
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+            await Persistence.RestoreAllAsync(cts.Token).WaitAsync(cts.Token);
+            Logger.LogInformation("Database restore completed");
+            restoreOk = true;
+        }
+        catch (OperationCanceledException ex)
+        {
+            Logger.LogWarning(ex, "Database restore timed out after 12s");
+            _error = "Restore timed out. Your browser may have blocked Cache Storage. Try Retry, or clear local data.";
+            _status = "Restore timed out";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Database restore failed");
+            _error = $"Restore failed: {ex.Message}";
+            _status = "Restore failed";
+        }
+
+        // PageHide hook is best effort. Never let it block the boot gate.
+        try
+        {
+            using var cts2 = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await Persistence.InstallPageHideSaveHookAsync(cts2.Token).WaitAsync(cts2.Token);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "PageHide hook install failed");
+        }
+
         _ = StartAutosaveLoopAsync();
-        await Persistence.InstallPageHideSaveHookAsync();
+
+        // Always proceed: a fresh empty database is better than an infinite spinner.
+        // If we had an error we still show it briefly, but we unblock the app so
+        // the user can reach Settings and export or reset.
+        if (!restoreOk && _error != null)
+        {
+            // Keep the error visible for 1.5s before unblocking, so the user sees it.
+            await Task.Delay(1500);
+        }
 
         _ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RetryAsync()
+    {
+        _ready = false;
+        _initializing = false;
+        _error = null;
+        _status = "Preparing your local database...";
+        await InvokeAsync(StateHasChanged);
+        // OnAfterRender will not re-fire, so trigger directly.
+        _initializing = true;
+        await InitializeAsync();
+    }
+
+    private async Task ClearAndReloadAsync()
+    {
+        try
+        {
+            await Persistence.ClearAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Clear Cache Storage failed");
+        }
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "try{localStorage.clear()}catch(e){}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "localStorage clear failed, ignored");
+        }
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "location.reload()");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Reload failed, ignored");
+        }
     }
 
     private async Task StartAutosaveLoopAsync()
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
-        while (await timer.WaitForNextTickAsync())
+        try
         {
-            await Persistence.SaveAllAsync();
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+            while (await timer.WaitForNextTickAsync())
+            {
+                try
+                {
+                    await Persistence.SaveAllAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Autosave failed");
+                }
+            }
+        }
+        catch (OperationCanceledException ex)
+        {
+            Logger.LogDebug(ex, "Autosave loop canceled");
         }
     }
 }

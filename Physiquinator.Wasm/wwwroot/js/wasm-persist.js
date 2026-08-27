@@ -50,3 +50,11 @@ export async function saveDatabase(name, bytes) {
     const cache = await caches.open(CACHE_NAME);
     await cache.put(KEY_PREFIX + name, new Response(new Blob([bytes])));
 }
+
+export async function clearAll() {
+    try {
+        await caches.delete(CACHE_NAME);
+    } catch {
+        // Best effort. Some browsers may block Cache Storage.
+    }
+}

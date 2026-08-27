@@ -1850,10 +1850,8 @@ html[data-theme="dark"] .mud-popover .mud-list-item { color:var(--pl-ink) !impor
 .completed-icon { border-radius:0px !important; }
 .completed-icon .mud-icon-root { font-size:20px !important; }
 
-.app-splash { background:var(--pl-rubber) !important; color:var(--pl-paper) !important; font-family:var(--font-body) !important; }
-.app-splash__logo svg g { fill:var(--pl-paper) !important; }
-html[data-theme="light"] .app-splash { background:var(--pl-paper) !important; color:var(--pl-ink) !important; }
-html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important; }
+.app-splash { background:#0E0F17 !important; color:#C0CAF5 !important; font-family:var(--font-body) !important; }
+html[data-theme="light"] .app-splash { background:#0E0F17 !important; color:#C0CAF5 !important; }
 .mud-dialog.ai-chat-dialog { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; }
 .share-card { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; overflow:hidden; position:relative; }
 .mud-paper:has(.empty-state) { border:var(--hairline) !important; background:var(--pl-chip) !important; }

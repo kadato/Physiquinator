@@ -30,7 +30,7 @@
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=77" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=78" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" />
     <style>
         /* MAUI WebView2 fallback. Shell only if stylesheets fail to load */
@@ -40,7 +40,7 @@
         .app-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100%; overflow: hidden; }
         .app-main-scroll { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
         .app-tab-bar { flex-shrink: 0; }
-        /* Startup splash - full volt plate, centered figure, matches app icon 06 Square Bald Big */
+        /* Startup splash - void #0E0F17 with volt plate centered: matches native MauiSplashScreen */
         .app-splash {
             position: fixed;
             inset: 0;
@@ -53,8 +53,8 @@
             padding: 2rem;
             box-sizing: border-box;
             text-align: center;
-            background-color: #FAFF00;
-            color: #10111A;
+            background-color: #0E0F17;
+            color: #C0CAF5;
             min-height: 100vh;
             min-height: 100dvh;
         }
@@ -70,8 +70,8 @@
             display: block;
         }
         html[data-theme="light"] .app-splash {
-            background-color: #FAFF00;
-            color: #10111A;
+            background-color: #0E0F17;
+            color: #C0CAF5;
         }
     </style>
     <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg?v=2" />
@@ -86,15 +86,19 @@
     <div id="app">
         <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
             <div class="app-splash__logo" aria-hidden="true">
-                <!-- 06 Square Bald Big - bigger centered, black on volt, thick violet shadow -->
+                <!-- 06 Square Bald Big - void #0E0F17 with volt plate #FAFF00, matches Resources/Splash/splash.svg and Android splash_logo.xml -->
                 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physiquinator">
+                    <rect x="62" y="62" width="392" height="392" fill="#414770"/>
+                    <rect x="52" y="52" width="392" height="392" fill="#FAFF00" stroke="#10111A" stroke-width="6"/>
+                    <path d="M52 52 H444 V59 H52 Z" fill="white" opacity="0.42"/>
+                    <path d="M52 52 V444 H59 V52 Z" fill="white" opacity="0.42"/>
                     <g fill="#414770" transform="translate(10,10)">
-                        <rect x="224" y="94" width="64" height="82"/>
-                        <polygon points="136,186 376,186 304,418 208,418"/>
+                        <rect x="216" y="124" width="64" height="82"/>
+                        <polygon points="128,216 368,216 296,376 200,376"/>
                     </g>
                     <g fill="#10111A">
-                        <rect x="224" y="94" width="64" height="82"/>
-                        <polygon points="136,186 376,186 304,418 208,418"/>
+                        <rect x="216" y="124" width="64" height="82"/>
+                        <polygon points="128,216 368,216 296,376 200,376"/>
                     </g>
                 </svg>
             </div>

@@ -202,9 +202,9 @@ Plate dots encode barbell load with shape plus hue: **Plate Red** (#FF0055 / #E1
 
 ### Light theme mapping
 
-The light theme keeps every role and swaps the night for warm print stock: ground #E5E1D2 bone paper, chip #FFFFFF (a white plate laid on the bone), wells #F0EDE2, raised paper #EFECE0, deep recess #D8D3C0, ink #1A1B26, warm slate #565349, hairlines #C6C1AB and #A39D82. Volt survives the switch, in two prints: fills stay #FAFF00 under #10111A ink text (buttons, FABs, active tabs, chips in both themes), and text-sized volt prints as #6E6400 deep olive-volt ink (timer digits, first stat value, volt borders and hover accents), which lands about 6:1 on white. The timer edge track and TIME'S UP plate carry the bright fill so the surface still glows. Accents go vibrant: electric purple #7C3AED and vivid red #E11D48 carry the tertiary roles, teal #0369A1 and leaf #166534 print the data accents, and acid lime #65A30D keeps success. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.26), which lands the 24px checker at the same perceived weight as dark. The page aurora: candle white top, violet whisper bottom corner.
+The light theme keeps every role and swaps the night for acid concrete: ground #E7E3D1, chip #FFFFFF (a white plate laid on the concrete), wells #EDE8D3, raised paper #EFECE0, deep recess #D8D3C0, ink #1A1B26, warm slate #5A5644, hairlines #C6C1AB and #A39D82. Interactive plates use an ink border #1A1B26 distinct from the warm hairline on static cards, so buttons and inputs never blend into their wells. Volt survives the switch, in two prints: fills stay #FAFF00 under #10111A ink text (buttons, FABs, active tabs, chips in both themes), and text-sized volt prints as #6E6400 deep olive-volt ink (timer digits, first stat value, volt borders and hover accents), which lands about 6:1 on white. The timer edge track and TIME'S UP plate carry the bright fill so the surface still glows. Accents go vibrant: electric violet #7C3AED and vivid red #E11D48 carry the tertiary roles, teal #0E7490 and leaf #5A8A0B print the data accents with a 3px colored bottom edge on stat values, and acid lime #5A8A0B keeps success. Grid lines go from rgba(192,202,245,0.05) to rgba(26,27,38,0.18) at 24px, and the page aurora layers candle white, violet 0.09, cyan 0.07 and volt 0.06 washes under the grid.
 
-**The Visible-Ladder Rule.** Surface steps must be tellable apart in both themes, not just in dark. In light, chip (#FFFFFF) and chip-well (#F0EDE2) differ by about 6 luminance points so card header bars, wells, steppers, and table heads read as their own layer. If two adjacent steps look identical, deepen the lower one.
+**The Visible-Ladder Rule.** Surface steps must be tellable apart in both themes, not just in dark. In light, chip (#FFFFFF) and chip-well (#EDE8D3) differ by about 12 luminance points so card header bars, wells, steppers, and table heads read as their own layer. Buttons use an ink border #1A1B26 while cards keep the warm hairline #A39D82, so interactive and static never share the same edge. If two adjacent steps look identical, deepen the lower one.
 
 ## Typography
 
@@ -277,17 +277,17 @@ Glyphs are drawn, never typed: heatmap legend keys, load dots, hatches, and regi
 
 ### Buttons
 
-- **Shape:** radius 0, 1.5px hairline-strong border, 44px minimum height.
-- **Primary:** volt yellow fill (#FAFF00), #10111A text, 1.5px #10111A border in dark. Light theme keeps the volt fill with an ink border.
-- **Secondary:** chip-well fill, ink text, hairline-strong border. Hover shifts to chip with a volt border.
+- **Shape:** radius 0, 44px minimum height. Static cards keep the warm hairline-strong #A39D82 border; interactive controls use an ink border #1A1B26 in light so they never vanish into their card. Every button casts a hard offset shadow (sm 4px, md 6px) with press physics.
+- **Primary:** volt yellow fill (#FAFF00), #10111A text, 1.5px #10111A ink border in both themes, 4px hard shadow.
+- **Secondary:** white chip fill in light (#FFFFFF) with 1.5px ink #1A1B26 border and 4px shadow. Dark keeps chip-well fill with hairline-strong. Hover tints 8 percent volt and turns the border to volt olive #6E6400.
 - **Accent:** volt fill with ink text for primary MudBlazor actions, identical in both themes.
 - **Type treatment:** 11px, weight 700, uppercase, +0.12em tracking. No sentence-case buttons.
 - **Error confirm:** light is white on #BE123C (6.4:1), dark is #10111A on #FF0055 (4.8:1). Both audited; do not trust library defaults for filled error buttons.
-- **Focus:** 2px outline, ink in light and volt in dark.
+- **Focus:** 2px outline, ink in light and volt in dark. Focused inputs add a 3px volt ring plus the hard offset in light.
 
 ### FABs
 
-48px squares, radius 0, fixed corners, always visible (never scroll-parked). Primary is volt with black icon and volt glow. Secondary is chip-well with ink icon and hairline border. Dialog FABs pin to screen corners at 16px. On pages with the bottom pill, FABs float at 84px so they clear it. Undo sits bottom-left; primary actions bottom-right.
+48px squares, radius 0, fixed corners, always visible (never scroll-parked). Primary is volt with ink icon, ink border and hard shadow. Secondary is white chip in light (#FFFFFF with ink border and 6px shadow) and chip-well in dark with hairline border. Dialog FABs pin to screen corners at 16px. On pages with the bottom pill, FABs float at 84px so they clear it. Undo sits bottom-left; primary actions bottom-right.
 
 ### Chips
 
@@ -300,7 +300,7 @@ Glyphs are drawn, never typed: heatmap legend keys, load dots, hatches, and regi
 - **Border:** 1.5px hairline-strong frame.
 - **Shadow:** none.
 - **Padding:** 10 to 16px.
-- **Stat card:** white (light) or chip (dark) plate in two rows. The value sits on a plate tinted 12 percent with its own accent, and the label below the hairline divider is a plain 11px uppercase ink stamp, no plate, no shadow. Values print in the text-safe accent of their card (volt ink, teal, purple, leaf), never the raw neon, so every value clears 4.5:1 on its tint in both themes. Accents run yellow, cyan, violet, green by card position, so a KPI row reads as a graded strip rather than four identical boxes.
+- **Stat card:** white (light) or chip (dark) plate in two rows with an ink border and 5px hard shadow in light. The value sits on a plate tinted 12 to 22 percent with its own accent and a 3px solid bottom edge in its accent (yellow, cyan, violet, lime), and the label below the divider is a plain 11px uppercase ink stamp on chip-2. Values print in the text-safe accent of their card (volt olive #6E6400, teal #0E7490, violet #6D28D9, leaf #5A8A0B in light), never the raw neon, so every value clears 4.5:1 on its tint. Accents run yellow, cyan, violet, green by card position, so a KPI row reads as a graded strip rather than four identical boxes.
 - **Plan card:** handle, name (16px 800), load dots, and a 44px accent START control. The whole card is a reorderable plate.
 - **Session card:** title, mono subtitle with time and duration badges, delete and chevron actions. Hover shifts border to volt.
 

@@ -14,19 +14,19 @@ public static class PhysiquinatorThemes
         {
             Primary = "#FAFF00", // volt fill, identical to dark: ink text on it keeps 15:1
             PrimaryContrastText = "#10111A",
-            Secondary = "#7C3AED", // electric purple
-            Tertiary = "#D81B60", // hot magenta
-            Success = "#4D7C0F", // acid lime darkened for light bg, distinct from error
-            Info = "#1E5EFF",
-            Warning = "#8F5E15",
+            Secondary = "#7C3AED", // electric violet, acid
+            Tertiary = "#E11D48", // vivid magenta, acid
+            Success = "#5A8A0B", // acid lime darkened for 4.5:1 on white tint
+            Info = "#0E7490", // deeper cyan holds AA on white
+            Warning = "#B45309", // acid amber 700, brutal
             Error = "#BE123C", // vivid red, paired with icon
-            Background = "#E5E1D2", // warm bone plate stock
-            Surface = "#F0EDE2", // warm well, matches --pl-chip-2
-            AppbarBackground = "#E5E1D2",
+            Background = "#E7E3D1", // acid concrete, matches --pl-paper
+            Surface = "#EDE8D3", // brutal well, matches --pl-chip-2
+            AppbarBackground = "#E7E3D1",
             TextPrimary = "#1A1B26", // near-black navy, 14:1 on bg
-            TextSecondary = "#565349", // warm slate, ~5.9:1 on bone, passes AA
-            LinesDefault = "#C6C1AB", // warm hairline 1px
-            Divider = "#D8D3C0",
+            TextSecondary = "#5A5644", // darker warm slate, 7:1 on white
+            LinesDefault = "#B8B2A0", // warm hairline, brutal
+            Divider = "#C6C1AB",
         },
         PaletteDark = new PaletteDark()
         {

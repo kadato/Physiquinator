@@ -6,10 +6,10 @@
     <Application.Resources>
         <ResourceDictionary>
 
-            <Color x:Key="PageBackgroundColor">#0B0C10</Color>
-            <Color x:Key="PrimaryTextColor">#F3F4F6</Color>
-            <Color x:Key="PrimaryButtonBackgroundColor">#10B981</Color>
-            <Color x:Key="PrimaryButtonTextColor">#0B0C10</Color>
+            <Color x:Key="PageBackgroundColor">#E7E3D1</Color>
+            <Color x:Key="PrimaryTextColor">#1A1B26</Color>
+            <Color x:Key="PrimaryButtonBackgroundColor">#FAFF00</Color>
+            <Color x:Key="PrimaryButtonTextColor">#10111A</Color>
 
             <Style TargetType="Label">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />

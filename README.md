@@ -14,6 +14,10 @@ A cross-platform workout tracking app built with **.NET MAUI and Blazor Hybrid**
 
 It also ships a **web client with a Model Context Protocol (MCP) server**, so any AI agent (Claude, Cursor, Copilot) can query your workout history and manage your plans.
 
+[![Live Demo — Try in browser](https://img.shields.io/badge/Live%20Demo-Try%20in%20browser-2dd4bf?style=for-the-badge)](https://physiquinator.pages.dev)
+
+No install, no account. Data stays in your browser.
+
 [Preview](#preview) - [Download and install](#download-and-install) - [Features](#features) - [Agent API (MCP)](#agent-api-mcp) - [Architecture](#architecture) - [Tech stack](#tech-stack) - [Getting started](#getting-started) - [Testing and CI](#testing-and-ci)
 
 </div>

@@ -4,10 +4,11 @@
     border: 1.5px solid var(--hairline-strong) !important;
     background: var(--pl-chip) !important;
     box-shadow: none !important;
-    contain: layout style;
     transition: border-color 150ms ease, background 150ms ease;
     overflow: hidden;
     position: relative;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .plan-card:hover {

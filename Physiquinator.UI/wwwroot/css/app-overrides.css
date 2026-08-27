@@ -32,20 +32,23 @@
    TYPE: Departure Mono everywhere with JetBrains Mono secondary. Tabular numerals enforced everywhere.
 */
 :root {
-  --pl-paper: #E5E1D2; /* warm bone plate stock */
+  --pl-paper: #E7E3D1; /* acid concrete, slightly brighter and cooler than bone */
   --pl-paper-2: #EFECE0;
   --pl-paper-3: #D8D3C0;
   --pl-ink: #1A1B26; /* deep navy ink */
   --pl-ink-2: #24283B;
-  --pl-stone: #565349; /* warm slate */
+  --pl-stone: #5A5644; /* darker warm slate for 7:1 on white */
   --pl-stone-2: #7A7565;
   --pl-hairline: #C6C1AB;
   --pl-hairline-strong: #A39D82;
-  --pl-chip: #FFFFFF; /* white plate laid on bone paper */
-  --pl-chip-2: #F0EDE2; /* warm well, clearly a step down from chip */
+  --pl-chip: #FFFFFF; /* white plate laid on acid concrete */
+  --pl-chip-2: #EDE8D3; /* brutal well, 12pts below chip, visible ladder */
   --pl-rubber: #1A1B26;
   --pl-rubber-2: #24283B;
   --pl-rubber-3: #1F2335;
+  /* Brutalist ink border for interactive plates, distinct from hairline-strong cards */
+  --pl-ink-border: #1A1B26;
+  --pl-ink-border-2: #24283B;
 
   /* Accent variants reserved for small text and small glyphs, where the
      vibrant accent tokens fall below 4.5:1 on chip surfaces in light mode.
@@ -59,20 +62,20 @@
      fills stay #FAFF00 under ink text, text-sized volt prints as #6E6400. */
   --pl-yellow: #6E6400; /* printed volt ink: timer digits, first stat, warm accents */
   --pl-yellow-bg: rgba(250, 255, 0, 0.30);
-  --pl-purple: #7C3AED; /* electric purple */
-  --pl-magenta: #E11D48; /* vivid red */
-  --pl-cyan: #0891B2;
+  --pl-purple: #7C3AED; /* electric violet, acid */
+  --pl-magenta: #E11D48; /* vivid magenta, acid */
+  --pl-cyan: #0E7490; /* deeper cyan for 4.5:1 on white tint */
   --pl-amber: #D97706;
   --pl-amber-ink: #5A3E1A;
   --pl-plate-red: #E11D48;
   --pl-plate-blue: #1E5EFF;
   --pl-plate-gold: #D97706;
-  --pl-plate-green: #65A30D;
-  --pl-success: #65A30D;
+  --pl-plate-green: #5A8A0B; /* darker lime keeps 4.5:1 on its tint */
+  --pl-success: #5A8A0B;
   --pl-error: #BE123C;
   --pl-seal: #7C3AED;
-  --pl-dot: rgba(26, 27, 38, 0.12);
-  --pl-grid-line: rgba(26, 27, 38, 0.26);
+  --pl-dot: rgba(26, 27, 38, 0.09);
+  --pl-grid-line: rgba(26, 27, 38, 0.18);
 
   /* Accent pair for primary buttons & active indicators: volt fill, ink text,
      identical to dark so the signature survives the theme switch */
@@ -161,7 +164,7 @@ html[data-theme="dark"] {
 }
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background: var(--pl-paper); color: var(--pl-ink); }
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background: var(--pl-paper); color: var(--pl-ink); scrollbar-gutter: stable; }
 body { display:flex; flex-direction:column; font-family: var(--font-body); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 html, body, #app, button, input, select, textarea, .mud-typography, .mud-button, .mud-input {
   font-family: 'Departure Mono', 'JetBrains Mono', ui-monospace, monospace !important;
@@ -193,10 +196,7 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 }
 .app-main-scroll {
   flex:1 1 auto; min-height:0; width:100%; overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; scroll-padding-top: 0;
-  background-image: 
-    linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background: transparent;
 }
 .app-page-container { padding-left: var(--page-x) !important; padding-right: var(--page-x) !important; padding-top: 16px !important; padding-bottom: 24px !important; max-width: var(--page-max) !important; margin-inline:auto !important; }
 .mud-icon-root { user-select:none; width:1em; height:1em; display:inline-block; fill:currentColor; flex-shrink:0; }
@@ -515,7 +515,7 @@ h1:focus-visible,
 }
 
 .home-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; }
-.stat-card.mud-paper { display:grid; grid-template-rows:1fr 32px; gap:0; min-height:88px; padding:0 !important; border:1.5px solid var(--pl-hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip); overflow:hidden; position:relative; transition:border-color 150ms ease, transform 120ms ease; }
+.stat-card.mud-paper { display:grid; grid-template-rows:1fr 32px; gap:0; min-height:88px; padding:0 !important; border:1.5px solid var(--pl-hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip); overflow:hidden; position:relative; transition:border-color 150ms ease; }
 .stat-card.mud-paper:hover { border-color:var(--pl-yellow) !important; }
 .stat-card__value { display:grid; place-items:center; place-content:center; text-align:center; padding:4px 6px; font-family:var(--font-display); font-weight:800; line-height:1.1; letter-spacing:0.02em; font-variant-numeric:tabular-nums; color:var(--pl-ink); white-space:normal; overflow-wrap:anywhere; font-size:1.375rem; min-height:0; }
 .stat-card:nth-child(1) .stat-card__value { color:var(--pl-yellow); background:color-mix(in srgb, var(--pl-yellow) 12%, transparent); }
@@ -561,8 +561,11 @@ h1:focus-visible,
 .heatmap-scroll { flex:1; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 4px 6px 2px; overscroll-behavior-x:contain; scrollbar-width:thin; }
 .heatmap-grid { display:grid; gap:var(--heatmap-gap); align-items:center; min-width:min-content; padding:2px; }
 .heatmap-day-label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); text-align:end; justify-content:flex-end; display:flex; align-items:center; height:var(--heatmap-cell-size); min-width:14px; }
-button.heatmap-cell { width:var(--heatmap-cell-size); height:var(--heatmap-cell-size); border:1px solid var(--pl-hairline); border-radius:var(--radius); background:var(--pl-paper-2); box-sizing:border-box; padding:0; margin:0; display:block; cursor:pointer; position:relative; overflow:hidden; transition:transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease; }
-button.heatmap-cell:hover { transform:scale(1.12); z-index:2; }
+button.heatmap-cell { width:var(--heatmap-cell-size); height:var(--heatmap-cell-size); border:1px solid var(--pl-hairline); border-radius:var(--radius); background:var(--pl-paper-2); box-sizing:border-box; padding:0; margin:0; display:block; cursor:pointer; position:relative; overflow:hidden; transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  button.heatmap-cell { transition:transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease; }
+  button.heatmap-cell:hover { transform:scale(1.12); z-index:2; }
+}
 button.heatmap-cell:active { transform:scale(1.18); z-index:2; }
 button.heatmap-cell.heatmap-off { background:var(--pl-paper-2); border:1px solid var(--pl-hairline); }
 button.heatmap-cell.heatmap-future.heatmap-off { opacity:0.55; border-style:dashed; border-color:var(--pl-hairline-strong); }
@@ -1652,7 +1655,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .settings-tab { flex:1 1 72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 12px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; white-space:nowrap; touch-action:manipulation; }
 .settings-tab .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; color:inherit; }
 .settings-tab:hover { border-color:var(--pl-hairline-strong); color:var(--pl-ink); background:var(--pl-chip-2); }
-.settings-tab--active, .settings-tab--active:hover { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-accent-bg) !important; }
+.settings-tab--active, .settings-tab--active:hover { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-ink) !important; font-weight:900 !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
 .settings-tab:focus-visible { outline:2px solid var(--pl-focus); outline-offset:-2px; }
 
 /* Settings expansion panel headers, title and subtitle as distinct rows */
@@ -1673,7 +1676,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .settings-schedule-days { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; margin-top:4px; }
 .settings-schedule-day { display:grid; place-items:center; height:44px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; user-select:none; -webkit-tap-highlight-color:transparent; }
 .settings-schedule-day:hover { border-color:var(--pl-hairline-strong); color:var(--pl-ink); background:var(--pl-chip-2); }
-.settings-schedule-day[aria-pressed="true"] { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-accent-bg) !important; }
+.settings-schedule-day[aria-pressed="true"] { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-ink) !important; font-weight:900 !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
 .settings-schedule-day:focus-visible { outline:2px solid var(--pl-focus); outline-offset:2px; }
 
 /* Ghost danger button (Remove all data...), outlined error with AA contrast */
@@ -1723,7 +1726,7 @@ html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-
 .exercise-metric-tabs { display:flex; align-items:stretch; gap:4px; padding:3px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); width:100%; margin-bottom:4px; }
 .exercise-metric-tab { flex:1 1 0px; display:inline-flex; align-items:center; justify-content:center; height:36px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); background:transparent; border:none; border-radius:var(--radius); cursor:pointer; transition:all 120ms ease; white-space:nowrap; }
 .exercise-metric-tab:hover { color:var(--pl-ink); }
-.exercise-metric-tab--active { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; font-weight:700; }
+.exercise-metric-tab--active { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; font-weight:900 !important; border:1.5px solid var(--pl-ink) !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
 
 /* Infinite Table List. One compact density shared by the session sets table,
    bodyweight entries, and exercise progression rows, sized for phones first. */
@@ -1852,8 +1855,6 @@ html[data-theme="light"] .app-splash__logo svg g { fill:var(--pl-ink) !important
 .mud-button-root:focus-visible, .mud-icon-button:focus-visible { outline:2px solid var(--pl-ink) !important; outline-offset:2px !important; }
 html[data-theme="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
 /* content-visibility removed: it deferred paint of plate shadows on scroll, making box shadows appear delayed */
-.plan-card { contain-intrinsic-size:auto 88px; }
-.history-session-card { contain-intrinsic-size:auto 68px; }
 .visually-hidden { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
 /* Universal Departure Mono typography: cyberpunk brutalist field computer */
@@ -1944,11 +1945,16 @@ html body span.rest-timer-complete-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--pl-chip-2);
-  border: 1.5px solid var(--hairline-strong);
+  background: #1A1B26;
+  border: 1.5px solid #1A1B26;
   border-radius: var(--radius);
-  color: var(--pl-cyan);
+  color: var(--pl-volt-fill);
   flex-shrink: 0;
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+.ai-msg__avatar .mud-icon-root {
+  color: var(--pl-volt-fill) !important;
+  fill: var(--pl-volt-fill) !important;
 }
 .ai-msg__body {
   display: flex;
@@ -2232,8 +2238,9 @@ html body span.rest-timer-complete-title {
   background: var(--pl-yellow) !important;
   background-color: var(--pl-yellow) !important;
   color: var(--pl-volt-fg) !important;
-  border-color: var(--pl-volt-edge) !important;
+  border-color: var(--pl-ink) !important;
   font-weight: 900 !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
 }
 .ai-mode-tab--active .mud-icon-root {
   color: var(--pl-volt-fg) !important;
@@ -2288,12 +2295,20 @@ html body span.rest-timer-complete-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius);
-  background: var(--pl-chip-2);
-  border: 1.5px solid var(--hairline-strong);
-  color: var(--pl-yellow-text);
+  background: var(--pl-volt-fill);
+  border: 1.5px solid var(--pl-volt-edge);
+  color: var(--pl-volt-fg);
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+.ai-chat-empty__icon-plate .mud-icon-root {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
+  font-size: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
 }
 .ai-chat-empty__title {
   font-family: var(--font-display);
@@ -2446,21 +2461,27 @@ html[data-theme="dark"] {
 
 /* Aurora grounds: one cool wash per theme under the 24px grid. Static, cheap,
    decorative only. */
-html[data-theme="dark"] .app-shell,
-html[data-theme="dark"] .app-main-scroll {
+html[data-theme="dark"] .app-shell {
   background-image:
     radial-gradient(1000px 500px at 85% -8%, rgba(122, 162, 247, 0.08), transparent 62%),
     radial-gradient(800px 460px at 4% 108%, rgba(187, 154, 247, 0.06), transparent 62%),
     linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
 }
-html[data-theme="light"] .app-shell,
-html[data-theme="light"] .app-main-scroll {
+html[data-theme="dark"] .app-main-scroll {
+  background: transparent;
+}
+html[data-theme="light"] .app-shell {
   background-image:
-    radial-gradient(1200px 560px at 50% -12%, rgba(255, 250, 235, 0.4), transparent 65%),
-    radial-gradient(900px 520px at 100% 112%, rgba(124, 58, 237, 0.05), transparent 60%),
+    radial-gradient(820px 420px at 8% -6%, rgba(14, 116, 144, 0.07), transparent 58%),
+    radial-gradient(1100px 520px at 50% -12%, rgba(255, 252, 235, 0.52), transparent 62%),
+    radial-gradient(900px 520px at 98% 108%, rgba(124, 58, 237, 0.09), transparent 58%),
+    radial-gradient(700px 400px at 18% 102%, rgba(250, 255, 0, 0.06), transparent 60%),
     linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
+}
+html[data-theme="light"] .app-main-scroll {
+  background: transparent;
 }
 
 /* Raised plates: cards, panels, toolbars. Bevel plus offset, never blur. */
@@ -2488,19 +2509,32 @@ html[data-theme="light"] .app-main-scroll {
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
 
-/* Interactive plates lift toward the reader on hover. Box-shadow is now instant so shadows never render delayed. */
+/* Interactive plates: base cards are GPU-promoted for stable scrolling, hover lift only on devices that actually hover. */
 .plan-card.mud-card,
 .history-session-card,
 .progress-exercise-card {
-  transition: transform 120ms ease, border-color 150ms ease, background 120ms ease;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+  transition: border-color 150ms ease, background 120ms ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .plan-card.mud-card:hover,
 .history-session-card:hover,
 .progress-exercise-card:hover {
-  transform: translate3d(-2px, -2px, 0);
-  box-shadow: 7px 7px 0 var(--pl-plate-shadow-color) !important;
+  border-color: var(--pl-yellow) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .plan-card.mud-card,
+  .history-session-card,
+  .progress-exercise-card {
+    transition: transform 120ms ease, border-color 150ms ease, background 120ms ease;
+    will-change: transform;
+  }
+  .plan-card.mud-card:hover,
+  .history-session-card:hover,
+  .progress-exercise-card:hover {
+    transform: translate3d(-2px, -2px, 0);
+    box-shadow: 7px 7px 0 var(--pl-plate-shadow-color) !important;
+  }
 }
 
 /* Fused workout block: stats plate and timer read as one mounted unit, so the
@@ -2654,6 +2688,101 @@ html[data-theme="light"] .app-main-scroll {
 .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):active {
   transform: translate(2px, 2px) !important;
   box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+}
+
+/* ==================================================================
+   BRUTALIST ACID LIGHT MODE — button and control separation.
+   Light mode was too polite: every control shared the same warm
+   hairline and chip-2 well, so secondary buttons vanished into cards.
+   These overrides give interactive plates an ink border (#1A1B26)
+   and a hard offset, while static cards keep the warm hairline.
+   Volt stays the only fill bright enough to shout; everything else
+   earns attention through border weight and shadow depth.
+   ================================================================== */
+html[data-theme="light"] .mud-button-outlined:not(.mud-button-filled-disabled):not(.mud-button-outlined-disabled) {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .mud-button-outlined:not(.mud-button-outlined-disabled):hover {
+  background: color-mix(in srgb, var(--pl-volt-fill) 8%, #FFFFFF) !important;
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start):not(.rest-timer-icon-btn) {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover {
+  background: #FFFFFF !important;
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover .mud-icon-root {
+  color: var(--pl-yellow-text) !important;
+  fill: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .app-fab--secondary {
+  background: #FFFFFF !important;
+  color: var(--pl-ink) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .app-fab--secondary:hover {
+  background: #FFFFFF !important;
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .app-fab--secondary:hover .mud-icon-root {
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .settings-tab,
+html[data-theme="light"] .exercise-metric-tab,
+html[data-theme="light"] .ai-quick-btn,
+html[data-theme="light"] .history-filter-chip,
+html[data-theme="light"] .progress-exercise-card {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .settings-tab--active,
+html[data-theme="light"] .exercise-metric-tab--active,
+html[data-theme="light"] .history-filter-chip--selected,
+html[data-theme="light"] .ai-mode-tab--active {
+  background: var(--pl-volt-fill) !important;
+  border: 1.5px solid var(--pl-ink) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  font-weight: 900 !important;
+}
+html[data-theme="light"] .settings-tab:hover,
+html[data-theme="light"] .exercise-metric-tab:hover,
+html[data-theme="light"] .ai-quick-btn:hover,
+html[data-theme="light"] .history-filter-chip:hover,
+html[data-theme="light"] .progress-exercise-card:hover {
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .mud-input-outlined-border {
+  border-color: var(--pl-ink-border) !important;
+  border-width: 1.5px !important;
+}
+html[data-theme="light"] .mud-input-control.mud-input-focused .mud-input-outlined-border {
+  border-color: var(--pl-yellow) !important;
+  border-width: 2px !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color), 0 0 0 3px color-mix(in srgb, var(--pl-volt-fill) 22%, transparent) !important;
+}
+html[data-theme="light"] .history-session-card,
+html[data-theme="light"] .plan-card.mud-card,
+html[data-theme="light"] .exercise-accordion-card {
+  border-color: var(--pl-hairline-strong) !important;
+}
+html[data-theme="light"] .home-plans-header__title {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-left: 5px solid var(--pl-volt-fill) !important;
 }
 
 /* Copy Share and PR buttons: Text variant premium plates were missing the machined shadow. All premium-btn and related table buttons now carry the same plate. */
@@ -3008,7 +3137,6 @@ html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
   padding: 7px 14px !important;
   background: var(--pl-chip) !important;
   border: 1.5px solid var(--pl-hairline-strong) !important;
-  border-left: 4px solid var(--pl-cyan) !important;
   border-radius: var(--radius) !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
   font-size: 18px !important;
@@ -3083,12 +3211,10 @@ html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
   border-bottom-width: 2px !important;
 }
 .history-detail-table .settings-card__title,
-.exercise-progress-chart .settings-card__title {
-  border-left: 4px solid var(--pl-cyan) !important;
-}
-/* Exercise header names reuse the plate defined above; keep consistent depth */
+.exercise-progress-chart .settings-card__title,
+.bodyweight-chart-panel .settings-card__title,
 .plan-details-card .settings-card__title {
-  border-left-color: var(--pl-cyan) !important;
+  border-left: 0 !important;
 }
 
 /* History select controls: hard offset only for instant paint */
@@ -4534,5 +4660,317 @@ html[data-theme="dark"] .workout-actions__btn--discard:hover { color: #10111A; }
     box-shadow: none !important;
     transform: none !important;
   }
+}
+
+/* ==================================================================
+   ACID BRUTALIST LIGHT — extra dosage where light felt too polite.
+   Keeps the Tokyo Night discipline (one volt per region, shape+label)
+   but lets concrete, hazard, and registration do more work in light.
+   Only light theme is touched; dark stays as the reference neon.
+   ================================================================== */
+html[data-theme="light"] .stat-card.mud-paper {
+  border-width: 1.5px !important;
+  border-color: var(--pl-ink-border) !important;
+  box-shadow: 5px 5px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .stat-card__label {
+  background: var(--pl-chip-2) !important;
+  border-top: 1.5px solid var(--pl-hairline-strong) !important;
+  color: var(--pl-stone) !important;
+}
+html[data-theme="light"] .stat-card:nth-child(1) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-volt-fill) 22%, #FFFFFF) 0%, color-mix(in srgb, var(--pl-yellow) 14%, transparent) 100%) !important;
+  border-bottom: 3px solid var(--pl-volt-fill) !important;
+}
+html[data-theme="light"] .stat-card:nth-child(2) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-cyan) 18%, #FFFFFF) 0%, color-mix(in srgb, var(--pl-cyan) 10%, transparent) 100%) !important;
+  border-bottom: 3px solid var(--pl-cyan) !important;
+}
+html[data-theme="light"] .stat-card:nth-child(3) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-purple) 18%, #FFFFFF) 0%, color-mix(in srgb, var(--pl-purple) 10%, transparent) 100%) !important;
+  border-bottom: 3px solid var(--pl-purple) !important;
+}
+html[data-theme="light"] .stat-card:nth-child(4) .stat-card__value {
+  background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-success) 18%, #FFFFFF) 0%, color-mix(in srgb, var(--pl-success) 10%, transparent) 100%) !important;
+  border-bottom: 3px solid var(--pl-success) !important;
+}
+html[data-theme="light"] .home-hero.mud-paper {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background-color: #FFFFFF !important;
+  background-image:
+    repeating-linear-gradient(-45deg, color-mix(in srgb, var(--pl-volt-fill) 10%, transparent) 0 14px, transparent 14px 28px),
+    linear-gradient(150deg, color-mix(in srgb, var(--pl-volt-fill) 14%, #FFFFFF) 0%, color-mix(in srgb, var(--pl-cyan) 6%, #FFFFFF) 55%, #FFFFFF 100%) !important;
+  box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .bodyweight-panel.mud-paper,
+html[data-theme="light"] .history-heatmap-panel.mud-paper,
+html[data-theme="light"] .home-heatmap-panel.mud-paper {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .history-session-card__badge-inprogress {
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .load-dot {
+  border-width: 1.5px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 1px 1px 0 rgba(26,27,38,0.12) !important;
+}
+html[data-theme="light"] .plan-card__load-dots .load-dot--5 {
+  background: var(--pl-chip-2) !important;
+  border-color: var(--pl-ink-border) !important;
+  color: var(--pl-stone) !important;
+}
+html[data-theme="light"] .rest-timer-panel.mud-paper {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .rest-timer-digits {
+  color: var(--pl-yellow-text) !important;
+  text-shadow: 1px 0 0 rgba(250,255,0,0.18) !important;
+}
+html[data-theme="light"] .rest-timer-digits--imminent { color: #B45309 !important; }
+html[data-theme="light"] .rest-timer-digits--urgent { color: #9F1239 !important; }
+html[data-theme="light"] .rest-timer-edge-track {
+  background: var(--pl-chip-2) !important;
+  border-top: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .rest-timer-edge-fill { background: var(--pl-volt-fill) !important; }
+html[data-theme="light"] .rest-timer-controls .mud-icon-button,
+html[data-theme="light"] .rest-timer-icon-btn,
+html[data-theme="light"] .rest-timer-add-btn {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .rest-timer-controls .mud-icon-button:hover,
+html[data-theme="light"] .rest-timer-icon-btn:hover,
+html[data-theme="light"] .rest-timer-add-btn:hover {
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .set-metric-stepper__btn.mud-button-root,
+html[data-theme="light"] .set-metric-stepper__btn {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .set-metric-stepper__value,
+html[data-theme="light"] .set-metric-stepper__input {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+}
+html[data-theme="light"] .set-metric-stepper__btn.mud-button-root:hover {
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+html[data-theme="light"] .exercise-accordion-card {
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .exercise-accordion-card--expanded {
+  border-color: var(--pl-ink-border) !important;
+  box-shadow: 6px 6px 0 var(--pl-plate-shadow-color), inset 0 0 0 1px var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .workout-hud,
+html[data-theme="light"] .workout-deck,
+html[data-theme="light"] .workout-brutal__header {
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .workout-hud__stat {
+  border-color: var(--pl-hairline) !important;
+}
+html[data-theme="light"] .workout-hud__bar {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background: var(--pl-chip-2) !important;
+}
+html[data-theme="light"] .plan-exercise-row {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .plan-exercise-row:hover {
+  border-color: var(--pl-yellow) !important;
+}
+html[data-theme="light"] .plan-exercise-handle {
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .workout-actions__btn--discard {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  color: var(--pl-err-text) !important;
+}
+html[data-theme="light"] .workout-actions__btn--end {
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .app-nav-pill__inner {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 8px 8px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .mud-dialog {
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .mud-dialog-title {
+  background: var(--pl-chip-2) !important;
+  border-bottom: 1.5px solid var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .home-plans-new-btn.mud-button-root,
+html[data-theme="light"] .plan-sheet-save-btn,
+html[data-theme="light"] .log-set-btn,
+html[data-theme="light"] .bodyweight-log-row__log-btn,
+html[data-theme="light"] .ai-chat-send-button {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme="light"] .home-plans-new-btn.mud-button-root:hover,
+html[data-theme="light"] .plan-sheet-save-btn:hover,
+html[data-theme="light"] .log-set-btn:hover {
+  filter: brightness(1.06) !important;
+}
+
+/* ==================================================================
+   CLIPBOARD TAB FIX — brutalist plate pass made checkboxes 44px
+   plates with shadows, so the 3px shadow covered the label text
+   and the control looked ugly. Textareas kept the global 48px
+   min-height, so long placeholders clipped after two lines.
+   Reset checkboxes to a tight 20px square with no shadow and
+   give bridge fields enough height to show their full placeholder.
+   ================================================================== */
+.mud-checkbox {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  padding: 6px 0 !important;
+}
+.mud-checkbox .mud-typography {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--pl-ink) !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+/* The box itself: small brutalist square, not a 44px plate.
+   Use #app prefix to beat the brutalist plate's 0,7,1 specificity. */
+#app .mud-checkbox .mud-icon-button,
+#app .mud-checkbox .mud-button-root.mud-icon-button,
+html #app .mud-checkbox .mud-icon-button,
+html[data-theme="light"] #app .mud-checkbox .mud-icon-button,
+html[data-theme="dark"] #app .mud-checkbox .mud-icon-button {
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  flex-shrink: 0 !important;
+}
+#app .mud-checkbox .mud-icon-button:hover,
+html #app .mud-checkbox .mud-icon-button:hover {
+  border-color: var(--pl-ink) !important;
+  background: var(--pl-chip) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+html[data-theme="light"] #app .mud-checkbox .mud-icon-button,
+html[data-theme="light"] #app .mud-checkbox .mud-button-root.mud-icon-button {
+  background: #FFFFFF !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: none !important;
+}
+html #app .mud-checkbox .mud-icon-button.mud-checked,
+html #app .mud-checkbox .mud-button-root.mud-icon-button.mud-checked,
+html #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
+html #app .mud-checkbox .mud-button-root.mud-icon-button.mud-checkbox-true,
+html #app .mud-checkbox .mud-icon-button:has(.mud-checkbox-input:checked),
+html[data-theme="light"] #app .mud-checkbox .mud-icon-button.mud-checked,
+html[data-theme="light"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
+html[data-theme="dark"] #app .mud-checkbox .mud-icon-button.mud-checked,
+html[data-theme="dark"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
+#app .mud-checkbox .mud-icon-button.mud-checked,
+#app .mud-checkbox .mud-icon-button.mud-checkbox-true {
+  background: var(--pl-volt-fill) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  color: var(--pl-volt-fg) !important;
+  box-shadow: none !important;
+}
+#app .mud-checkbox .mud-icon-button .mud-icon-root {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+#app .mud-checkbox .mud-icon-button.mud-checked .mud-icon-root,
+#app .mud-checkbox .mud-icon-button.mud-checkbox-true .mud-icon-root,
+#app .mud-checkbox .mud-icon-button:has(.mud-checkbox-input:checked) .mud-icon-root {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
+}
+
+/* Bridge textareas: let the placeholder wrap and breathe */
+.ai-bridge-field .mud-input-control { margin-bottom: 8px !important; }
+.ai-bridge-field .mud-input.mud-input-outlined {
+  background: var(--pl-chip) !important;
+  padding: 6px 12px !important;
+}
+html[data-theme="light"] .ai-bridge-field .mud-input.mud-input-outlined {
+  background: #FFFFFF !important;
+  border-color: var(--pl-ink-border) !important;
+}
+.ai-bridge-field .mud-input-outlined-border {
+  padding: 0 8px !important;
+}
+.ai-bridge-field textarea,
+.ai-bridge-field input,
+.ai-bridge-field textarea.mud-input,
+.ai-bridge-field input.mud-input {
+  padding: 10px 0 !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+.ai-bridge-field textarea,
+.ai-bridge-field textarea.mud-input {
+  min-height: 96px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  resize: vertical !important;
+}
+.ai-bridge-field textarea::placeholder,
+.ai-bridge-field input::placeholder,
+.ai-bridge-field textarea.mud-input::placeholder,
+.ai-bridge-field input.mud-input::placeholder {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  opacity: 1 !important;
+  color: var(--pl-stone) !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+.ai-bridge-field .mud-input-helper-text { margin-top: 6px !important; }
+.ai-bridge-options {
+  gap: 8px 16px !important;
+  padding: 10px 0 4px !important;
+  align-items: flex-start !important;
 }
 

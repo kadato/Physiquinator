@@ -7,7 +7,21 @@
 }
 else
 {
-    <p class="wasm-boot-status">@_status</p>
+    <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
+        <div class="app-splash__logo" aria-hidden="true">
+            <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physiquinator">
+                <g fill="#414770" transform="translate(10,10)">
+                    <rect x="224" y="94" width="64" height="82"/>
+                    <polygon points="136,186 376,186 304,418 208,418"/>
+                </g>
+                <g fill="#10111A">
+                    <rect x="224" y="94" width="64" height="82"/>
+                    <polygon points="136,186 376,186 304,418 208,418"/>
+                </g>
+            </svg>
+        </div>
+        <p class="app-splash__status">@_status</p>
+    </output>
 }
 
 @code {

@@ -5,7 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Physiquinator</title>
+    <meta name="color-scheme" content="light dark" />
     <base href="/" />
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="_content/Physiquinator.UI/fonts/jetbrains-mono-5.woff2" as="font" type="font/woff2" crossorigin />
     <script>
         (function () {
             const key = "physiquinator-theme-preference";
@@ -29,6 +32,43 @@
             background-color: #D5D6DB !important;
             color: #1A1B26;
         }
+        /* Startup splash: paints from raw HTML before Blazor boots, then
+           hides itself as soon as any real content renders into #app. */
+        .app-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            padding: 2rem;
+            box-sizing: border-box;
+            text-align: center;
+            background-color: #FAFF00;
+            color: #10111A;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        .app-splash__logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .app-splash__logo svg {
+            width: min(68vmin, 320px);
+            height: min(68vmin, 320px);
+            display: block;
+        }
+        html[data-theme="light"] .app-splash {
+            background-color: #FAFF00;
+            color: #10111A;
+        }
+        #app:has(> :not(.app-splash)) .app-splash {
+            display: none;
+        }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=77" />
@@ -40,7 +80,20 @@
 
 <body>
     <div id="app">
-        <p class="wasm-boot-status">Loading Physiquinator...</p>
+        <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
+            <div class="app-splash__logo" aria-hidden="true">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physiquinator">
+                    <g fill="#414770" transform="translate(10,10)">
+                        <rect x="224" y="94" width="64" height="82"/>
+                        <polygon points="136,186 376,186 304,418 208,418"/>
+                    </g>
+                    <g fill="#10111A">
+                        <rect x="224" y="94" width="64" height="82"/>
+                        <polygon points="136,186 376,186 304,418 208,418"/>
+                    </g>
+                </svg>
+            </div>
+        </output>
     </div>
 
     <div id="blazor-error-ui">

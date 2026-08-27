@@ -100,6 +100,23 @@
         </output>
     </div>
 
+    <script>
+        (function () {
+            var app = document.getElementById('app');
+            if (!app) return;
+            function hide() {
+                if (app.querySelector(':scope > :not(.app-splash)')) {
+                    var s = app.querySelector('.app-splash');
+                    if (s) s.style.display = 'none';
+                    return true;
+                }
+                return false;
+            }
+            if (hide()) return;
+            new MutationObserver(hide).observe(app, { childList: true });
+        })();
+    </script>
+
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>

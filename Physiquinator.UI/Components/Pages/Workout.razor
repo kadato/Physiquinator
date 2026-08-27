@@ -80,18 +80,20 @@ else
             @if (SessionService.IsResting || _isRestComplete)
             {
                 <div class="workout-rest-takeover">
-                    <div class="workout-rest-takeover__head">
-                        <span class="workout-rest-takeover__kicker">
-                            <span class="workout-rest-takeover__dot" aria-hidden="true"></span>
-                            REST INTERVAL
-                        </span>
+                    <div class="workout-rest-card">
+                        <div class="workout-rest-takeover__head">
+                            <span class="workout-rest-takeover__kicker">
+                                <span class="workout-rest-takeover__dot" aria-hidden="true"></span>
+                                REST INTERVAL
+                            </span>
+                        </div>
+                        <RestTimerPanel @ref="_restPanel"
+                                        IsRestComplete="_isRestComplete"
+                                        AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
+                                        OnReset="ResetRest"
+                                        OnSkip="SkipRestFromPanel"
+                                        OnAddTime="AddRestTime" />
                     </div>
-                    <RestTimerPanel @ref="_restPanel"
-                                    IsRestComplete="_isRestComplete"
-                                    AddRestSeconds="@RestAlertSettings.AddTimeSeconds"
-                                    OnReset="ResetRest"
-                                    OnSkip="SkipRestFromPanel"
-                                    OnAddTime="AddRestTime" />
                     <div class="workout-rest-takeover__next">
                         <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
                         <span class="workout-rest-takeover__next-name">@NextExerciseName</span>

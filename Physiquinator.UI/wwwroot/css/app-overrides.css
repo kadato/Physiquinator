@@ -928,11 +928,6 @@ html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
 }
 
 /* Diagrams, Charts, and Heatmaps with CAD Fine-Line Checkered Grid */
-.exercise-progress-chart,
-.exercise-progress-chart__plot,
-.bodyweight-chart-panel,
-.bodyweight-chart,
-.mud-chart,
 .history-heatmap-panel,
 .home-heatmap-panel,
 .activity-heatmap-card {
@@ -943,8 +938,57 @@ html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
   background-size: 16px 16px !important;
   border: 1.5px solid var(--hairline-strong) !important;
 }
-.mud-chart svg {
-  background: transparent !important;
+.exercise-progress-chart__plot,
+.bodyweight-chart {
+  position: relative !important;
+  background: var(--pl-chip) !important;
+  background-image: none !important;
+  border: none !important;
+  overflow: visible !important;
+}
+@media (max-width: 480px) {
+  .exercise-progress-chart,
+  .bodyweight-chart-panel {
+    padding: 14px 10px !important;
+  }
+  .exercise-progress-chart .settings-card__title,
+  .bodyweight-chart-panel .settings-card__title {
+    font-size: 15px !important;
+    line-height: 1.2 !important;
+  }
+  .exercise-progress-chart__plot,
+  .bodyweight-chart {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px;
+  }
+  .exercise-progress-chart__plot .mud-chart,
+  .bodyweight-chart .mud-chart {
+    min-width: 560px !important;
+    height: 300px !important;
+  }
+  .exercise-progress-chart__plot .mud-chart svg,
+  .bodyweight-chart .mud-chart svg {
+    height: 300px !important;
+  }
+  .mud-charts-yaxis text,
+  .mud-charts-xaxis text {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    fill: var(--pl-ink) !important;
+  }
+  .mud-chart-serie.mud-chart-line {
+    stroke-width: 3.2 !important;
+  }
+}
+@media (max-width: 380px) {
+  .exercise-progress-chart__plot .mud-chart,
+  .bodyweight-chart .mud-chart {
+    min-width: 520px !important;
+  }
+  .activity-heatmap { --heatmap-cell-size: 22px; }
 }
 
 /* iOS Safari zooms the viewport when focusing a field under 16px; floor all fields.
@@ -1431,7 +1475,7 @@ html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#7
 .history-detail-warmup-badge { display:inline-flex; align-items:center; padding:1px 5px; border-radius:var(--radius); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:color-mix(in srgb, var(--pl-amber) 20%, transparent); color:var(--pl-warn-text); border:1px solid var(--pl-warn-text); }
 /* Card titles already name the series; the MudChart legend would duplicate them */
 .bodyweight-chart .mud-chart-legend, .exercise-progress-chart__plot .mud-chart-legend { display:none; }
-.bodyweight-chart-panel, .exercise-progress-chart { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; overflow:hidden; }
+.bodyweight-chart-panel, .exercise-progress-chart { border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; overflow:visible !important; }
 .bodyweight-chart, .exercise-progress-chart__plot { width:100%; }
 
 /* Plan Exercise List and Rows */
@@ -3244,12 +3288,14 @@ html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
   margin-right: 6px !important;
 }
 /* Diagram and chart plates need room for inner title shadows */
-.exercise-progress-chart,
-.bodyweight-chart-panel,
 .home-heatmap-panel.mud-paper,
 .history-heatmap-panel.mud-paper,
 .bodyweight-panel.mud-paper,
 .settings-card.mud-paper {
+  overflow: visible !important;
+}
+.exercise-progress-chart,
+.bodyweight-chart-panel {
   overflow: visible !important;
 }
 .exercise-progress-chart .exercise-progress-chart__plot,
@@ -4130,11 +4176,27 @@ html[data-theme="dark"] .workout-next__preview { color: var(--pl-stone); }
   font-size: 16px !important;
 }
 
-/* REST TAKEOVER — intense, full bleed inside deck */
+/* REST TAKEOVER — two distinct cards, not a fused block */
+.workout-deck:has(.workout-rest-takeover) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.workout-deck:has(.workout-rest-takeover)::before {
+  display: none !important;
+}
 .workout-rest-takeover {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  background: transparent;
+}
+.workout-rest-card {
   background: var(--pl-chip);
+  border: 1.5px solid var(--pl-hairline-strong);
+  box-shadow: var(--pl-plate-shadow-md);
+  overflow: hidden;
 }
 .workout-rest-takeover__head {
   display: flex;
@@ -4166,7 +4228,6 @@ html[data-theme="dark"] .workout-next__preview { color: var(--pl-stone); }
 @keyframes workout-rest-dot { 0%{box-shadow:0 0 0 0 rgba(0,229,255,0.5)} 100%{box-shadow:0 0 0 6px rgba(0,229,255,0)} }
 .workout-rest-takeover .rest-timer-panel.mud-paper {
   border: none !important;
-  border-bottom: 1.5px solid var(--pl-hairline) !important;
   box-shadow: none !important;
   border-radius: 0 !important;
   background: var(--pl-chip) !important;
@@ -4192,7 +4253,8 @@ html[data-theme="light"] .workout-rest-takeover .rest-timer-digits { color: var(
   gap: 4px;
   padding: 14px 12px 16px;
   background: var(--pl-volt-fill);
-  border-top: 1.5px solid var(--pl-volt-edge);
+  border: 1.5px solid var(--pl-volt-edge);
+  box-shadow: var(--pl-plate-shadow-md);
   text-align: center;
 }
 .workout-rest-takeover__next-kicker {
@@ -4774,6 +4836,19 @@ html[data-theme="light"] .exercise-accordion-card {
 html[data-theme="light"] .exercise-accordion-card--expanded {
   border-color: var(--pl-ink-border) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color), inset 0 0 0 1px var(--pl-ink-border) !important;
+}
+html[data-theme="light"] .workout-deck:has(.workout-rest-takeover) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] .workout-rest-card {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: var(--pl-plate-shadow-md) !important;
+}
+html[data-theme="light"] .workout-rest-takeover__next {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: var(--pl-plate-shadow-md) !important;
 }
 html[data-theme="light"] .workout-hud,
 html[data-theme="light"] .workout-deck,

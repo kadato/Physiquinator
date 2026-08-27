@@ -26,4 +26,15 @@
     <ProjectReference Include="..\Physiquinator.UI\Physiquinator.UI.csproj" />
   </ItemGroup>
 
+  <!-- Cloudflare Pages is a static file server. Isolated CSS is fingerprinted
+       to Physiquinator.UI.*.bundle.scp.css but index.html references the
+       unfingerprinted name. Copy the hashed file to the unfingerprinted
+       path so the stylesheet loads without ASP.NET's MapStaticAssets. -->
+  <Target Name="CopyScopedCssForStaticHost" AfterTargets="Publish">
+    <ItemGroup>
+      <ScopedCssHashed Include="$(PublishDir)wwwroot/_content/Physiquinator.UI/Physiquinator.UI.*.bundle.scp.css" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ScopedCssHashed)" DestinationFiles="$(PublishDir)wwwroot/_content/Physiquinator.UI/Physiquinator.UI.bundle.scp.css" OverwriteReadOnlyFiles="true" Condition="'@(ScopedCssHashed)' != ''" />
+  </Target>
+
 </Project>

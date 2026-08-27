@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using MudBlazor.Services;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
@@ -8,6 +9,7 @@ using Physiquinator.Web.Components;
 using Physiquinator.Web.Mcp;
 using Physiquinator.Web.Services;
 using SQLitePCL;
+using System.IO;
 using System.Threading.RateLimiting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -125,6 +127,18 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+if (app.Environment.IsDevelopment())
+{
+    var mudBlazorPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget/packages/mudblazor/9.7.0/staticwebassets");
+    if (Directory.Exists(mudBlazorPath))
+    {
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(mudBlazorPath),
+            RequestPath = "/_content/MudBlazor"
+        });
+    }
+}
 app.MapStaticAssets();
 
 app.UseRateLimiter();

@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
+    <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
 </Project>

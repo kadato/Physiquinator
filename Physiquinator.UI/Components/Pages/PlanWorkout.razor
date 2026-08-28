@@ -129,10 +129,13 @@ else
         </MudStack>
     </MudForm>
 
-    <PlanEditorFooter IsNew="IsNew"
-                  OnSave="Save"
-                  OnCancel="GoHome"
-                  OnExport="ExportCurrentPlan" />
+    @if (!_isSheetOpen)
+    {
+        <PlanEditorFooter IsNew="IsNew"
+                      OnSave="Save"
+                      OnCancel="GoHome"
+                      OnExport="ExportCurrentPlan" />
+    }
     </div>
 }
 
@@ -154,6 +157,7 @@ else
     private List<ExercisePlan> Exercises { get; set; } = new();
     private string NewExerciseName { get; set; } = "";
     private int _sortableVersion;
+    private bool _isSheetOpen;
     private bool IsNew => PlanId == null;
     private string PageTitleText => IsNew ? "New plan" : "Edit plan";
 
@@ -300,25 +304,44 @@ else
 
     private async Task EditExerciseAsync(ExercisePlan exercise, bool isNew = false, bool insertAtEnd = false)
     {
-        var parameters = new DialogParameters<PlanExerciseSheet>
-        {
-            { x => x.Exercise, CloneExercise(exercise) },
-            { x => x.IsNew, isNew },
-            { x => x.OnAutoSave, EventCallback.Factory.Create<ExercisePlan>(this, snapshot => ApplyExerciseSnapshot(snapshot)) }
-        };
-        var options = new DialogOptions
-        {
-            CloseButton = false,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true,
-            Position = DialogPosition.TopCenter,
-        };
+        _isSheetOpen = true;
+        await InvokeAsync(StateHasChanged);
 
-        var dialog = await DialogService.ShowAsync<PlanExerciseSheet>(
-            isNew ? "Add exercise" : "Edit exercise",
-            parameters,
-            options);
+        DialogParameters<PlanExerciseSheet> parameters;
+        DialogOptions options;
+        IDialogReference dialog;
+
+        try
+        {
+            parameters = new DialogParameters<PlanExerciseSheet>
+            {
+                { x => x.Exercise, CloneExercise(exercise) },
+                { x => x.IsNew, isNew },
+                { x => x.OnAutoSave, EventCallback.Factory.Create<ExercisePlan>(this, snapshot => ApplyExerciseSnapshot(snapshot)) }
+            };
+            options = new DialogOptions
+            {
+                CloseButton = false,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                Position = DialogPosition.TopCenter,
+            };
+
+            dialog = await DialogService.ShowAsync<PlanExerciseSheet>(
+                isNew ? "Add exercise" : "Edit exercise",
+                parameters,
+                options);
+        }
+        catch
+        {
+            _isSheetOpen = false;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
+
         var result = await dialog.Result;
+        _isSheetOpen = false;
+        await InvokeAsync(StateHasChanged);
         if (result is { Canceled: false } && result.Data is ExercisePlan updated)
         {
             var isDuplicate = Exercises.Any(e =>

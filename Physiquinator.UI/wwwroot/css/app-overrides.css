@@ -1076,7 +1076,9 @@ textarea { font-size:max(16px, 1em); }
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  padding: 16px 12px 76px !important;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 12px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-left: calc(12px + env(safe-area-inset-left, 0px)) !important;
+  padding-right: calc(12px + env(safe-area-inset-right, 0px)) !important;
   box-sizing: border-box !important;
   overflow-y: auto !important;
 }
@@ -1093,7 +1095,7 @@ textarea { font-size:max(16px, 1em); }
   width: 100% !important;
   max-width: 560px !important;
   height: auto !important;
-  max-height: calc(100dvh - 92px) !important;
+  max-height: calc(100dvh - 92px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   margin-top: auto !important;
   margin-bottom: auto !important;
 }
@@ -1191,14 +1193,14 @@ textarea { font-size:max(16px, 1em); }
   z-index: 1400 !important;
 }
 .dialog-fab.app-fab--bl-1 {
-  left: 16px !important;
+  left: calc(16px + env(safe-area-inset-left, 0px)) !important;
   right: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 .dialog-fab.app-fab--br-1 {
-  right: 16px !important;
+  right: calc(16px + env(safe-area-inset-right, 0px)) !important;
   left: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Hide underlying page FABs when any dialog/sheet is open so only the dialog FABs show */

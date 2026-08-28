@@ -64,11 +64,22 @@ public sealed class WasmFileTransferService(IJSRuntime js) : IFileTransferServic
     /// <summary>Triggers a client-side download of the given bytes.</summary>
     private async Task DownloadAsync(string fileName, string mimeType, byte[] bytes)
     {
-        await js.InvokeVoidAsync(
-            "physiquinatorWasm.downloadFile",
-            fileName,
-            mimeType,
-            Convert.ToBase64String(bytes));
+        try
+        {
+            await js.InvokeVoidAsync(
+                "physiquinatorWasm.downloadFile",
+                fileName,
+                mimeType,
+                Convert.ToBase64String(bytes));
+        }
+        catch (JSException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Download failed: {ex.Message}");
+        }
+        catch (JSDisconnectedException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Download disconnected: {ex.Message}");
+        }
     }
 
     public async Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan")

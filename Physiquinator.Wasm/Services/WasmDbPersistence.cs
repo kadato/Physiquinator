@@ -128,10 +128,24 @@ public sealed class WasmDbPersistence(IJSRuntime js, ILogger<WasmDbPersistence> 
 
     private async Task<IJSObjectReference> GetModuleAsync(CancellationToken cancellationToken = default)
     {
-        if (_module == null)
+        if (_module != null)
+        {
+            return _module;
+        }
+
+        try
         {
             _module = await js.InvokeAsync<IJSObjectReference>("import", cancellationToken, ModulePath);
         }
+        catch (JSException ex)
+        {
+            throw new InvalidOperationException("Failed to import wasm-persist module", ex);
+        }
+        catch (JSDisconnectedException ex)
+        {
+            throw new InvalidOperationException("JS disconnected while importing wasm-persist module", ex);
+        }
+
         return _module;
     }
 }

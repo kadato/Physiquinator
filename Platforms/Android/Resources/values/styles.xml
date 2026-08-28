@@ -11,7 +11,7 @@
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
     <!-- Main theme also extends into the cutout so the BlazorWebView is edge-to-edge behind the camera hole -->
-    <style name="Maui.MainTheme" parent="Maui.MainTheme.NoActionBar">
+    <style name="Maui.MainTheme" parent="Maui.MainTheme.Base">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 </resources>

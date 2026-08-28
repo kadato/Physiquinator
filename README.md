@@ -9,6 +9,8 @@
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20iOS%20%7C%20macOS-blue)
 [![Build](https://img.shields.io/github/actions/workflow/status/kadato/Physiquinator/ci.yml?label=CI&logo=github)](https://github.com/kadato/Physiquinator/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/kadato/Physiquinator)](https://github.com/kadato/Physiquinator/releases/latest)
+[![Android APK](https://img.shields.io/badge/Android-latest%20APK-3DDC84?logo=android&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Android.apk)
+[![Windows ZIP](https://img.shields.io/badge/Windows-latest%20ZIP-0078D6?logo=windows&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Windows.zip)
 
 A cross-platform workout tracking app built with **.NET MAUI and Blazor Hybrid**. Plan workouts, log sets against a rest timer that keeps running across apps, track progress and personal records, and ask an on-device AI assistant to analyze your training. All data lives in a local SQLite database and works offline.
 
@@ -18,9 +20,27 @@ It also ships a **web client with a Model Context Protocol (MCP) server**, so an
 
 No install, no account. Data stays in your browser.
 
-[Preview](#preview) - [Download and install](#download-and-install) - [Features](#features) - [Agent API (MCP)](#agent-api-mcp) - [Architecture](#architecture) - [Tech stack](#tech-stack) - [Getting started](#getting-started) - [Testing and CI](#testing-and-ci)
+[Download](#download) - [Preview](#preview) - [Features](#features) - [Agent API (MCP)](#agent-api-mcp) - [Architecture](#architecture) - [Tech stack](#tech-stack) - [Getting started](#getting-started) - [Testing and CI](#testing-and-ci)
 
 </div>
+
+---
+
+## Download
+
+**Android.** Install the latest signed APK (~115 MB, Android 7.0+):
+
+[![Download Physiquinator for Android](https://img.shields.io/badge/Download-Physiquinator%20Android%20APK-0d9488?style=for-the-badge&logo=android&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Android.apk)
+
+**Windows.** Download and extract the ZIP (~70 MB):
+
+[![Download Physiquinator for Windows](https://img.shields.io/badge/Download-Physiquinator%20Windows%20ZIP-2563eb?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Windows.zip)
+
+Requires [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/11.0) (one-time, free). Extract the ZIP and run `Physiquinator.exe`. No installation needed. See [WINDOWS-INSTALL.md](WINDOWS-INSTALL.md) for troubleshooting.
+
+Every `v*` tag builds a signed APK and a Windows package via `.github/workflows/release.yml`. On first Android install, allow **Install unknown apps** for your browser. Updates keep your local SQLite data. The app checks GitHub releases on start and shows an update prompt in Settings.
+
+> The app seeds sample plans and workouts on first launch so you can explore immediately.
 
 ---
 
@@ -87,23 +107,6 @@ No install, no account. Data stays in your browser.
 </p>
 
 </div>
-
----
-
-## Download and install
-
-**Latest release**: [![GitHub Release](https://img.shields.io/github/v/release/kadato/Physiquinator)](https://github.com/kadato/Physiquinator/releases/latest)
-
-| Platform | Package | Size | Requirements |
-|----------|---------|------|--------------|
-| Android | [Physiquinator-Android.apk](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | ~115 MB | Android 7.0+ |
-| Windows | [Physiquinator-Windows.zip](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | ~70 MB | [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/11.0) (one-time, free) |
-
-**Android:** enable "Install from unknown sources", open the APK, tap **Install**.
-
-**Windows:** extract the ZIP and run `Physiquinator.exe`. No installation needed. See [WINDOWS-INSTALL.md](WINDOWS-INSTALL.md) for troubleshooting.
-
-> The app seeds sample plans and workouts on first launch so you can explore immediately.
 
 ---
 

@@ -295,13 +295,16 @@ else
 
         @if (UpcomingExercises.Count > 1)
         {
-            <div class="workout-sequence-strip" aria-hidden="true">
+            <div class="workout-sequence-strip" role="navigation" aria-label="Exercise sequence">
                 @foreach (var item in UpcomingExercises)
                 {
-                    var isActive = item.ExerciseIndex == _activeExerciseIndex;
+                    var exerciseIndex = item.ExerciseIndex;
+                    var isActive = exerciseIndex == _activeExerciseIndex;
                     <button type="button"
                             class="workout-sequence-strip__item @(isActive ? "workout-sequence-strip__item--active" : "")"
-                            @onclick="() => FocusExercise(item.ExerciseIndex)">
+                            aria-label="@($"Go to {item.Exercise.Name}, exercise {(exerciseIndex + 1):D2}")"
+                            aria-current="@(isActive ? "true" : null)"
+                            @onclick="() => FocusExercise(exerciseIndex)">
                         <span class="workout-sequence-strip__num">@((item.ExerciseIndex + 1).ToString("D2"))</span>
                         <span class="workout-sequence-strip__pips">
                             @for (int si = 0; si < item.TotalSets; si++)
@@ -397,6 +400,7 @@ else
     private readonly HashSet<(int, int)> _skippedSets = [];
     private int _activeExerciseIndex;
     private readonly Dictionary<int, int> _activeSetIndices = new();
+    private int? _restNextExerciseOverride;
 
     private string ElapsedLabel
     {
@@ -541,6 +545,16 @@ else
         {
             var plan = SessionService.CurrentPlan;
             if (plan == null) return (null, -1);
+            if ((SessionService.IsResting || _isRestComplete) && _restNextExerciseOverride.HasValue)
+            {
+                var ov = _restNextExerciseOverride.Value;
+                if (ov >= 0 && ov < plan.Exercises.Count && !SessionService.IsExerciseDone(ov))
+                {
+                    var ovSetIdx = SessionService.GetFirstUncompletedSetIndex(ov);
+                    if (ovSetIdx != -1)
+                        return (plan.Exercises[ov], ovSetIdx);
+                }
+            }
             var nextExIdx = SessionService.GetFirstUncompletedExerciseIndex();
             if (nextExIdx == -1) return (null, -1);
             var setIdx = SessionService.GetFirstUncompletedSetIndex(nextExIdx);
@@ -580,7 +594,11 @@ else
         if (UpcomingExercises.Count <= 1) return;
         var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == _activeExerciseIndex);
         if (idx > 0)
+        {
             _activeExerciseIndex = UpcomingExercises[idx - 1].ExerciseIndex;
+            if (SessionService.IsResting || _isRestComplete)
+                _restNextExerciseOverride = _activeExerciseIndex;
+        }
     }
 
     private void FocusNext()
@@ -588,7 +606,11 @@ else
         if (UpcomingExercises.Count <= 1) return;
         var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == _activeExerciseIndex);
         if (idx >= 0 && idx < UpcomingExercises.Count - 1)
+        {
             _activeExerciseIndex = UpcomingExercises[idx + 1].ExerciseIndex;
+            if (SessionService.IsResting || _isRestComplete)
+                _restNextExerciseOverride = _activeExerciseIndex;
+        }
     }
 
     private void FocusExercise(int exIdx)
@@ -596,6 +618,8 @@ else
         if (SessionService.CurrentPlan == null) return;
         if (exIdx < 0 || exIdx >= SessionService.CurrentPlan.Exercises.Count) return;
         _activeExerciseIndex = exIdx;
+        if (SessionService.IsResting || _isRestComplete)
+            _restNextExerciseOverride = exIdx;
         StateHasChanged();
     }
 
@@ -758,6 +782,7 @@ else
         _sessionSets.Clear();
         _skippedSets.Clear();
         _activeSetIndices.Clear();
+        _restNextExerciseOverride = null;
         int firstUncompletedExIdx = -1;
 
         IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> lastSessionMetrics =
@@ -1150,13 +1175,18 @@ else
             }
 
             _isRestComplete = false;
+            _restNextExerciseOverride = null;
             await TimerInterop.StopTimerAsync();
             _lastRestDurationSeconds = exercise.RestIntervalSeconds;
             SessionService.StartRest(exercise.RestIntervalSeconds);
             await StartJsTimerAsync();
             await ScrollRestTimerIntoViewAsync();
 
-            if (SessionService.IsExerciseDone(exerciseIndex))
+            if (_restNextExerciseOverride != null)
+            {
+                _activeExerciseIndex = _restNextExerciseOverride.Value;
+            }
+            else if (SessionService.IsExerciseDone(exerciseIndex))
             {
                 _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
             }
@@ -1418,6 +1448,7 @@ else
 
         await TimerInterop.StopTimerAsync();
         _isRestComplete = false;
+        _restNextExerciseOverride = null;
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
     }

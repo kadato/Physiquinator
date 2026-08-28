@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Serialization;
@@ -10,7 +11,8 @@ public sealed class UserProfileService(
     WorkoutSessionService sessionService,
     IAppPreferences preferences,
     IDatabasePathProvider dbPathProvider,
-    TimeProvider time)
+    TimeProvider time,
+    IServiceProvider? serviceProvider = null)
 {
     public const string ProfilesKey = PreferenceKeys.UserProfiles;
     public const string ActiveProfileIdKey = PreferenceKeys.ActiveProfileId;
@@ -97,6 +99,42 @@ public sealed class UserProfileService(
         // 3. Resolve the database path for the new user profile and hot-swap the connection
         var dbPath = _dbPathProvider.GetDatabasePath(profileId);
         await _database.SwitchDatabaseAsync(dbPath).ConfigureAwait(false);
+
+        // 4. Invalidate per-profile caches so the new profile's data is loaded fresh.
+        //    Warm caches (plans, stats, schedule) would otherwise return stale data from
+        //    the previous profile's database until the app is restarted.
+        if (serviceProvider != null)
+        {
+            try
+            {
+                if (serviceProvider.GetService<WorkoutPlanService>() is { } planService)
+                    planService.InvalidatePlanCache();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Cache invalidate plans failed: {ex.Message}");
+            }
+
+            try
+            {
+                if (serviceProvider.GetService<WorkoutStatsService>() is { } statsService)
+                    statsService.InvalidateCache();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Cache invalidate stats failed: {ex.Message}");
+            }
+
+            try
+            {
+                if (serviceProvider.GetService<WorkoutScheduleService>() is { } scheduleService)
+                    await scheduleService.ResetCacheAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Cache reset schedule failed: {ex.Message}");
+            }
+        }
     }
 
     public void CreateProfile(string name)

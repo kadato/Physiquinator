@@ -60,13 +60,26 @@ public sealed class AppDatabase
         {
             if (_database != null)
             {
+                // Flush the WAL file into the main database so a hot-swap or a
+                // subsequent process kill does not leave committed pages only in
+                // the -wal sidecar. Without this a crash between the close and
+                // the next open could appear as lost data on Android.
+                try
+                {
+                    await _database.ExecuteAsync("PRAGMA wal_checkpoint(TRUNCATE);").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"WAL checkpoint failed: {ex.Message}");
+                }
+
                 try
                 {
                     await _database.CloseAsync().ConfigureAwait(false);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignore connection closing errors
+                    System.Diagnostics.Debug.WriteLine($"Database close failed: {ex.Message}");
                 }
             }
             _database = new SQLiteAsyncConnection(dbPath);

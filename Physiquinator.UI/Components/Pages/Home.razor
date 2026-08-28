@@ -173,6 +173,7 @@
     private DotNetObjectReference<Home>? _dotNetRef;
     private int _lastSortableCount = -1;
     private bool _sortableReady;
+    private Guid _lastActiveProfileId = Guid.Empty;
 
     /// <summary>Last session's plan name, so Home answers "what did I do" at a glance.</summary>
     private string LastSessionLabel
@@ -218,6 +219,19 @@
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
+    protected override async Task OnParametersSetAsync()
+    {
+        var currentProfileId = UserProfileService.GetActiveProfile().Id;
+        if (_lastActiveProfileId != Guid.Empty && _lastActiveProfileId != currentProfileId)
+        {
+            _isLoading = true;
+            _sortableReady = false;
+            _lastSortableCount = -1;
+            await LoadAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     private async Task LoadAsync()
     {
         var endLocal = DateOnly.FromDateTime(DateTime.Today);
@@ -239,6 +253,7 @@
         _inProgressSession = await inProgressTask;
         _inProgressPlanId = _inProgressSession?.TryGetPlanId();
         _lastSessionByPlan = await lastDoneTask;
+        _lastActiveProfileId = UserProfileService.GetActiveProfile().Id;
         _isLoading = false;
     }
 

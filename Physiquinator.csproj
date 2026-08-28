@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>net11.0-android;net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('linux'))">net11.0-android</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
 
         <!-- Note for MacCatalyst:
@@ -27,8 +28,8 @@
         <ApplicationId>dev.karoly.physiquinator</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.19.2</ApplicationDisplayVersion>
-        <ApplicationVersion>11902</ApplicationVersion>
+        <ApplicationDisplayVersion>1.19.3</ApplicationDisplayVersion>
+        <ApplicationVersion>11903</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>

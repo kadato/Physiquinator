@@ -2,8 +2,10 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Views;
 using AndroidX.Activity;
 using Physiquinator.Platforms.Android.Services;
+using Physiquinator.Services;
 using AndroidView = global::Android.Views.View;
 using AndroidViewGroup = global::Android.Views.ViewGroup;
 using WebView = global::Android.Webkit.WebView;
@@ -49,7 +51,7 @@ public class MainActivity : MauiAppCompatActivity
         catch { }
 
         // Apply the current theme's system bar colors after the window is edge-to-edge.
-        try { Services.SystemBarsHelper.ApplyFromCurrentResources(); } catch { }
+        try { SystemBarsHelper.ApplyFromCurrentResources(); } catch { }
 
         // Resize the WebView when the soft keyboard opens so inputs in dialogs
         // and steppers are never hidden behind it (Android).

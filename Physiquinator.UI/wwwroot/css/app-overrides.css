@@ -1564,9 +1564,59 @@ html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#7
   border-radius: var(--radius) !important;
   color: var(--pl-ink) !important;
 }
-.plan-exercise-row--ghost { opacity: 0.4; border-style: dashed !important; }
-.plan-exercise-row--chosen { background: var(--pl-chip-2) !important; }
-.plan-exercise-row--drag { box-shadow: none !important; }
+/* Drag and drop feedback: both home plan cards and plan exercise rows share the
+   same Sortable contract: ghost is the placeholder left behind, chosen is the
+   lifted item before it becomes the floating mirror, drag/fallback is the
+   mirror that follows the finger. The mirror must look elevated and alive. */
+.plan-exercise-row--ghost,
+.plan-card--ghost {
+  opacity: 0.38 !important;
+  background: repeating-linear-gradient(-45deg, transparent 0 5px, color-mix(in srgb, var(--pl-stone) 14%, transparent) 5px 10px) !important;
+  border: 1.5px dashed var(--pl-hairline-strong) !important;
+  box-shadow: none !important;
+}
+
+.plan-exercise-row--chosen,
+.plan-card--chosen {
+  border-color: var(--pl-yellow) !important;
+  background: color-mix(in srgb, var(--pl-yellow) 13%, var(--pl-chip)) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+}
+
+.plan-exercise-row--drag,
+.plan-card--drag,
+.plan-exercise-row--fallback,
+.plan-card--fallback {
+  opacity: 0.96 !important;
+  transform: rotate(0.7deg) scale(1.02);
+  border-color: var(--pl-yellow) !important;
+  background: var(--pl-chip) !important;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.20), 0 4px 8px rgba(0,0,0,0.14) !important;
+  z-index: 1200;
+}
+
+.plan-exercise-row--fallback,
+.plan-card--fallback {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-exercise-row--drag,
+  .plan-card--drag,
+  .plan-exercise-row--fallback,
+  .plan-card--fallback {
+    transform: none !important;
+  }
+}
+
+.plan-exercise-row--chosen .plan-exercise-handle,
+.plan-card--chosen .plan-card-handle,
+.plan-exercise-row--drag .plan-exercise-handle,
+.plan-card--drag .plan-card-handle {
+  background: var(--pl-yellow) !important;
+  color: var(--pl-volt-fg) !important;
+  border-color: var(--pl-volt-edge) !important;
+}
 
 /* Active Workout Layout and Exercise Cards */
 .workout-exercise-layout { display:flex; flex-direction:column; gap:12px; }

@@ -58,11 +58,14 @@ public sealed class RestOverlayService : Service
     private AndroidTextView? _headerText;
     private AndroidTextView? _timerText;
     private AndroidTextView? _setInfoText;
+    private AndroidTextView? _detailText;
     private AndroidTextView? _weightValue;
     private AndroidTextView? _repsValue;
     private AndroidView? _stepperRow;
     private AndroidButton? _logSetButton;
     private AndroidTextButton? _addTimeButton;
+    private AndroidView? _edgeTrack;
+    private AndroidView? _edgeFill;
     private AndroidButton? _resetButton;
     private AndroidButton? _skipButton;
     private WindowManagerLayoutParams? _layoutParams;
@@ -77,33 +80,56 @@ public sealed class RestOverlayService : Service
     private double _currentWeightKg;
     private int _currentReps;
     private int _trackedExerciseIndex = -1;
+    private int _trackedSetIndex = -1;
     private ExerciseLogType _currentLogType = ExerciseLogType.WeightAndReps;
 
-    // Theme color palettes matching MainLayout.razor MudBlazor definitions
-    private static readonly AndroidColor DarkBackground = AndroidColor.ParseColor("#0B0C10");
-    private static readonly AndroidColor DarkSurface = AndroidColor.ParseColor("#151821");
-    private static readonly AndroidColor DarkTextPrimary = AndroidColor.ParseColor("#F3F4F6");
-    private static readonly AndroidColor DarkTextSecondary = AndroidColor.ParseColor("#9CA3AF");
-    private static readonly AndroidColor DarkPrimary = AndroidColor.ParseColor("#10B981");
-    private static readonly AndroidColor DarkWarning = AndroidColor.ParseColor("#F59E0B");
-    private static readonly AndroidColor DarkError = AndroidColor.ParseColor("#EF4444");
+    // Cyberpunk brutalist palettes — Tokyo Night field-terminal, matches DESIGN.md and app-overrides.css.
+    // Hard-contrast ink on void, volt-yellow signature, zero-blur hard shadows, hairline scaffolding.
+    // Dark: void #0E0F17, chip #181A2A, chip-well #22253B, ink #C0CAF5, stone #8A90B8, hairline-strong #414770, volt #FAFF00
+    // Light: paper #E7E3D1, chip #FFFFFF, chip-2 #EDE8D3, ink #1A1B26, stone #5A5644, hairline-strong #A39D82, volt #FAFF00 / #6E6400
 
-    private static readonly AndroidColor LightBackground = AndroidColor.ParseColor("#F8F9FA");
-    private static readonly AndroidColor LightSurface = AndroidColor.ParseColor("#FFFFFF");
-    private static readonly AndroidColor LightTextPrimary = AndroidColor.ParseColor("#111827");
-    private static readonly AndroidColor LightTextSecondary = AndroidColor.ParseColor("#6B7280");
-    private static readonly AndroidColor LightPrimary = AndroidColor.ParseColor("#0F766E");
-    private static readonly AndroidColor LightWarning = AndroidColor.ParseColor("#F59E0B");
-    private static readonly AndroidColor LightError = AndroidColor.ParseColor("#EF4444");
+    // Dark — the default field terminal at night
+    private static readonly AndroidColor DarkVoid = AndroidColor.ParseColor("#0E0F17");
+    private static readonly AndroidColor DarkChip = AndroidColor.ParseColor("#181A2A");
+    private static readonly AndroidColor DarkChipWell = AndroidColor.ParseColor("#22253B");
+    private static readonly AndroidColor DarkInk = AndroidColor.ParseColor("#C0CAF5");
+    private static readonly AndroidColor DarkInkDim = AndroidColor.ParseColor("#A9B1D6");
+    private static readonly AndroidColor DarkStone = AndroidColor.ParseColor("#8A90B8");
+    private static readonly AndroidColor DarkHairline = AndroidColor.ParseColor("#282B42");
+    private static readonly AndroidColor DarkHairlineStrong = AndroidColor.ParseColor("#414770");
+    private static readonly AndroidColor DarkVolt = AndroidColor.ParseColor("#FAFF00");
+    private static readonly AndroidColor DarkVoltFg = AndroidColor.ParseColor("#10111A");
+    private static readonly AndroidColor DarkMagenta = AndroidColor.ParseColor("#FF0055");
+    private static readonly AndroidColor DarkCyan = AndroidColor.ParseColor("#00E5FF");
+    private static readonly AndroidColor DarkGreen = AndroidColor.ParseColor("#A3E635");
+    private static readonly AndroidColor DarkAmber = AndroidColor.ParseColor("#E0AF68");
+    private static readonly AndroidColor DarkShadow = AndroidColor.ParseColor("#000000");
 
-    private Typeface? _outfitFont;
+    // Light — acid concrete day plate
+    private static readonly AndroidColor LightPaper = AndroidColor.ParseColor("#E7E3D1");
+    private static readonly AndroidColor LightChip = AndroidColor.ParseColor("#FFFFFF");
+    private static readonly AndroidColor LightChipWell = AndroidColor.ParseColor("#EDE8D3");
+    private static readonly AndroidColor LightInk = AndroidColor.ParseColor("#1A1B26");
+    private static readonly AndroidColor LightStone = AndroidColor.ParseColor("#5A5644");
+    private static readonly AndroidColor LightHairline = AndroidColor.ParseColor("#C6C1AB");
+    private static readonly AndroidColor LightHairlineStrong = AndroidColor.ParseColor("#A39D82");
+    private static readonly AndroidColor LightVoltFill = AndroidColor.ParseColor("#FAFF00");
+    private static readonly AndroidColor LightVoltFg = AndroidColor.ParseColor("#10111A");
+    private static readonly AndroidColor LightVoltText = AndroidColor.ParseColor("#6E6400");
+    private static readonly AndroidColor LightMagenta = AndroidColor.ParseColor("#E11D48");
+    private static readonly AndroidColor LightError = AndroidColor.ParseColor("#BE123C");
+    private static readonly AndroidColor LightCyan = AndroidColor.ParseColor("#0E7490");
+    private static readonly AndroidColor LightGreen = AndroidColor.ParseColor("#5A8A0B");
+    private static readonly AndroidColor LightShadow = AndroidColor.ParseColor("#1B1E33");
+
+    private Typeface? _departureMono;
 
     public override void OnCreate()
     {
         base.OnCreate();
 
-        try { _outfitFont = Typeface.CreateFromAsset(Assets, "fonts/outfit-latin.woff2"); }
-        catch { _outfitFont = Typeface.Default; }
+        try { _departureMono = Typeface.CreateFromAsset(Assets, "fonts/DepartureMono-Regular.ttf"); }
+        catch { try { _departureMono = Typeface.CreateFromAsset(Assets, "fonts/outfit-latin.woff2"); } catch { _departureMono = Typeface.Monospace; } }
 
         _handler = new Handler(Looper.MainLooper!);
         System.Action tick = null!;
@@ -235,7 +261,7 @@ public sealed class RestOverlayService : Service
         _overlayView = null;
     }
 
-    private Typeface OutfitFont() => _outfitFont ?? Typeface.Default!;
+    private Typeface MonoFont() => _departureMono ?? Typeface.Monospace!;
 
     private void ShowOverlay()
     {
@@ -248,69 +274,107 @@ public sealed class RestOverlayService : Service
             var colors = GetThemeColors();
             var addSeconds = ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds;
 
+            var shadowContainer = new FrameLayout(this);
+            shadowContainer.Background = CreatePlateBackground(colors.Chip, colors.HairlineStrong, colors.Shadow);
+            shadowContainer.SetPadding(0, 0, Dp(5), Dp(5));
+
             var root = new AndroidLinearLayout(this)
             {
                 Orientation = Orientation.Vertical
             };
-            var bg = new GradientDrawable();
-            bg.SetColor(AndroidColor.Argb(0xF2, colors.Background.R, colors.Background.G, colors.Background.B));
-            bg.SetCornerRadius(Dp(20));
-            bg.SetStroke(Dp(2), AndroidColor.Argb(0x40, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-            root.Background = bg;
-            root.SetPadding(Dp(16), Dp(12), Dp(16), Dp(12));
+            root.SetPadding(Dp(12), Dp(10), Dp(12), Dp(10));
 
-            // Row 1: exercise name left, timer right, close overlaid top-right
-            var headerFrame = new FrameLayout(this);
+            var dragHandle = new AndroidView(this);
+            var dragBg = new GradientDrawable();
+            dragBg.SetColor(AndroidColor.Argb(0x66, colors.Stone.R, colors.Stone.G, colors.Stone.B));
+            dragBg.SetCornerRadius(Dp(2));
+            dragHandle.Background = dragBg;
+            root.AddView(dragHandle, new LinearLayout.LayoutParams(Dp(32), Dp(4))
+            {
+                Gravity = GravityFlags.CenterHorizontal,
+                BottomMargin = Dp(8)
+            });
 
             var headerRow = new AndroidLinearLayout(this)
             {
                 Orientation = Orientation.Horizontal
             };
             headerRow.SetGravity(GravityFlags.CenterVertical);
-            headerRow.SetPadding(0, 0, Dp(44), 0);
 
             _headerText = new AndroidTextView(this) { Text = string.Empty, Gravity = GravityFlags.Start | GravityFlags.CenterVertical };
             _headerText.SetMaxLines(1);
-            _headerText.SetTextColor(colors.TextPrimary);
-            _headerText.SetTextSize(ComplexUnitType.Sp, 15);
-            _headerText.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+            _headerText.Ellipsize = global::Android.Text.TextUtils.TruncateAt.End;
+            _headerText.SetTextColor(colors.Ink);
+            _headerText.SetTextSize(ComplexUnitType.Sp, 12);
+            _headerText.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+            _headerText.LetterSpacing = 0.08f;
 
             _timerText = new AndroidTextView(this) { Text = "00:00", Gravity = GravityFlags.End | GravityFlags.CenterVertical };
-            _timerText.SetTextColor(colors.TextPrimary);
-            _timerText.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
-            _timerText.SetTextSize(ComplexUnitType.Sp, 22);
-            _timerText.SetMinWidth(Dp(56));
+            _timerText.SetTextColor(colors.VoltText);
+            _timerText.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+            _timerText.SetTextSize(ComplexUnitType.Sp, 26);
+            _timerText.LetterSpacing = -0.02f;
+            _timerText.SetMinWidth(Dp(64));
 
             _setInfoText = new AndroidTextView(this) { Text = string.Empty, Gravity = GravityFlags.End | GravityFlags.CenterVertical };
-            _setInfoText.SetTextColor(colors.TextSecondary);
-            _setInfoText.SetTextSize(ComplexUnitType.Sp, 12);
-            _setInfoText.SetTypeface(OutfitFont(), TypefaceStyle.Normal);
-            _setInfoText.SetMinWidth(Dp(28));
+            _setInfoText.SetTextColor(colors.Stone);
+            _setInfoText.SetTextSize(ComplexUnitType.Sp, 11);
+            _setInfoText.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+            _setInfoText.LetterSpacing = 0.12f;
+            _setInfoText.SetMinWidth(Dp(32));
 
             headerRow.AddView(_headerText, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 1f));
-            headerRow.AddView(_timerText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
-            headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+            headerRow.AddView(_timerText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent) { LeftMargin = Dp(8) });
+            headerRow.AddView(_setInfoText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent) { LeftMargin = Dp(6) });
 
             AndroidButton closeButton = CreateCloseButton(colors);
             closeButton.ContentDescription = "Close overlay";
+            headerRow.AddView(closeButton, new LinearLayout.LayoutParams(Dp(44), Dp(44)) { LeftMargin = Dp(8) });
 
-            var headerRowParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MatchParent,
-                FrameLayout.LayoutParams.WrapContent);
-            var closeParams = new FrameLayout.LayoutParams(
-                Dp(44), Dp(44))
+            root.AddView(headerRow);
+
+            _detailText = new AndroidTextView(this) { Text = string.Empty, Gravity = GravityFlags.Start | GravityFlags.CenterVertical };
+            _detailText.SetMaxLines(1);
+            _detailText.Ellipsize = global::Android.Text.TextUtils.TruncateAt.End;
+            _detailText.SetTextColor(colors.Stone);
+            _detailText.SetTextSize(ComplexUnitType.Sp, 11);
+            _detailText.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+            _detailText.LetterSpacing = 0.10f;
+            _detailText.SetPadding(0, Dp(2), 0, 0);
+            root.AddView(_detailText, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, LinearLayout.LayoutParams.WrapContent)
             {
-                Gravity = GravityFlags.End | GravityFlags.CenterVertical,
-                RightMargin = Dp(2)
-            };
+                TopMargin = Dp(4)
+            });
 
-            headerFrame.AddView(headerRow, headerRowParams);
-            headerFrame.AddView(closeButton, closeParams);
+            var divider = new AndroidView(this);
+            divider.Background = new ColorDrawable(colors.HairlineStrong);
+            root.AddView(divider, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, Dp(2))
+            {
+                TopMargin = Dp(8),
+                BottomMargin = Dp(8)
+            });
 
-            // Row 2: weight and reps steppers (hidden by default)
             _stepperRow = CreateStepperRow(colors);
+            root.AddView(_stepperRow, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, LinearLayout.LayoutParams.WrapContent)
+            {
+                BottomMargin = Dp(8)
+            });
 
-            // Row 3: +Ns, Reset, and Log set (or Skip during rest) in one row
+            var trackContainer = new FrameLayout(this);
+            var trackWell = new GradientDrawable();
+            trackWell.SetColor(colors.ChipWell);
+            trackWell.SetStroke(Dp(1), colors.Hairline);
+            trackWell.SetCornerRadius(0);
+            trackContainer.Background = trackWell;
+            _edgeTrack = trackContainer;
+            _edgeFill = new AndroidView(this);
+            _edgeFill.Background = new ColorDrawable(colors.Volt);
+            trackContainer.AddView(_edgeFill, new FrameLayout.LayoutParams(0, FrameLayout.LayoutParams.MatchParent));
+            root.AddView(trackContainer, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, Dp(6))
+            {
+                BottomMargin = Dp(10)
+            });
+
             var actionRow = new AndroidLinearLayout(this)
             {
                 Orientation = Orientation.Horizontal
@@ -334,18 +398,16 @@ public sealed class RestOverlayService : Service
             AddActionBtn(actionRow, _logSetButton);
             AddActionBtn(actionRow, _skipButton);
 
-            root.AddView(headerFrame);
-            root.AddView(_stepperRow);
-            var actionRowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WrapContent,
-                LinearLayout.LayoutParams.WrapContent)
+            root.AddView(actionRow, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent, LinearLayout.LayoutParams.WrapContent)
             {
-                Gravity = GravityFlags.CenterHorizontal,
-                TopMargin = Dp(8)
-            };
-            root.AddView(actionRow, actionRowParams);
+                Gravity = GravityFlags.CenterHorizontal
+            });
 
-            root.SetOnTouchListener(new OverlayDragListener(this));
+            shadowContainer.AddView(root, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MatchParent,
+                FrameLayout.LayoutParams.WrapContent));
+
+            shadowContainer.SetOnTouchListener(new OverlayDragListener(this));
 
             var width = Math.Min(ScreenWidth - Dp(24), Dp(380));
             _layoutParams = new WindowManagerLayoutParams(
@@ -360,8 +422,13 @@ public sealed class RestOverlayService : Service
                 Y = StatusBarHeight + Dp(8)
             };
 
-            _windowManager?.AddView(root, _layoutParams);
-            _overlayView = root;
+            _windowManager?.AddView(shadowContainer, _layoutParams);
+            _overlayView = shadowContainer;
+
+            // Seed weight and reps immediately so that when the exercise is done
+            // and the logging inputs are shown, they display the correct seeded
+            // values instead of the initial 0 and 10 before the first ticker tick.
+            try { UpdateTicker(); } catch { }
 
             StartTicker();
         }
@@ -373,7 +440,7 @@ public sealed class RestOverlayService : Service
     }
 
     private AndroidLinearLayout CreateStepperRow(
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
     {
         var row = new AndroidLinearLayout(this)
         {
@@ -382,41 +449,59 @@ public sealed class RestOverlayService : Service
         row.SetGravity(GravityFlags.Center);
         row.Visibility = ViewStates.Gone;
 
-        // Weight stepper: [-] value kg
-        AndroidTextButton weightMinus = CreateStepperBtn("-", colors, OnWeightMinus);
+        // Weight stepper: [-] value kg — machined chip-well plates, tabular numerals
+        AndroidTextButton weightMinus = CreateStepperBtn("−", colors, OnWeightMinus);
         _weightValue = new AndroidTextView(this) { Text = "0", Gravity = GravityFlags.Center };
-        _weightValue.SetTextColor(colors.TextPrimary);
-        _weightValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        _weightValue.SetTextColor(colors.Ink);
+        _weightValue.SetTypeface(MonoFont(), TypefaceStyle.Bold);
         _weightValue.SetTextSize(ComplexUnitType.Sp, 15);
-        _weightValue.SetMinWidth(Dp(44));
+        _weightValue.SetMinWidth(Dp(48));
+        _weightValue.LetterSpacing = 0.02f;
         AndroidTextButton weightPlus = CreateStepperBtn("+", colors, OnWeightPlus);
-        var weightLabel = new AndroidTextView(this) { Text = "kg", Gravity = GravityFlags.CenterVertical };
-        weightLabel.SetTextColor(colors.TextSecondary);
+        var weightLabel = new AndroidTextView(this) { Text = "KG", Gravity = GravityFlags.CenterVertical };
+        weightLabel.SetTextColor(colors.Stone);
         weightLabel.SetTextSize(ComplexUnitType.Sp, 11);
+        weightLabel.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+        weightLabel.LetterSpacing = 0.12f;
 
         var weightGroup = new AndroidLinearLayout(this) { Orientation = Orientation.Horizontal };
         weightGroup.SetGravity(GravityFlags.CenterVertical);
+        var weightValueWell = new GradientDrawable();
+        weightValueWell.SetColor(colors.ChipWell);
+        weightValueWell.SetStroke(Dp(1), colors.HairlineStrong);
+        weightValueWell.SetCornerRadius(0);
+        _weightValue.Background = weightValueWell;
+        _weightValue.SetPadding(Dp(6), Dp(4), Dp(6), Dp(4));
         AddStepperElement(weightGroup, weightMinus);
-        weightGroup.AddView(_weightValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        weightGroup.AddView(_weightValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, Dp(36)) { LeftMargin = Dp(2), RightMargin = Dp(2), Gravity = GravityFlags.CenterVertical });
         AddStepperElement(weightGroup, weightPlus);
         AddStepperElement(weightGroup, weightLabel);
 
         // Reps stepper: [-] value reps
-        AndroidTextButton repsMinus = CreateStepperBtn("-", colors, OnRepsMinus);
+        AndroidTextButton repsMinus = CreateStepperBtn("−", colors, OnRepsMinus);
         _repsValue = new AndroidTextView(this) { Text = "10", Gravity = GravityFlags.Center };
-        _repsValue.SetTextColor(colors.TextPrimary);
-        _repsValue.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        _repsValue.SetTextColor(colors.Ink);
+        _repsValue.SetTypeface(MonoFont(), TypefaceStyle.Bold);
         _repsValue.SetTextSize(ComplexUnitType.Sp, 15);
-        _repsValue.SetMinWidth(Dp(36));
+        _repsValue.SetMinWidth(Dp(40));
+        _repsValue.LetterSpacing = 0.02f;
         AndroidTextButton repsPlus = CreateStepperBtn("+", colors, OnRepsPlus);
-        var repsLabel = new AndroidTextView(this) { Text = "reps", Gravity = GravityFlags.CenterVertical };
-        repsLabel.SetTextColor(colors.TextSecondary);
+        var repsLabel = new AndroidTextView(this) { Text = "REPS", Gravity = GravityFlags.CenterVertical };
+        repsLabel.SetTextColor(colors.Stone);
         repsLabel.SetTextSize(ComplexUnitType.Sp, 11);
+        repsLabel.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+        repsLabel.LetterSpacing = 0.12f;
 
         var repsGroup = new AndroidLinearLayout(this) { Orientation = Orientation.Horizontal };
         repsGroup.SetGravity(GravityFlags.CenterVertical);
+        var repsValueWell = new GradientDrawable();
+        repsValueWell.SetColor(colors.ChipWell);
+        repsValueWell.SetStroke(Dp(1), colors.HairlineStrong);
+        repsValueWell.SetCornerRadius(0);
+        _repsValue.Background = repsValueWell;
+        _repsValue.SetPadding(Dp(6), Dp(4), Dp(6), Dp(4));
         AddStepperElement(repsGroup, repsMinus);
-        repsGroup.AddView(_repsValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, LinearLayout.LayoutParams.WrapContent));
+        repsGroup.AddView(_repsValue, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WrapContent, Dp(36)) { LeftMargin = Dp(2), RightMargin = Dp(2), Gravity = GravityFlags.CenterVertical });
         AddStepperElement(repsGroup, repsPlus);
         AddStepperElement(repsGroup, repsLabel);
 
@@ -429,17 +514,17 @@ public sealed class RestOverlayService : Service
         return row;
     }
 
-    /// <summary>Creates a stepper button matching the style of other overlay action buttons.</summary>
+    /// <summary>Brutalist stepper plate — chip-well with hairline-strong, radius 0, Departure Mono.</summary>
     private AndroidTextButton CreateStepperBtn(string text,
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors,
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors,
         Action onClick)
     {
         var btn = new AndroidTextButton(this)
         {
             Text = text
         };
-        btn.SetTextColor(colors.Primary);
-        btn.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
+        btn.SetTextColor(colors.Ink);
+        btn.SetTypeface(MonoFont(), TypefaceStyle.Bold);
         btn.SetTextSize(ComplexUnitType.Sp, 18);
         btn.SetAllCaps(false);
         btn.SetPadding(0, 0, 0, 0);
@@ -448,11 +533,12 @@ public sealed class RestOverlayService : Service
         btn.SetMinimumWidth(0);
         btn.SetMinimumHeight(0);
         btn.Gravity = GravityFlags.Center;
+        btn.LetterSpacing = 0.04f;
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetCornerRadius(Dp(10));
+        bg.SetColor(colors.ChipWell);
+        bg.SetStroke(Dp(2), colors.HairlineStrong);
+        bg.SetCornerRadius(0);
         btn.Background = bg;
 
         btn.Click += (s, e) =>
@@ -466,7 +552,7 @@ public sealed class RestOverlayService : Service
     private static void AddStepperElement(AndroidLinearLayout row, AndroidView view)
     {
         var width = LinearLayout.LayoutParams.WrapContent;
-        var height = DpStatic(row, 40);
+        var height = DpStatic(row, 36);
 
         if (view is AndroidTextButton)
         {
@@ -509,20 +595,21 @@ public sealed class RestOverlayService : Service
     private static int DpStatic(AndroidLinearLayout row, int value) =>
         (int)(value * row.Context!.Resources!.DisplayMetrics!.Density);
 
-    /// <summary>Dedicated close button with subtle styling.</summary>
+    /// <summary>Brutalist close plate — chip-well, hairline-strong, 44dp touch, radius 0.</summary>
     private AndroidButton CreateCloseButton(
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
     {
         var button = new AndroidButton(this);
         button.SetImageResource(Resource.Drawable.ic_timer_close);
         button.SetScaleType(ImageView.ScaleType.FitCenter);
         button.SetAdjustViewBounds(true);
-        button.SetPadding(Dp(6), Dp(6), Dp(6), Dp(6));
-        button.SetColorFilter(colors.TextSecondary);
+        button.SetPadding(Dp(10), Dp(10), Dp(10), Dp(10));
+        button.SetColorFilter(colors.Stone);
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x0A, 0xFF, 0xFF, 0xFF));
-        bg.SetCornerRadius(Dp(18));
+        bg.SetColor(colors.ChipWell);
+        bg.SetStroke(Dp(2), colors.HairlineStrong);
+        bg.SetCornerRadius(0);
         button.Background = bg;
 
         button.Click += (s, e) =>
@@ -534,18 +621,19 @@ public sealed class RestOverlayService : Service
     }
 
     private AndroidButton CreateIconButton(int iconRes, Action<object?, EventArgs> click,
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
     {
         var button = new AndroidButton(this);
         button.SetImageResource(iconRes);
         button.SetScaleType(ImageView.ScaleType.FitCenter);
         button.SetAdjustViewBounds(true);
-        button.SetPadding(Dp(8), Dp(8), Dp(8), Dp(8));
-        button.SetColorFilter(colors.TextSecondary);
+        button.SetPadding(Dp(10), Dp(10), Dp(10), Dp(10));
+        button.SetColorFilter(colors.Stone);
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x14, 0xFF, 0xFF, 0xFF));
-        bg.SetCornerRadius(Dp(10));
+        bg.SetColor(colors.ChipWell);
+        bg.SetStroke(Dp(2), colors.HairlineStrong);
+        bg.SetCornerRadius(0);
         button.Background = bg;
 
         button.Click += (s, e) =>
@@ -556,20 +644,21 @@ public sealed class RestOverlayService : Service
         return button;
     }
 
+    // Primary volt plate — the one volt rule: #FAFF00 fill, #10111A ink, hairline-strong ink border, radius 0, hard shadow sm.
     private AndroidButton CreateLogSetButton(
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
     {
         var button = new AndroidButton(this);
         button.SetImageResource(Resource.Drawable.ic_timer_check);
         button.SetScaleType(ImageView.ScaleType.FitCenter);
         button.SetAdjustViewBounds(true);
-        button.SetPadding(Dp(8), Dp(8), Dp(8), Dp(8));
-        button.SetColorFilter(colors.Primary);
+        button.SetPadding(Dp(10), Dp(10), Dp(10), Dp(10));
+        button.SetColorFilter(colors.VoltFg);
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetCornerRadius(Dp(10));
+        bg.SetColor(colors.Volt);
+        bg.SetStroke(Dp(2), colors.VoltFg);
+        bg.SetCornerRadius(0);
         button.Background = bg;
 
         button.Click += (s, e) =>
@@ -581,7 +670,7 @@ public sealed class RestOverlayService : Service
     }
 
     private AndroidTextButton CreateAddTimeButton(int seconds,
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors)
+        (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
     {
         var label = seconds < 60 ? $"+{seconds}s" : $"+{seconds / 60}:{seconds % 60:D2}";
 
@@ -589,19 +678,22 @@ public sealed class RestOverlayService : Service
         {
             Text = label
         };
-        button.SetTextColor(colors.Primary);
-        button.SetTypeface(OutfitFont(), TypefaceStyle.Bold);
-        button.SetTextSize(ComplexUnitType.Sp, 12);
-        button.SetAllCaps(false);
+        button.SetTextColor(colors.Ink);
+        button.SetTypeface(MonoFont(), TypefaceStyle.Bold);
+        button.SetTextSize(ComplexUnitType.Sp, 11);
+        button.LetterSpacing = 0.08f;
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop)
+            button.SetAllCaps(true);
         button.SetSingleLine(true);
         button.SetMaxLines(1);
         button.SetMinWidth(Dp(56));
-        button.SetPadding(Dp(10), Dp(6), Dp(10), Dp(6));
+        button.SetPadding(Dp(12), Dp(8), Dp(12), Dp(8));
+        button.SetMinHeight(Dp(44));
 
         var bg = new GradientDrawable();
-        bg.SetColor(AndroidColor.Argb(0x1A, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetStroke(Dp(1), AndroidColor.Argb(0x4D, colors.Primary.R, colors.Primary.G, colors.Primary.B));
-        bg.SetCornerRadius(Dp(10));
+        bg.SetColor(colors.ChipWell);
+        bg.SetStroke(Dp(2), colors.HairlineStrong);
+        bg.SetCornerRadius(0);
         button.Background = bg;
 
         button.Click += (s, e) =>
@@ -755,21 +847,53 @@ public sealed class RestOverlayService : Service
             var setIndex = session.GetFirstUncompletedSetIndex(exerciseIndex);
             nextSetIndex = setIndex >= 0 ? setIndex + 1 : null;
 
-            // Reset weight and reps when exercise changes
-            if (exerciseIndex != _trackedExerciseIndex)
+            // Reset weight and reps when exercise or set changes - ensures that
+            // when an exercise is done and the logging inputs are shown for the
+            // next exercise or next set, the inputs are seeded from that set's
+            // exercise defaults rather than carrying stale values from the
+            // previous set or exercise.
+            if (exerciseIndex != _trackedExerciseIndex || setIndex != _trackedSetIndex)
             {
                 _trackedExerciseIndex = exerciseIndex;
+                _trackedSetIndex = setIndex;
                 _currentWeightKg = defaultWeight;
                 _currentReps = defaultReps;
                 _currentLogType = logType;
                 UpdateStepperDisplay();
             }
         }
+        else
+        {
+            _trackedSetIndex = -1;
+        }
 
         UpdateOverlayUi(session, nextExerciseName, nextSetIndex, nextSetTotal, logType);
     }
 
-    /// <summary>Renders the rest timer or between-sets state into the overlay views.</summary>
+    private string BuildUpcomingDetail(ExerciseLogType logType, int? nextSetIndex, int? nextSetTotal)
+    {
+        if (nextSetIndex == null || nextSetTotal == null)
+            return string.Empty;
+
+        string weightPart;
+        if (logType == ExerciseLogType.Duration)
+        {
+            weightPart = $"{_currentReps}S";
+        }
+        else if (logType == ExerciseLogType.BodyweightReps)
+        {
+            weightPart = $"BW × {_currentReps}";
+        }
+        else
+        {
+            var w = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
+            weightPart = $"{w} KG × {_currentReps}";
+        }
+
+        return $"{weightPart} · SET {nextSetIndex}/{nextSetTotal}";
+    }
+
+    /// <summary>Renders the brutalist field-terminal overlay — volt timer, hairline plates, 0 radius, hard shadow.</summary>
     private void UpdateOverlayUi(
         WorkoutSessionService session,
         string? nextExerciseName,
@@ -777,26 +901,43 @@ public sealed class RestOverlayService : Service
         int? nextSetTotal,
         ExerciseLogType logType)
     {
-        (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) colors = GetThemeColors();
+        var colors = GetThemeColors();
+
+        // Header detail is the upcoming exercise's weight/rep/set — visible whenever an exercise is queued
+        string detail = string.Empty;
+        if (nextExerciseName != null)
+            detail = BuildUpcomingDetail(logType, nextSetIndex, nextSetTotal);
+
+        if (_detailText != null)
+        {
+            _detailText.Text = detail;
+            SetVisible(_detailText, !string.IsNullOrEmpty(detail));
+        }
+        // Legacy setInfo is now folded into detail; keep hidden to avoid double readout
+        if (_setInfoText != null)
+        {
+            _setInfoText.Text = string.Empty;
+            SetVisible(_setInfoText, false);
+        }
 
         if (session.IsResting)
         {
             var remaining = session.RestSecondsRemaining;
 
-            _headerText!.Text = nextExerciseName ?? string.Empty;
+            _headerText!.Text = (nextExerciseName ?? string.Empty).ToUpperInvariant();
             _timerText!.Text = FormatTimer(remaining);
             SetVisible(_timerText, true);
 
             if (remaining <= 5)
                 _timerText.SetTextColor(colors.Error);
             else if (remaining <= 10)
-                _timerText.SetTextColor(colors.Warning);
+                _timerText.SetTextColor(colors.Magenta);
             else
-                _timerText.SetTextColor(colors.TextPrimary);
+                _timerText.SetTextColor(colors.VoltText);
 
-            _setInfoText!.Text = string.Empty;
+            UpdateEdgeTrack(session, remaining, colors);
 
-            // During rest: no steppers/log set, show action buttons
+            SetVisible(_edgeTrack, true);
             SetVisible(_stepperRow, false);
             SetVisible(_logSetButton, false);
             SetVisible(_addTimeButton, true);
@@ -805,17 +946,13 @@ public sealed class RestOverlayService : Service
         }
         else
         {
-            // Hide timer when not resting
             SetVisible(_timerText, false);
+            SetVisible(_edgeTrack, false);
 
             if (nextExerciseName != null)
             {
-                _headerText!.Text = nextExerciseName;
-                _setInfoText!.Text = nextSetIndex != null
-                    ? $"{nextSetIndex}/{nextSetTotal}"
-                    : string.Empty;
+                _headerText!.Text = nextExerciseName.ToUpperInvariant();
 
-                // Between sets: show steppers, log set, and +Ns/Reset
                 var showSteppers = logType != ExerciseLogType.Duration;
                 SetVisible(_stepperRow, showSteppers);
                 SetVisible(_logSetButton, true);
@@ -825,8 +962,12 @@ public sealed class RestOverlayService : Service
             }
             else
             {
-                _headerText!.Text = "Workout complete";
-                _setInfoText!.Text = string.Empty;
+                _headerText!.Text = "WORKOUT COMPLETE";
+                if (_detailText != null)
+                {
+                    _detailText.Text = string.Empty;
+                    SetVisible(_detailText, false);
+                }
                 SetVisible(_stepperRow, false);
                 SetVisible(_logSetButton, false);
                 SetVisible(_addTimeButton, false);
@@ -834,6 +975,34 @@ public sealed class RestOverlayService : Service
                 SetVisible(_skipButton, false);
             }
         }
+    }
+
+    private void UpdateEdgeTrack(WorkoutSessionService session, int remaining, (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) colors)
+    {
+        if (_edgeTrack == null || _edgeFill == null)
+            return;
+
+        var total = GetExerciseRestSeconds(session);
+        if (total <= 0) total = Math.Max(remaining, 60);
+        var fraction = total > 0 ? (float)remaining / total : 0f;
+        fraction = Math.Clamp(fraction, 0f, 1f);
+
+        // Urgency colors mirror .rest-timer-edge-fill
+        AndroidColor fill = colors.Volt;
+        if (remaining <= 5) fill = colors.Error;
+        else if (remaining <= 10) fill = colors.Magenta;
+        _edgeFill.Background = new ColorDrawable(fill);
+
+        // Width is set after layout — post a layout update
+        _edgeTrack.Post(() =>
+        {
+            var w = _edgeTrack.Width;
+            if (w <= 0) return;
+            var fillW = (int)(w * fraction);
+            var lp = (FrameLayout.LayoutParams)_edgeFill.LayoutParameters!;
+            lp.Width = Math.Max(Dp(2), fillW);
+            _edgeFill.LayoutParameters = lp;
+        });
     }
 
     private static void SetVisible(AndroidView? button, bool visible)
@@ -975,11 +1144,25 @@ public sealed class RestOverlayService : Service
         }
     }
 
-    private (AndroidColor Background, AndroidColor Surface, AndroidColor TextPrimary, AndroidColor TextSecondary, AndroidColor Primary, AndroidColor Warning, AndroidColor Error) GetThemeColors()
+    private (AndroidColor Chip, AndroidColor ChipWell, AndroidColor Ink, AndroidColor Stone, AndroidColor Hairline, AndroidColor HairlineStrong, AndroidColor Volt, AndroidColor VoltFg, AndroidColor VoltText, AndroidColor Magenta, AndroidColor Error, AndroidColor Cyan, AndroidColor Shadow) GetThemeColors()
     {
         if (IsDarkTheme())
-            return (DarkBackground, DarkSurface, DarkTextPrimary, DarkTextSecondary, DarkPrimary, DarkWarning, DarkError);
-        return (LightBackground, LightSurface, LightTextPrimary, LightTextSecondary, LightPrimary, LightWarning, LightError);
+            return (DarkChip, DarkChipWell, DarkInk, DarkStone, DarkHairline, DarkHairlineStrong, DarkVolt, DarkVoltFg, DarkVolt, DarkMagenta, DarkMagenta, DarkCyan, DarkShadow);
+        return (LightChip, LightChipWell, LightInk, LightStone, LightHairline, LightHairlineStrong, LightVoltFill, LightVoltFg, LightVoltText, LightMagenta, LightError, LightCyan, LightShadow);
+    }
+
+    // Hard offset shadow plate: LayerDrawable[0]=shadow, [1]=chip plate with hairline-strong stroke. Radius 0, zero blur.
+    private Drawable CreatePlateBackground(AndroidColor chip, AndroidColor hairlineStrong, AndroidColor shadow)
+    {
+        var plate = new GradientDrawable();
+        plate.SetColor(chip);
+        plate.SetStroke(Dp(2), hairlineStrong);
+        plate.SetCornerRadius(0);
+
+        var shadowDrawable = new ColorDrawable(shadow);
+        var ld = new LayerDrawable(new Drawable[] { shadowDrawable, plate });
+        ld.SetLayerInset(1, 0, 0, Dp(5), Dp(5));
+        return ld;
     }
 
     private sealed class OverlayDragListener(RestOverlayService service) : Java.Lang.Object, AndroidView.IOnTouchListener

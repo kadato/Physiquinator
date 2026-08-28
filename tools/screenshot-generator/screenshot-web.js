@@ -189,11 +189,24 @@ async function configureAiSettings(page) {
     await page.locator('.settings-tab:has-text("AI")').click();
     await page.getByLabel('API Base URL').waitFor({ state: 'visible', timeout: 10000 });
 
+    // Ensure the assistant is enabled - toggle if the switch is off
+    try {
+        const enableSwitch = page.locator('.mud-switch:has-text("Enable AI Assistant") input');
+        const isChecked = await enableSwitch.isChecked({ timeout: 2000 }).catch(() => null);
+        if (isChecked === false) {
+            await page.locator('.mud-switch:has-text("Enable AI Assistant")').click();
+            await delay(300);
+        }
+    } catch {}
+
     await page.getByLabel('API Base URL').fill(`http://127.0.0.1:${AI_PORT}/v1`);
     await page.getByLabel('API Key', { exact: false }).fill('dummy-key-for-screenshots');
     await page.getByLabel('Model Name').fill('gpt-4o-mini');
     await page.getByRole('button', { name: 'Save settings' }).click();
-    await delay(1200);
+    // Wait for success snackbar to appear and then disappear naturally
+    await page.waitForSelector('.mud-snackbar', { state: 'visible', timeout: 4000 }).catch(() => {});
+    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 4000 }).catch(() => {});
+    await delay(300);
     console.log('AI settings saved.');
 }
 
@@ -216,13 +229,19 @@ async function selectTheme(page, themeName) {
     } else {
         await page.click('.mud-list-item:has-text("Dark (always)")');
     }
-    await delay(1500);
+    // Theme change shows a "Theme updated" snackbar for 3s. Wait for it to
+    // appear and disappear so captures stay clean.
+    await page.waitForSelector('.mud-snackbar', { state: 'visible', timeout: 3000 }).catch(() => {});
+    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 4000 }).catch(() => {});
+    await delay(300);
 }
 
 async function capture(page, name) {
     const filepath = path.join(DOCS_DIR, name);
     console.log(`Capturing screenshot: ${name}`);
 
+    // Ensure any stray snackbar is gone before capture
+    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 1000 }).catch(() => {});
     // Hide scrollbar briefly for a cleaner screenshot
     await page.evaluate(() => {
         document.documentElement.style.overflow = 'hidden';
@@ -340,6 +359,8 @@ async function run() {
             await page.click('button[aria-label="Add exercise"]');
             await page.waitForSelector('.plan-exercise-row', { timeout: 10000 });
             await delay(500);
+            await page.mouse.move(0, 0);
+            await delay(200);
             await capture(page, `create-plan-${theme}.png`);
 
             // Edit Plan screen (navigate home first so the editor re-initializes)
@@ -348,6 +369,8 @@ async function run() {
             await blazorNavigate(page, `/plan/${PUSH_PLAN_ID}`);
             await page.waitForSelector('.plan-page', { timeout: 10000 });
             await delay(500);
+            await page.mouse.move(0, 0);
+            await delay(200);
             await capture(page, `edit-plan-${theme}.png`);
 
             // History screen
@@ -373,14 +396,14 @@ async function run() {
             await delay(1000);
             await capture(page, `exercise-progression-${theme}.png`);
 
-            // Active Workout rest timer
+            // Active Workout rest timer - brutal deck layout
             await blazorNavigate(page, `/workout/${PUSH_PLAN_ID}`);
-            await page.waitForSelector('.workout-exercise-layout', { timeout: 10000 });
-            await page.waitForSelector('.set-active-panel', { timeout: 10000 });
+            await page.waitForSelector('.workout-brutal', { timeout: 15000 });
+            await page.waitForSelector('.workout-focus__log', { timeout: 10000 });
             await delay(500);
 
             // Log a set to start the rest timer
-            await page.click('.log-set-btn');
+            await page.click('.workout-focus__log');
             await page.waitForSelector('.rest-timer-panel', { timeout: 10000 });
             await delay(500);
             await capture(page, `rest-timer-${theme}.png`);

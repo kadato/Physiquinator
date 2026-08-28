@@ -291,7 +291,15 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 }
 .app-fab--primary:hover {
   filter: brightness(1.12) !important;
-  background-color: var(--pl-yellow) !important;
+  background: var(--pl-volt-fill) !important;
+  background-color: var(--pl-volt-fill) !important;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
+    var(--pl-volt-fill) 52%,
+    color-mix(in srgb, var(--pl-volt-fill) 86%, #000000) 100%
+  ) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
 }
 .app-fab--primary:disabled,
 .app-fab:disabled {
@@ -309,7 +317,7 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 }
 
 html[data-theme="light"] .app-fab--secondary {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   color: #1A1B26 !important;
   border: 1.5px solid #A39D82 !important;
 }
@@ -331,12 +339,35 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
 }
 
 /* On pages with bottom navigation (e.g. Home): float above the nav pill */
-.app-nav-pill ~ * .app-fab--br-1:not(.dialog-fab),
-.app-nav-pill ~ .app-fab--br-1:not(.dialog-fab),
-.home-page ~ .app-fab--br-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--br-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ .app-fab--br-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--br-1:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .app-fab--br-1:not(.dialog-fab) {
   bottom: calc(56px + 12px + 16px) !important; /* 84px */
   right: 16px !important;
+}
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--bl-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ .app-fab--back:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ .workout-undo-fab:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--bl-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--back:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .workout-undo-fab:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-fab--bl-1:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-fab--back:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .workout-undo-fab:not(.dialog-fab) {
+  bottom: 84px !important;
+}
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--br-2:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--br-2:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-fab--br-2:not(.dialog-fab) {
+  bottom: 84px !important;
+  right: 72px !important;
+}
+.app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--bl-2:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--bl-2:not(.dialog-fab),
+.app-shell:not(.app-shell--immersive) .app-fab--bl-2:not(.dialog-fab) {
+  bottom: 84px !important;
+  left: 72px !important;
 }
 
 @media (min-width: 960px) {
@@ -369,9 +400,9 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
 }
 
 .app-fab--br-2 {
-  right: 16px !important;
+  right: 72px !important;
   left: auto !important;
-  bottom: 72px !important;
+  bottom: 16px !important;
 }
 .app-fab--bl-1,
 .app-fab--back,
@@ -380,11 +411,12 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
   right: auto !important;
   bottom: 16px !important;
 }
+/* Keep secondary left stack for future use, but keep same height */
 .app-fab--bl-2,
 .dialog-fab.app-fab--bl-2 {
-  left: 16px !important;
+  left: 72px !important;
   right: auto !important;
-  bottom: 72px !important;
+  bottom: 16px !important;
 }
 
 .mud-dialog-container,
@@ -433,6 +465,7 @@ html[data-theme="light"] .app-fab--secondary .mud-icon-root {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
+  flex-wrap: wrap !important;
   padding: 2px 0 6px !important;
   margin-bottom: 14px !important;
   background: transparent !important;
@@ -1208,7 +1241,9 @@ body:has(.mud-dialog-container) .app-fab:not(.dialog-fab),
 body:has(.mud-dialog) .app-fab:not(.dialog-fab),
 body:has(.mud-overlay-dialog) .app-fab:not(.dialog-fab),
 html:has(.mud-dialog) .app-fab:not(.dialog-fab),
-.mud-dialog-open .app-fab:not(.dialog-fab) {
+.mud-dialog-open .app-fab:not(.dialog-fab),
+.mud-overlay-dialog ~ .app-fab:not(.dialog-fab),
+.mud-dialog-container ~ .app-fab:not(.dialog-fab) {
   display: none !important;
 }
 
@@ -1771,7 +1806,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 
 /* Settings section tabs, premium wrapping segmented control */
 .settings-tab-row { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
-.settings-tab { flex:1 1 72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 12px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; white-space:nowrap; touch-action:manipulation; }
+.settings-tab { flex:1 1 72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 12px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; white-space:nowrap; touch-action:manipulation; }
 .settings-tab .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; color:inherit; }
 .settings-tab:hover { border-color:var(--pl-hairline-strong); color:var(--pl-ink); background:var(--pl-chip-2); }
 .settings-tab--active, .settings-tab--active:hover { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-ink) !important; font-weight:900 !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
@@ -1793,7 +1828,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .settings-btn-group .mud-button-root { flex:0 1 auto; min-height:40px !important; }
 .settings-local-banner { border:var(--hairline) !important; background:color-mix(in srgb, var(--pl-success) 8%, var(--pl-chip)) !important; }
 .settings-schedule-days { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; margin-top:4px; }
-.settings-schedule-day { display:grid; place-items:center; height:44px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; user-select:none; -webkit-tap-highlight-color:transparent; }
+.settings-schedule-day { display:grid; place-items:center; height:44px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-stone); font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:all 120ms ease; user-select:none; -webkit-tap-highlight-color:transparent; }
 .settings-schedule-day:hover { border-color:var(--pl-hairline-strong); color:var(--pl-ink); background:var(--pl-chip-2); }
 .settings-schedule-day[aria-pressed="true"] { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-ink) !important; font-weight:900 !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
 .settings-schedule-day:focus-visible { outline:2px solid var(--pl-focus); outline-offset:2px; }
@@ -1823,7 +1858,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .history-select-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip-2) !important; margin-bottom:8px; }
 .history-select-bar__left, .history-select-bar__right { display:flex; align-items:center; gap:8px; }
 .history-select-bar__count { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--pl-ink); }
-.history-select-bar__btn { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); color:var(--pl-ink); cursor:pointer; transition:all 120ms ease; }
+.history-select-bar__btn { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); cursor:pointer; transition:all 120ms ease; }
 .history-select-bar__btn:hover { background:var(--pl-chip-2); border-color:var(--pl-ink); }
 .history-select-bar__btn--delete { color:var(--pl-err-text) !important; border-color:color-mix(in srgb, var(--pl-err-text) 45%, transparent) !important; }
 .history-select-bar__btn--delete:hover:not(:disabled) { background:var(--pl-error) !important; color:#1A1B26 !important; border-color:var(--pl-error) !important; }
@@ -2079,6 +2114,36 @@ html body span.rest-timer-complete-title {
   gap: 6px;
   flex: 1;
   min-width: 0;
+}
+.ai-msg__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 0 2px;
+  flex-wrap: wrap;
+}
+.ai-msg__time {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--pl-stone);
+  white-space: nowrap;
+  line-height: 1;
+}
+.ai-msg__copy.mud-icon-button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
+  border: 1px solid var(--pl-hairline) !important;
+  background: var(--pl-chip) !important;
+}
+.ai-msg__copy.mud-icon-button .mud-icon-root {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 .ai-msg--assistant .ai-msg__bubble {
   background: var(--pl-chip-2);
@@ -2485,6 +2550,37 @@ html body span.rest-timer-complete-title {
   color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-volt-edge) !important;
 }
+html[data-theme="dark"] .ai-chat-send-button:disabled,
+html[data-theme="dark"] .ai-chat-send-button.mud-button-filled-disabled,
+html[data-theme="dark"] .ai-chat-send-button[disabled] {
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-stone) !important;
+  border-color: var(--pl-hairline-strong) !important;
+  opacity: 0.65 !important;
+}
+html[data-theme="dark"] .ai-chat-send-button:disabled .mud-icon-root,
+html[data-theme="dark"] .ai-chat-send-button.mud-button-filled-disabled .mud-icon-root,
+html[data-theme="dark"] .ai-chat-send-button[disabled] .mud-icon-root {
+  color: var(--pl-stone) !important;
+  fill: var(--pl-stone) !important;
+  opacity: 1 !important;
+}
+html[data-theme="dark"] .log-set-btn:disabled,
+html[data-theme="dark"] .bodyweight-log-row__log-btn:disabled,
+html[data-theme="dark"] .plan-card-icon-btn.plan-card__start:disabled,
+html[data-theme="dark"] .home-hero__continue.mud-button-root:disabled,
+html[data-theme="dark"] .ai-quick-btn:disabled {
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-stone) !important;
+  border-color: var(--pl-hairline-strong) !important;
+  opacity: 0.65 !important;
+}
+html[data-theme="dark"] .log-set-btn:disabled .mud-icon-root,
+html[data-theme="dark"] .bodyweight-log-row__log-btn:disabled .mud-icon-root,
+html[data-theme="dark"] .ai-quick-btn:disabled {
+  color: var(--pl-stone) !important;
+  fill: var(--pl-stone) !important;
+}
 .ai-bridge-container {
   display: flex;
   flex-direction: column;
@@ -2833,24 +2929,24 @@ html[data-theme="light"] .app-main-scroll {
    earns attention through border weight and shadow depth.
    ================================================================== */
 html[data-theme="light"] .mud-button-outlined:not(.mud-button-filled-disabled):not(.mud-button-outlined-disabled) {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
 html[data-theme="light"] .mud-button-outlined:not(.mud-button-outlined-disabled):hover {
-  background: color-mix(in srgb, var(--pl-volt-fill) 8%, #FFFFFF) !important;
+  background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
 html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start):not(.rest-timer-icon-btn) {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
 html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
@@ -2859,13 +2955,13 @@ html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab
   fill: var(--pl-yellow-text) !important;
 }
 html[data-theme="light"] .app-fab--secondary {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   color: var(--pl-ink) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
 }
 html[data-theme="light"] .app-fab--secondary:hover {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
@@ -2877,7 +2973,7 @@ html[data-theme="light"] .exercise-metric-tab,
 html[data-theme="light"] .ai-quick-btn,
 html[data-theme="light"] .history-filter-chip,
 html[data-theme="light"] .progress-exercise-card {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-hairline-strong) !important;
   box-shadow: none !important;
 }
@@ -2920,6 +3016,7 @@ html[data-theme="light"] .home-plans-header__title {
 
 /* Copy Share and PR buttons: Text variant premium plates were missing the machined shadow. All premium-btn and related table buttons now carry the same plate. */
 .premium-btn.mud-button-root,
+.premium-btn.mud-icon-button,
 .exercise-progress-table__open.mud-icon-button,
 .pr-dialog-close.mud-button-root,
 .history-detail-table__btn.mud-icon-button {
@@ -3042,24 +3139,27 @@ button.heatmap-cell.heatmap-on {
 /* Big screens: the pill stays the one chrome, centered, and FABs anchor to
    the centered 640px content column instead of the viewport edges. */
 @media (min-width:769px) {
-  .app-shell .app-fab.app-fab--br-1:not(.dialog-fab),
-  .app-shell .home-page ~ .app-fab--br-1:not(.dialog-fab) {
+  .app-shell:not(.app-shell--immersive) .app-fab.app-fab--br-1:not(.dialog-fab),
+  .app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--br-1:not(.dialog-fab) {
     right: calc(50% - 320px - 64px) !important;
     bottom: 84px !important;
   }
-  .app-shell .app-fab.app-fab--br-2:not(.dialog-fab) {
-    right: calc(50% - 320px - 64px) !important;
-    bottom: 140px !important;
+  .app-shell:not(.app-shell--immersive) .app-fab.app-fab--br-2:not(.dialog-fab) {
+    right: calc(50% - 320px - 120px) !important;
+    bottom: 84px !important;
   }
-  .app-shell .app-fab.app-fab--bl-1:not(.dialog-fab),
-  .app-shell .app-fab.app-fab--back:not(.dialog-fab),
-  .app-shell .workout-undo-fab {
+  .app-shell:not(.app-shell--immersive) .app-fab.app-fab--bl-1:not(.dialog-fab),
+  .app-shell:not(.app-shell--immersive) .app-fab.app-fab--back:not(.dialog-fab),
+  .app-shell:not(.app-shell--immersive) .workout-undo-fab {
     left: calc(50% - 320px - 64px) !important;
     bottom: 84px !important;
   }
-  .app-shell .app-fab.app-fab--bl-2:not(.dialog-fab) {
-    left: calc(50% - 320px - 64px) !important;
-    bottom: 140px !important;
+  .app-shell:not(.app-shell--immersive) .app-fab.app-fab--bl-2:not(.dialog-fab) {
+    left: calc(50% - 320px - 120px) !important;
+    bottom: 84px !important;
+  }
+  .app-shell.app-shell--immersive .app-fab:not(.dialog-fab) {
+    bottom: 16px !important;
   }
   .app-shell .dialog-fab.app-fab--br-1 {
     right: calc(50% - 320px - 64px) !important;
@@ -4919,13 +5019,13 @@ html[data-theme="light"] .rest-timer-add-btn:hover {
 }
 html[data-theme="light"] .set-metric-stepper__btn.mud-button-root,
 html[data-theme="light"] .set-metric-stepper__btn {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
 html[data-theme="light"] .set-metric-stepper__value,
 html[data-theme="light"] .set-metric-stepper__input {
-  background: #FFFFFF !important;
+  background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
 }

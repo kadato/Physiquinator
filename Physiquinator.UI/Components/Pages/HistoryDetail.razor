@@ -19,9 +19,9 @@
 <PageHeader Title="@("Session")">
     @if (_ready && _session != null)
     {
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopySessionAsync">@("Copy")</MudButton>
-        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.Share" OnClick="ShareSessionAsync">@("Share")</MudButton>
-        <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline" Color="Color.Error" OnClick="DeleteSessionClick" aria-label="@("Delete workout")" />
+        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="premium-btn" OnClick="CopySessionAsync" aria-label="@("Copy session")" />
+        <MudIconButton Icon="@Icons.Material.Filled.Share" Class="premium-btn" OnClick="ShareSessionAsync" aria-label="@("Share session")" />
+        <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline" Class="premium-btn" OnClick="DeleteSessionClick" aria-label="@("Delete workout")" />
     }
 </PageHeader>
 

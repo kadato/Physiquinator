@@ -1,9 +1,13 @@
 
 <MudDialog>
     <TitleContent>
-        <div class="d-flex align-items-center gap-3">
-            <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Color="Color.Primary" Size="Size.Large" />
-            <MudText Typo="Typo.h5" Class="fw-bold">@("Welcome to Physiquinator!")</MudText>
+        <div class="dialog-header-bar">
+            <div class="dialog-header-bar__left">
+                <span class="dialog-title-icon-box">
+                    <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Size="Size.Small" />
+                </span>
+                <span class="dialog-header-bar__title">@("Welcome to Physiquinator!")</span>
+            </div>
         </div>
     </TitleContent>
     <DialogContent>

@@ -2,6 +2,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     padding: 2px 0 6px;
     background: transparent !important;
     border: none !important;
@@ -43,6 +44,9 @@
 .page-header__actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 6px;
-    flex-shrink: 0;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
 }

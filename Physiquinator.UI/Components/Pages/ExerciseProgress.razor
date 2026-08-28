@@ -115,6 +115,12 @@ else
                                   Width="100%"
                                   Height="@_chartHeightPx" />
                     </div>
+                    @if (IsUsingArbitraryBodyweight && (_metric == ChartMetric.Volume || _metric == ChartMetric.BestWeight))
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">
+                            @($"Showing relative trend with {ArbitraryBodyweightKg:0} kg - log your bodyweight for exact numbers.")
+                        </MudText>
+                    }
                 }
                 else
                 {
@@ -339,17 +345,26 @@ else
         _planMissing = ex == null;
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;
         _bodyweightPercent = ex?.BodyweightPercent;
-        _metric = _logType == ExerciseLogType.Duration ? ChartMetric.TotalTime : ChartMetric.Volume;
+        if (_logType == ExerciseLogType.Duration)
+            _metric = ChartMetric.TotalTime;
+        else
+            _metric = ChartMetric.Volume;
         await LoadRowsAsync();
         BuildChartData();
         ResetListPaging();
         _ready = true;
     }
 
+    private const double ArbitraryBodyweightKg = 70;
+
+    private bool IsUsingArbitraryBodyweight => _logType == ExerciseLogType.BodyweightReps && _bodyweightKg == null;
+
+    private double? EffectiveBodyweightKg => IsUsingArbitraryBodyweight ? ArbitraryBodyweightKg : _bodyweightKg;
+
     private async Task LoadRowsAsync()
     {
         _rows = await HistoryRepo.GetExerciseSessionProgressAsync(
-            PlanId, _decodedExerciseName, ActiveMaxSessions, _bodyweightKg, _logType, _bodyweightPercent);
+            PlanId, _decodedExerciseName, ActiveMaxSessions, EffectiveBodyweightKg, _logType, _bodyweightPercent);
     }
 
     /// <summary>Reveals the next chunk of session rows for the lazy list (no pagination UI).</summary>
@@ -442,6 +457,9 @@ else
 
     private double GetMetricValue(ExerciseSessionProgressEntry row) => _metric switch
     {
+        ChartMetric.BestWeight when _logType == ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.ToDisplay(
+            ((EffectiveBodyweightKg ?? ArbitraryBodyweightKg) * (_bodyweightPercent ?? 100) / 100.0) + (row.BestWeightKg ?? 0),
+            WeightUnitService.Current),
         ChartMetric.BestWeight => row.BestWeightKg is { } kg
             ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
             : 0,

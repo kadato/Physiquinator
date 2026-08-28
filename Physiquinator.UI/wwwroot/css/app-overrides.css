@@ -1041,6 +1041,17 @@ html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
   }
   .activity-heatmap { --heatmap-cell-size: 22px; }
 }
+html[data-theme="light"] .mud-charts-grid path,
+html[data-theme="light"] .mud-charts-gridlines-yaxis path {
+  stroke: var(--pl-ink) !important;
+  stroke-width: 1.2px !important;
+  opacity: 0.95 !important;
+}
+html[data-theme="dark"] .mud-charts-grid path,
+html[data-theme="dark"] .mud-charts-gridlines-yaxis path {
+  stroke-width: 0.8px !important;
+  opacity: 1 !important;
+}
 
 /* iOS Safari zooms the viewport when focusing a field under 16px; floor all fields.
    Class-level rules (steppers etc.) still win over this element selector. */
@@ -1578,16 +1589,20 @@ html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#7
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 2px 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
   font-family: var(--font-mono) !important;
-  font-size: 0.6875rem !important;
+  font-size: 0.875rem !important;
   font-weight: 800 !important;
   color: var(--pl-purple-text) !important;
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--hairline-strong) !important;
   border-radius: var(--radius) !important;
   flex-shrink: 0;
-  min-width: 34px !important;
+  box-sizing: border-box !important;
 }
 .plan-exercise-row__text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .plan-exercise-row__name { font-family: var(--font-display) !important; font-size: 16px !important; font-weight: 800 !important; letter-spacing: -0.015em !important; color: var(--pl-ink) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1915,6 +1930,9 @@ html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-
 }
 .infinite-table-row:hover {
   background: color-mix(in srgb, var(--pl-yellow) 10%, var(--pl-chip-2)) !important;
+}
+.infinite-table-row:nth-child(odd) {
+  background: var(--pl-chip-2) !important;
 }
 .infinite-table-row:last-child { border-bottom:none; }
 /* Value columns align right for scanning; the first cell holds the label or date */

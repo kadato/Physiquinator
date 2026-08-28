@@ -23,6 +23,34 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
+        // Edge-to-edge for tall screens and camera hole (punch-hole / notch).
+        // Must be before the WebView is inflated so the window extends into the cutout.
+        try
+        {
+            if (OperatingSystem.IsAndroidVersionAtLeast(28) && Window != null)
+            {
+                var attrs = Window.Attributes;
+                if (attrs != null)
+                {
+                    attrs.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.ShortEdges;
+                    Window.Attributes = attrs;
+                }
+            }
+            // Android 15+ enforces edge-to-edge; use AndroidX helper when available.
+            if (OperatingSystem.IsAndroidVersionAtLeast(35))
+            {
+                try { AndroidX.Activity.EdgeToEdge.Enable(this); } catch { }
+            }
+            else if (Window != null)
+            {
+                try { AndroidX.Core.View.WindowCompat.SetDecorFitsSystemWindows(Window, false); } catch { }
+            }
+        }
+        catch { }
+
+        // Apply the current theme's system bar colors after the window is edge-to-edge.
+        try { Services.SystemBarsHelper.ApplyFromCurrentResources(); } catch { }
+
         // Resize the WebView when the soft keyboard opens so inputs in dialogs
         // and steppers are never hidden behind it (Android).
         Window?.SetSoftInputMode(global::Android.Views.SoftInput.AdjustResize);

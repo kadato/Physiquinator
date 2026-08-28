@@ -74,6 +74,24 @@
             background-color: #0E0F17;
             color: #C0CAF5;
         }
+        /* Camera hole / display cutout and tall screens: let the WebView extend edge-to-edge
+           and use the safe-area inset for the top. The status-bar-safe-area div provides
+           the visible background behind the cutout. */
+        .status-bar-safe-area {
+            display: block;
+            height: env(safe-area-inset-top, 0px);
+            min-height: env(safe-area-inset-top, 0px);
+            background: #0E0F17;
+            flex-shrink: 0;
+        }
+        html[data-theme="light"] .status-bar-safe-area {
+            background: #E7E3D1;
+        }
+        /* Tall screens (20:9, 21:9) - ensure the app fills the viewport even when the
+           status bar is transparent and the content extends into the cutout. */
+        html, body {
+            min-height: 100dvh;
+        }
     </style>
     <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg?v=2" />
     <link rel="icon" type="image/png" sizes="32x32" href="_content/Physiquinator.UI/favicon.png?v=2" />
@@ -113,10 +131,12 @@
             var app = document.getElementById('app');
             if (!app) return;
             function hide() {
-                if (app.querySelector(':scope > :not(.app-splash)')) {
-                    var s = app.querySelector('.app-splash');
-                    if (s) s.style.display = 'none';
-                    return true;
+                for (var i = 0; i < app.children.length; i++) {
+                    if (!app.children[i].classList.contains('app-splash')) {
+                        var s = app.querySelector('.app-splash');
+                        if (s) s.style.display = 'none';
+                        return true;
+                    }
                 }
                 return false;
             }

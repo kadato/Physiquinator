@@ -1165,17 +1165,23 @@ public sealed class RestOverlayService : Service
         return ld;
     }
 
-    private sealed class OverlayDragListener(RestOverlayService service) : Java.Lang.Object, AndroidView.IOnTouchListener
+    private sealed class OverlayDragListener : Java.Lang.Object, AndroidView.IOnTouchListener
     {
+        private readonly RestOverlayService _service;
         private float _downRawX;
         private float _downRawY;
         private int _downLpX;
         private int _downLpY;
         private bool _moved;
 
+        public OverlayDragListener(RestOverlayService service)
+        {
+            _service = service;
+        }
+
         public bool OnTouch(AndroidView? v, MotionEvent? e)
         {
-            if (v == null || e == null || service._layoutParams == null || service._windowManager == null)
+            if (v == null || e == null || _service._layoutParams == null || _service._windowManager == null)
                 return false;
 
             switch (e.Action)
@@ -1183,8 +1189,8 @@ public sealed class RestOverlayService : Service
                 case MotionEventActions.Down:
                     _downRawX = e.RawX;
                     _downRawY = e.RawY;
-                    _downLpX = service._layoutParams.X;
-                    _downLpY = service._layoutParams.Y;
+                    _downLpX = _service._layoutParams.X;
+                    _downLpY = _service._layoutParams.Y;
                     _moved = false;
                     return true;
 
@@ -1195,10 +1201,10 @@ public sealed class RestOverlayService : Service
                         return true;
 
                     _moved = true;
-                    WindowManagerLayoutParams lp = service._layoutParams;
+                    WindowManagerLayoutParams lp = _service._layoutParams;
                     lp.X = _downLpX + (int)dx;
                     lp.Y = _downLpY + (int)dy;
-                    service._windowManager.UpdateViewLayout(v, lp);
+                    _service._windowManager.UpdateViewLayout(v, lp);
                     return true;
 
                 case MotionEventActions.Up:
@@ -1206,11 +1212,11 @@ public sealed class RestOverlayService : Service
                     if (_moved && e.Action == MotionEventActions.Up)
                     {
                         // Snap floating bubble towards the nearest screen edge (left or right)
-                        WindowManagerLayoutParams lpSnap = service._layoutParams;
-                        var screenWidth = service.ScreenWidth;
+                        WindowManagerLayoutParams lpSnap = _service._layoutParams;
+                        var screenWidth = _service.ScreenWidth;
                         var bubbleWidth = lpSnap.Width;
                         var currentCenterX = lpSnap.X + (bubbleWidth / 2);
-                        var margin = service.Dp(12);
+                        var margin = _service.Dp(12);
 
                         if (currentCenterX < screenWidth / 2)
                         {
@@ -1220,12 +1226,12 @@ public sealed class RestOverlayService : Service
                         {
                             lpSnap.X = Math.Max(margin, screenWidth - bubbleWidth - margin);
                         }
-                        service._windowManager.UpdateViewLayout(v, lpSnap);
+                        _service._windowManager.UpdateViewLayout(v, lpSnap);
                     }
                     else if (!_moved && e.Action == MotionEventActions.Up)
                     {
                         // A tap (no drag) on the bubble body opens the app.
-                        service.OpenApp();
+                        _service.OpenApp();
                     }
                     return true;
 

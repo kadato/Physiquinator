@@ -93,9 +93,15 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 
-    private sealed class WorkoutBackGuardCallback(MainActivity activity) : OnBackPressedCallback(true)
+    private sealed class WorkoutBackGuardCallback : OnBackPressedCallback
     {
-        private readonly MainActivity _activity = activity;
+        private readonly MainActivity _activity;
+
+        public WorkoutBackGuardCallback(MainActivity activity)
+            : base(true)
+        {
+            _activity = activity;
+        }
 
         public override void HandleOnBackPressed()
         {
@@ -155,12 +161,19 @@ public class MainActivity : MauiAppCompatActivity
         return null;
     }
 
-    private sealed class WorkoutBackResultCallback(Action<bool> onResult) : Java.Lang.Object, global::Android.Webkit.IValueCallback
+    private sealed class WorkoutBackResultCallback : Java.Lang.Object, global::Android.Webkit.IValueCallback
     {
+        private readonly Action<bool> _onResult;
+
+        public WorkoutBackResultCallback(Action<bool> onResult)
+        {
+            _onResult = onResult;
+        }
+
         public void OnReceiveValue(Java.Lang.Object? value)
         {
             var result = (value as Java.Lang.String)?.ToString();
-            onResult(result is "\"true\"" or "true");
+            _onResult(result is "\"true\"" or "true");
         }
     }
 

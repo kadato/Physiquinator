@@ -71,13 +71,13 @@ public sealed class MauiThemeService(
         var isDark = EffectiveTheme == ThemePreference.Dark;
 
         Application.Current.Resources["PageBackgroundColor"] =
-            Color.FromArgb(isDark ? "#0B0C10" : "#F8F9FA");
+            Color.FromArgb(isDark ? "#0E0F17" : "#E7E3D1");
         Application.Current.Resources["PrimaryTextColor"] =
-            Color.FromArgb(isDark ? "#F3F4F6" : "#111827");
+            Color.FromArgb(isDark ? "#C0CAF5" : "#1A1B26");
         Application.Current.Resources["PrimaryButtonBackgroundColor"] =
-            Color.FromArgb(isDark ? "#10B981" : "#0F766E");
+            Color.FromArgb("#FAFF00");
         Application.Current.Resources["PrimaryButtonTextColor"] =
-            Color.FromArgb("#FFFFFF");
+            Color.FromArgb("#10111A");
 
         SystemBarsHelper.Apply(
             (Color)Application.Current.Resources["PageBackgroundColor"],

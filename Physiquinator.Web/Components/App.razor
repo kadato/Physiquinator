@@ -60,8 +60,8 @@
             display: block;
         }
         html[data-theme="light"] .app-splash {
-            background-color: #0E0F17;
-            color: #C0CAF5;
+            background-color: #E7E3D1;
+            color: #1A1B26;
         }
         #app:has(> :not(.app-splash)) .app-splash {
             display: none;
@@ -90,43 +90,23 @@
         <output class="app-splash" aria-live="polite" aria-busy="true" aria-label="Loading application">
             <div class="app-splash__logo" aria-hidden="true">
                 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Physiquinator">
-                    <rect x="62" y="62" width="392" height="392" fill="#414770"/>
-                    <rect x="52" y="52" width="392" height="392" fill="#FAFF00" stroke="#10111A" stroke-width="6"/>
-                    <path d="M52 52 H444 V59 H52 Z" fill="white" opacity="0.42"/>
-                    <path d="M52 52 V444 H59 V52 Z" fill="white" opacity="0.42"/>
-                    <g fill="#414770" transform="translate(10,10)">
-                        <rect x="216" y="124" width="64" height="82"/>
-                        <polygon points="128,216 368,216 296,376 200,376"/>
+                    <rect x="150" y="150" width="220" height="220" fill="#414770"/>
+                    <rect x="142" y="142" width="220" height="220" fill="#FAFF00" stroke="#10111A" stroke-width="4"/>
+                    <path d="M142 142 H362 V146 H142 Z" fill="white" opacity="0.42"/>
+                    <path d="M142 142 V362 H146 V142 Z" fill="white" opacity="0.42"/>
+                    <g fill="#414770" transform="translate(6,6)">
+                        <rect x="234" y="182" width="36" height="46"/>
+                        <polygon points="185,234 319,234 279,324 225,324"/>
                     </g>
                     <g fill="#10111A">
-                        <rect x="216" y="124" width="64" height="82"/>
-                        <polygon points="128,216 368,216 296,376 200,376"/>
+                        <rect x="234" y="182" width="36" height="46"/>
+                        <polygon points="185,234 319,234 279,324 225,324"/>
                     </g>
                 </svg>
             </div>
         </output>
         <AuthGate @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     </div>
-
-    <script>
-        // Fallback for browsers without :has() - hide the HTML splash when Blazor renders.
-        (function () {
-            var app = document.getElementById('app');
-            if (!app) return;
-            function hide() {
-                for (var i = 0; i < app.children.length; i++) {
-                    if (!app.children[i].classList.contains('app-splash')) {
-                        var s = app.querySelector('.app-splash');
-                        if (s) s.style.display = 'none';
-                        return true;
-                    }
-                }
-                return false;
-            }
-            if (hide()) return;
-            new MutationObserver(hide).observe(app, { childList: true });
-        })();
-    </script>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.

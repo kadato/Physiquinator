@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-    <!-- Splash - void #0E0F17 will be the MauiSplashScreen Color, this SVG is the centered plate -->
-    <!-- Yellow plate 392 with 10px violet-grey shadow and bevel, bigger centered figure -->
-    <!-- Plate shadow - violet-grey 10px hard offset -->
-    <rect x="62" y="62" width="392" height="392" fill="#414770"/>
-    <rect x="52" y="52" width="392" height="392" fill="#FAFF00" stroke="#10111A" stroke-width="6"/>
-    <path d="M52 52 H444 V59 H52 Z" fill="white" opacity="0.42"/>
-    <path d="M52 52 V444 H59 V52 Z" fill="white" opacity="0.42"/>
-    <!-- Figure shadow #414770 10px hard offset, centered at 248,256 (plate center 248) -->
-    <g fill="#414770" transform="translate(10,10)">
-        <!-- bald square head 64x82 at plate center -->
-        <rect x="216" y="124" width="64" height="82"/>
-        <!-- V body 136,216 to 360,216 to 296,376 to 216,376 - adjusted for plate 52 offset and centered -->
-        <polygon points="128,216 368,216 296,376 200,376"/>
+    <!-- Splash - void background is theme-aware, this SVG is the centered plate -->
+    <!-- Yellow plate 220 with 8px violet-grey shadow and bevel, centered figure (fits round icon mask) -->
+    <!-- Plate shadow - violet-grey 8px hard offset -->
+    <rect x="150" y="150" width="220" height="220" fill="#414770"/>
+    <rect x="142" y="142" width="220" height="220" fill="#FAFF00" stroke="#10111A" stroke-width="4"/>
+    <path d="M142 142 H362 V146 H142 Z" fill="white" opacity="0.42"/>
+    <path d="M142 142 V362 H146 V142 Z" fill="white" opacity="0.42"/>
+    <!-- Figure shadow #414770 6px hard offset -->
+    <g fill="#414770" transform="translate(6,6)">
+        <rect x="234" y="182" width="36" height="46"/>
+        <polygon points="185,234 319,234 279,324 225,324"/>
     </g>
     <g fill="#10111A">
-        <rect x="216" y="124" width="64" height="82"/>
-        <polygon points="128,216 368,216 296,376 200,376"/>
+        <rect x="234" y="182" width="36" height="46"/>
+        <polygon points="185,234 319,234 279,324 225,324"/>
     </g>
 </svg>

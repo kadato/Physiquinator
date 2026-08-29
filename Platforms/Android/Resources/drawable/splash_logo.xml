@@ -4,42 +4,41 @@
     android:height="512dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
-    <!-- Splash plate - yellow #FAFF00 with shadow and bevel, centered at 248 -->
-    <!-- Plate shadow 10dp hard offset - violet-grey -->
+    <!-- Plate shadow 8dp hard offset - violet-grey (fits within adaptive circular mask) -->
     <path
-        android:fillColor="#414770"
-        android:pathData="M62,62 h392 v392 h-392 z" />
+        android:fillColor="@color/maui_splash_shadow_color"
+        android:pathData="M150,150 h220 v220 h-220 z" />
     <!-- Yellow plate -->
     <path
         android:fillColor="@color/maui_splash_plate_color"
         android:strokeColor="#10111A"
-        android:strokeWidth="6"
-        android:pathData="M52,52 h392 v392 h-392 z" />
+        android:strokeWidth="4"
+        android:pathData="M142,142 h220 v220 h-220 z" />
     <!-- Bevel highlight -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M52,52 h392 v7 h-392 z"
+        android:pathData="M142,142 h220 v4 h-220 z"
         android:fillAlpha="0.42" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M52,52 v392 h7 v-392 z"
+        android:pathData="M142,142 v220 h4 v-220 z"
         android:fillAlpha="0.42" />
     <!-- Figure shadow #414770 -->
     <group
-        android:translateX="10"
-        android:translateY="10">
+        android:translateX="6"
+        android:translateY="6">
         <path
             android:fillColor="@color/maui_splash_shadow_color"
-            android:pathData="M216,124 h64 v82 h-64 z" />
+            android:pathData="M234,182 h36 v46 h-36 z" />
         <path
             android:fillColor="@color/maui_splash_shadow_color"
-            android:pathData="M128,216 L368,216 L296,376 L200,376 Z" />
+            android:pathData="M185,234 L319,234 L279,324 L225,324 Z" />
     </group>
-    <!-- Figure #10111A - bald square head 64x82 + V body, centered in plate -->
+    <!-- Figure #10111A - bald square head 36x46 + V body, centered in plate -->
     <path
         android:fillColor="@color/maui_splash_icon_color"
-        android:pathData="M216,124 h64 v82 h-64 z" />
+        android:pathData="M234,182 h36 v46 h-36 z" />
     <path
         android:fillColor="@color/maui_splash_icon_color"
-        android:pathData="M128,216 L368,216 L296,376 L200,376 Z" />
+        android:pathData="M185,234 L319,234 L279,324 L225,324 Z" />
 </vector>

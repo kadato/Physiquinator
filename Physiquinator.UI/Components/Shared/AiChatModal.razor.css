@@ -603,19 +603,6 @@ html[data-theme="dark"] .ai-quick-btn--green {
     word-break: break-word;
 }
 
-.ai-bridge-actions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.ai-bridge-action-item {
-    background: var(--pl-chip-2);
-    border: var(--hairline);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-}
-
 .ai-bridge-empty {
     display: flex;
     align-items: center;

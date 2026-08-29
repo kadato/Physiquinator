@@ -20,18 +20,21 @@
             <MudStack Spacing="3" Class="plan-exercise-sheet__body">
                 <MudAutocomplete T="string"
                                  Value="_name"
+                                 ValueChanged="OnNameChanged"
+                                 TextChanged="OnNameChanged"
                                  id="exercise-sheet-name-input"
                                  Variant="Variant.Outlined"
                                  Label="@("Exercise name")"
                                  Placeholder="@("For example, bench press")"
                                  SearchFunc="SearchExerciseNamesAsync"
-                                 ValueChanged="OnNameChanged"
-                                 CoerceText="false"
-                                 CoerceValue="false"
-                                 ResetValueOnEmptyText="true"
+                                 CoerceText="true"
+                                 CoerceValue="true"
+                                 ResetValueOnEmptyText="false"
+                                 Immediate="true"
                                  MaxItems="80"
                                  Dense="false"
                                  autocapitalize="words"
+                                 autocomplete="off"
                                  @onfocus="OnExerciseNameFocus" />
                 <MudText Typo="Typo.caption" Class="plan-exercise-sheet__catalog-hint">
                     @("Type to search 120+ popular exercises, or enter any custom name.")

@@ -1,12 +1,14 @@
-<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8 px-4">
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8 px-4 empty-state-container">
     @if (!string.IsNullOrEmpty(Icon))
     {
-        <MudIcon Icon="@Icon" Size="Size.Large" Color="Color.Primary" Class="mb-2" Style="opacity:0.5; font-size:3rem;" />
+        <div class="empty-state-icon-box" aria-hidden="true">
+            <MudIcon Icon="@Icon" Class="empty-state-icon" />
+        </div>
     }
-    <MudText Typo="Typo.body1" Align="Align.Center" Class="mud-text-secondary">@Message</MudText>
+    <MudText Typo="Typo.body1" Align="Align.Center" Class="mud-text-secondary empty-state-message">@Message</MudText>
     @if (ChildContent != null)
     {
-        <div class="mt-3">@ChildContent</div>
+        <div class="mt-3 empty-state-actions">@ChildContent</div>
     }
 </MudStack>
 

@@ -1,5 +1,6 @@
 @using Physiquinator.Core.Services.Ai
 @using Physiquinator.Core.Models
+@using System.Text.Json
 @using Markdig
 @inject AiAssistantService AiAssistant
 @inject AiClipboardBridgeService BridgeService
@@ -336,42 +337,99 @@
                             }
                         </div>
 
-                        <!-- Parsed Actions Preview -->
+                        <!-- Parsed Actions Preview & Summary -->
                         @if (_parsedActions.Count > 0)
                         {
+                            <div class="ai-bridge-summary mt-3">
+                                <div class="ai-bridge-summary__header">
+                                    <div class="ai-bridge-summary__title-wrap">
+                                        <span class="ai-bridge-summary__badge">@_parsedActions.Count @(_parsedActions.Count == 1 ? "ACTION DETECTED" : "ACTIONS DETECTED")</span>
+                                        <h3 class="ai-bridge-summary__title">ACTION SUMMARY</h3>
+                                    </div>
+                                    <div class="ai-bridge-summary__status-chips">
+                                        @{
+                                            var validCount = _parsedActions.Count(a => a.IsValid);
+                                            var invalidCount = _parsedActions.Count(a => !a.IsValid);
+                                            var destructiveCount = _parsedActions.Count(a => a.IsDestructive);
+                                        }
+                                        <span class="ai-bridge-stat-chip ai-bridge-stat-chip--ready">
+                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                            @validCount READY
+                                        </span>
+                                        @if (destructiveCount > 0)
+                                        {
+                                            <span class="ai-bridge-stat-chip ai-bridge-stat-chip--warn">
+                                                <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" />
+                                                @destructiveCount DESTRUCTIVE
+                                            </span>
+                                        }
+                                        @if (invalidCount > 0)
+                                        {
+                                            <span class="ai-bridge-stat-chip ai-bridge-stat-chip--err">
+                                                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Small" />
+                                                @invalidCount INVALID
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="ai-bridge-summary__tools">
+                                    @foreach (var group in _parsedActions.GroupBy(a => a.ToolName))
+                                    {
+                                        <span class="ai-bridge-tool-badge">
+                                            <strong>@group.Count()×</strong> @FormatToolName(group.Key)
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
                             <div class="ai-bridge-actions-list mt-3">
-                                <MudText Typo="Typo.caption" Class="font-weight-bold mud-text-secondary text-uppercase mb-1">
-                                    @("Actions found")
-                                </MudText>
-                                @foreach (var action in _parsedActions)
+                                @for (var i = 0; i < _parsedActions.Count; i++)
                                 {
-                                    <div class="ai-bridge-action-item @(action.IsValid ? "" : "ai-bridge-action-item--invalid")">
-                                        <div class="d-flex align-center gap-2">
-                                            @if (action.IsValid)
-                                            {
-                                                <MudIcon Icon="@(action.IsDestructive ? Icons.Material.Filled.Warning : Icons.Material.Filled.CheckCircleOutline)"
-                                                         Color="@(action.IsDestructive ? Color.Warning : Color.Success)"
-                                                         Size="Size.Small" />
-                                            }
-                                            else
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Small" />
-                                            }
-                                            <div class="flex-1">
-                                                <MudText Typo="Typo.body2" Class="font-weight-bold">@action.HumanSummary</MudText>
-                                                @if (!action.IsValid && !string.IsNullOrWhiteSpace(action.ValidationError))
+                                    var action = _parsedActions[i];
+                                    var index = i + 1;
+                                    <div class="ai-bridge-action-card @GetActionCardClass(action)">
+                                        <div class="ai-bridge-action-card__head">
+                                            <div class="ai-bridge-action-card__head-left">
+                                                <span class="ai-bridge-action-card__tag">/@index.ToString("D2")</span>
+                                                <span class="ai-bridge-action-card__tool">@FormatToolName(action.ToolName)</span>
+                                            </div>
+                                            <div class="ai-bridge-action-card__head-right">
+                                                @if (action.IsDestructive)
                                                 {
-                                                    <MudText Typo="Typo.caption" Color="Color.Error">@action.ValidationError</MudText>
+                                                    <span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--warn">DESTRUCTIVE</span>
                                                 }
-                                                else if (!string.IsNullOrWhiteSpace(action.Description))
+                                                else if (!action.IsValid)
                                                 {
-                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@action.Description</MudText>
+                                                    <span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--err">INVALID</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--ok">VALIDATED</span>
                                                 }
                                             </div>
-                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
-                                                @action.ToolName
-                                            </MudChip>
                                         </div>
+                                        <div class="ai-bridge-action-card__body">
+                                            <h4 class="ai-bridge-action-card__title">@action.HumanSummary</h4>
+                                            @if (!action.IsValid && !string.IsNullOrWhiteSpace(action.ValidationError))
+                                            {
+                                                <div class="ai-bridge-action-card__error-callout">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <span>@action.ValidationError</span>
+                                                </div>
+                                            }
+                                            else if (!string.IsNullOrWhiteSpace(action.Description))
+                                            {
+                                                <p class="ai-bridge-action-card__desc">@action.Description</p>
+                                            }
+                                        </div>
+                                        <details class="ai-bridge-action-card__details">
+                                            <summary class="ai-bridge-action-card__summary">
+                                                <span>Inspect JSON payload</span>
+                                                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+                                            </summary>
+                                            <pre class="ai-bridge-action-card__code">@FormatJson(action.ArgumentsJson)</pre>
+                                        </details>
                                     </div>
                                 }
                             </div>
@@ -681,6 +739,38 @@
     private void Close()
     {
         MudDialog?.Close();
+    }
+
+    private static string FormatToolName(string toolName) => toolName switch
+    {
+        "create_workout_plan" => "Create Plan",
+        "update_workout_plan" => "Update Plan",
+        "delete_workout_plan" => "Delete Plan",
+        "log_bodyweight" or "log_bodyweight_entry" => "Log Weight",
+        "delete_bodyweight_entry" => "Delete Weight",
+        "log_completed_workout" => "Log Workout",
+        _ => string.Join(" ", toolName.Split('_').Select(s => s.Length > 0 ? char.ToUpper(s[0]) + s[1..] : s))
+    };
+
+    private static string FormatJson(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "{}";
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+    private static string GetActionCardClass(AiBridgeAction action)
+    {
+        if (!action.IsValid) return "ai-bridge-action-card--invalid";
+        if (action.IsDestructive) return "ai-bridge-action-card--warn";
+        return "ai-bridge-action-card--valid";
     }
 
     public void Dispose()

@@ -38,7 +38,6 @@ else
         <!-- PLAN PLATE HEADER — brutal, machined, volt edge -->
         <div class="workout-brutal__header">
             <div class="workout-brutal__title-wrap">
-                <span class="workout-brutal__kicker">ACTIVE SEQUENCE</span>
                 <h1 class="workout-brutal__title">@SessionService.CurrentPlan.Name</h1>
             </div>
         </div>
@@ -101,12 +100,13 @@ else
                     <div class="workout-rest-takeover__next @(UpcomingExercises.Count > 1 ? "workout-rest-takeover__next--swipeable" : "")"
                          @ontouchstart="HandleRestNextTouchStart"
                          @ontouchend="HandleRestNextTouchEnd"
-                         @onclick="CycleNextExercise"
-                         role="button"
-                         tabindex="0"
-                         aria-label="Up next exercise. Swipe or tap to change.">
+                         aria-label="Up next exercise. Swipe to change.">
                         <div class="workout-rest-takeover__next-head">
                             <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
+                            @if (NextPendingSet.Exercise != null)
+                            {
+                                <span class="workout-rest-takeover__next-set">SET @(NextPendingSet.SetIndex + 1)/@(NextPendingSet.Exercise.TotalSetCount)</span>
+                            }
                         </div>
                         <span class="workout-rest-takeover__next-name">@NextExerciseName</span>
                         @if (!string.IsNullOrEmpty(NextSetPreview))
@@ -122,16 +122,41 @@ else
                     @if (_isRestComplete)
                     {
                         <div class="workout-timesup-banner" role="status">
-                            <div class="workout-timesup-banner__body">
-                                <span class="workout-timesup-banner__dot" aria-hidden="true"></span>
-                                <div class="workout-timesup-banner__text">
-                                    <span class="workout-timesup-banner__title">TIME’S UP!</span>
-                                    <span class="workout-timesup-banner__sub">REST COMPLETE — READY FOR SET @(FocusedActiveSetIndex + 1)</span>
+                            <div class="workout-timesup-banner__main">
+                                <div class="workout-timesup-banner__body">
+                                    <div class="workout-timesup-banner__badge" aria-hidden="true">
+                                        <MudIcon Icon="@Icons.Material.Filled.AlarmOn" />
+                                    </div>
+                                    <div class="workout-timesup-banner__text">
+                                        <span class="workout-timesup-banner__title">TIME’S UP!</span>
+                                        <span class="workout-timesup-banner__exercise-name">@FocusedExercise.Name</span>
+                                    </div>
                                 </div>
+                                <span class="workout-timesup-banner__set-badge">SET @(FocusedActiveSetIndex + 1) / @FocusedTotalSets</span>
                             </div>
-                            <button type="button" class="workout-timesup-banner__dismiss" @onclick="DismissTimesUp" aria-label="Dismiss time's up alert">
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
-                            </button>
+                            <div class="workout-timesup-banner__actions">
+                                <button type="button"
+                                        class="workout-timesup-banner__btn workout-timesup-banner__btn--add"
+                                        @onclick="() => AddRestTime(RestAlertSettings.AddTimeSeconds)"
+                                        aria-label="@(string.Format("Add {0} seconds of rest", RestAlertSettings.AddTimeSeconds))">
+                                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                    <span>+@(RestAlertSettings.AddTimeSeconds)S</span>
+                                </button>
+                                <button type="button"
+                                        class="workout-timesup-banner__btn workout-timesup-banner__btn--reset"
+                                        @onclick="ResetRest"
+                                        aria-label="Reset rest timer">
+                                    <MudIcon Icon="@Icons.Material.Filled.Replay" Size="Size.Small" />
+                                    <span>RESET</span>
+                                </button>
+                                <button type="button"
+                                        class="workout-timesup-banner__btn workout-timesup-banner__btn--ready"
+                                        @onclick="DismissTimesUp"
+                                        aria-label="Ready for next set">
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                    <span>READY</span>
+                                </button>
+                            </div>
                         </div>
                     }
                     <div class="workout-focus__head">
@@ -141,8 +166,16 @@ else
                             {
                                 <span class="workout-focus__superset">S@FocusedExercise.SupersetGroupId</span>
                             }
+                            @if (IsFocusedWarmup)
+                            {
+                                <span class="workout-focus__badge workout-focus__badge--warmup">WARM-UP @(FocusedActiveSetIndex + 1)/@FocusedTotalSets</span>
+                            }
+                            else
+                            {
+                                <span class="workout-focus__badge workout-focus__badge--set">SET @(FocusedActiveSetIndex + 1)/@FocusedTotalSets</span>
+                            }
                             <span class="workout-focus__pill @(FocusedCompletedSets == FocusedTotalSets ? "workout-focus__pill--done" : "")">
-                                @FocusedCompletedSets/@FocusedTotalSets
+                                @FocusedCompletedSets/@FocusedTotalSets DONE
                             </span>
                         </div>
                         <div class="workout-focus__head-right">
@@ -171,24 +204,12 @@ else
 
                     <h2 class="workout-focus__name">@FocusedExercise.Name</h2>
 
-                    <div class="workout-focus__set-head">
-                        @if (IsFocusedWarmup)
-                        {
-                            <span class="workout-focus__warmup">WARM-UP @(FocusedActiveSetIndex + 1)</span>
-                        }
-                        else
-                        {
-                            <span class="workout-focus__set-label">SET @(FocusedActiveSetIndex + 1)</span>
-                        }
-                    </div>
-
                     <div class="workout-focus__controls">
                         <span class="workout-focus__bumper" aria-hidden="true"></span>
                         <div class="workout-focus__steppers">
                             @if (FocusedExercise.LogType != ExerciseLogType.Duration)
                             {
                                 <div class="workout-focus__stepper">
-                                    <span class="workout-focus__stepper-label">WEIGHT</span>
                                     <SetMetricStepper Value="@ToDisplayWeight(FocusedInputs.Weight)"
                                                       ValueChanged="@(val => HandleWeightStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, ToKgWeight(val))))"
                                                       Step="@WeightStep"
@@ -202,7 +223,6 @@ else
                                 </div>
                             }
                             <div class="workout-focus__stepper">
-                                <span class="workout-focus__stepper-label">@(FocusedExercise.LogType == ExerciseLogType.Duration ? "DURATION" : "REPS")</span>
                                 <SetMetricStepper Value="@((double?)FocusedInputs.Reps)"
                                                   ValueChanged="@(val => HandleRepsStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                                   Step="1"
@@ -220,25 +240,9 @@ else
                                 disabled="@_isCompleting"
                                 aria-label="@(string.Format("Log set {0} for {1}", FocusedActiveSetIndex + 1, FocusedExercise.Name))">
                             <MudIcon Icon="@Icons.Material.Filled.Bolt" Class="workout-focus__log-icon" />
+                            <span class="workout-focus__log-label">LOG</span>
                         </button>
                     </div>
-
-                    @if (NextExerciseInfo.Exercise != null)
-                    {
-                        <div class="workout-next @(UpcomingExercises.Count > 1 ? "workout-next--swipeable" : "")"
-                             @ontouchstart="HandleWorkoutNextTouchStart"
-                             @ontouchend="HandleWorkoutNextTouchEnd"
-                             @onclick="() => FocusExercise(NextExerciseInfo.ExerciseIndex)"
-                             role="button"
-                             tabindex="0"
-                             aria-label="@(string.Format("Next: {0}. Swipe or tap to view.", NextExerciseInfo.Exercise.Name))">
-                            <div class="workout-next__head">
-                                <span class="workout-next__kicker">UP NEXT</span>
-                            </div>
-                            <span class="workout-next__name">@NextExerciseInfo.Exercise.Name</span>
-                            <span class="workout-next__preview">@NextExerciseInfo.Preview</span>
-                        </div>
-                    }
 
                     @{ var loggedRows = GetLoggedRowsForFocused(); }
                     @if (loggedRows.Any())
@@ -293,6 +297,24 @@ else
                         </details>
                     }
                 </div>
+
+                @if (NextExerciseInfo.Exercise != null)
+                {
+                    <div class="workout-rest-takeover__next workout-next @(UpcomingExercises.Count > 1 ? "workout-rest-takeover__next--swipeable" : "")"
+                         @ontouchstart="HandleWorkoutNextTouchStart"
+                         @ontouchend="HandleWorkoutNextTouchEnd"
+                         aria-label="@(string.Format("Next: {0}. Swipe to view.", NextExerciseInfo.Exercise.Name))">
+                        <div class="workout-rest-takeover__next-head">
+                            <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
+                            <span class="workout-rest-takeover__next-set">SET @(NextExerciseInfo.SetIndex + 1)/@(NextExerciseInfo.Exercise.TotalSetCount)</span>
+                        </div>
+                        <span class="workout-rest-takeover__next-name">@NextExerciseInfo.Exercise.Name</span>
+                        @if (!string.IsNullOrEmpty(NextExerciseInfo.Preview))
+                        {
+                            <span class="workout-rest-takeover__next-preview">@NextExerciseInfo.Preview</span>
+                        }
+                    </div>
+                }
             }
             else if (!UpcomingExercises.Any() && DoneExercises.Any())
             {
@@ -304,31 +326,7 @@ else
             }
         </div>
 
-        <!-- TRANSPORT — brutal thumb bar, prev/next between exercises -->
-        @if (!SessionService.IsResting && UpcomingExercises.Count > 1)
-        {
-            <div class="workout-transport">
-                <button type="button"
-                        class="workout-transport__btn workout-transport__btn--prev"
-                        disabled="@(FocusedPosition == 0)"
-                        @onclick="FocusPrev"
-                        aria-label="Previous exercise">
-                    <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" />
-                </button>
-                <div class="workout-transport__center">
-                    <span class="workout-transport__pos">@(FocusedPosition + 1) / @(UpcomingExercises.Count)</span>
-                </div>
-                <button type="button"
-                        class="workout-transport__btn workout-transport__btn--next"
-                        disabled="@(FocusedPosition >= UpcomingExercises.Count - 1)"
-                        @onclick="FocusNext"
-                        aria-label="Next exercise">
-                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" />
-                </button>
-            </div>
-        }
-
-        @if (UpcomingExercises.Count > 1)
+        @if (UpcomingExercises.Any())
         {
             <div class="workout-sequence-strip" role="navigation" aria-label="Exercise sequence">
                 @foreach (var item in UpcomingExercises)
@@ -517,7 +515,7 @@ else
             return c;
         }
     }
-    private int OverallProgressPct => TotalSetsCount == 0 ? 0 : (int)Math.Round(TotalCompletedSets * 100.0 / TotalSetsCount);
+    private int OverallProgressPct => SessionService.CalculateProgressPercentage();
     private int ExerciseCount => SessionService.CurrentPlan?.Exercises.Count ?? 0;
     private int FocusedPosition
     {
@@ -530,18 +528,28 @@ else
     private bool CanMoveUp => _activeExerciseIndex > 0;
     private bool CanMoveDown => SessionService.CurrentPlan != null && _activeExerciseIndex < SessionService.CurrentPlan.Exercises.Count - 1;
 
-    private (ExercisePlan? Exercise, int ExerciseIndex, string Preview) NextExerciseInfo
+    private (ExercisePlan? Exercise, int ExerciseIndex, int SetIndex, string Preview) NextExerciseInfo
     {
         get
         {
-            if (FocusedExercise == null) return (null, -1, "");
+            if (FocusedExercise == null) return (null, -1, -1, "");
+
+            // If the current focused exercise still has sets remaining after this active set:
+            if (FocusedActiveSetIndex + 1 < FocusedTotalSets)
+            {
+                var nextSetIdx = FocusedActiveSetIndex + 1;
+                var inputs = _setInputs.GetValueOrDefault((_activeExerciseIndex, nextSetIdx), (FocusedExercise.DefaultWeightKg ?? 0, FocusedExercise.DefaultReps ?? DefaultReps));
+                return (FocusedExercise, _activeExerciseIndex, nextSetIdx, FormatLogPreview(FocusedExercise, inputs));
+            }
+
+            // Otherwise, look for the next upcoming exercise in the plan:
             var pos = FocusedPosition;
-            if (pos < 0 || pos >= UpcomingExercises.Count - 1) return (null, -1, "");
+            if (pos < 0 || pos >= UpcomingExercises.Count - 1) return (null, -1, -1, "");
             var next = UpcomingExercises[pos + 1];
             var ex = next.Exercise;
             var setIdx = _activeSetIndices.GetValueOrDefault(next.ExerciseIndex, 0);
-            var inputs = _setInputs.GetValueOrDefault((next.ExerciseIndex, setIdx), (ex.DefaultWeightKg ?? 0, ex.DefaultReps ?? DefaultReps));
-            return (ex, next.ExerciseIndex, FormatLogPreview(ex, inputs));
+            var nextInputs = _setInputs.GetValueOrDefault((next.ExerciseIndex, setIdx), (ex.DefaultWeightKg ?? 0, ex.DefaultReps ?? DefaultReps));
+            return (ex, next.ExerciseIndex, setIdx, FormatLogPreview(ex, nextInputs));
         }
     }
 
@@ -1065,7 +1073,6 @@ else
         var key = (exIdx, setIdx);
         var current = _setInputs.GetValueOrDefault(key, (null, null));
         _setInputs[key] = (weight, current.Reps);
-        _isRestComplete = false;
     }
 
     private void HandleRepsStepperChanged((int ExerciseIndex, int SetIndex, int? Reps) input)
@@ -1074,12 +1081,20 @@ else
         var key = (exIdx, setIdx);
         var current = _setInputs.GetValueOrDefault(key, (null, null));
         _setInputs[key] = (current.Weight, reps);
-        _isRestComplete = false;
     }
 
     private void DismissTimesUp()
     {
         _isRestComplete = false;
+        if (_restNextExerciseOverride.HasValue)
+        {
+            _activeExerciseIndex = _restNextExerciseOverride.Value;
+            _restNextExerciseOverride = null;
+        }
+        else if (SessionService.IsExerciseDone(_activeExerciseIndex))
+        {
+            _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
+        }
         StateHasChanged();
     }
 
@@ -1474,12 +1489,18 @@ else
             SessionService.ResetRest();
         else if (_lastRestDurationSeconds > 0)
             SessionService.StartRest(_lastRestDurationSeconds);
+        else if (FocusedExercise != null && FocusedExercise.RestIntervalSeconds > 0)
+        {
+            _lastRestDurationSeconds = FocusedExercise.RestIntervalSeconds;
+            SessionService.StartRest(FocusedExercise.RestIntervalSeconds);
+        }
         else
             return;
 
         if (SessionService.IsResting)
         {
             await StartJsTimerAsync();
+            await ScrollRestTimerIntoViewAsync();
         }
 
         await SafeStateHasChangedAsync();
@@ -1490,8 +1511,16 @@ else
         if (_disposed) return;
 
         await TimerInterop.StopTimerAsync();
-        _isRestComplete = false;
-        _restNextExerciseOverride = null;
+        _isRestComplete = true;
+        if (_restNextExerciseOverride.HasValue)
+        {
+            _activeExerciseIndex = _restNextExerciseOverride.Value;
+            _restNextExerciseOverride = null;
+        }
+        else if (SessionService.IsExerciseDone(_activeExerciseIndex))
+        {
+            _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
+        }
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
     }
@@ -1514,6 +1543,7 @@ else
             _lastRestDurationSeconds = seconds;
             SessionService.StartRest(seconds);
             await StartJsTimerAsync();
+            await ScrollRestTimerIntoViewAsync();
             await SafeStateHasChangedAsync();
             return;
         }
@@ -1792,13 +1822,6 @@ else
         StateHasChanged();
     }
 
-    private void CycleNextExercise()
-    {
-        if (UpcomingExercises.Count > 1)
-        {
-            CycleRestNextExercise(forward: true);
-        }
-    }
 
     private void HandleWorkoutNextTouchStart(TouchEventArgs e)
     {

@@ -503,4 +503,77 @@ public class WorkoutSessionServiceTests
         Assert.True(svc.IsSetCompleted(0, 0));
         Assert.True(svc.IsSetCompleted(1, 0));
     }
+
+    [Fact]
+    public void CalculateProgressPercentage_WeightsRestIntervalsAccurately()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                // Heavy Squats: 2 sets, 180s rest, 40s work = 220s per set -> 440s total
+                new ExercisePlan { Name = "Heavy Squat", SetCount = 2, RestIntervalSeconds = 180 },
+                // Lateral Raises: 2 sets, 30s rest, 40s work = 70s per set -> 140s total
+                new ExercisePlan { Name = "Lateral Raises", SetCount = 2, RestIntervalSeconds = 30 }
+            ]
+        };
+        // Total duration = 440s + 140s = 580s
+        var clock = new ManualTimeProvider();
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(plan);
+
+        Assert.Equal(0, svc.CalculateProgressPercentage());
+
+        // Complete set 1 of Heavy Squat (220s / 580s = 38%)
+        svc.CompleteSet(0, 0);
+        Assert.Equal(38, svc.CalculateProgressPercentage());
+
+        // Complete all Heavy Squats (440s / 580s = 76%)
+        svc.CompleteSet(0, 1);
+        Assert.Equal(76, svc.CalculateProgressPercentage());
+
+        // Complete set 1 of Lateral Raises (510s / 580s = 88%)
+        svc.CompleteSet(1, 0);
+        Assert.Equal(88, svc.CalculateProgressPercentage());
+
+        // Complete all sets -> 100%
+        svc.CompleteSet(1, 1);
+        Assert.Equal(100, svc.CalculateProgressPercentage());
+    }
+
+    [Fact]
+    public void CalculateProgressPercentage_CreditsActiveRestCountdown()
+    {
+        var plan = new WorkoutPlan
+        {
+            Exercises =
+            [
+                new ExercisePlan { Name = "Bench", SetCount = 2, RestIntervalSeconds = 60 }
+            ]
+        };
+        // Total duration = 2 sets * (40s work + 60s rest) = 200s
+        var clock = new ManualTimeProvider();
+        clock.SetUtcNow(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(plan);
+
+        svc.CompleteSet(0, 0);
+        svc.StartRest(60);
+
+        // At 0s elapsed rest: 40s work done out of 200s = 20%
+        Assert.Equal(20, svc.CalculateProgressPercentage());
+
+        // Advance 30s into rest (30s remaining): (40s + 30s) / 200s = 70 / 200 = 35%
+        clock.Advance(TimeSpan.FromSeconds(30));
+        Assert.Equal(35, svc.CalculateProgressPercentage());
+
+        // When rest expires: 100s / 200s = 50%
+        clock.Advance(TimeSpan.FromSeconds(30));
+        svc.TickRest();
+        Assert.Equal(50, svc.CalculateProgressPercentage());
+
+        // Complete final set -> 100%
+        svc.CompleteSet(0, 1);
+        Assert.Equal(100, svc.CalculateProgressPercentage());
+    }
 }

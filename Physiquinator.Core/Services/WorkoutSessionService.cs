@@ -378,6 +378,72 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         }
     }
 
+    /// <summary>
+    /// Calculates the time-weighted workout progress percentage (0-100), accounting for each
+    /// exercise's estimated execution duration and configured rest intervals.
+    /// </summary>
+    public int CalculateProgressPercentage()
+    {
+        if (CurrentPlan == null || CurrentPlan.Exercises.Count == 0)
+            return 0;
+
+        double totalDurationSeconds = 0;
+        double completedDurationSeconds = 0;
+        var totalSets = 0;
+        var completedSetsCount = 0;
+
+        for (var ei = 0; ei < CurrentPlan.Exercises.Count; ei++)
+        {
+            ExercisePlan ex = CurrentPlan.Exercises[ei];
+            var workDuration = GetEstimatedWorkDurationSeconds(ex);
+            var restDuration = Math.Max(0, ex.RestIntervalSeconds);
+            var setDuration = workDuration + restDuration;
+
+            totalSets += ex.TotalSetCount;
+            totalDurationSeconds += ex.TotalSetCount * setDuration;
+
+            for (var si = 0; si < ex.TotalSetCount; si++)
+            {
+                if (IsSetCompleted(ei, si))
+                {
+                    completedSetsCount++;
+                    completedDurationSeconds += setDuration;
+                }
+            }
+        }
+
+        if (totalSets == 0 || totalDurationSeconds <= 0)
+            return 0;
+
+        if (completedSetsCount == totalSets)
+            return 100;
+
+        // If currently resting, credit the elapsed portion of the active rest interval
+        if (_isResting && _activeRestDurationSeconds > 0)
+        {
+            var remainingRest = RestSecondsRemaining;
+            if (remainingRest > 0)
+            {
+                var unelapsed = Math.Min(remainingRest, _activeRestDurationSeconds);
+                completedDurationSeconds = Math.Max(0, completedDurationSeconds - unelapsed);
+            }
+        }
+
+        var pct = (int)Math.Round((completedDurationSeconds / totalDurationSeconds) * 100.0);
+        return Math.Clamp(pct, 0, 99);
+    }
+
+    private static double GetEstimatedWorkDurationSeconds(ExercisePlan ex)
+    {
+        if (ex.LogType == ExerciseLogType.Duration)
+            return Math.Max(15, ex.DefaultReps ?? 45);
+
+        if (ex.DefaultReps.HasValue && ex.DefaultReps.Value > 0)
+            return Math.Clamp(ex.DefaultReps.Value * 3.5, 20, 60);
+
+        return 40;
+    }
+
     public void Dispose()
     {
         StopInternalTimer();

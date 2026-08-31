@@ -85,4 +85,20 @@ public class ExerciseWeightFormatterTests
         Assert.Equal("BW + 11 lb (198.4 lb) × 8 reps", ExerciseWeightFormatter.FormatBodyweightOffset(5, 85, 8, WeightUnit.Pounds));
         Assert.Equal("BW - 11 lb (176.4 lb)", ExerciseWeightFormatter.FormatBodyweightOffset(-5, 85, WeightUnit.Pounds));
     }
+
+    [Fact]
+    public void ComputeEffectiveWeight_calculates_with_bodyweight_and_share()
+    {
+        // 80kg bodyweight, 65% share (push-ups), no offset -> 52kg
+        Assert.Equal(52.0, ExerciseWeightFormatter.ComputeEffectiveWeight(null, 80, 65));
+        // 80kg bodyweight, 65% share, +5kg offset -> 57kg
+        Assert.Equal(57.0, ExerciseWeightFormatter.ComputeEffectiveWeight(5, 80, 65));
+        // 80kg bodyweight, 100% share (pull-ups), +10kg -> 90kg
+        Assert.Equal(90.0, ExerciseWeightFormatter.ComputeEffectiveWeight(10, 80, 100));
+        // 80kg bodyweight, 100% share, -10kg assisted -> 70kg
+        Assert.Equal(70.0, ExerciseWeightFormatter.ComputeEffectiveWeight(-10, 80, 100));
+        // No bodyweight -> returns offset
+        Assert.Equal(10.0, ExerciseWeightFormatter.ComputeEffectiveWeight(10, null, 100));
+        Assert.Null(ExerciseWeightFormatter.ComputeEffectiveWeight(null, null, 100));
+    }
 }

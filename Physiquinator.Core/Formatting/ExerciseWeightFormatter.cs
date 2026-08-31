@@ -88,4 +88,19 @@ public static class ExerciseWeightFormatter
             ? $"BW - {FormatWeight(abs, unit)} {unitSuffix} ({FormatWeight(bodyweightKg.Value - abs, unit)} {unitSuffix}){suffix}"
             : $"BW - {FormatWeight(abs, unit)} {unitSuffix}{suffix}";
     }
+
+    /// <summary>
+    /// Calculates the effective lifted load for a bodyweight exercise:
+    /// (bodyweightKg * (bodyweightPercent / 100)) + offsetKg.
+    /// Returns null if neither bodyweight nor offset is provided.
+    /// </summary>
+    public static double? ComputeEffectiveWeight(double? offsetKg, double? bodyweightKg, double? bodyweightPercent = null)
+    {
+        if (bodyweightKg is > 0)
+        {
+            var share = (bodyweightPercent ?? 100) / 100.0;
+            return (bodyweightKg.Value * share) + (offsetKg ?? 0);
+        }
+        return offsetKg;
+    }
 }

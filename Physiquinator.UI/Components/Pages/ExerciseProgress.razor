@@ -136,13 +136,7 @@ else
                         <span>@("Date")</span>
                         @if (_logType == ExerciseLogType.Duration)
                         {
-                            <span>@("Total time")</span>
-                            <span>@("Sets")</span>
-                        }
-                        else if (_logType == ExerciseLogType.BodyweightReps)
-                        {
-                            <span>@("Best offset")</span>
-                            <span>@("Reps (total)")</span>
+                            <span>@("Total time (s)")</span>
                             <span>@("Sets")</span>
                         }
                         else
@@ -160,7 +154,7 @@ else
                             <span>@UiDateFormats.LocalDateCompact(item.StartedAtUtc)</span>
                             @if (_logType == ExerciseLogType.Duration)
                             {
-                                <span>@(string.Format("{0}s", item.TotalReps))</span>
+                                <span>@item.TotalReps</span>
                                 <span>@item.SetCount</span>
                             }
                             else
@@ -314,6 +308,7 @@ else
             { x => x.Records, records },
             { x => x.LogType, _logType },
             { x => x.BodyweightKg, _bodyweightKg },
+            { x => x.BodyweightPercent, _bodyweightPercent },
         };
         var options = new DialogOptions
         {
@@ -485,8 +480,15 @@ else
     private string FormatBestWeight(double? weight)
     {
         if (_logType == ExerciseLogType.BodyweightReps)
-            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
-        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "-";
+        {
+            var effectiveKg = ExerciseWeightFormatter.ComputeEffectiveWeight(weight, _bodyweightKg, _bodyweightPercent);
+            if (effectiveKg.HasValue)
+                return ExerciseWeightFormatter.FormatWeight(effectiveKg.Value, WeightUnitService.Current);
+            if (weight.HasValue)
+                return ExerciseWeightFormatter.FormatWeight(weight.Value, WeightUnitService.Current);
+            return "-";
+        }
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeight(w, WeightUnitService.Current) : "-";
     }
 
     private bool _hasChartData;

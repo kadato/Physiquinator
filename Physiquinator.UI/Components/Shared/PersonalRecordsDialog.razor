@@ -66,6 +66,9 @@
     [Parameter]
     public double? BodyweightKg { get; set; }
 
+    [Parameter]
+    public double? BodyweightPercent { get; set; }
+
     private void Close() => MudDialog.Close();
 
     private void OpenSession(PersonalRecordEntry entry)
@@ -95,13 +98,15 @@
     private string FormatValue(PersonalRecordEntry entry) => entry.Kind switch
     {
         ExerciseRecordKind.BestWeight when LogType == ExerciseLogType.BodyweightReps =>
-            ExerciseWeightFormatter.FormatBodyweightOffset(entry.Value, BodyweightKg, WeightUnitService.Current),
+            ExerciseWeightFormatter.ComputeEffectiveWeight(entry.Value, BodyweightKg, BodyweightPercent) is { } eff
+                ? ExerciseWeightFormatter.FormatWeightWithUnit(eff, WeightUnitService.Current)
+                : ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.BestWeight =>
             ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.MostReps =>
             string.Format("{0} reps", ExerciseWeightFormatter.FormatKg(entry.Value)),
         ExerciseRecordKind.BestVolume =>
-            ExerciseWeightFormatter.FormatWeightWithUnit(entry.Value, WeightUnitService.Current),
+            ExerciseWeightFormatter.FormatVolumeWithUnit(entry.Value, WeightUnitService.Current),
         ExerciseRecordKind.LongestDuration =>
             $"{ExerciseWeightFormatter.FormatKg(entry.Value)}s",
         _ => ExerciseWeightFormatter.FormatKg(entry.Value)

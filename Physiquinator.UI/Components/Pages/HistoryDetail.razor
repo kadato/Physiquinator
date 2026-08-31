@@ -93,20 +93,51 @@ else
             </MudPaper>
         }
 
-        @if (_snapshot != null)
+        @if (_snapshot != null && _snapshot.Exercises.Count > 0)
         {
-            <MudPaper Class="pa-3 settings-card" Elevation="0">
-                <div class="settings-card__header">
+            <MudPaper Elevation="0" Class="premium-table history-detail-plan-table">
+                <div class="pa-3 pb-1 d-flex align-center gap-2">
                     <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
                     <MudText Typo="Typo.h2" Class="settings-card__title">@("Plan when you trained")</MudText>
                 </div>
-                @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
-                {
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
-                        <MudText Typo="Typo.body2">@ex.Name</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@(string.Format("{0} sets · {1}s rest", ex.SetCount, ex.RestIntervalSeconds))</MudText>
-                    </MudStack>
-                }
+                <div class="infinite-table-list">
+                    <div class="infinite-table-head @(SnapshotHasTargets ? "history-detail-plan-head--4" : "history-detail-plan-head--3")">
+                        <span>@("Exercise")</span>
+                        @if (SnapshotHasTargets)
+                        {
+                            <span>@("Target")</span>
+                        }
+                        <span>@("Sets")</span>
+                        <span>@("Rest (s)")</span>
+                    </div>
+                    @foreach (var ex in _snapshot.Exercises.OrderBy(e => e.Order))
+                    {
+                        <div @key="ex.Id" class="infinite-table-row @(SnapshotHasTargets ? "history-detail-plan-row--4" : "history-detail-plan-row--3")">
+                            <span class="history-detail-exercise-cell">
+                                <span class="history-detail-exercise-name">@ex.Name</span>
+                                @if (!string.IsNullOrWhiteSpace(ex.SupersetGroupId))
+                                {
+                                    <span class="plan-exercise-row__chip plan-exercise-row__chip--superset"
+                                          aria-label="@(string.Format("Superset group {0}", ex.SupersetGroupId))">@ex.SupersetGroupId</span>
+                                }
+                            </span>
+                            @if (SnapshotHasTargets)
+                            {
+                                <span>@FormatPlanTarget(ex)</span>
+                            }
+                            <span>
+                                @ex.SetCount
+                                @if (ex.WarmupSetCount > 0)
+                                {
+                                    <span class="history-detail-plan-warmup" title="@(string.Format("{0} warm-up sets", ex.WarmupSetCount))">
+                                        +@(ex.WarmupSetCount)w
+                                    </span>
+                                }
+                            </span>
+                            <span>@(ex.RestIntervalSeconds > 0 ? ex.RestIntervalSeconds.ToString() : "-")</span>
+                        </div>
+                    }
+                </div>
             </MudPaper>
         }
 
@@ -151,12 +182,21 @@ else
                             <span class="infinite-table-head__action" />
                         }
                     </div>
-                    @foreach (var set in _sets.Take(_loadedListCount))
+                    @{
+                        var visibleSets = _sets.Take(_loadedListCount).ToList();
+                    }
+                    @for (var i = 0; i < visibleSets.Count; i++)
                     {
-                        var context = set;
-                        <div @key="context.Id" class="infinite-table-row @(_editMode ? "infinite-table-row--5" : "infinite-table-row--4x")">
-                            <span class="history-detail-exercise-cell">
-                                <span class="history-detail-exercise-name">@context.ExerciseName</span>
+                        var context = visibleSets[i];
+                        var isFirstInGroup = i == 0 || !string.Equals(context.ExerciseName, visibleSets[i - 1].ExerciseName, StringComparison.OrdinalIgnoreCase);
+                        var isNewGroup = isFirstInGroup && i > 0;
+
+                        <div @key="context.Id" class="infinite-table-row @(_editMode ? "infinite-table-row--5" : "infinite-table-row--4x") @(isNewGroup ? "history-detail-row--group-start" : "") @(!isFirstInGroup ? "history-detail-row--continuation" : "")">
+                            <span class="history-detail-exercise-cell @(!isFirstInGroup ? "history-detail-exercise-cell--continuation" : "")">
+                                @if (isFirstInGroup)
+                                {
+                                    <span class="history-detail-exercise-name">@context.ExerciseName</span>
+                                }
                                 @if (context.IsWarmup)
                                 {
                                     <span class="history-detail-warmup-badge">@("Warm-up")</span>
@@ -215,9 +255,9 @@ else
                                                         OnClick="@(() => SaveSetAsync(context))" />
                                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                        Size="Size.Small"
-                                                        Class="history-detail-table__btn"
-                                                        aria-label="@("Cancel edit")"
-                                                        OnClick="CancelEditSet" />
+                                                       Class="history-detail-table__btn"
+                                                       aria-label="@("Cancel edit")"
+                                                       OnClick="CancelEditSet" />
                                     }
                                     else
                                     {
@@ -312,6 +352,24 @@ else
         _session = string.IsNullOrWhiteSpace(id) ? null : await HistoryRepo.GetSessionAsync(id);
         _snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(_session?.PlanSnapshotJson);
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
+        if (!_bodyweightKg.HasValue || _bodyweightKg.Value <= 0)
+        {
+            var logs = await HistoryRepo.GetBodyweightLogsAsync(500);
+            if (_session != null)
+            {
+                var sessionDate = DateOnly.FromDateTime(_session.StartedAtUtc.ToLocalTime());
+                var match = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= sessionDate)
+                            ?? logs.FirstOrDefault();
+                if (match != null && match.BodyweightKg > 0)
+                    _bodyweightKg = match.BodyweightKg;
+            }
+            else
+            {
+                var latest = logs.FirstOrDefault();
+                if (latest != null && latest.BodyweightKg > 0)
+                    _bodyweightKg = latest.BodyweightKg;
+            }
+        }
 
         var sets = _session != null
             ? (await HistoryRepo.GetSetsForSessionAsync(_session.Id)).ToList()
@@ -609,15 +667,23 @@ else
         }
     }
 
-    private ExerciseLogType GetLogType(string exerciseName) =>
-        _logTypesByExercise.TryGetValue(exerciseName, out var type)
-            ? type
-            : ExerciseLogType.WeightAndReps;
+    private ExerciseLogType GetLogType(string exerciseName)
+    {
+        if (_logTypesByExercise.TryGetValue(exerciseName, out var type))
+            return type;
+        if (ExerciseCatalog.Find(exerciseName) is { } catalogEntry)
+            return catalogEntry.LogType;
+        return ExerciseLogType.WeightAndReps;
+    }
 
-    private double? GetBodyweightPercent(string exerciseName) =>
-        _percentByExercise.TryGetValue(exerciseName, out var percent)
-            ? percent
-            : null;
+    private double? GetBodyweightPercent(string exerciseName)
+    {
+        if (_percentByExercise.TryGetValue(exerciseName, out var percent) && percent.HasValue)
+            return percent;
+        if (ExerciseCatalog.Find(exerciseName) is { } catalogEntry)
+            return catalogEntry.BodyweightPercent ?? 100;
+        return 100;
+    }
 
     private string FormatReps(string exerciseName, int? reps)
     {
@@ -631,8 +697,63 @@ else
         var type = GetLogType(exerciseName);
         if (type == ExerciseLogType.Duration) return "-";
         if (type == ExerciseLogType.BodyweightReps)
-            return ExerciseWeightFormatter.FormatBodyweightOffset(weight, _bodyweightKg, WeightUnitService.Current);
-        return weight is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : "-";
+        {
+            var effectiveKg = ExerciseWeightFormatter.ComputeEffectiveWeight(weight, _bodyweightKg, GetBodyweightPercent(exerciseName));
+            if (effectiveKg.HasValue)
+                return ExerciseWeightFormatter.FormatWeight(effectiveKg.Value, WeightUnitService.Current);
+            if (weight.HasValue)
+                return ExerciseWeightFormatter.FormatWeight(weight.Value, WeightUnitService.Current);
+            return "-";
+        }
+        return weight is { } w ? ExerciseWeightFormatter.FormatWeight(w, WeightUnitService.Current) : "-";
+    }
+
+    private bool SnapshotHasTargets => _snapshot?.Exercises.Any(e =>
+        e.DefaultReps.HasValue ||
+        e.DefaultWeightKg.HasValue ||
+        (e.LogType == ExerciseLogType.BodyweightReps && e.BodyweightPercent.HasValue) ||
+        e.LogType == ExerciseLogType.Duration) == true;
+
+    private string FormatPlanTarget(ExercisePlan exercise)
+    {
+        if (exercise.LogType == ExerciseLogType.Duration)
+        {
+            return exercise.DefaultReps.HasValue ? $"{exercise.DefaultReps.Value}s" : "-";
+        }
+
+        if (exercise.LogType == ExerciseLogType.BodyweightReps)
+        {
+            var effectiveKg = ExerciseWeightFormatter.ComputeEffectiveWeight(exercise.DefaultWeightKg, _bodyweightKg, exercise.BodyweightPercent);
+            string weightStr;
+            if (effectiveKg.HasValue)
+                weightStr = ExerciseWeightFormatter.FormatWeight(effectiveKg.Value, WeightUnitService.Current);
+            else if (exercise.BodyweightPercent.HasValue)
+                weightStr = ExerciseCatalog.FormatShare(exercise.BodyweightPercent);
+            else
+                weightStr = "";
+
+            if (exercise.DefaultReps.HasValue && !string.IsNullOrEmpty(weightStr))
+                return $"{exercise.DefaultReps.Value} × {weightStr}";
+            if (exercise.DefaultReps.HasValue)
+                return $"{exercise.DefaultReps.Value} reps";
+            return !string.IsNullOrEmpty(weightStr) ? weightStr : "-";
+        }
+
+        if (exercise.DefaultReps.HasValue && exercise.DefaultWeightKg.HasValue)
+        {
+            var weight = ExerciseWeightFormatter.FormatWeight(exercise.DefaultWeightKg.Value, WeightUnitService.Current);
+            return $"{exercise.DefaultReps.Value} × {weight}";
+        }
+        if (exercise.DefaultReps.HasValue)
+        {
+            return $"{exercise.DefaultReps.Value} reps";
+        }
+        if (exercise.DefaultWeightKg.HasValue)
+        {
+            return ExerciseWeightFormatter.FormatWeight(exercise.DefaultWeightKg.Value, WeightUnitService.Current);
+        }
+
+        return "-";
     }
 
     /// <summary>Builds a readable text summary of the session for sharing.</summary>
@@ -706,7 +827,8 @@ else
         }
         else if (type == ExerciseLogType.BodyweightReps)
         {
-            weight = ExerciseWeightFormatter.FormatBodyweightOffset(set.WeightKg, _bodyweightKg, WeightUnitService.Current);
+            var eff = ExerciseWeightFormatter.ComputeEffectiveWeight(set.WeightKg, _bodyweightKg, GetBodyweightPercent(set.ExerciseName));
+            weight = eff.HasValue ? ExerciseWeightFormatter.FormatWeightWithUnit(eff.Value, WeightUnitService.Current) : "BW";
         }
         else
         {
@@ -732,7 +854,9 @@ else
         var weight = type switch
         {
             ExerciseLogType.Duration => "",
-            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.FormatBodyweightOffset(set.WeightKg, _bodyweightKg, WeightUnitService.Current),
+            ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.ComputeEffectiveWeight(set.WeightKg, _bodyweightKg, GetBodyweightPercent(set.ExerciseName)) is { } eff
+                ? ExerciseWeightFormatter.FormatWeightWithUnit(eff, WeightUnitService.Current)
+                : "BW",
             _ => set.WeightKg is { } w ? ExerciseWeightFormatter.FormatWeightWithUnit(w, WeightUnitService.Current) : ""
         };
         string reps;

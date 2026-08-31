@@ -82,7 +82,7 @@ else
                 <div class="infinite-table-list">
                     <div class="infinite-table-head infinite-table-head--3">
                         <span>@("Date")</span>
-                        <span>@("Weight")</span>
+                        <span>@(string.Format("Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)))</span>
                         <span class="infinite-table-head__action" />
                     </div>
                     @foreach (var entry in _entries.Take(_loadedListCount))
@@ -90,7 +90,7 @@ else
                         var item = entry;
                         <div @key="item.DateOnly" class="infinite-table-row infinite-table-row--3">
                             <span>@UiDateFormats.DateOnlyCompact(item.DateOnly)</span>
-                            <span>@FormatWeightWithUnit(item.BodyweightKg)</span>
+                            <span>@FormatWeight(item.BodyweightKg)</span>
                             <span class="infinite-table-row__action">
                                 <MudMenu Icon="@Icons.Material.Filled.MoreVert"
                                          Class="bodyweight-table__menu"
@@ -171,6 +171,9 @@ else
 
     private string FormatWeightWithUnit(double kg) =>
         ExerciseWeightFormatter.FormatWeightWithUnit(kg, WeightUnitService.Current);
+
+    private string FormatWeight(double kg) =>
+        ExerciseWeightFormatter.FormatWeight(kg, WeightUnitService.Current);
 
 
     private async Task OnRangeChanged(BodyweightTimeRange range)

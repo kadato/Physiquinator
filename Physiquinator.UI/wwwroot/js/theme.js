@@ -193,13 +193,54 @@
 
     window.planReorder = {
         sortable: null,
+        sortables: [],
+        _dragState: null,
         init: function (listId, dotNetRef) {
             const el = document.getElementById(listId);
             if (!el || typeof Sortable === "undefined") {
                 return false;
             }
             this.destroy();
-            this.sortable = Sortable.create(el, {
+            this.sortables = [];
+            this._dragState = null;
+            const getAllRows = () => Array.from(el.querySelectorAll(".plan-exercise-row"));
+            const onStart = (evt) => {
+                const all = getAllRows();
+                this._dragState = {
+                    item: evt.item,
+                    from: evt.from,
+                    oldIndex: evt.oldIndex,
+                    globalOldIndex: all.indexOf(evt.item)
+                };
+            };
+            const onEnd = (evt) => {
+                if (!this._dragState) {
+                    return;
+                }
+                const globalOldIndex = this._dragState.globalOldIndex;
+                const allAfter = getAllRows();
+                const globalNewIndex = allAfter.indexOf(evt.item);
+                const from = this._dragState.from;
+                const oldIdx = this._dragState.oldIndex;
+                const item = evt.item;
+                // Revert DOM to original order before notifying Blazor
+                if (evt.from === evt.to) {
+                    revertDomOrder(evt);
+                } else {
+                    if (oldIdx >= from.children.length) {
+                        from.appendChild(item);
+                    } else {
+                        from.insertBefore(item, from.children[oldIdx]);
+                    }
+                }
+                this._dragState = null;
+                if (globalOldIndex === -1 || globalNewIndex === -1 || globalOldIndex === globalNewIndex) {
+                    return;
+                }
+                dotNetRef.invokeMethodAsync("OnExerciseReordered", globalOldIndex, globalNewIndex);
+            };
+            const common = {
+                group: "plan-exercises",
                 handle: ".plan-exercise-handle",
                 animation: 0,
                 delay: 140,
@@ -217,19 +258,28 @@
                 chosenClass: "plan-exercise-row--chosen",
                 dragClass: "plan-exercise-row--drag",
                 draggable: ".plan-exercise-row",
-                onEnd: function (evt) {
-                    if (evt.oldIndex === evt.newIndex) {
-                        return;
-                    }
-                    revertDomOrder(evt);
-                    dotNetRef.invokeMethodAsync("OnExerciseReordered", evt.oldIndex, evt.newIndex);
-                }
+                onStart: onStart,
+                onEnd: onEnd
+            };
+            try {
+                const outer = Sortable.create(el, common);
+                this.sortables.push(outer);
+                this.sortable = outer;
+            } catch (e) {}
+            el.querySelectorAll(".plan-exercise-group").forEach(g => {
+                try {
+                    const inner = Sortable.create(g, { ...common });
+                    this.sortables.push(inner);
+                } catch (e) {}
             });
             return true;
         },
         destroy: function () {
+            (this.sortables || []).forEach(s => { try { s.destroy(); } catch (e) {} });
+            this.sortables = [];
+            this._dragState = null;
             if (this.sortable) {
-                this.sortable.destroy();
+                try { this.sortable.destroy(); } catch (e) {}
                 this.sortable = null;
             }
         }

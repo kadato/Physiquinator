@@ -5,17 +5,42 @@
 
 <div id="plan-exercise-sortable-list"
      class="plan-exercise-list">
-    @for (var i = 0; i < Exercises.Count; i++)
+    @foreach (var group in ExerciseGroups)
     {
-        var index = i;
-        <PlanExerciseRow Exercise="Exercises[index]"
-                         Index="index"
-                         CanMoveUp="@(index > 0)"
-                         CanMoveDown="@(index < Exercises.Count - 1)"
-                         OnMoveUp="@(() => OnMoveUp.InvokeAsync(index))"
-                         OnMoveDown="@(() => OnMoveDown.InvokeAsync(index))"
-                         OnEdit="@(() => OnEdit.InvokeAsync(index))"
-                         OnDelete="@(() => OnDelete.InvokeAsync(index))" />
+        if (group.GroupId is not null)
+        {
+            <div class="plan-exercise-group plan-exercise-group--superset" data-group="@group.GroupId">
+                <div class="plan-exercise-group__header">
+                    <span>SUPERSET @group.GroupId</span>
+                    <span class="plan-exercise-group__count">@group.Items.Count exercises</span>
+                </div>
+                @foreach (var item in group.Items)
+                {
+                    var idx = item.OriginalIndex;
+                    <PlanExerciseRow Exercise="item.Exercise"
+                                     Index="idx"
+                                     CanMoveUp="@(idx > 0)"
+                                     CanMoveDown="@(idx < Exercises.Count - 1)"
+                                     OnMoveUp="@(() => OnMoveUp.InvokeAsync(idx))"
+                                     OnMoveDown="@(() => OnMoveDown.InvokeAsync(idx))"
+                                     OnEdit="@(() => OnEdit.InvokeAsync(idx))"
+                                     OnDelete="@(() => OnDelete.InvokeAsync(idx))" />
+                }
+            </div>
+        }
+        else
+        {
+            var item = group.Items[0];
+            var idx = item.OriginalIndex;
+            <PlanExerciseRow Exercise="item.Exercise"
+                             Index="idx"
+                             CanMoveUp="@(idx > 0)"
+                             CanMoveDown="@(idx < Exercises.Count - 1)"
+                             OnMoveUp="@(() => OnMoveUp.InvokeAsync(idx))"
+                             OnMoveDown="@(() => OnMoveDown.InvokeAsync(idx))"
+                             OnEdit="@(() => OnEdit.InvokeAsync(idx))"
+                             OnDelete="@(() => OnDelete.InvokeAsync(idx))" />
+        }
     }
 </div>
 
@@ -47,6 +72,43 @@
     private int _lastSortableCount = -1;
     private int _lastSortableVersion = -1;
     private bool _sortableReady;
+
+    private IReadOnlyList<ExerciseGroup> ExerciseGroups => BuildGroups();
+
+    private sealed record GroupItem(ExercisePlan Exercise, int OriginalIndex);
+    private sealed record ExerciseGroup(string? GroupId, IReadOnlyList<GroupItem> Items);
+
+    private IReadOnlyList<ExerciseGroup> BuildGroups()
+    {
+        var result = new List<ExerciseGroup>();
+        for (var i = 0; i < Exercises.Count;)
+        {
+            var current = Exercises[i];
+            var groupId = current.SupersetGroupId;
+            if (!string.IsNullOrEmpty(groupId))
+            {
+                var items = new List<GroupItem>();
+                var j = i;
+                while (j < Exercises.Count && string.Equals(Exercises[j].SupersetGroupId, groupId, StringComparison.Ordinal))
+                {
+                    items.Add(new GroupItem(Exercises[j], j));
+                    j++;
+                }
+
+                if (items.Count >= 2)
+                {
+                    result.Add(new ExerciseGroup(groupId, items));
+                    i = j;
+                    continue;
+                }
+            }
+
+            result.Add(new ExerciseGroup(null, new[] { new GroupItem(current, i) }));
+            i++;
+        }
+
+        return result;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

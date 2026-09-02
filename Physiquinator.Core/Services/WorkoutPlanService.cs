@@ -37,6 +37,42 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
         InvalidatePlanCache();
     }
 
+    public async Task<WorkoutPlan> DuplicatePlanAsync(Guid id)
+    {
+        var plan = await GetPlanAsync(id) ?? throw new InvalidOperationException($"Plan with ID {id} not found.");
+        var allPlans = await GetAllPlansAsync();
+        var maxSortOrder = allPlans.Count == 0 ? -1 : allPlans.Max(p => p.SortOrder);
+        var cloned = new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = $"{plan.Name} Copy",
+            RestIntervalSeconds = plan.RestIntervalSeconds,
+            DefaultSetCount = plan.DefaultSetCount,
+            CreatedAt = DateTime.UtcNow,
+            SortOrder = maxSortOrder + 1,
+            Exercises =
+            [
+                .. plan.Exercises.Select(e => new ExercisePlan
+                {
+                    Id = Guid.NewGuid(),
+                    Name = e.Name,
+                    SetCount = e.SetCount,
+                    WarmupSetCount = e.WarmupSetCount,
+                    SupersetGroupId = e.SupersetGroupId,
+                    Order = e.Order,
+                    RestIntervalSeconds = e.RestIntervalSeconds,
+                    DefaultReps = e.DefaultReps,
+                    DefaultWeightKg = e.DefaultWeightKg,
+                    BodyweightPercent = e.BodyweightPercent,
+                    LogType = e.LogType,
+                }),
+            ],
+        };
+
+        await SavePlanAsync(cloned);
+        return cloned;
+    }
+
     /// <summary>
     /// Persists a new relative ordering for the given plan IDs (position 0 = first).
     /// </summary>

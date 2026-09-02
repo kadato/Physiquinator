@@ -38,6 +38,7 @@
                                  Disabled="@(!CanMoveDown)"
                                  OnClick="OnMoveDown">Move down</MudMenuItem>
                     <MudMenuItem Icon="@Icons.Material.Filled.Upload" OnClick="OnExport">@("Export")</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" OnClick="OnDuplicate">Duplicate</MudMenuItem>
                     <MudMenuItem Icon="@Icons.Material.Outlined.DeleteOutline" IconColor="Color.Error" OnClick="OnDelete">@("Delete")</MudMenuItem>
                 </MudMenu>
             </div>
@@ -54,6 +55,7 @@
     [Parameter] public EventCallback OnEdit { get; set; }
     [Parameter] public EventCallback OnExport { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback OnDuplicate { get; set; }
     [Parameter] public bool CanMoveUp { get; set; }
     [Parameter] public bool CanMoveDown { get; set; }
     [Parameter] public EventCallback OnMoveUp { get; set; }

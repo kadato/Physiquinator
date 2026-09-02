@@ -139,6 +139,7 @@
                               OnStart="@(() => StartWorkoutAsync(plan.Id, plan.Name))"
                               OnEdit="@(() => Navigation.NavigateTo(AppRoutes.Plan(plan.Id)))"
                               OnExport="@(() => ExportSinglePlan(plan.Id, plan.Name))"
+                              OnDuplicate="@(() => DuplicatePlanAsync(plan.Id))"
                               OnDelete="@(() => DeletePlan(plan.Id, plan.Name))" />
                 }
             </div>
@@ -471,6 +472,38 @@
         _plans = await PlanService.GetAllPlansAsync();
         _sortedPlans = null;
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DuplicatePlanAsync(Guid planId)
+    {
+        try
+        {
+            var dup = await PlanService.DuplicatePlanAsync(planId);
+            _plans = await PlanService.GetAllPlansAsync();
+            _sortedPlans = null;
+            Snackbar.Add(
+                $"'{dup.Name}' created.",
+                Severity.Success,
+                options =>
+                {
+                    options.Action = "Undo";
+                    options.ActionColor = Color.Primary;
+                    options.RequireInteraction = true;
+                    options.OnClick = async _ =>
+                    {
+                        await PlanService.DeletePlanAsync(dup.Id);
+                        _plans = await PlanService.GetAllPlansAsync();
+                        _sortedPlans = null;
+                        Snackbar.Add($"'{dup.Name}' removed.", Severity.Success);
+                        await InvokeAsync(StateHasChanged);
+                    };
+                });
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Duplicate failed: {ex.Message}", Severity.Error);
+        }
     }
 
     public async ValueTask DisposeAsync()

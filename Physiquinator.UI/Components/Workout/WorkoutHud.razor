@@ -1,0 +1,43 @@
+<div class="workout-hud">
+    <div class="workout-hud__stats">
+        <div class="workout-hud__stat">
+            <span class="workout-hud__label">ELAPSED</span>
+            <span class="workout-hud__value">@ElapsedLabel</span>
+        </div>
+        <div class="workout-hud__stat workout-hud__stat--volume">
+            <span class="workout-hud__label">VOLUME</span>
+            <span class="workout-hud__value">@VolumeLabel</span>
+        </div>
+        <div class="workout-hud__stat workout-hud__stat--sets">
+            <span class="workout-hud__label">LOGGED</span>
+            <span class="workout-hud__value">@TotalCompletedSets / @TotalSetsCount</span>
+        </div>
+    </div>
+    <div class="workout-hud__bar-wrap">
+        <div class="workout-hud__bar-head">
+            <span class="workout-hud__bar-label">PROGRESSION</span>
+            <span class="workout-hud__bar-pct">@OverallProgressPct%</span>
+        </div>
+        <div class="workout-hud__bar">
+            <div class="workout-hud__fill" style="width: @(OverallProgressPct)%"></div>
+            <div class="workout-hud__bar-grid" aria-hidden="true"></div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ElapsedLabel { get; set; } = "0 MIN";
+
+    [Parameter]
+    public string VolumeLabel { get; set; } = "";
+
+    [Parameter]
+    public int TotalCompletedSets { get; set; }
+
+    [Parameter]
+    public int TotalSetsCount { get; set; }
+
+    [Parameter]
+    public int OverallProgressPct { get; set; }
+}

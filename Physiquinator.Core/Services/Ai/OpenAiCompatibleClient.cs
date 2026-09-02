@@ -8,22 +8,22 @@ using System.Text.Json.Serialization;
 
 namespace Physiquinator.Core.Services.Ai;
 
-public sealed class OpenAiCompatibleResponse
+public abstract class AiChatResponseBase
 {
-    public string AssistantContent { get; set; } = string.Empty;
     public string ReasoningContent { get; set; } = string.Empty;
     public List<AiToolCallInfo> ToolCalls { get; set; } = [];
     public bool IsError { get; set; }
     public string ErrorMessage { get; set; } = string.Empty;
 }
 
-public sealed class StreamingChatChunk
+public sealed class OpenAiCompatibleResponse : AiChatResponseBase
+{
+    public string AssistantContent { get; set; } = string.Empty;
+}
+
+public sealed class StreamingChatChunk : AiChatResponseBase
 {
     public string DeltaContent { get; set; } = string.Empty;
-    public string ReasoningContent { get; set; } = string.Empty;
-    public List<AiToolCallInfo> ToolCalls { get; set; } = [];
-    public bool IsError { get; set; }
-    public string ErrorMessage { get; set; } = string.Empty;
 }
 
 
@@ -292,14 +292,8 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
         return chunk;
     }
 
-    private static void ParseStreamingToolCalls(JsonElement delta, List<AiToolCallInfo> toolCalls)
-    {
-        if (!delta.TryGetProperty("tool_calls", out JsonElement toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
-        {
-            return;
-        }
-
-        foreach (JsonElement tc in toolCallsElem.EnumerateArray())
+    private static void ParseStreamingToolCalls(JsonElement delta, List<AiToolCallInfo> toolCalls) =>
+        AppendToolCalls(delta, toolCalls, static tc =>
         {
             var tcId = tc.TryGetProperty("id", out JsonElement idp) ? idp.GetString() ?? string.Empty : string.Empty;
             var fnName = string.Empty;
@@ -307,11 +301,30 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
 
             if (tc.TryGetProperty("function", out JsonElement fn))
             {
-                if (fn.TryGetProperty("name", out JsonElement np)) fnName = np.GetString() ?? string.Empty;
-                if (fn.TryGetProperty("arguments", out JsonElement ap)) fnArgs = ap.GetString() ?? string.Empty;
+                if (fn.TryGetProperty("name", out JsonElement np))
+                {
+                    fnName = np.GetString() ?? string.Empty;
+                }
+
+                if (fn.TryGetProperty("arguments", out JsonElement ap))
+                {
+                    fnArgs = ap.GetString() ?? string.Empty;
+                }
             }
 
-            toolCalls.Add(new AiToolCallInfo { Id = tcId, Name = fnName, ArgumentsJson = fnArgs });
+            return new AiToolCallInfo { Id = tcId, Name = fnName, ArgumentsJson = fnArgs };
+        });
+
+    private static void AppendToolCalls(JsonElement container, List<AiToolCallInfo> toolCalls, Func<JsonElement, AiToolCallInfo> factory)
+    {
+        if (!container.TryGetProperty("tool_calls", out JsonElement toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (JsonElement tc in toolCallsElem.EnumerateArray())
+        {
+            toolCalls.Add(factory(tc));
         }
     }
 
@@ -398,28 +411,21 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
     }
 
 
-    private static void ParseJsonResponseToolCalls(JsonElement messageElem, List<AiToolCallInfo> toolCalls)
-    {
-        if (!messageElem.TryGetProperty("tool_calls", out JsonElement toolCallsElem) || toolCallsElem.ValueKind != JsonValueKind.Array)
-        {
-            return;
-        }
-
-        foreach (JsonElement tc in toolCallsElem.EnumerateArray())
+    private static void ParseJsonResponseToolCalls(JsonElement messageElem, List<AiToolCallInfo> toolCalls) =>
+        AppendToolCalls(messageElem, toolCalls, static tc =>
         {
             var tcId = tc.TryGetProperty("id", out JsonElement idp) ? idp.GetString() ?? Guid.NewGuid().ToString("N") : Guid.NewGuid().ToString("N");
             JsonElement fn = tc.GetProperty("function");
             var fnName = fn.GetProperty("name").GetString() ?? string.Empty;
             var fnArgs = fn.GetProperty("arguments").GetString() ?? "{}";
 
-            toolCalls.Add(new AiToolCallInfo
+            return new AiToolCallInfo
             {
                 Id = tcId,
                 Name = fnName,
                 ArgumentsJson = fnArgs
-            });
-        }
-    }
+            };
+        });
 
     private const int MaxErrorDetailLength = 300;
 

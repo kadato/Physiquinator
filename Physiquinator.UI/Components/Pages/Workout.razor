@@ -1,6 +1,7 @@
 @page "/workout/{PlanId:guid}"
 @using Microsoft.Extensions.Logging
 @using System.Globalization
+@using Physiquinator.UI.Components.Workout
 @inject WorkoutPlanService PlanService
 @inject WorkoutSessionService SessionService
 @inject RestAlertSettingsService RestAlertSettings
@@ -51,32 +52,11 @@ else
             </div>
         }
 
-        <div class="workout-hud">
-            <div class="workout-hud__stats">
-                <div class="workout-hud__stat">
-                    <span class="workout-hud__label">ELAPSED</span>
-                    <span class="workout-hud__value">@ElapsedLabel</span>
-                </div>
-                <div class="workout-hud__stat workout-hud__stat--volume">
-                    <span class="workout-hud__label">VOLUME</span>
-                    <span class="workout-hud__value">@(SessionVolumeLabel ?? "0 " + UnitSuffix)</span>
-                </div>
-                <div class="workout-hud__stat workout-hud__stat--sets">
-                    <span class="workout-hud__label">LOGGED</span>
-                    <span class="workout-hud__value">@TotalCompletedSets / @TotalSetsCount</span>
-                </div>
-            </div>
-            <div class="workout-hud__bar-wrap">
-                <div class="workout-hud__bar-head">
-                    <span class="workout-hud__bar-label">PROGRESSION</span>
-                    <span class="workout-hud__bar-pct">@OverallProgressPct%</span>
-                </div>
-                <div class="workout-hud__bar">
-                    <div class="workout-hud__fill" style="width: @(OverallProgressPct)%"></div>
-                    <div class="workout-hud__bar-grid" aria-hidden="true"></div>
-                </div>
-            </div>
-        </div>
+        <WorkoutHud ElapsedLabel="@ElapsedLabel"
+                   VolumeLabel="@(SessionVolumeLabel ?? "0 " + UnitSuffix)"
+                   TotalCompletedSets="@TotalCompletedSets"
+                   TotalSetsCount="@TotalSetsCount"
+                   OverallProgressPct="@OverallProgressPct" />
 
         <!-- FOCUS DECK — only one thing at a time. BRUTAL. -->
         <div class="workout-deck">
@@ -1573,81 +1553,68 @@ else
         }
     }
 
-    private void OnSessionRestStateChanged(object? sender, EventArgs e)
-    {
-        _ = InvokeAsync(async () =>
+    private void OnSessionRestStateChanged(object? sender, EventArgs e) =>
+        EnqueueRestUpdate(async () =>
         {
-            if (_disposed) return;
-
-            try
-            {
-                if (!SessionService.IsResting)
-                {
-                    await TimerInterop.StopTimerAsync();
-                    _restPanel?.Refresh();
-                    await SafeStateHasChangedAsync();
-                    return;
-                }
-
-                _isRestComplete = false;
-
-                var remainingMs = RestRemainingMs;
-                if (remainingMs > 0)
-                    await StartJsTimerAsync(remainingMs, continueMode: true);
-
-                _restPanel?.Refresh();
-                await SafeStateHasChangedAsync();
-            }
-            catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
-            {
-                // Ignore cancellation, circuit is gone
-            }
-            catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
-            {
-                // Ignore disconnect, circuit is gone
-            }
-            catch (Exception ex)
-            {
-                Logger.LogDebug(ex, "Rest state sync error");
-            }
-        });
-    }
-
-    private void OnSessionRestCompletedWhileBackground(object? sender, EventArgs e)
-    {
-        _ = InvokeAsync(async () =>
-        {
-            if (_disposed) return;
-
-            try
+            if (!SessionService.IsResting)
             {
                 await TimerInterop.StopTimerAsync();
-                _isRestComplete = true;
-                if (_restNextExerciseOverride.HasValue)
-                {
-                    _activeExerciseIndex = _restNextExerciseOverride.Value;
-                    _restNextExerciseOverride = null;
-                }
-                else if (SessionService.IsExerciseDone(_activeExerciseIndex))
-                {
-                    _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-                }
+                _restPanel?.Refresh();
                 await SafeStateHasChangedAsync();
-                await PlayRestCompleteAlertsAsync();
-                await ScrollActiveCardIntoViewAsync();
-                await SafeStateHasChangedAsync();
+                return;
             }
-            catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
+
+            _isRestComplete = false;
+
+            var remainingMs = RestRemainingMs;
+            if (remainingMs > 0)
+                await StartJsTimerAsync(remainingMs, continueMode: true);
+
+            _restPanel?.Refresh();
+            await SafeStateHasChangedAsync();
+        }, "Rest state sync error");
+
+    private void OnSessionRestCompletedWhileBackground(object? sender, EventArgs e) =>
+        EnqueueRestUpdate(async () =>
+        {
+            await TimerInterop.StopTimerAsync();
+            _isRestComplete = true;
+            if (_restNextExerciseOverride.HasValue)
+            {
+                _activeExerciseIndex = _restNextExerciseOverride.Value;
+                _restNextExerciseOverride = null;
+            }
+            else if (SessionService.IsExerciseDone(_activeExerciseIndex))
+            {
+                _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
+            }
+            await SafeStateHasChangedAsync();
+            await PlayRestCompleteAlertsAsync();
+            await ScrollActiveCardIntoViewAsync();
+            await SafeStateHasChangedAsync();
+        }, "Background rest completion error");
+
+    private void EnqueueRestUpdate(Func<Task> action, string errorMessage)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed) return;
+
+            try
+            {
+                await action();
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
             {
                 // Ignore cancellation, circuit is gone
             }
-            catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
+            catch (Exception ex) when (JsSafeInvoker.IsJSDisconnected(ex))
             {
                 // Ignore disconnect, circuit is gone
             }
             catch (Exception ex)
             {
-                Logger.LogDebug(ex, "Background rest completion error");
+                Logger.LogDebug(ex, errorMessage);
             }
         });
     }

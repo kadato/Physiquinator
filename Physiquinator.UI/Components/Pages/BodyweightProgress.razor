@@ -1,5 +1,4 @@
 @page "/history/bodyweight"
-@implements IAsyncDisposable
 @using System.Globalization
 @using System.Linq
 @using MudBlazor.Charts
@@ -8,7 +7,6 @@
 @inject IDialogService DialogService
 @inject UiFeedbackService UiFeedback
 @inject WeightUnitService WeightUnitService
-@inject IJSRuntime JS
 
 <PageTitle>@("Bodyweight")</PageTitle>
 
@@ -57,27 +55,20 @@ else
                 <StatCard Value="@_entries.Count.ToString()" Label="@("Entries")" />
             </div>
 
-            <MudPaper Class="pa-3 exercise-progress-chart bodyweight-chart-panel" Elevation="0">
-                <MudText Typo="Typo.h2" Class="settings-card__title mb-2">@("Bodyweight")</MudText>
-                @if (_hasChartData)
-                {
-                    <div class="bodyweight-chart">
-                        <MudChart T="double"
-                                  ChartType="ChartType.Line"
-                                  ChartSeries="@_chartSeries"
-                                  ChartLabels="@_chartLabels"
-                                  ChartOptions="@_chartOptions"
-                                  Width="100%"
-                                  Height="@_chartHeightPx" />
-                    </div>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        @("Log your weight to see the chart.")
-                    </MudText>
-                }
-            </MudPaper>
+            <ProgressChartShell Title="@("Bodyweight")"
+                                HasData="_hasChartData"
+                                EmptyMessage="@("Log your weight to see the chart.")"
+                                Class="pa-3 exercise-progress-chart bodyweight-chart-panel">
+                <div class="bodyweight-chart">
+                    <MudChart T="double"
+                              ChartType="ChartType.Line"
+                              ChartSeries="@_chartSeries"
+                              ChartLabels="@_chartLabels"
+                              ChartOptions="@_chartOptions"
+                              Width="100%"
+                              Height="@_chartHeightPx" />
+                </div>
+            </ProgressChartShell>
 
             <MudPaper Class="premium-table bodyweight-table" Elevation="0">
                 <div class="infinite-table-list">
@@ -107,16 +98,10 @@ else
                         </div>
                     }
                 </div>
-                @if (_isLoadingMore)
-                {
-                    <div class="history-infinite-scroll-loading" aria-hidden="true">
-                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
-                    </div>
-                }
-                @if (_hasMoreListItems)
-                {
-                    <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
-                }
+                <InfiniteScrollSentinel IsLoadingMore="_isLoadingMore"
+                                        HasMoreItems="_hasMoreListItems"
+                                        SentinelId="@LoadMoreSentinelId"
+                                        OnLoadMore="OnLoadMoreVisible" />
             </MudPaper>
         }
     </MudStack>
@@ -147,8 +132,6 @@ else
     private int _loadedListCount;
     private bool _hasMoreListItems;
     private bool _isLoadingMore;
-    private bool _sentinelObserved;
-    private DotNetObjectReference<BodyweightProgress>? _dotNetRef;
     private BodyweightTimeRange _range = BodyweightTimeRange.AllTime;
     private string[] _chartLabels = Array.Empty<string>();
     private ChartSeriesList _chartSeries = [];
@@ -190,11 +173,6 @@ else
         _hasMoreListItems = _loadedListCount < _entries.Count;
     }
 
-    /// <summary>
-    /// Invoked from JS when the sentinel scrolls into view. Reveals the next chunk
-    /// of already-loaded entries and reports whether more pages may exist.
-    /// </summary>
-    [JSInvokable]
     public Task<bool> OnLoadMoreVisible()
     {
         if (_isLoadingMore || !_hasMoreListItems || _entries.Count == 0)
@@ -385,35 +363,4 @@ else
             "Entry restored.",
             "Could not restore entry");
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!_hasMoreListItems)
-        {
-            if (_sentinelObserved)
-            {
-                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
-                _sentinelObserved = false;
-            }
-            return;
-        }
-
-        if (!_sentinelObserved)
-        {
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            await InfiniteScrollInterop.ObserveAsync(JS, LoadMoreSentinelId, _dotNetRef, nameof(OnLoadMoreVisible));
-            _sentinelObserved = true;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_sentinelObserved)
-        {
-            await Physiquinator.UI.Services.JsSafeInvoker.RunSafeAsync(() => InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId));
-            _sentinelObserved = false;
-        }
-
-        _dotNetRef?.Dispose();
-        _dotNetRef = null;
-    }
 }

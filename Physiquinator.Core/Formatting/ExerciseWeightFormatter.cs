@@ -1,4 +1,5 @@
 using System.Globalization;
+using Physiquinator.Core.Models;
 
 namespace Physiquinator.Core.Formatting;
 
@@ -102,5 +103,25 @@ public static class ExerciseWeightFormatter
             return (bodyweightKg.Value * share) + (offsetKg ?? 0);
         }
         return offsetKg;
+    }
+
+    public static string FormatEffectiveWeight(double? offsetKg, double? bodyweightKg, double? bodyweightPercent, WeightUnit unit, ExerciseLogType logType)
+    {
+        if (logType == ExerciseLogType.Duration)
+            return "-";
+
+        if (logType == ExerciseLogType.BodyweightReps)
+        {
+            var effective = ComputeEffectiveWeight(offsetKg, bodyweightKg, bodyweightPercent);
+            if (effective.HasValue)
+                return FormatWeight(effective.Value, unit);
+
+            if (offsetKg.HasValue)
+                return FormatWeight(offsetKg.Value, unit);
+
+            return "-";
+        }
+
+        return offsetKg is { } w ? FormatWeight(w, unit) : "-";
     }
 }

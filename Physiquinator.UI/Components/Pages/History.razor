@@ -1,5 +1,4 @@
 @page "/history"
-@implements IAsyncDisposable
 @inject WorkoutHistoryRepository HistoryRepo
 @inject WorkoutSessionService SessionService
 @inject NavigationManager Navigation
@@ -9,7 +8,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject WeightUnitService WeightUnitService
-@inject IJSRuntime JS
 <MudStack Spacing="3">
     <PageTitle>@("Workout history")</PageTitle>
     <PageHeader Title="@("Workout history")">
@@ -222,17 +220,10 @@
                 }
             </div>
 
-            @if (_isLoadingMore)
-            {
-                <div class="history-infinite-scroll-loading" aria-hidden="true">
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
-                </div>
-            }
-
-            @if (_hasMoreSessions && _selectedDays.Count == 0)
-            {
-                <div id="@LoadMoreSentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
-            }
+            <InfiniteScrollSentinel IsLoadingMore="_isLoadingMore"
+                                    HasMoreItems="_hasMoreSessions && _selectedDays.Count == 0"
+                                    SentinelId="@LoadMoreSentinelId"
+                                    OnLoadMore="OnLoadMoreVisible" />
         }
     }
 </MudStack>
@@ -253,8 +244,6 @@
     private int _loadedSessionCount;
     private bool _hasMoreSessions;
     private bool _isLoadingMore;
-    private bool _sentinelObserved;
-    private DotNetObjectReference<History>? _dotNetRef;
     private bool _selectMode;
     private int _selectionVersion;
     private readonly HashSet<string> _selectedSessionIds = new(StringComparer.Ordinal);
@@ -534,12 +523,6 @@
         await UpdateSessionsListAsync();
     }
 
-    /// <summary>
-    /// Invoked from JS when the sentinel scrolls into view. Loads the next
-    /// page of sessions and returns whether more pages may exist (the JS
-    /// observer re-arms itself only while that is true).
-    /// </summary>
-    [JSInvokable]
     public async Task<bool> OnLoadMoreVisible()
     {
         if (_sessions == null || _selectedDays.Count > 0 || !_hasMoreSessions || _isLoadingMore)
@@ -563,38 +546,6 @@
             _isLoadingMore = false;
             StateHasChanged();
         }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_selectedDays.Count > 0 || !_hasMoreSessions)
-        {
-            if (_sentinelObserved)
-            {
-                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
-                _sentinelObserved = false;
-            }
-            return;
-        }
-
-        if (!_sentinelObserved)
-        {
-            _dotNetRef ??= DotNetObjectReference.Create(this);
-            await InfiniteScrollInterop.ObserveAsync(JS, LoadMoreSentinelId, _dotNetRef, nameof(OnLoadMoreVisible));
-            _sentinelObserved = true;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_sentinelObserved)
-        {
-            await Physiquinator.UI.Services.JsSafeInvoker.RunSafeAsync(() => InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId));
-            _sentinelObserved = false;
-        }
-
-        _dotNetRef?.Dispose();
-        _dotNetRef = null;
     }
 
     private void MapLatestBodyweight(IReadOnlyList<BodyweightLogEntity> rows)

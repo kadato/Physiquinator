@@ -8,12 +8,7 @@ public sealed class GetWorkoutPlansTool(WorkoutPlanService planService) : IAiToo
     public string Name => "get_workout_plans";
     public string Description => "Get all existing workout plans, including exercise lists, sets, reps, and target weights.";
 
-    public object ParametersSchema => new
-    {
-        type = "object",
-        properties = new { },
-        required = Array.Empty<string>()
-    };
+    public object ParametersSchema => AiToolSchemaHelper.EmptySchema();
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
@@ -61,14 +56,7 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
                 items = new
                 {
                     type = "object",
-                    properties = new
-                    {
-                        name = new { type = StringType, description = "Exercise name (for example, 'Bench Press')" },
-                        targetSets = new { type = "integer", description = "Number of sets (for example, 3 or 4)" },
-                        targetReps = new { type = "integer", description = "Target reps per set (for example, 8 or 10)" },
-                        targetWeightKg = new { type = "number", description = "Target weight in kg (optional, for example, 80.0)" },
-                        restTimerSeconds = new { type = "integer", description = "Rest timer seconds (optional, for example, 90)" }
-                    },
+                    properties = AiToolSchemaHelper.ExerciseItemProperties(includeId: false),
                     required = new[] { NameProperty }
                 }
             }
@@ -96,19 +84,12 @@ public sealed class CreateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
 
     private static List<ExercisePlan> ParseExercisesJson(JsonElement root)
     {
-        var exercises = new List<ExercisePlan>();
         if (!root.TryGetProperty("exercises", out JsonElement exArray) || exArray.ValueKind != JsonValueKind.Array)
         {
-            return exercises;
+            return [];
         }
 
-        var order = 0;
-        foreach (JsonElement exElem in exArray.EnumerateArray())
-        {
-            exercises.Add(WorkoutPlanToolHelper.ParseExerciseItem(exElem, order++));
-        }
-
-        return exercises;
+        return WorkoutPlanToolHelper.ParseExerciseList(exArray);
     }
 }
 
@@ -126,7 +107,7 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
         type = "object",
         properties = new
         {
-            planId = new { type = StringType, description = "GUID ID of the plan to update" },
+            planId = AiToolSchemaHelper.PlanIdProperty("GUID ID of the plan to update"),
             name = new { type = StringType, description = "New name of the plan (optional)" },
             exercises = new
             {
@@ -135,15 +116,7 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
                 items = new
                 {
                     type = "object",
-                    properties = new
-                    {
-                        id = new { type = StringType, description = "Existing exercise GUID ID (optional, new GUID generated if omitted)" },
-                        name = new { type = StringType, description = "Exercise name" },
-                        targetSets = new { type = "integer", description = "Number of sets" },
-                        targetReps = new { type = "integer", description = "Target reps" },
-                        targetWeightKg = new { type = "number", description = "Target weight in kg" },
-                        restTimerSeconds = new { type = "integer", description = "Rest timer seconds" }
-                    },
+                    properties = AiToolSchemaHelper.ExerciseItemProperties(includeId: true),
                     required = new[] { NameProperty }
                 }
             }
@@ -156,7 +129,7 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
         using var doc = JsonDocument.Parse(argumentsJson);
         JsonElement root = doc.RootElement;
 
-        if (!root.TryGetProperty(PlanIdProperty, out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
+        if (!AiToolSchemaHelper.TryParsePlanId(root, out Guid planId))
         {
             return JsonSerializer.Serialize(new { success = false, error = "Invalid or missing planId" });
         }
@@ -181,46 +154,22 @@ public sealed class UpdateWorkoutPlanTool(WorkoutPlanService planService) : IAiT
         return JsonSerializer.Serialize(new { success = true, message = $"Updated workout plan '{plan.Name}'." });
     }
 
-    private static List<ExercisePlan> ParseUpdatedExercises(JsonElement exArray)
-    {
-        var updatedExercises = new List<ExercisePlan>();
-        var order = 0;
-
-        foreach (JsonElement exElem in exArray.EnumerateArray())
-        {
-            updatedExercises.Add(WorkoutPlanToolHelper.ParseExerciseItem(exElem, order++));
-        }
-
-        return updatedExercises;
-    }
+    private static List<ExercisePlan> ParseUpdatedExercises(JsonElement exArray) =>
+        WorkoutPlanToolHelper.ParseExerciseList(exArray);
 }
 
 public sealed class DeleteWorkoutPlanTool(WorkoutPlanService planService) : IAiTool
 {
-    private const string PlanIdProperty = "planId";
-    private const string StringType = "string";
-
     public string Name => "delete_workout_plan";
     public string Description => "Delete a workout plan by its ID.";
 
-    public object ParametersSchema => new
-    {
-        type = "object",
-        properties = new
-        {
-            planId = new { type = StringType, description = "GUID ID of the plan to delete" }
-        },
-        required = new[] { PlanIdProperty }
-    };
+    public object ParametersSchema => AiToolSchemaHelper.PlanIdOnlySchema("GUID ID of the plan to delete");
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
-        using var doc = JsonDocument.Parse(argumentsJson);
-        JsonElement root = doc.RootElement;
-
-        if (!root.TryGetProperty(PlanIdProperty, out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
+        if (!AiToolSchemaHelper.TryParsePlanId(argumentsJson, out Guid planId, out var planIdError))
         {
-            return JsonSerializer.Serialize(new { success = false, error = "Invalid planId" });
+            return planIdError!;
         }
 
         await planService.DeletePlanAsync(planId);
@@ -230,6 +179,18 @@ public sealed class DeleteWorkoutPlanTool(WorkoutPlanService planService) : IAiT
 
 internal static class WorkoutPlanToolHelper
 {
+    public static List<ExercisePlan> ParseExerciseList(JsonElement array)
+    {
+        var list = new List<ExercisePlan>();
+        var order = 0;
+        foreach (JsonElement exElem in array.EnumerateArray())
+        {
+            list.Add(ParseExerciseItem(exElem, order++));
+        }
+
+        return list;
+    }
+
     public static ExercisePlan ParseExerciseItem(JsonElement exElem, int order)
     {
         var exName = exElem.GetProperty("name").GetString() ?? "Exercise";

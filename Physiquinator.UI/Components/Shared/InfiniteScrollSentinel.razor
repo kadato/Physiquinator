@@ -1,0 +1,72 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@if (IsLoadingMore)
+{
+    <div class="history-infinite-scroll-loading" aria-hidden="true">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+    </div>
+}
+@if (HasMoreItems)
+{
+    <div id="@SentinelId" class="history-infinite-scroll-sentinel" aria-hidden="true"></div>
+}
+
+@code {
+    [Parameter]
+    public bool IsLoadingMore { get; set; }
+
+    [Parameter]
+    public bool HasMoreItems { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string SentinelId { get; set; } = "";
+
+    [Parameter]
+    [EditorRequired]
+    public Func<Task<bool>> OnLoadMore { get; set; } = default!;
+
+    private bool _observed;
+    private DotNetObjectReference<InfiniteScrollSentinel>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!HasMoreItems)
+        {
+            if (_observed)
+            {
+                await InfiniteScrollInterop.DisposeAsync(JS, SentinelId);
+                _observed = false;
+            }
+            return;
+        }
+
+        if (!_observed)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await InfiniteScrollInterop.ObserveAsync(JS, SentinelId, _dotNetRef, nameof(OnSentinelVisible));
+            _observed = true;
+        }
+    }
+
+    [JSInvokable]
+    public async Task<bool> OnSentinelVisible()
+    {
+        var result = await OnLoadMore.Invoke();
+        await InvokeAsync(StateHasChanged);
+        return result;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_observed)
+        {
+            await JsSafeInvoker.RunSafeAsync(() => InfiniteScrollInterop.DisposeAsync(JS, SentinelId));
+            _observed = false;
+        }
+
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
+    }
+}

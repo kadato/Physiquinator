@@ -1,17 +1,22 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
-@if (Compact)
-{
-    <div class="set-metric-stepper__row set-metric-stepper__row--compact">
+@{
+    var rowClass = Compact ? "set-metric-stepper__row set-metric-stepper__row--compact" : "set-metric-stepper__row";
+    var btnDecClass = Compact ? "set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact" : "set-metric-stepper__btn set-metric-stepper__btn--dec";
+    var btnIncClass = Compact ? "set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact" : "set-metric-stepper__btn set-metric-stepper__btn--inc";
+    var valueSlotClass = Compact ? "set-metric-stepper__value-slot set-metric-stepper__value-slot--compact" : "set-metric-stepper__value-slot";
+    var valueClass = Compact ? "set-metric-stepper__value set-metric-stepper__value--compact" : "set-metric-stepper__value";
+    var inputClass = Compact ? "set-metric-stepper__input set-metric-stepper__input--compact" : "set-metric-stepper__input";
+    RenderFragment stepperRow = @<div class="@rowClass">
         <button type="button"
-                class="set-metric-stepper__btn set-metric-stepper__btn--dec set-metric-stepper__btn--compact"
+                class="@btnDecClass"
                 @onclick="@(() => Adjust(-1))"
                 aria-label="@(string.Format("Decrease {0}", Label))">&#x2212;</button>
-        <div class="set-metric-stepper__value-slot set-metric-stepper__value-slot--compact">
+        <div class="@valueSlotClass">
             <button @ref="_valueButtonRef"
                     type="button"
-                    class="set-metric-stepper__value set-metric-stepper__value--compact @(_editing ? "set-metric-stepper__value--hidden" : "")"
+                    class="@valueClass @(_editing ? "set-metric-stepper__value--hidden" : "")"
                     aria-hidden="@_editing"
                     tabindex="@(_editing ? -1 : 0)"
                     aria-label="@ValueButtonAriaLabel"
@@ -21,7 +26,7 @@
                     data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                     data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
                 @DisplayText
-                @if (!string.IsNullOrEmpty(Unit))
+                @if (Compact && !string.IsNullOrEmpty(Unit))
                 {
                     <span class="set-metric-stepper__value-unit"> @Unit</span>
                 }
@@ -30,7 +35,7 @@
             {
                 <div class="set-metric-stepper__edit-form">
                     <input @ref="_inputRef"
-                           class="set-metric-stepper__input set-metric-stepper__input--compact"
+                           class="@inputClass"
                            type="number"
                            inputmode="@InputMode"
                            min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
@@ -49,61 +54,21 @@
             }
         </div>
         <button type="button"
-                class="set-metric-stepper__btn set-metric-stepper__btn--inc set-metric-stepper__btn--compact"
+                class="@btnIncClass"
                 @onclick="@(() => Adjust(1))"
                 aria-label="@(string.Format("Increase {0}", Label))">&#x2B;</button>
-    </div>
+    </div>;
+}
+
+@if (Compact)
+{
+    @stepperRow
 }
 else
 {
     <MudStack Class="set-metric-stepper" Spacing="1">
         <MudText Typo="Typo.caption" Class="set-metric-stepper__label">@Label</MudText>
-        <div class="set-metric-stepper__row">
-            <button type="button"
-                    class="set-metric-stepper__btn set-metric-stepper__btn--dec"
-                    @onclick="@(() => Adjust(-1))"
-                    aria-label="@(string.Format("Decrease {0}", Label))">&#x2212;</button>
-            <div class="set-metric-stepper__value-slot">
-                <button @ref="_valueButtonRef"
-                        type="button"
-                        class="set-metric-stepper__value @(_editing ? "set-metric-stepper__value--hidden" : "")"
-                        aria-hidden="@_editing"
-                        tabindex="@(_editing ? -1 : 0)"
-                        aria-label="@ValueButtonAriaLabel"
-                        @onclick="StartEdit"
-                        data-value="@(Value?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
-                        data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                        data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                        data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
-                    @DisplayText
-                </button>
-                @if (_editing)
-                {
-                    <div class="set-metric-stepper__edit-form">
-                        <input @ref="_inputRef"
-                               class="set-metric-stepper__input"
-                               type="number"
-                               inputmode="@InputMode"
-                               min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                               step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                               placeholder="@PlaceholderText"
-                               autocapitalize="off"
-                               autocomplete="off"
-                               spellcheck="false"
-                               enterkeyhint="done"
-                               aria-label="@EditInputAriaLabel"
-                               @bind="EditText"
-                               @bind:event="oninput"
-                               @onblur="CommitEdit"
-                               @onkeydown="OnEditKeyDown" />
-                    </div>
-                }
-            </div>
-            <button type="button"
-                    class="set-metric-stepper__btn set-metric-stepper__btn--inc"
-                    @onclick="@(() => Adjust(1))"
-                    aria-label="@(string.Format("Increase {0}", Label))">&#x2B;</button>
-        </div>
+        @stepperRow
     </MudStack>
 }
 

@@ -64,7 +64,7 @@ internal static class JsSafeInvoker
         }
     }
 
-    public static async Task RunSafeAsync(Func<Task> action)
+    private static async Task RunCoreAsync(Func<Task> action)
     {
         try
         {
@@ -92,33 +92,9 @@ internal static class JsSafeInvoker
         }
     }
 
-    public static async ValueTask RunSafeAsync(Func<ValueTask> action)
-    {
-        try
-        {
-            await action();
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone, ignore.
-        }
-        catch (OperationCanceledException)
-        {
-            // Operation canceled, ignore.
-        }
-        catch (ObjectDisposedException)
-        {
-            // Module disposed during teardown.
-        }
-        catch (InvalidOperationException)
-        {
-            // JS runtime not available.
-        }
-        catch (Exception ex) when (IsJSDisconnected(ex))
-        {
-            // JSDisconnected via reflection, ignore.
-        }
-    }
+    public static Task RunSafeAsync(Func<Task> action) => RunCoreAsync(action);
+
+    public static ValueTask RunSafeAsync(Func<ValueTask> action) => new(RunCoreAsync(() => action().AsTask()));
 
     public static bool IsJSDisconnected(Exception ex) =>
         ex.GetType().Name.Contains("JSDisconnected", StringComparison.Ordinal);

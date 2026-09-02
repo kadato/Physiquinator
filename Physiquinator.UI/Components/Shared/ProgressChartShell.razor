@@ -1,0 +1,28 @@
+<MudPaper Class="@Class" Elevation="0">
+    <MudText Typo="Typo.h2" Class="settings-card__title mb-2">@Title</MudText>
+    @if (HasData)
+    {
+        @ChildContent
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">@EmptyMessage</MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public bool HasData { get; set; }
+
+    [Parameter]
+    public string EmptyMessage { get; set; } = "";
+
+    [Parameter]
+    public string Class { get; set; } = "pa-3 exercise-progress-chart";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

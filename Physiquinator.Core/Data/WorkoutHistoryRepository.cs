@@ -42,7 +42,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public DateTime StartedAtUtc { get; set; }
     }
 
-    private sealed class ExerciseProgressAggRow
+    private abstract class ExerciseProgressRowBase
     {
         public string SessionId { get; set; } = "";
         public DateTime StartedAtUtc { get; set; }
@@ -52,15 +52,13 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public double TotalVolumeKg { get; set; }
     }
 
-    private sealed class ExerciseProgressByNameRow
+    private sealed class ExerciseProgressAggRow : ExerciseProgressRowBase
+    {
+    }
+
+    private sealed class ExerciseProgressByNameRow : ExerciseProgressRowBase
     {
         public string ExerciseName { get; set; } = "";
-        public string SessionId { get; set; } = "";
-        public DateTime StartedAtUtc { get; set; }
-        public double? BestWeightKg { get; set; }
-        public int TotalReps { get; set; }
-        public int SetCount { get; set; }
-        public double TotalVolumeKg { get; set; }
     }
 
     private sealed class LatestMetricsByExerciseRow
@@ -78,14 +76,9 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         public double? WeightKg { get; set; }
     }
 
-    private sealed class ExerciseNameRow
+    private sealed class StringValueRow
     {
-        public string ExerciseName { get; set; } = "";
-    }
-
-    private sealed class SessionIdRow
-    {
-        public string SessionId { get; set; } = "";
+        public string Value { get; set; } = "";
     }
 
     private sealed class PlanLastSessionRow
@@ -267,24 +260,13 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         var useBodyweight = logType == ExerciseLogType.BodyweightReps
             && bodyweightKg.HasValue
             && bodyweightKg.Value > 0;
-        var (query, args) = BuildSessionProgressQuery(
+        return await QueryProgressEntriesAsync(BuildSessionProgressQuery(
             workoutPlanId.ToString(),
             exerciseName,
             maxSessions,
             useBodyweight,
             useBodyweight ? bodyweightKg!.Value : 0,
-            useBodyweight ? bodyweightPercent ?? 100 : 100);
-
-        List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
-
-        return [.. rows
-            .Select(r => new ExerciseSessionProgressEntry(
-                r.SessionId,
-                r.StartedAtUtc,
-                r.BestWeightKg,
-                r.TotalReps,
-                r.SetCount,
-                r.TotalVolumeKg))];
+            useBodyweight ? bodyweightPercent ?? 100 : 100));
     }
 
     /// <summary>
@@ -341,18 +323,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         maxSessions = Math.Clamp(maxSessions, 1, 500);
         await _db.EnsureInitializedAsync();
 
-        var (query, args) = BuildSessionProgressQuery(null, exerciseName, maxSessions, useBodyweight: false, bodyweightForQuery: 0);
-
-        List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(query, args);
-
-        return [.. rows
-            .Select(r => new ExerciseSessionProgressEntry(
-                r.SessionId,
-                r.StartedAtUtc,
-                r.BestWeightKg,
-                r.TotalReps,
-                r.SetCount,
-                r.TotalVolumeKg))];
+        return await QueryProgressEntriesAsync(BuildSessionProgressQuery(null, exerciseName, maxSessions, useBodyweight: false, bodyweightForQuery: 0));
     }
 
     private static string BuildVolumeSelect(bool useBodyweight) =>
@@ -405,6 +376,15 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         return (query, args.ToArray());
     }
 
+    private static IReadOnlyList<ExerciseSessionProgressEntry> ToProgressEntries(IEnumerable<ExerciseProgressRowBase> rows) =>
+        [.. rows.Select(r => new ExerciseSessionProgressEntry(r.SessionId, r.StartedAtUtc, r.BestWeightKg, r.TotalReps, r.SetCount, r.TotalVolumeKg))];
+
+    private async Task<IReadOnlyList<ExerciseSessionProgressEntry>> QueryProgressEntriesAsync((string Query, object[] Args) built)
+    {
+        List<ExerciseProgressAggRow> rows = await _db.Database.QueryAsync<ExerciseProgressAggRow>(built.Query, built.Args);
+        return ToProgressEntries(rows);
+    }
+
     public async Task<int> GetSessionCountAsync()
     {
         await _db.EnsureInitializedAsync();
@@ -428,15 +408,15 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
     {
         await _db.EnsureInitializedAsync();
         limit = Math.Clamp(limit, 1, 500);
-        List<ExerciseNameRow> rows = await _db.Database.QueryAsync<ExerciseNameRow>(
-            @"SELECT ExerciseName
+        List<StringValueRow> rows = await _db.Database.QueryAsync<StringValueRow>(
+            @"SELECT ExerciseName AS Value
               FROM WorkoutSetLogs
               WHERE ExerciseName IS NOT NULL AND TRIM(ExerciseName) != ''
               GROUP BY ExerciseName
               ORDER BY MAX(CompletedAtUtc) DESC, ExerciseName ASC
               LIMIT ?",
             limit);
-        return [.. rows.Select(r => r.ExerciseName)];
+        return [.. rows.Select(r => r.Value)];
     }
 
     /// <summary>
@@ -449,12 +429,12 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
             return new HashSet<string>(StringComparer.Ordinal);
 
         await _db.EnsureInitializedAsync();
-        List<SessionIdRow> rows = await _db.Database.QueryAsync<SessionIdRow>(
-            @"SELECT DISTINCT SessionId
+        List<StringValueRow> rows = await _db.Database.QueryAsync<StringValueRow>(
+            @"SELECT DISTINCT SessionId AS Value
               FROM WorkoutSetLogs
               WHERE ExerciseName LIKE ? ESCAPE '\'",
             $"%{EscapeLikePattern(searchText.Trim())}%");
-        return new HashSet<string>(rows.Select(r => r.SessionId), StringComparer.Ordinal);
+        return new HashSet<string>(rows.Select(r => r.Value), StringComparer.Ordinal);
     }
 
     private static string EscapeLikePattern(string value) =>

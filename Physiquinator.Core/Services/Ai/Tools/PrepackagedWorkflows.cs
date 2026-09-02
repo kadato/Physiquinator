@@ -9,24 +9,13 @@ public sealed class GenerateDeloadPlanWorkflowTool(WorkoutPlanService planServic
     public string Name => "generate_deload_plan";
     public string Description => "Pre-packaged workflow: Generate a deload version of an existing plan with 50% reduced set volume and slightly lighter target weights.";
 
-    public object ParametersSchema => new
-    {
-        type = "object",
-        properties = new
-        {
-            planId = new { type = "string", description = "GUID ID of the base plan to generate deload for" }
-        },
-        required = new[] { "planId" }
-    };
+    public object ParametersSchema => AiToolSchemaHelper.PlanIdOnlySchema("GUID ID of the base plan to generate deload for");
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {
-        using var doc = JsonDocument.Parse(argumentsJson);
-        JsonElement root = doc.RootElement;
-
-        if (!root.TryGetProperty("planId", out JsonElement planIdProp) || !Guid.TryParse(planIdProp.GetString(), out Guid planId))
+        if (!AiToolSchemaHelper.TryParsePlanId(argumentsJson, out Guid planId, out var planIdError))
         {
-            return JsonSerializer.Serialize(new { success = false, error = "Invalid planId" });
+            return planIdError!;
         }
 
         WorkoutPlan? basePlan = await planService.GetPlanAsync(planId);
@@ -68,12 +57,7 @@ public sealed class CalculateProgressiveOverloadWorkflowTool(WorkoutHistoryRepos
     public string Name => "calculate_progressive_overload";
     public string Description => "Pre-packaged workflow: Analyzes recent completed session performance and calculates recommended progressive overload target weights and reps per exercise.";
 
-    public object ParametersSchema => new
-    {
-        type = "object",
-        properties = new { },
-        required = Array.Empty<string>()
-    };
+    public object ParametersSchema => AiToolSchemaHelper.EmptySchema();
 
     public async Task<string> ExecuteAsync(string argumentsJson)
     {

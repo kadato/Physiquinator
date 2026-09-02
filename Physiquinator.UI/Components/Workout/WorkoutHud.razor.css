@@ -1,0 +1,6 @@
+/* WorkoutHud styles live in wwwroot/css/app-overrides.css under .workout-hud.
+   This file exists so the HUD owns its theming entry point.
+   Tokens from wwwroot/css/tokens.css drive colors, shadows, and typography. */
+.workout-hud {
+    border-color: var(--pl-hairline-strong);
+}

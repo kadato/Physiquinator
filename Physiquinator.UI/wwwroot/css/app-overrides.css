@@ -1441,9 +1441,41 @@ button.plan-card__start,
 /* Autocomplete: prevent flex clipping and oversized adornment button everywhere */
 .mud-autocomplete { min-width:0; }
 .mud-autocomplete .mud-input-control { min-width:0; }
-.mud-autocomplete .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
+html body .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button {
+  width:32px !important;
+  height:32px !important;
+  min-width:32px !important;
+  min-height:32px !important;
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html body .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button:hover,
+html body .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button:active,
+html body .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 .mud-autocomplete .mud-input-adornment .mud-icon-button .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
 .plan-exercise-sheet__body .mud-autocomplete { min-width:0; }
+
+/* Prevent double scrollbar when a dialog is open: hide the main scroll behind the overlay */
+body:has(.mud-dialog) .app-main-scroll,
+.mud-dialog-open .app-main-scroll {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+}
+body:has(.mud-dialog) .app-main-scroll::-webkit-scrollbar,
+.mud-dialog-open .app-main-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 
 /* Home plans header */
 .home-plans-header { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; margin-bottom:8px !important; }
@@ -6442,4 +6474,27 @@ html[data-theme-mode="dark"] .theme-option--active { border-color:var(--pl-yello
 .theme-option__text { font-family:var(--font-display); font-size:11px; font-weight:800; margin-left:auto; }
 .theme-option__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; color:var(--pl-ink); line-height:1.2; }
 .theme-option__group { font-family:var(--font-mono); font-size:0.625rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); margin-top:-4px; }
+
+/* Final override: autocomplete dropdown toggle must be borderless and not clip - must be last to win */
+#app .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button,
+#app .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-icon-button-edge-end,
+html body #app .mud-autocomplete .mud-input-adornment .mud-icon-button {
+  border: none !important;
+  border-width: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  outline: none !important;
+  padding: 0 !important;
+}
+#app .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button:hover,
+#app .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-icon-button-edge-end:hover,
+html body #app .mud-autocomplete .mud-input-adornment .mud-icon-button:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+}
 

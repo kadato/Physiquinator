@@ -1,0 +1,6 @@
+/* Workout deck — extracted from app-overrides.css for modular loading.
+   This file holds the Active Workout Layout and Exercise Cards section.
+   Keep here only workout-specific rules so the main bundle stays small.
+   Offline-first: self-hosted, no external import. */
+
+/* Active Workout Layout and Exercise Cards — see app-overrides.css:1648 */

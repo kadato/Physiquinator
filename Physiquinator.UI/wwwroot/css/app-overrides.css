@@ -22,9 +22,11 @@
 }
 
 @import url("tokens.css");
+@import url("workout.css");
 
 /* app-overrides.css imports tokens from tokens.css - see DESIGN.md and tokens.css for the palette.
-   Keep only component and layout rules here. Theme changes belong in tokens.css. */
+   Keep only component and layout rules here. Theme changes belong in tokens.css.
+   workout.css is split for modular loading; app-overrides keeps the fallback import for MAUI. */
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 html, body { margin:0; padding:0; width:100%; height:100%; min-height:100dvh; overflow:hidden; background: var(--pl-paper); color: var(--pl-ink); scrollbar-gutter: stable; }
@@ -257,6 +259,42 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
   .home-page ~ .app-fab--br-1:not(.dialog-fab) {
     bottom: 24px !important;
     right: 24px !important;
+  }
+}
+
+/* Big screens: keep FABs beside the 640px content column, not at the far window edge.
+   On 800 to 1920px the calc lands 16px outside the column with a 16px gap. Below 768px
+   the 16px viewport edge stays. This matches DESIGN.md: FABs anchor to calc(50% - 320px - 64px). */
+@media (min-width: 769px) {
+  .app-fab--bl-1:not(.dialog-fab),
+  .app-fab--back:not(.dialog-fab),
+  .workout-undo-fab:not(.dialog-fab) {
+    left: max(16px, calc(50% - 320px - 64px)) !important;
+    right: auto !important;
+  }
+  .app-fab--br-1:not(.dialog-fab) {
+    right: max(16px, calc(50% - 320px - 64px)) !important;
+    left: auto !important;
+  }
+  .app-fab--bl-2:not(.dialog-fab) {
+    left: max(72px, calc(50% - 320px - 8px)) !important;
+  }
+  .app-fab--br-2:not(.dialog-fab) {
+    right: max(72px, calc(50% - 320px - 8px)) !important;
+  }
+  .app-shell:not(.app-shell--immersive) .app-fab--bl-1:not(.dialog-fab),
+  .app-shell:not(.app-shell--immersive) .app-fab--back:not(.dialog-fab),
+  .app-shell:not(.app-shell--immersive) .workout-undo-fab:not(.dialog-fab) {
+    left: max(16px, calc(50% - 320px - 64px)) !important;
+  }
+  .app-shell:not(.app-shell--immersive) .app-fab--br-1:not(.dialog-fab) {
+    right: max(16px, calc(50% - 320px - 64px)) !important;
+  }
+  .app-shell:not(.app-shell--immersive) .app-fab--bl-2:not(.dialog-fab) {
+    left: max(72px, calc(50% - 320px - 8px)) !important;
+  }
+  .app-shell:not(.app-shell--immersive) .app-fab--br-2:not(.dialog-fab) {
+    right: max(72px, calc(50% - 320px - 8px)) !important;
   }
 }
 
@@ -513,6 +551,25 @@ button.heatmap-cell.heatmap-today { box-shadow:inset 0 0 0 2px var(--pl-volt-fil
 button.heatmap-cell.heatmap-selected { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 2.5px var(--pl-ink); }
 button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5px var(--pl-ink), inset 0 0 0 4.5px var(--pl-volt-fill); }
 .home-plan-list { display:flex; flex-direction:column; gap:8px; }
+@media (min-width: 960px) {
+  .home-plan-list { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; align-items:start; }
+  .home-plan-list .plan-card.mud-card { height:100%; }
+}
+
+/* History top: heatmap takes full row, KPIs bigger on desktop */
+.history-top-grid { display:flex; flex-direction:column; gap:12px; }
+.history-top-grid__left { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.history-top-grid__right { min-width:0; }
+@media (min-width: 960px) {
+  .history-top-grid { gap:16px; }
+  .history-heatmap-panel.mud-paper { padding:16px !important; }
+  .activity-heatmap { --heatmap-cell-size:28px; --heatmap-gap:4px; }
+  .history-stats { gap:12px; margin-top:4px; }
+  .history-stats .stat-card.mud-paper { min-height:110px; }
+  .history-stats .stat-card__value { font-size:28px !important; line-height:1 !important; }
+  .history-stats .stat-card__label { font-size:12px !important; letter-spacing:0.08em !important; }
+  .history-stats:has(.stat-card:nth-child(3):last-child) .stat-card__value { font-size:28px !important; }
+}
 .plan-card.mud-card { width:100%; overflow:hidden; border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; position:relative; }
 .plan-card__content { padding:10px 12px !important; display:flex; flex-direction:column; gap:8px; }
 .plan-card__row { display:flex; align-items:center; justify-content:flex-start !important; gap:8px; }
@@ -1471,6 +1528,17 @@ html[data-theme-mode="dark"] .share-card__set--warmup { color: var(--pl-stone); 
 html[data-theme-mode="dark"] .share-card__warmup { color: var(--pl-yellow); }
 .share-card__footer { margin-top:16px; padding-top:12px; border-top:1px solid #B4B8C5; font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; text-align:center; color:#565A6E; }
 html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-hairline); color: var(--pl-stone); }
+.share-card--dark { background:#141624; color:#C0CAF5; }
+.share-card--dark .share-card__logo { fill:#00E5FF; }
+.share-card--dark .share-card__brand { color:#8A90B8; }
+.share-card--dark .share-card__date { color:#8A90B8; }
+.share-card--dark .share-card__stat { background:#181A2A; }
+.share-card--dark .share-card__stat-value { color:#00E5FF; }
+.share-card--dark .share-card__stat-label { color:#8A90B8; }
+.share-card--dark .share-card__exercise { border-top-color:#282B42; }
+.share-card--dark .share-card__set--warmup { color:#8A90B8; }
+.share-card--dark .share-card__warmup { color:#FAFF00; }
+.share-card--dark .share-card__footer { border-top-color:#282B42; color:#8A90B8; }
 
 /* Infinite Scroll Tables and Progress Lists for Bodyweight, Exercise Progress, and History Detail */
 /* Column rhythm matches the shared compact table; edit mode keeps a wide action slot. */
@@ -1496,6 +1564,18 @@ html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-ha
 
 /* Plan Exercise List and Rows */
 .plan-exercise-list { display:flex; flex-direction:column; gap:8px; width:100%; min-width:0; }
+.plan-exercise-group { border:1.5px solid var(--pl-hairline-strong); margin-bottom:4px; background:var(--pl-chip); overflow:hidden; border-radius:var(--radius); }
+.plan-exercise-group--superset { border-left:3px solid var(--pl-cyan); }
+.plan-exercise-group[data-group="A"] { border-left-color: var(--pl-cyan); }
+.plan-exercise-group[data-group="B"] { border-left-color: var(--pl-plate-red); }
+.plan-exercise-group[data-group="C"] { border-left-color: var(--pl-plate-blue); }
+.plan-exercise-group[data-group="D"] { border-left-color: var(--pl-plate-gold); }
+.plan-exercise-group__header { padding:6px 12px; background:var(--pl-chip-2); border-bottom:1px solid var(--pl-hairline); font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--pl-ink); display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.plan-exercise-group__count { color:var(--pl-stone); font-weight:700; }
+.plan-exercise-group .plan-exercise-row { border:none !important; border-radius:0 !important; margin:0 !important; box-shadow:none !important; }
+.plan-exercise-group .plan-exercise-row + .plan-exercise-row { border-top:1px solid var(--pl-hairline) !important; }
+.plan-exercise-group .plan-exercise-row:hover { background:color-mix(in srgb, var(--pl-yellow) 6%, var(--pl-chip)) !important; }
+.plan-exercise-group .plan-exercise-row__chip--superset { opacity:0.82; font-size:0.625rem !important; }
 .plan-exercise-row {
   display: flex;
   align-items: center;
@@ -1827,6 +1907,10 @@ html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .history-select-bar__btn--delete { color:var(--pl-err-text) !important; border-color:color-mix(in srgb, var(--pl-err-text) 45%, transparent) !important; }
 .history-select-bar__btn--delete:hover:not(:disabled) { background:var(--pl-error) !important; color:#1A1B26 !important; border-color:var(--pl-error) !important; }
 .history-select-bar__btn--delete:disabled { opacity:0.4; cursor:not-allowed; }
+.history-select-bar__btn--compare { color:var(--pl-ink) !important; }
+.history-select-bar__btn--compare:disabled { opacity:0.4; cursor:not-allowed; }
+.history-select-bar__btn--compare:not(:disabled) { border-color:var(--pl-hairline-strong) !important; }
+.history-select-bar__btn--compare:not(:disabled):hover { background:var(--pl-chip) !important; border-color:var(--pl-ink) !important; }
 .history-select-bar__btn--done { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-accent-bg) !important; }
 
 /* History Session Card Selection */
@@ -1845,6 +1929,31 @@ html[data-theme-mode="dark"] .history-session-card--selected { border-color:var(
 .exercise-metric-tab { flex:1 1 0px; display:inline-flex; align-items:center; justify-content:center; height:36px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); background:transparent; border:none; border-radius:var(--radius); cursor:pointer; transition:all 120ms ease; white-space:nowrap; }
 .exercise-metric-tab:hover { color:var(--pl-ink); }
 .exercise-metric-tab--active { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; font-weight:900 !important; border:1.5px solid var(--pl-ink) !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
+
+/* Exercise progress: date cell with PR trophy aligned to baseline */
+.exercise-progress-date { display:inline-flex; align-items:center; gap:6px; min-width:0; }
+.exercise-progress-date__text { line-height:1; }
+.exercise-progress-date__pr { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; border-radius:var(--radius); background:color-mix(in srgb, var(--pl-yellow) 18%, transparent); border:1px solid color-mix(in srgb, var(--pl-yellow) 55%, var(--pl-hairline)); }
+.exercise-progress-date__pr-icon.mud-icon-root { font-size:14px !important; width:14px !important; height:14px !important; color:var(--pl-warn-text) !important; fill:var(--pl-warn-text) !important; line-height:1 !important; }
+html[data-theme-mode="dark"] .exercise-progress-date__pr { background:color-mix(in srgb, var(--pl-yellow) 14%, transparent); border-color:color-mix(in srgb, var(--pl-yellow) 40%, transparent); }
+html[data-theme-mode="dark"] .exercise-progress-date__pr-icon.mud-icon-root { color:var(--pl-yellow) !important; fill:var(--pl-yellow) !important; }
+.infinite-table-row--pr { border-left:3px solid var(--pl-yellow) !important; background:color-mix(in srgb, var(--pl-yellow) 6%, var(--pl-chip-2)) !important; }
+
+/* Exercise progress chart: tighter padding so dots never sit on top edge and labels have air on mobile */
+.exercise-progress-chart { overflow:hidden !important; }
+.exercise-progress-chart__plot { padding:6px 6px 2px 2px; box-sizing:border-box; min-width:0; overflow:hidden; }
+.exercise-progress-chart__plot .mud-chart { overflow:visible !important; }
+.exercise-progress-chart__plot svg { overflow:visible !important; }
+@media (max-width:600px) {
+  .exercise-progress-controls { gap:8px; }
+  .exercise-progress-picker, .exercise-progress-range { min-width:0; flex-basis:100%; }
+  .exercise-metric-tabs { gap:3px; padding:2px; }
+  .exercise-metric-tab { height:34px; font-size:0.625rem; padding:0 8px; }
+  .exercise-progress-chart__plot { padding:4px 4px 8px 0; }
+  .infinite-table-head, .infinite-table-row { font-size:0.875rem !important; }
+  .exercise-progress-date__pr { width:18px; height:18px; }
+  .exercise-progress-date__pr-icon.mud-icon-root { font-size:13px !important; width:13px !important; height:13px !important; }
+}
 
 /* Infinite Table List. One compact density shared by the session sets table,
    bodyweight entries, and exercise progression rows, sized for phones first. */
@@ -1925,9 +2034,11 @@ html[data-theme-mode="light"] .app-splash { background: var(--pl-paper) !importa
 .share-card { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; overflow:hidden; position:relative; }
 .mud-paper:has(.empty-state) { border:var(--hairline) !important; background:var(--pl-chip) !important; }
 /* Reduced motion: no transforms anywhere; state changes keep a plain opacity
-   fade (DESIGN.md motion contract) instead of a global animation kill. */
+   fade (DESIGN.md motion contract) instead of a global animation kill.
+   Rest pulse is also disabled here. */
 @media (prefers-reduced-motion:reduce) {
   *, ::before, ::after { animation:none !important; transition-property:opacity, background-color, border-color, color !important; transition-duration:150ms !important; scroll-behavior:auto !important; }
+  .rest-timer-digits--urgent { animation:none !important; }
 }
 @media (prefers-contrast:more) { .app-nav-tab--active, .mud-button-filled-primary, .stat-card.mud-paper, .history-session-card { border-width:2px !important; } }
 /* Desktop status rail: retired. The bottom pill is the chrome at every width,
@@ -1975,6 +2086,7 @@ html[data-theme-mode="light"] .app-splash { background: var(--pl-paper) !importa
 html[data-theme-mode="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
 /* content-visibility removed: it deferred paint of plate shadows on scroll, making box shadows appear delayed */
 .visually-hidden { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
+.sr-only { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
 /* Universal Departure Mono typography: cyberpunk brutalist field computer */
 html, body, #app, button, input, select, textarea, .mud-typography, .mud-button-root, .mud-input-root, .mud-chip, .mud-card, .mud-paper {
@@ -1986,6 +2098,39 @@ html body div.rest-timer-digits span.rest-timer-unit,
 html body span.rest-timer-complete-title {
   font-family: 'Departure Mono', 'JetBrains Mono', monospace !important;
 }
+
+/* AI chat markdown uses a proportional stack for readability.
+   Timer and stat values stay mono per DESIGN.md. Code stays mono. */
+.ai-msg--assistant .markdown-body,
+.ai-msg--assistant .ai-msg__content {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+.ai-msg--assistant .markdown-body code,
+.ai-msg--assistant .markdown-body pre,
+.ai-msg--assistant .markdown-body pre *,
+.ai-msg--assistant .markdown-body code * {
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+}
+.markdown-body pre,
+.markdown-body code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+}
+.ai-msg--assistant .markdown-body p { margin: 0 0 8px !important; line-height: 1.6 !important; }
+.ai-msg--assistant .markdown-body p:last-child { margin-bottom: 0 !important; }
+.ai-msg--assistant .markdown-body ul,
+.ai-msg--assistant .markdown-body ol { margin: 8px 0 !important; padding-left: 20px !important; line-height: 1.6 !important; }
+.ai-msg--assistant .markdown-body li { margin: 4px 0 !important; }
+.ai-msg--assistant .markdown-body h1,
+.ai-msg--assistant .markdown-body h2,
+.ai-msg--assistant .markdown-body h3,
+.ai-msg--assistant .markdown-body h4 { font-family: 'Inter', system-ui, sans-serif !important; line-height: 1.35 !important; letter-spacing: -0.01em !important; text-transform: none !important; }
+.ai-msg--assistant .markdown-body blockquote { border-left: 3px solid var(--pl-hairline-strong) !important; margin: 8px 0 !important; padding: 6px 12px !important; color: var(--pl-stone) !important; }
+.ai-msg--assistant .markdown-body a { text-decoration: underline !important; }
 
 /* AI Assistant Full Page Layout & Components */
 .ai-page-wrapper {
@@ -2187,41 +2332,6 @@ html body span.rest-timer-complete-title {
   filter: brightness(1.1) !important;
 }
 
-/* AI Bridge Container & Cards */
-.ai-bridge-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-.ai-bridge-card {
-  background: var(--pl-chip) !important;
-  border: 1.5px solid var(--hairline-strong) !important;
-  border-radius: var(--radius) !important;
-  padding: 16px !important;
-  box-sizing: border-box;
-}
-.ai-bridge-card__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-.ai-bridge-step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border-radius: var(--radius);
-  background: var(--pl-volt-fill);
-  color: var(--pl-volt-fg);
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 900;
-  flex-shrink: 0;
-}
 .ai-bridge-presets {
   display: flex;
   flex-wrap: wrap;
@@ -2481,6 +2591,33 @@ html body span.rest-timer-complete-title {
   padding: 8px 0;
   width: 100%;
 }
+.ai-chat-offline-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--hairline-strong) !important;
+  border-radius: var(--radius) !important;
+  box-sizing: border-box;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  overflow: visible !important;
+  margin: 0 3px 8px 0;
+}
+.ai-chat-view { overflow: visible !important; }
+.ai-chat-messages { overflow-y: auto; overflow-x: visible; padding-right: 8px; }
+.ai-chat-offline-hint .mud-typography {
+  color: var(--pl-ink) !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ai-chat-offline-hint .mud-button-root {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .ai-chat-input {
   display: flex;
   align-items: center;
@@ -2596,6 +2733,137 @@ html[data-theme-mode="dark"] .ai-quick-btn:disabled {
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--pl-ink);
+}
+
+.ai-bridge-wizard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+.ai-bridge-step {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--pl-hairline);
+  background: var(--pl-chip);
+  font-family: 'Departure Mono', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pl-ink);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.ai-bridge-step.active {
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
+  border-color: var(--pl-ink);
+  box-shadow: var(--pl-plate-shadow-sm);
+}
+.ai-bridge-step:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ai-bridge-step-line {
+  flex: 0 0 24px;
+  height: 2px;
+  background: var(--pl-hairline);
+  display: block;
+}
+.ai-bridge-diff {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--pl-chip-2);
+  border: 1px solid var(--pl-hairline);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ai-bridge-diff__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ai-bridge-diff__label {
+  font-family: 'Departure Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 0;
+  width: fit-content;
+}
+.ai-bridge-diff__added {
+  color: #15803d;
+}
+html[data-theme-mode="dark"] .ai-bridge-diff__added {
+  color: #22c55e;
+}
+.ai-bridge-diff__removed {
+  color: #991b1b;
+}
+html[data-theme-mode="dark"] .ai-bridge-diff__removed {
+  color: #ef4444;
+}
+.ai-bridge-diff__modified {
+  color: #854d0e;
+}
+html[data-theme-mode="dark"] .ai-bridge-diff__modified {
+  color: #eab308;
+}
+.ai-bridge-diff__list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Departure Mono', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--pl-ink);
+}
+.ai-bridge-diff__list li {
+  word-break: break-word;
+}
+.ai-bridge-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--pl-chip-2);
+  border: 1px solid var(--pl-hairline);
+  border-radius: 0;
+}
+.ai-bridge-results {
+  background: var(--pl-chip-2);
+  border: 1px solid var(--pl-hairline);
+  border-radius: 0;
+  padding: 10px 12px;
+}
+.ai-bridge-result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--pl-hairline);
+}
+.ai-bridge-result-item:last-child {
+  border-bottom: none;
+}
+.ai-bridge-result-item--success {
+  color: var(--pl-success, #15803d);
+}
+.ai-bridge-result-item--error {
+  color: var(--pl-danger, #991b1b);
 }
 
 /* AI Bridge Action Summary Banner */
@@ -4444,6 +4712,58 @@ html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); ba
   font-weight: 900;
   letter-spacing: 0.06em;
   border-radius: var(--radius);
+}
+.workout-focus__superset-partner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--pl-chip-2);
+  border-top: 1.5px solid var(--pl-hairline);
+  border-left: 3px solid var(--pl-cyan);
+}
+.workout-focus__superset-partner[data-group="B"] { border-left-color: var(--pl-plate-red); }
+.workout-focus__superset-partner[data-group="C"] { border-left-color: var(--pl-plate-blue); }
+.workout-focus__superset-partner[data-group="D"] { border-left-color: var(--pl-plate-gold); }
+.workout-focus__superset[data-group="B"] { background: var(--pl-plate-red); }
+.workout-focus__superset[data-group="C"] { background: var(--pl-plate-blue); color: #FFFFFF; }
+.workout-focus__superset[data-group="D"] { background: var(--pl-plate-gold); }
+.workout-focus__superset-partner__kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pl-stone);
+}
+.workout-focus__superset-partner__name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--pl-ink);
+  line-height: 1.2;
+}
+.workout-focus__superset-partner__preview {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--pl-ink);
+  background: var(--pl-chip);
+  border: 1px solid var(--pl-hairline);
+  padding: 2px 8px;
+}
+.workout-focus__superset-partner__hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pl-stone);
 }
 .workout-focus__badge {
   display: inline-flex;

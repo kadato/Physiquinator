@@ -5,6 +5,7 @@ using Microsoft.JSInterop;
 using MudBlazor.Services;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
+using Physiquinator.UI.Services;
 using Physiquinator.Wasm;
 using Physiquinator.Wasm.Services;
 using SQLitePCL;
@@ -45,6 +46,7 @@ builder.Services.AddPhysiquinatorServices(
             PhysiquinatorServiceCollectionExtensions.GetActiveProfileId(sp.GetRequiredService<IAppPreferences>()));
         return new AppDatabase(path);
     });
+builder.Services.AddPhysiquinatorUiServices();
 
 // Browser platform implementations.
 builder.Services.AddSingleton<WasmDbPersistence>();

@@ -6,6 +6,7 @@ using MudBlazor.Services;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
 using Physiquinator.Services;
+using Physiquinator.UI.Services;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
 #if ANDROID
@@ -66,6 +67,7 @@ public static class MauiProgram
             sqliteBatteriesReady));
 
         builder.Services.AddPhysiquinatorServices(prefs, dbPathProvider);
+        builder.Services.AddPhysiquinatorUiServices();
 
         // The MAUI shell (app theme, resource colors, system bars) must follow
         // the Blazor UI theme. Override the base registration with the MAUI

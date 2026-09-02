@@ -617,14 +617,16 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         if (entry is null || entry.Session is null || string.IsNullOrWhiteSpace(entry.Session.Id))
             return;
 
-        var sessionId = entry.Session.Id;
         conn.InsertOrReplace(entry.Session);
+        InsertNormalizedSets(conn, entry.Session.Id, entry.Sets);
+    }
 
-        if (entry.Sets == null) return;
-        foreach (WorkoutSetLogEntity? set in entry.Sets)
+    private static void InsertNormalizedSets(SQLite.SQLiteConnection conn, string sessionId, IReadOnlyList<WorkoutSetLogEntity>? sets)
+    {
+        if (sets == null) return;
+        foreach (WorkoutSetLogEntity? set in sets)
         {
-            if (set is null)
-                continue;
+            if (set is null) continue;
             set.SessionId = sessionId;
             if (string.IsNullOrWhiteSpace(set.Id))
                 set.Id = Guid.NewGuid().ToString();
@@ -888,15 +890,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         await _db.Database.RunInTransactionAsync(conn =>
         {
             conn.InsertOrReplace(session);
-            if (sets == null) return;
-            foreach (WorkoutSetLogEntity set in sets)
-            {
-                if (set is null) continue;
-                set.SessionId = session.Id;
-                if (string.IsNullOrWhiteSpace(set.Id))
-                    set.Id = Guid.NewGuid().ToString();
-                conn.InsertOrReplace(set);
-            }
+            InsertNormalizedSets(conn, session.Id, sets);
         });
     }
 
@@ -908,14 +902,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
 
         await _db.Database.RunInTransactionAsync(conn =>
         {
-            foreach (WorkoutSetLogEntity set in sets)
-            {
-                if (set is null) continue;
-                set.SessionId = sessionId;
-                if (string.IsNullOrWhiteSpace(set.Id))
-                    set.Id = Guid.NewGuid().ToString();
-                conn.InsertOrReplace(set);
-            }
+            InsertNormalizedSets(conn, sessionId, sets);
         });
     }
 

@@ -1,0 +1,92 @@
+@using Physiquinator.Core.Data
+@inject NavigationManager Navigation
+
+<div @key="Session.Id"
+	 class="@(IsSelected ? "history-session-card history-session-card--selected" : "history-session-card")"
+	 role="button"
+	 tabindex="0"
+	 aria-label="@(string.Format("Open session {0}", Session.PlanName))"
+	 @onclick="HandleTap"
+	 @onkeydown="HandleKeyDown">
+	<div class="history-session-card__inner">
+		<div class="history-session-card__left">
+			@if (SelectMode)
+			{
+				<span class="history-session-check" aria-hidden="true">
+					<MudIcon Icon="@(IsSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+							 Color="@(IsSelected ? Color.Primary : Color.Default)" />
+				</span>
+			}
+			<div class="history-session-card__info">
+				<span class="history-session-card__title">@Session.PlanName</span>
+				<span class="history-session-card__subtitle">
+					<span class="history-session-card__time-badge">@UiDateFormats.LocalDateTimeCompact(Session.StartedAtUtc)</span>
+					@if (Session.EndedAtUtc != null)
+					{
+						<span class="history-session-card__duration-badge">@FormatEnd(Session.StartedAtUtc, Session.EndedAtUtc.Value)</span>
+					}
+					else
+					{
+						<span class="history-session-card__badge-inprogress">@("In progress")</span>
+					}
+				</span>
+			</div>
+		</div>
+		<div class="history-session-card__right">
+			@if (Session.EndedAtUtc == null && Session.TryGetPlanId() is { } planId && !SelectMode)
+			{
+				<button type="button"
+						class="history-card-continue-btn"
+						@onclick:stopPropagation="true"
+						@onclick="@(() => Continue(planId))">
+					<MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+					<span>@("Continue")</span>
+				</button>
+			}
+			<div @onclick:stopPropagation="true" class="history-session-card__actions">
+				<button type="button"
+						class="history-action-btn history-action-btn--delete"
+						aria-label="@(string.Format("Delete session {0}", UiDateFormats.LocalDateTimeCompact(Session.StartedAtUtc)))"
+						@onclick="() => OnDelete.InvokeAsync(Session.Id)">
+					<MudIcon Icon="@Icons.Material.Outlined.DeleteOutline" Size="Size.Small" />
+				</button>
+				@if (!SelectMode)
+				{
+					<span class="history-action-btn history-action-btn--chevron" aria-hidden="true">
+						<MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+					</span>
+				}
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter, EditorRequired] public WorkoutSessionLogEntity Session { get; set; } = null!;
+	[Parameter] public bool IsSelected { get; set; }
+	[Parameter] public bool SelectMode { get; set; }
+	[Parameter] public EventCallback<string> OnOpen { get; set; }
+	[Parameter] public EventCallback<string> OnToggleSelect { get; set; }
+	[Parameter] public EventCallback<string> OnDelete { get; set; }
+
+	private static string FormatEnd(DateTime startUtc, DateTime endUtc) =>
+		endUtc.ToLocalTime().Date == startUtc.ToLocalTime().Date
+			? UiDateFormats.LocalTimeOnly(endUtc)
+			: UiDateFormats.LocalDateTimeCompact(endUtc);
+
+	private void HandleTap()
+	{
+		if (SelectMode)
+			OnToggleSelect.InvokeAsync(Session.Id);
+		else
+			OnOpen.InvokeAsync(Session.Id);
+	}
+
+	private void HandleKeyDown(KeyboardEventArgs e)
+	{
+		if (e.Key is "Enter" or " " or "Spacebar")
+			HandleTap();
+	}
+
+	private void Continue(Guid planId) => Navigation.NavigateTo(AppRoutes.Workout(planId));
+}

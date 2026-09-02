@@ -5,6 +5,7 @@ using Microsoft.Extensions.FileProviders;
 using MudBlazor.Services;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Services;
+using Physiquinator.UI.Services;
 using Physiquinator.Web.Components;
 using Physiquinator.Web.Mcp;
 using Physiquinator.Web.Services;
@@ -62,6 +63,7 @@ builder.Services.AddPhysiquinatorServices(
     new WebAppPreferences(),
     new WebDatabasePathProvider(),
     scopeStatefulServicesPerCircuit: true);
+builder.Services.AddPhysiquinatorUiServices();
 
 // Per-account database files: registered after Core's registration so they win.
 builder.Services.AddScoped<IDatabasePathProvider, WebUserDatabasePathProvider>();

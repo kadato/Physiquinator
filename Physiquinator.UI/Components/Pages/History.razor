@@ -212,67 +212,13 @@
             <div class="history-session-list">
                 @foreach (var s in _listSessions ?? [])
                 {
-                    var sid = s.Id;
-                    var isSel = IsSelected(sid);
-                    <div @key="s.Id"
-                         class="@(isSel ? "history-session-card history-session-card--selected" : "history-session-card")"
-                         role="button"
-                         tabindex="0"
-                         aria-label="@(string.Format("Open session {0}", s.PlanName))"
-                         @onclick="@(() => HandleSessionTap(sid))"
-                         @onkeydown="(e) => OnSessionCardKeyDown(e, sid)">
-                        <div class="history-session-card__inner">
-                            <div class="history-session-card__left">
-                                @if (_selectMode)
-                                {
-                                    <span class="history-session-check" aria-hidden="true">
-                                        <MudIcon Icon="@(isSel ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                                 Color="@(isSel ? Color.Primary : Color.Default)" />
-                                    </span>
-                                }
-                                <div class="history-session-card__info">
-                                    <span class="history-session-card__title">@s.PlanName</span>
-                                    <span class="history-session-card__subtitle">
-                                        <span class="history-session-card__time-badge">@UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)</span>
-                                        @if (s.EndedAtUtc != null)
-                                        {
-                                            <span class="history-session-card__duration-badge">@(FormatSessionEnd(s.StartedAtUtc, s.EndedAtUtc.Value))</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="history-session-card__badge-inprogress">@("In progress")</span>
-                                        }
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="history-session-card__right">
-                                @if (s.EndedAtUtc == null && s.TryGetPlanId() is { } continuePlanId && !_selectMode)
-                                {
-                                    <button type="button"
-                                            class="history-card-continue-btn"
-                                            @onclick:stopPropagation="true"
-                                            @onclick="@(() => ContinueWorkout(continuePlanId))">
-                                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
-                                        <span>@("Continue")</span>
-                                    </button>
-                                }
-                                <div @onclick:stopPropagation="true" class="history-session-card__actions">
-                                    <button type="button"
-                                            class="history-action-btn history-action-btn--delete"
-                                            aria-label="@(string.Format("Delete session {0}", UiDateFormats.LocalDateTimeCompact(s.StartedAtUtc)))"
-                                            @onclick="@(() => DeleteSession(sid, s.PlanName, s.EndedAtUtc == null))">
-                                        <MudIcon Icon="@Icons.Material.Outlined.DeleteOutline" Size="Size.Small" />
-                                    </button>
-                                    @if (!_selectMode)
-                                    {
-                                        <span class="history-action-btn history-action-btn--chevron" aria-hidden="true">
-                                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <HistorySessionCard @key="s.Id"
+                                        Session="s"
+                                        IsSelected="IsSelected(s.Id)"
+                                        SelectMode="_selectMode"
+                                        OnOpen="OpenSession"
+                                        OnToggleSelect="ToggleSelect"
+                                        OnDelete="DeleteSessionById" />
                 }
             </div>
 
@@ -292,12 +238,6 @@
 </MudStack>
 
 @code {
-    /// <summary>End label for a session card: time-only when it ended on the start day.</summary>
-    private static string FormatSessionEnd(DateTime startUtc, DateTime endUtc) =>
-        endUtc.ToLocalTime().Date == startUtc.ToLocalTime().Date
-            ? UiDateFormats.LocalTimeOnly(endUtc)
-            : UiDateFormats.LocalDateTimeCompact(endUtc);
-
     private const int HeatmapWeeks = 53;
     private const int SessionPageSize = 50;
     private const string LoadMoreSentinelId = "history-load-more-sentinel";
@@ -336,18 +276,12 @@
     private void OpenSession(string sessionId) =>
         Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
 
-    private void OnSessionCardKeyDown(KeyboardEventArgs e, string sessionId)
+    private Task DeleteSessionById(string sessionId)
     {
-        if (e.Key is "Enter" or " " or "Spacebar")
-            HandleSessionTap(sessionId);
-    }
-
-    private void HandleSessionTap(string sessionId)
-    {
-        if (_selectMode)
-            ToggleSelect(sessionId);
-        else
-            OpenSession(sessionId);
+        var s = _listSessions?.FirstOrDefault(x => x.Id == sessionId)
+            ?? _sessions?.FirstOrDefault(x => x.Id == sessionId);
+        if (s == null) return Task.CompletedTask;
+        return DeleteSession(s.Id, s.PlanName, s.EndedAtUtc == null);
     }
 
     private async Task ToggleSelectMode()
@@ -576,9 +510,6 @@
         MapLatestBodyweight(await bodyweightTask);
         await UpdateSessionsListAsync();
     }
-
-    private void ContinueWorkout(Guid planId) =>
-        Navigation.NavigateTo(AppRoutes.Workout(planId));
 
     private void OpenBodyweightProgress() =>
         Navigation.NavigateTo(AppRoutes.Bodyweight);

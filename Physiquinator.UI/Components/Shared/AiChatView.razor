@@ -1,0 +1,721 @@
+@using Physiquinator.Core.Services.Ai
+@using Physiquinator.Core.Models
+@using Physiquinator.UI.Services
+@using System.Text.Json
+@using Markdig
+@inject AiAssistantService AiAssistant
+@inject AiClipboardBridgeService BridgeService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<div class="ai-chat-view @(IsDialog ? "ai-chat-view--dialog" : "ai-chat-view--page")">
+	<div class="ai-chat-view__header">
+		<div class="ai-mode-tabs" role="tablist">
+			<button type="button"
+					role="tab"
+					aria-selected="@(_activeTab == 0 ? "true" : "false")"
+					class="ai-mode-tab @(_activeTab == 0 ? "ai-mode-tab--active" : "")"
+					@onclick="@(() => SetTab(0))">
+				<MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" />
+				<span>@("Chat")</span>
+			</button>
+			<button type="button"
+					role="tab"
+					aria-selected="@(_activeTab == 1 ? "true" : "false")"
+					class="ai-mode-tab @(_activeTab == 1 ? "ai-mode-tab--active" : "")"
+					@onclick="@(() => SetTab(1))">
+				<MudIcon Icon="@Icons.Material.Filled.ContentPaste" Size="Size.Small" />
+				<span>@("Clipboard")</span>
+			</button>
+		</div>
+
+		<div class="ai-chat-view__header-actions">
+			@if (_activeTab == 0 && AiAssistant.Messages.Count > 0)
+			{
+				<MudButton Variant="Variant.Filled"
+						   Color="Color.Default"
+						   Size="Size.Small"
+						   StartIcon="@Icons.Material.Outlined.DeleteSweep"
+						   Class="premium-btn ai-clear-btn"
+						   OnClick="ClearHistory">
+					@("Clear")
+				</MudButton>
+			}
+			@if (IsDialog && OnClose.HasDelegate)
+			{
+				<button type="button" class="ai-header-btn" aria-label="@("Close")" @onclick="() => OnClose.InvokeAsync()">
+					<MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+				</button>
+			}
+		</div>
+	</div>
+
+	@if (_activeTab == 0)
+	{
+		@if (IsApiKeyMissing)
+		{
+			<div class="ai-api-key-banner mb-3">
+				<div class="ai-api-key-banner__content">
+					<MudIcon Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Small" />
+					<div>
+						<MudText Typo="Typo.subtitle2" Class="font-weight-bold ai-banner-title">@("API key required")</MudText>
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="@(() => SetTab(1))" Class="ai-banner-button">
+						@("Clipboard")
+					</MudButton>
+					<MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" OnClick="NavigateToSettings" Class="ai-banner-button">
+						@("Settings")
+					</MudButton>
+				</div>
+			</div>
+		}
+
+		<div class="ai-chat-messages" @ref="_messagesElement" role="log" aria-live="polite" aria-relevant="additions">
+			@if (AiAssistant.Messages.Count == 0)
+			{
+				<div class="ai-chat-empty">
+					<div class="ai-chat-empty__icon-plate">
+						<MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Large" Color="Color.Primary" />
+					</div>
+					<MudText Typo="Typo.h2" Class="ai-chat-empty__title mt-2">@("Ask anything")</MudText>
+					<MudText Typo="Typo.body2" Class="mud-text-secondary">@("Ask for workout routines, progressive overload advice, deload plans, or volume analysis.")</MudText>
+				</div>
+			}
+			else
+			{
+				@foreach (var msg in AiAssistant.Messages)
+				{
+					if (msg.Role == AiMessageRole.User)
+					{
+						<div class="ai-msg ai-msg--user">
+							<div class="ai-msg__bubble">
+								@msg.Content
+							</div>
+							<span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
+						</div>
+					}
+					else if (msg.Role == AiMessageRole.Assistant)
+					{
+						<div class="@GetAssistantClass(msg)">
+							<div class="ai-msg__avatar" aria-hidden="true">
+								<MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
+							</div>
+							<div class="ai-msg__body">
+								<div class="ai-msg__bubble">
+									@if (msg.IsThinking)
+									{
+										<div class="ai-msg__thinking">
+											<MudProgressCircular Size="Size.Small" Indeterminate="true" />
+											<span>@("Thinking…")</span>
+										</div>
+									}
+									else
+									{
+										<div class="ai-msg__content markdown-body">@((MarkupString)RenderMarkdown(msg.Content))</div>
+									}
+								</div>
+								@if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
+								{
+									<div class="ai-msg__tools">
+										@foreach (var tc in msg.ToolCalls)
+										{
+											<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Build">
+												@(string.Format("Executed {0}", tc.Name))
+											</MudChip>
+										}
+									</div>
+								}
+								<span class="ai-msg__actions">
+									@if (!string.IsNullOrWhiteSpace(msg.Content))
+									{
+										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+													   Size="Size.Small"
+													   Class="ai-msg__copy"
+													   aria-label="@("Copy message")"
+													   OnClick="@(() => CopyTextAsync(msg.Content, "Message copied."))" />
+									}
+									<span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
+								</span>
+							</div>
+						</div>
+					}
+				}
+			}
+		</div>
+
+		@if (AiAssistant.Messages.Count == 0)
+		{
+			<div class="ai-chat-quick-actions mb-3">
+				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
+					<span>@("Progressive Overload")</span>
+				</button>
+				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
+					<span>@("Performance Stats")</span>
+				</button>
+				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
+					<span>@("Deload Plan")</span>
+				</button>
+				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
+					<span>@("Workout Advice")</span>
+				</button>
+			</div>
+		}
+
+		<div class="ai-chat-input">
+			<div class="ai-chat-composer">
+				<div class="ai-chat-input__field">
+					<MudTextField @ref="_inputField" T="string" Variant="Variant.Outlined" Placeholder="@("Ask anything…")"
+								  Immediate="true"
+								  @bind-Value="_inputText"
+								  OnKeyDown="HandleKeyDown"
+								  Disabled="@(_isSending || IsApiKeyMissing)"
+								  Margin="Margin.Dense"
+								  enterkeyhint="send"
+								  Class="ai-chat-textfield" />
+				</div>
+
+				@if (_isSending)
+				{
+					<MudIconButton Icon="@Icons.Material.Filled.Stop"
+								   Color="Color.Error"
+								   Variant="Variant.Filled"
+								   aria-label="@("Stop generating")"
+								   title="@("Stop generating")"
+								   OnClick="StopGeneration"
+								   Class="ai-chat-send-button" />
+				}
+				else
+				{
+					<MudIconButton Icon="@Icons.Material.Filled.Send"
+								   Color="Color.Primary"
+								   Variant="Variant.Filled"
+								   aria-label="@("Send message")"
+								   title="@("Send message")"
+								   Disabled="@(string.IsNullOrWhiteSpace(_inputText) || IsApiKeyMissing)"
+								   OnClick="SendMessageAsync"
+								   Class="ai-chat-send-button" />
+				}
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="ai-bridge-container">
+			<div class="ai-bridge-card">
+				<div class="ai-bridge-card__header">
+					<div class="ai-bridge-step-badge">1</div>
+					<div>
+						<MudText Typo="Typo.subtitle2" Class="font-weight-bold">@("Copy prompt for Gemini or ChatGPT")</MudText>
+						<MudText Typo="Typo.caption" Class="mud-text-secondary">@("Copies your plans, history summary, and the action list for the AI. Paste it into Gemini or ChatGPT, then paste the reply back here.")</MudText>
+					</div>
+				</div>
+
+				<div class="ai-bridge-field mt-2">
+					<MudTextField T="string"
+								  @bind-Value="_promptGoal"
+								  Placeholder="@("What should the AI do? For example build a 3-day push pull legs routine, analyze volume, or log weight")"
+								  Variant="Variant.Outlined"
+								  Margin="Margin.Dense"
+								  Lines="2" />
+				</div>
+
+				<div class="ai-bridge-presets mt-2">
+					<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => SetGoalPreset("Create a 3-day Full Body workout routine focusing on compound lifts."))">
+						@("3-Day Full Body")
+					</MudChip>
+					<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => SetGoalPreset("Design a 4-day Upper / Lower hypertrophy split with 90s rest timers."))">
+						@("Upper / Lower Split")
+					</MudChip>
+					<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => SetGoalPreset("Analyze my workout plans and calculate progressive overload weight recommendations."))">
+						@("Progressive Overload")
+					</MudChip>
+					<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => SetGoalPreset("Create a deload version of my existing routine."))">
+						@("Deload Plan")
+					</MudChip>
+				</div>
+
+				<div class="ai-bridge-options mt-2">
+					<MudCheckBox @bind-Value="_includePlans" Label="@("Workout plans")" Dense="true" Size="Size.Small" Color="Color.Primary" />
+					<MudCheckBox @bind-Value="_includeBodyweight" Label="@("Recent bodyweight")" Dense="true" Size="Size.Small" Color="Color.Primary" />
+					<MudCheckBox @bind-Value="_includeStats" Label="@("History stats")" Dense="true" Size="Size.Small" Color="Color.Primary" />
+				</div>
+
+				<div class="d-flex justify-space-between align-center mt-2">
+					<MudButton Variant="Variant.Filled"
+							   Color="Color.Primary"
+							   StartIcon="@Icons.Material.Filled.ContentCopy"
+							   Size="Size.Small"
+							   OnClick="GenerateAndCopyPromptAsync"
+							   Disabled="@_isGeneratingPrompt">
+						@if (_isGeneratingPrompt)
+						{
+							<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+							<span>@("Generating...")</span>
+						}
+						else
+						{
+							<span>@("Copy prompt")</span>
+						}
+					</MudButton>
+
+					@if (!string.IsNullOrWhiteSpace(_generatedPromptPreview))
+					{
+						<MudButton Variant="Variant.Text"
+								   Color="Color.Default"
+								   Size="Size.Small"
+								   OnClick="@(() => _showPromptPreview = !_showPromptPreview)">
+							@(_showPromptPreview ? "Hide Prompt" : "Preview Prompt")
+						</MudButton>
+					}
+				</div>
+
+				@if (_showPromptPreview && !string.IsNullOrWhiteSpace(_generatedPromptPreview))
+				{
+					<div class="ai-bridge-prompt-preview mt-2">
+						<pre>@_generatedPromptPreview</pre>
+					</div>
+				}
+			</div>
+
+			<div class="ai-bridge-card mt-3">
+				<div class="ai-bridge-card__header">
+					<div class="ai-bridge-step-badge">2</div>
+					<div>
+						<MudText Typo="Typo.subtitle2" Class="font-weight-bold">@("Paste AI response")</MudText>
+						<MudText Typo="Typo.caption" Class="mud-text-secondary">@("Paste the reply from Gemini or ChatGPT here. The app reads it and lists the actions to apply.")</MudText>
+					</div>
+				</div>
+
+				<div class="ai-bridge-field mt-2">
+					<MudTextField T="string"
+								  @bind-Value="_pastedResponse"
+								  Placeholder="@("Paste the full response from Gemini or ChatGPT here (including the JSON action block)...")"
+								  Variant="Variant.Outlined"
+								  Margin="Margin.Dense"
+								  Lines="3" />
+				</div>
+
+				<div class="d-flex justify-space-between align-center mt-2">
+					<MudButton Variant="Variant.Filled"
+							   Color="Color.Secondary"
+							   StartIcon="@Icons.Material.Filled.FindInPage"
+							   Size="Size.Small"
+							   Disabled="@(string.IsNullOrWhiteSpace(_pastedResponse))"
+							   OnClick="InspectPastedActions">
+						@("Review actions")
+					</MudButton>
+
+					@if (_parsedActions.Count > 0)
+					{
+						<MudButton Variant="Variant.Filled"
+								   Color="Color.Success"
+								   StartIcon="@Icons.Material.Filled.CheckCircle"
+								   Size="Size.Small"
+								   Disabled="@(_isExecutingActions || !_parsedActions.Any(a => a.IsValid))"
+								   OnClick="ApplyActionsAsync">
+							@if (_isExecutingActions)
+							{
+								<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+								<span>@("Applying...")</span>
+							}
+							else
+							{
+								<span>@(string.Format("Apply {0} actions", _parsedActions.Count(a => a.IsValid)))</span>
+							}
+						</MudButton>
+					}
+				</div>
+
+				@if (_parsedActions.Count > 0)
+				{
+					<div class="ai-bridge-summary mt-3">
+						<div class="ai-bridge-summary__header">
+							<div class="ai-bridge-summary__title-wrap">
+								<span class="ai-bridge-summary__badge">@_parsedActions.Count @(_parsedActions.Count == 1 ? "ACTION DETECTED" : "ACTIONS DETECTED")</span>
+								<h3 class="ai-bridge-summary__title">ACTION SUMMARY</h3>
+							</div>
+							<div class="ai-bridge-summary__status-chips">
+								@{
+									var validCount = _parsedActions.Count(a => a.IsValid);
+									var invalidCount = _parsedActions.Count(a => !a.IsValid);
+									var destructiveCount = _parsedActions.Count(a => a.IsDestructive);
+								}
+								<span class="ai-bridge-stat-chip ai-bridge-stat-chip--ready">
+									<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+									@validCount READY
+								</span>
+								@if (destructiveCount > 0)
+								{
+									<span class="ai-bridge-stat-chip ai-bridge-stat-chip--warn">
+										<MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" />
+										@destructiveCount DESTRUCTIVE
+									</span>
+								}
+								@if (invalidCount > 0)
+								{
+									<span class="ai-bridge-stat-chip ai-bridge-stat-chip--err">
+										<MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Small" />
+										@invalidCount INVALID
+									</span>
+								}
+							</div>
+						</div>
+
+						<div class="ai-bridge-summary__tools">
+							@foreach (var group in _parsedActions.GroupBy(a => a.ToolName))
+							{
+								<span class="ai-bridge-tool-badge">
+									<strong>@group.Count()×</strong> @FormatToolName(group.Key)
+								</span>
+							}
+						</div>
+					</div>
+
+					<div class="ai-bridge-actions-list mt-3">
+						@for (var i = 0; i < _parsedActions.Count; i++)
+						{
+							var action = _parsedActions[i];
+							var index = i + 1;
+							<div class="ai-bridge-action-card @GetActionCardClass(action)">
+								<div class="ai-bridge-action-card__head">
+									<div class="ai-bridge-action-card__head-left">
+										<span class="ai-bridge-action-card__tag">/@index.ToString("D2")</span>
+										<span class="ai-bridge-action-card__tool">@FormatToolName(action.ToolName)</span>
+									</div>
+									<div class="ai-bridge-action-card__head-right">
+										@if (action.IsDestructive)
+										{
+											<span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--warn">DESTRUCTIVE</span>
+										}
+										else if (!action.IsValid)
+										{
+											<span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--err">INVALID</span>
+										}
+										else
+										{
+											<span class="ai-bridge-action-card__pill ai-bridge-action-card__pill--ok">VALIDATED</span>
+										}
+									</div>
+								</div>
+								<div class="ai-bridge-action-card__body">
+									<h4 class="ai-bridge-action-card__title">@action.HumanSummary</h4>
+									@if (!action.IsValid && !string.IsNullOrWhiteSpace(action.ValidationError))
+									{
+										<div class="ai-bridge-action-card__error-callout">
+											<MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+											<span>@action.ValidationError</span>
+										</div>
+									}
+									else if (!string.IsNullOrWhiteSpace(action.Description))
+									{
+										<p class="ai-bridge-action-card__desc">@action.Description</p>
+									}
+								</div>
+								<details class="ai-bridge-action-card__details">
+									<summary class="ai-bridge-action-card__summary">
+										<span>Inspect JSON payload</span>
+										<MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+									</summary>
+									<pre class="ai-bridge-action-card__code">@FormatJson(action.ArgumentsJson)</pre>
+								</details>
+							</div>
+						}
+					</div>
+				}
+				else if (_hasInspected && _parsedActions.Count == 0)
+				{
+					<div class="ai-bridge-empty mt-2">
+						<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" />
+						<MudText Typo="Typo.caption" Class="mud-text-secondary">
+							@("No structured actions found in the pasted text. Make sure the AI included the ```json { \"actions\": [...] } ``` block.")
+						</MudText>
+					</div>
+				}
+
+				@if (_executionResults.Count > 0)
+				{
+					<div class="ai-bridge-results mt-3">
+						<MudText Typo="Typo.caption" Class="font-weight-bold mud-text-secondary text-uppercase mb-1">
+							@("Results")
+						</MudText>
+						@foreach (var res in _executionResults)
+						{
+							<div class="ai-bridge-result-item @(res.Success ? "ai-bridge-result-item--success" : "ai-bridge-result-item--error")">
+								<MudIcon Icon="@(res.Success ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
+										 Color="@(res.Success ? Color.Success : Color.Error)"
+										 Size="Size.Small" />
+								<MudText Typo="Typo.body2">@res.Message</MudText>
+							</div>
+						}
+					</div>
+				}
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	[Parameter] public bool IsDialog { get; set; }
+	[Parameter] public EventCallback OnClose { get; set; }
+	[Parameter] public EventCallback OnNavigateToSettings { get; set; }
+
+	private int _activeTab = 0;
+	private MudTextField<string>? _inputField;
+	private string _inputText = string.Empty;
+	private bool _isSending = false;
+	private ElementReference _messagesElement;
+	private string _promptGoal = string.Empty;
+	private bool _includePlans = true;
+	private bool _includeBodyweight = true;
+	private bool _includeStats = true;
+	private bool _isGeneratingPrompt = false;
+	private string _generatedPromptPreview = string.Empty;
+	private bool _showPromptPreview = false;
+	private string _pastedResponse = string.Empty;
+	private bool _hasInspected = false;
+	private List<AiBridgeAction> _parsedActions = [];
+	private List<AiBridgeActionExecutionResult> _executionResults = [];
+	private bool _isExecutingActions = false;
+
+	private bool IsApiKeyMissing
+	{
+		get
+		{
+			var settings = AiAssistant.GetSettings();
+			return !settings.Enabled || (settings.Provider != AiProviderType.OllamaLocal && string.IsNullOrWhiteSpace(settings.ApiKey));
+		}
+	}
+
+	private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+		.UseAdvancedExtensions()
+		.DisableHtml()
+		.Build();
+
+	private static string RenderMarkdown(string? rawMarkdown) =>
+		Markdown.ToHtml(rawMarkdown ?? string.Empty, MarkdownPipeline);
+
+	private static string GetAssistantClass(AiChatMessage msg) =>
+		msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error" : "ai-msg ai-msg--assistant";
+
+	private static string FormatTime(DateTime timestamp) =>
+		timestamp.ToLocalTime().ToString("t", System.Globalization.CultureInfo.CurrentCulture);
+
+	protected override void OnInitialized()
+	{
+		AiAssistant.OnMessagesChanged += HandleMessagesChanged;
+	}
+
+	private void SetTab(int tabIndex)
+	{
+		_activeTab = tabIndex;
+		StateHasChanged();
+	}
+
+	private void SetGoalPreset(string goal) => _promptGoal = goal;
+
+	private async Task GenerateAndCopyPromptAsync()
+	{
+		_isGeneratingPrompt = true;
+		try
+		{
+			var options = new AiBridgePromptOptions
+			{
+				IncludeWorkoutPlans = _includePlans,
+				IncludeRecentBodyweight = _includeBodyweight,
+				IncludeHistoryStats = _includeStats
+			};
+			var prompt = await BridgeService.GeneratePromptAsync(_promptGoal, options);
+			_generatedPromptPreview = prompt;
+			await CopyTextAsync(prompt, "Prompt copied to clipboard! Paste it into Gemini or ChatGPT.");
+		}
+		catch (Exception ex)
+		{
+			Snackbar.Add($"Failed to generate prompt: {ex.Message}", Severity.Error);
+		}
+		finally
+		{
+			_isGeneratingPrompt = false;
+		}
+	}
+
+	private void InspectPastedActions()
+	{
+		_hasInspected = true;
+		_executionResults.Clear();
+		_parsedActions = [.. BridgeService.ParseResponse(_pastedResponse)];
+		if (_parsedActions.Count == 0)
+			Snackbar.Add("No actions found in that response.", Severity.Warning);
+		else
+			Snackbar.Add($"Found {_parsedActions.Count(a => a.IsValid)} valid actions. Ready to apply.", Severity.Info);
+	}
+
+	private async Task ApplyActionsAsync()
+	{
+		if (_parsedActions.Count == 0 || _isExecutingActions) return;
+		_isExecutingActions = true;
+		try
+		{
+			_executionResults = await BridgeService.ExecuteActionsAsync(_parsedActions);
+			var successCount = _executionResults.Count(r => r.Success);
+			if (successCount > 0)
+				Snackbar.Add($"Successfully applied {successCount} changes to Physiquinator!", Severity.Success);
+			else
+				Snackbar.Add("Could not apply that action.", Severity.Error);
+		}
+		catch (Exception ex)
+		{
+			Snackbar.Add($"Error applying actions: {ex.Message}", Severity.Error);
+		}
+		finally
+		{
+			_isExecutingActions = false;
+		}
+	}
+
+	private void HandleMessagesChanged()
+	{
+		InvokeAsync(async () =>
+		{
+			StateHasChanged();
+			await ScrollToBottomAsync();
+		});
+	}
+
+	private async Task ScrollToBottomAsync()
+	{
+		await JsSafeInvoker.ScrollToBottomAsync(JS, _messagesElement);
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			try
+			{
+				if (_inputField != null)
+					await _inputField.FocusAsync();
+			}
+			catch (Exception ex)
+			{
+				// Focus failed, ignore but keep analyzer happy.
+				_ = ex.Message;
+			}
+		}
+		await ScrollToBottomAsync();
+	}
+
+	private void StopGeneration() => AiAssistant.CancelCurrentTurn();
+
+	private async Task CopyTextAsync(string content, string successMessage)
+	{
+		if (string.IsNullOrWhiteSpace(content)) return;
+		var copied = await JsSafeInvoker.TryCopyTextAsync(JS, content);
+		if (copied)
+			Snackbar.Add(successMessage, Severity.Success);
+		else
+			Snackbar.Add("Could not copy to clipboard.", Severity.Error);
+	}
+
+	private async Task HandleKeyDown(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && !e.ShiftKey && !string.IsNullOrWhiteSpace(_inputText) && !_isSending)
+			await SendMessageAsync();
+	}
+
+	private async Task OnProgressiveOverloadClick() =>
+		await SendPrompt("Suggest progressive overload recommendations for my active workout plans.");
+
+	private async Task OnPerformanceStatsClick() =>
+		await SendPrompt("Show my current workout stats and recent performance.");
+
+	private async Task OnWorkoutAdviceClick() =>
+		await SendPrompt("Analyze my training volume and recommend recovery adjustments.");
+
+	private async Task OnDeloadPlanClick() =>
+		await SendPrompt("Create a deload version of my primary workout plan.");
+
+	private async Task SendPrompt(string prompt)
+	{
+		_inputText = prompt;
+		await SendMessageAsync();
+	}
+
+	private async Task SendMessageAsync()
+	{
+		if (string.IsNullOrWhiteSpace(_inputText) || _isSending) return;
+		var text = _inputText;
+		_inputText = string.Empty;
+		_isSending = true;
+		try
+		{
+			await AiAssistant.SendUserMessageAsync(text);
+		}
+		finally
+		{
+			_isSending = false;
+		}
+	}
+
+	private async Task NavigateToSettings()
+	{
+		if (OnNavigateToSettings.HasDelegate)
+			await OnNavigateToSettings.InvokeAsync();
+		else
+			Navigation.NavigateTo(AppRoutes.Settings);
+	}
+
+	private async Task ClearHistory()
+	{
+		if (AiAssistant.Messages.Count == 0) return;
+		var confirmed = await DialogService.ConfirmAsync(
+			"Clear chat history?",
+			"This removes every message in this conversation. It cannot be undone.",
+			confirmText: "Clear",
+			confirmColor: Color.Error);
+		if (!confirmed) return;
+		AiAssistant.ClearHistory();
+	}
+
+	private static string FormatToolName(string toolName) => toolName switch
+	{
+		"create_workout_plan" => "Create Plan",
+		"update_workout_plan" => "Update Plan",
+		"delete_workout_plan" => "Delete Plan",
+		"log_bodyweight" or "log_bodyweight_entry" => "Log Weight",
+		"delete_bodyweight_entry" => "Delete Weight",
+		"log_completed_workout" => "Log Workout",
+		_ => string.Join(" ", toolName.Split('_').Select(s => s.Length > 0 ? char.ToUpper(s[0]) + s[1..] : s))
+	};
+
+	private static string FormatJson(string json)
+	{
+		if (string.IsNullOrWhiteSpace(json)) return "{}";
+		try
+		{
+			using var doc = JsonDocument.Parse(json);
+			return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+		}
+		catch
+		{
+			return json;
+		}
+	}
+
+	private static string GetActionCardClass(AiBridgeAction action)
+	{
+		if (!action.IsValid) return "ai-bridge-action-card--invalid";
+		if (action.IsDestructive) return "ai-bridge-action-card--warn";
+		return "ai-bridge-action-card--valid";
+	}
+
+	public void Dispose()
+	{
+		AiAssistant.CancelCurrentTurn();
+		AiAssistant.OnMessagesChanged -= HandleMessagesChanged;
+	}
+}

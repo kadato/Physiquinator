@@ -11,12 +11,11 @@ namespace Physiquinator.Wasm.Services;
 /// host build, before rendering). Writes go to localStorage immediately.
 /// Keys are prefixed so only this app's entries are loaded.
 /// </summary>
-public sealed class WasmAppPreferences : IAppPreferences
+public sealed class WasmAppPreferences : InMemoryAppPreferences
 {
     private const string Prefix = "physiquinator.pref.";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
     private IJSInProcessRuntime? _js;
 
     /// <summary>Must be called once the host is built, before first use.</summary>
@@ -44,7 +43,7 @@ public sealed class WasmAppPreferences : IAppPreferences
             }
             foreach (var (prefixedKey, value) in stored)
             {
-                _values[prefixedKey[Prefix.Length..]] = value ?? string.Empty;
+                Values[prefixedKey[Prefix.Length..]] = value ?? string.Empty;
             }
         }
         catch
@@ -53,22 +52,22 @@ public sealed class WasmAppPreferences : IAppPreferences
         }
     }
 
-    public string Get(string key, string defaultValue) =>
-        _values.TryGetValue(key, out var value) ? value : defaultValue;
+    public override string Get(string key, string defaultValue) =>
+        Values.TryGetValue(key, out var value) ? value : defaultValue;
 
-    public bool Get(string key, bool defaultValue)
+    public override bool Get(string key, bool defaultValue)
     {
         var raw = Get(key, defaultValue ? "true" : "false");
         return bool.TryParse(raw, out var parsed) ? parsed : defaultValue;
     }
 
-    public void Set(string key, string value)
+    public override void Set(string key, string value)
     {
-        _values[key] = value;
+        Values[key] = value;
         WriteToStorage(key, value);
     }
 
-    public void Set(string key, bool value) => Set(key, value ? "true" : "false");
+    public override void Set(string key, bool value) => Set(key, value ? "true" : "false");
 
     private void WriteToStorage(string key, string value)
     {

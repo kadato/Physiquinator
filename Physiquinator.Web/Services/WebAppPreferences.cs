@@ -2,23 +2,9 @@ using Physiquinator.Core.Services;
 
 namespace Physiquinator.Web.Services;
 
-/// <summary>In-memory preferences for the browser debug host (reset on refresh).</summary>
-public sealed class WebAppPreferences : IAppPreferences
+/// <summary>In-memory preferences for the browser debug host (reset on refresh). Uses base InMemoryAppPreferences so bool handling stays consistent with Wasm and MAUI.</summary>
+#pragma warning disable S2094 // Empty class is intentional: it inherits the full in-memory implementation.
+public sealed class WebAppPreferences : InMemoryAppPreferences
 {
-    private readonly Dictionary<string, string> _values = [];
-
-    public string Get(string key, string defaultValue) =>
-        _values.TryGetValue(key, out var value) ? value : defaultValue;
-
-    public bool Get(string key, bool defaultValue)
-    {
-        if (!_values.TryGetValue(key, out var value))
-            return defaultValue;
-
-        return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
-    }
-
-    public void Set(string key, string value) => _values[key] = value;
-
-    public void Set(string key, bool value) => _values[key] = value.ToString();
 }
+#pragma warning restore S2094

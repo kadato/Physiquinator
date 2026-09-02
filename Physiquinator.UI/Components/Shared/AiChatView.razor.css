@@ -1,0 +1,45 @@
+.ai-chat-view {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	width: 100%;
+}
+
+.ai-chat-view--page {
+	min-height: 0;
+}
+
+.ai-chat-view--dialog {
+	height: min(860px, 92dvh);
+	max-height: 96vh;
+}
+
+.ai-chat-view__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 0 0 10px;
+	border-bottom: var(--hairline);
+	width: 100%;
+	flex-shrink: 0;
+}
+
+.ai-chat-view__header-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+	.ai-chat-view__header {
+		flex-wrap: wrap;
+		row-gap: 10px;
+	}
+	.ai-chat-view__header .ai-mode-tabs {
+		order: 3;
+		flex: 1 1 100%;
+		max-width: 100%;
+	}
+}

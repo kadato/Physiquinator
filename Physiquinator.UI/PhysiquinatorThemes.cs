@@ -1,10 +1,12 @@
 using MudBlazor;
+using Physiquinator.UI.Styles;
 
 namespace Physiquinator.UI;
 
 /// <summary>
-/// The single MudBlazor theme used by the app shell and the login page, so the
-/// two share one visual identity and one set of contrast-safe palette values.
+/// MudBlazor theme that mirrors tokens.css. Keep values in sync with
+/// Styles/DesignTokens.cs and wwwroot/css/tokens.css, which are the source for CSS variables.
+/// Change the palette in tokens.css and DesignTokens together.
 /// </summary>
 public static class PhysiquinatorThemes
 {
@@ -12,37 +14,37 @@ public static class PhysiquinatorThemes
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#FAFF00", // volt fill, identical to dark: ink text on it keeps 15:1
-            PrimaryContrastText = "#10111A",
-            Secondary = "#7C3AED", // electric violet, acid
-            Tertiary = "#E11D48", // vivid magenta, acid
-            Success = "#5A8A0B", // acid lime darkened for 4.5:1 on white tint
-            Info = "#0E7490", // deeper cyan holds AA on white
-            Warning = "#B45309", // acid amber 700, brutal
-            Error = "#BE123C", // vivid red, paired with icon
-            Background = "#E7E3D1", // acid concrete, matches --pl-paper
-            Surface = "#EDE8D3", // brutal well, matches --pl-chip-2
-            AppbarBackground = "#E7E3D1",
-            TextPrimary = "#1A1B26", // near-black navy, 14:1 on bg
-            TextSecondary = "#5A5644", // darker warm slate, 7:1 on white
-            LinesDefault = "#B8B2A0", // warm hairline, brutal
-            Divider = "#C6C1AB",
+            Primary = DesignTokens.Light.VoltFill,
+            PrimaryContrastText = DesignTokens.Light.VoltFg,
+            Secondary = DesignTokens.Light.Purple,
+            Tertiary = DesignTokens.Light.Magenta,
+            Success = "#5A8A0B",
+            Info = "#0E7490",
+            Warning = "#B45309",
+            Error = DesignTokens.Light.Error,
+            Background = DesignTokens.Light.Paper,
+            Surface = DesignTokens.Light.Chip2,
+            AppbarBackground = DesignTokens.Light.Paper,
+            TextPrimary = DesignTokens.Light.Ink,
+            TextSecondary = DesignTokens.Light.Stone,
+            LinesDefault = "#B8B2A0",
+            Divider = DesignTokens.Light.Hairline,
         },
         PaletteDark = new PaletteDark()
         {
-            Primary = "#FAFF00", // volt, same role as light: one signature hue per theme
-            PrimaryContrastText = "#10111A",
-            Secondary = "#7DCFFF", // cyan
-            Tertiary = "#BB9AF7", // magenta
-            Success = "#9ECE6A", // green, distinct luminance from blue
+            Primary = DesignTokens.Dark.VoltFill,
+            PrimaryContrastText = DesignTokens.Dark.VoltFg,
+            Secondary = "#7DCFFF",
+            Tertiary = "#BB9AF7",
+            Success = "#9ECE6A",
             Info = "#7DCFFF",
-            Warning = "#E0AF68", // yellow
-            Error = "#F7768E", // red/pink, paired with icon + label
-            Background = "#1A1B26", // Tokyo Night bg
-            Surface = "#24283B", // surface
-            AppbarBackground = "#1A1B26",
-            TextPrimary = "#C0CAF5", // primary text, 9.1:1
-            TextSecondary = "#8A90B8", // secondary text: 4.7:1 on surface #24283B, AA
+            Warning = "#E0AF68",
+            Error = "#F7768E",
+            Background = DesignTokens.Dark.Paper,
+            Surface = "#24283B",
+            AppbarBackground = DesignTokens.Dark.Paper,
+            TextPrimary = DesignTokens.Dark.Ink,
+            TextSecondary = DesignTokens.Dark.Stone,
             LinesDefault = "rgba(192, 202, 245, 0.12)",
             Divider = "rgba(192, 202, 245, 0.08)",
         },

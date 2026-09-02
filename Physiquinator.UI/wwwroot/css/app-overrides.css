@@ -1432,9 +1432,15 @@ button.plan-card__start,
 .plan-details-card .mud-input-filled .mud-input-slot { background:var(--pl-chip-2) !important; border-radius:var(--radius) !important; border:var(--hairline) !important; }
 
 /* Plan add exercise input form */
-.plan-add-exercise { display:flex; align-items:center; gap:8px; margin-top:12px; width:100%; }
-.plan-add-exercise__input { flex:1; }
-.plan-add-exercise__btn.mud-button-root { height:40px !important; min-height:40px !important; flex-shrink:0; }
+.plan-add-exercise { display:flex; align-items:center; gap:8px; margin-top:12px; width:100%; min-width:0; }
+.plan-add-exercise__input { flex:1 1 0; min-width:0; }
+.plan-add-exercise__input .mud-input-control { min-width:0; }
+.plan-add-exercise__input .mud-autocomplete { min-width:0; }
+.plan-add-exercise__input .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
+.plan-add-exercise__input .mud-input-adornment .mud-icon-button .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
+.plan-exercise-sheet__body .mud-autocomplete { min-width:0; }
+.plan-exercise-sheet__body .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
+.plan-add-exercise__btn.mud-button-root { height:40px !important; min-height:40px !important; flex-shrink:0; align-self:center; }
 
 /* Home plans header */
 .home-plans-header { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; margin-bottom:8px !important; }

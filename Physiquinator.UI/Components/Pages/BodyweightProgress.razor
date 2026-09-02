@@ -55,6 +55,13 @@ else
                 <StatCard Value="@_entries.Count.ToString()" Label="@("Entries")" />
             </div>
 
+            @if (_hasChartData)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @($"Showing {_entries.Count} entries")
+                </MudText>
+            }
+
             <ProgressChartShell Title="@("Bodyweight")"
                                 HasData="_hasChartData"
                                 EmptyMessage="@("Log your weight to see the chart.")"
@@ -119,12 +126,12 @@ else
 
     private const int EntryLimit = 1000;
     private const int MaxChartAxisLabels = 6;
-    private const int MaxYAxisTicks = 5;
+    private const int MaxYAxisTicks = 4;
     private const int ListPageSize = 50;
     private const string LoadMoreSentinelId = "bodyweight-load-more-sentinel";
 
     /// <summary>Show per-entry dots only for sparse series. Dense series render as a clean line.</summary>
-    private const int MaxChartMarkerEntries = 60;
+    private const int MaxChartMarkerEntries = 12;
 
     private bool _ready;
     private IReadOnlyList<BodyweightEntry> _allEntries = Array.Empty<BodyweightEntry>();
@@ -255,24 +262,79 @@ else
             UiDateFormats.DateOnlyCompact,
             MaxChartAxisLabels);
         var values = chronological
-            .Select(e => ExerciseWeightFormatter.ToDisplay(e.BodyweightKg, WeightUnitService.Current))
+            .Select(e => Math.Round(ExerciseWeightFormatter.ToDisplay(e.BodyweightKg, WeightUnitService.Current), 1, MidpointRounding.AwayFromZero))
             .ToArray();
-        _chartSeries = [ new ChartSeries<double>
-        {
-            Name = "Bodyweight",
-            Data = values
-        } ];
 
-        var maxValue = values.DefaultIfEmpty(0).Max();
+        var minValue = values.Min();
+        var maxValue = values.Max();
+        var range = maxValue - minValue;
+
+        // Tight max for high base with small range on mobile.
+        ChartAxisScale.Scale axisScale;
+        if (range > 0 && range / Math.Max(1, maxValue) < 0.35)
+        {
+            var target = maxValue * 1.06;
+            var wide = ChartAxisScale.SuggestYAxis(target);
+            var tightMax = minValue + range * 1.6 + 1.5;
+            var tight = ChartAxisScale.SuggestYAxis(tightMax);
+            axisScale = wide.Max > tightMax * 1.25 ? tight : wide;
+        }
+        else
+        {
+            axisScale = ChartAxisScale.SuggestYAxis(maxValue);
+        }
+
+        _ = ChartAxisScale.SuggestYAxisMin(minValue);
+
+        var series = new ChartSeriesList
+        {
+            new ChartSeries<double>
+            {
+                Name = "Bodyweight",
+                Data = values
+            }
+        };
+
+        if (chronological.Count >= 10)
+        {
+            var movingAvg = new double[values.Length];
+            for (var i = 0; i < values.Length; i++)
+            {
+                var start = Math.Max(0, i - 6);
+                var window = i - start + 1;
+                var sum = 0.0;
+                for (var j = start; j <= i; j++)
+                {
+                    sum += values[j];
+                }
+
+                movingAvg[i] = Math.Round(sum / window, 1, MidpointRounding.AwayFromZero);
+            }
+
+            series.Add(new ChartSeries<double>
+            {
+                Name = "7-day avg",
+                Data = movingAvg
+            });
+        }
+
+        _chartSeries = series;
+
         var rotateXLabels = chronological.Count > 4;
-        _chartHeightPx = rotateXLabels ? "220px" : "200px";
+        if (chronological.Count <= 2)
+            _chartHeightPx = "180px";
+        else if (rotateXLabels)
+            _chartHeightPx = "240px";
+        else
+            _chartHeightPx = "200px";
         _chartOptions = new LineChartOptions
         {
             YAxisRequireZeroPoint = false,
             ShowDataMarkers = chronological.Count <= MaxChartMarkerEntries,
-            MaxNumYAxisTicks = MaxYAxisTicks + 1,
-            YAxisTicks = SuggestYAxisUnits(values.Min(), maxValue, MaxYAxisTicks),
+            MaxNumYAxisTicks = MaxYAxisTicks,
+            YAxisTicks = SuggestYAxisUnits(minValue, maxValue, MaxYAxisTicks),
             YAxisToStringFunc = value => value.ToString("0.#", CultureInfo.InvariantCulture),
+            YAxisSuggestedMax = axisScale.Max,
             XAxisLabelRotation = rotateXLabels ? -35 : 0
         };
     }

@@ -1,5 +1,6 @@
 @inject IJSRuntime JSRuntime
 
+<div class="sr-only" aria-live="polite" role="status">@A11ySummary</div>
 <div class="activity-heatmap mb-0">
     <div class="heatmap-labels" aria-hidden="true">
         @for (var r = 0; r < 7; r++)
@@ -151,6 +152,9 @@
 
     private string GridAriaLabel =>
         $"Activity heatmap, {Weeks} weeks. Use arrow keys to move between days, Enter to select.";
+
+    private string A11ySummary =>
+        $"{CountsByDay.Values.Sum()} workouts logged across {Weeks} weeks, {CountsByDay.Count} active days";
 
     private static int RowFromMonday(DateOnly d) => ((int)d.DayOfWeek + 6) % 7;
 

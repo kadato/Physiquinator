@@ -100,6 +100,13 @@ else
                 </div>
             }
 
+            @if (_hasChartData)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @($"Showing {_rows.Count} sessions")
+                </MudText>
+            }
+
             <ProgressChartShell Title="@GetSeriesName()"
                                 HasData="_hasChartData"
                                 EmptyMessage="@("Log sets to see the chart.")"
@@ -141,8 +148,17 @@ else
                     @foreach (var row in _rows.Take(_loadedListCount))
                     {
                         var item = row;
-                        <div @key="item.SessionId" class="infinite-table-row @(_logType == ExerciseLogType.Duration ? "infinite-table-row--4" : "infinite-table-row--5")">
-                            <span>@UiDateFormats.LocalDateCompact(item.StartedAtUtc)</span>
+                        var isPr = IsPrSession(item.SessionId);
+                        <div @key="item.SessionId" class="infinite-table-row @(_logType == ExerciseLogType.Duration ? "infinite-table-row--4" : "infinite-table-row--5") @(isPr ? "infinite-table-row--pr" : "")">
+                            <span class="exercise-progress-date">
+                                <span class="exercise-progress-date__text">@UiDateFormats.LocalDateCompact(item.StartedAtUtc)</span>
+                                @if (isPr)
+                                {
+                                    <span class="exercise-progress-date__pr" title="Personal record" aria-label="Personal record">
+                                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="exercise-progress-date__pr-icon" />
+                                    </span>
+                                }
+                            </span>
                             @if (_logType == ExerciseLogType.Duration)
                             {
                                 <span>@item.TotalReps</span>
@@ -216,6 +232,7 @@ else
     private ChartSeriesList _chartSeries = [];
     private LineChartOptions _chartOptions = new();
     private string _chartHeightPx = "200px";
+    private HashSet<string> _prSessionIds = [];
 
     private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
@@ -384,6 +401,7 @@ else
         {
             _chartLabels = Array.Empty<string>();
             _chartSeries = [];
+            _prSessionIds = [];
             _hasChartData = false;
             return;
         }
@@ -407,43 +425,115 @@ else
             UiDateFormats.LocalDateChartAxis,
             MaxChartAxisLabels);
 
-        _chartSeries =
-        [
+        // PR sessions for the table badges, not a second chart series.
+        var maxSoFar = double.MinValue;
+        var prSet = new HashSet<string>();
+        for (var i = 0; i < count; i++)
+        {
+            var v = values[i];
+            if (v > 0 && v > maxSoFar)
+            {
+                maxSoFar = v;
+                var sessionId = _rows[count - 1 - i].SessionId;
+                prSet.Add(sessionId);
+            }
+        }
+
+        _prSessionIds = prSet;
+
+        _chartSeries = new ChartSeriesList
+        {
             new ChartSeries<double>
             {
                 Name = GetSeriesName(),
                 Data = values
             }
-        ];
+        };
 
         var maxValue = values.Max();
-
+        var minValue = values.Where(v => v > 0).DefaultIfEmpty(0).Min();
         var rotateXLabels = count > 4;
-        _chartHeightPx = rotateXLabels ? "220px" : "200px";
-        ChartAxisScale.Scale? axisScale = maxValue > 0 ? ChartAxisScale.SuggestYAxis(maxValue) : null;
+        if (count <= 2)
+            _chartHeightPx = "180px";
+        else if (rotateXLabels)
+            _chartHeightPx = "220px";
+        else
+            _chartHeightPx = "200px";
+
+        // Useful range: keep zero baseline for volume/reps, hug data for weight.
+        ChartAxisScale.Scale? axisScale;
+        if (_metric == ChartMetric.BestWeight && minValue > 0 && maxValue > 0)
+        {
+            var range = maxValue - minValue;
+            if (range <= 0)
+            {
+                // Single unique value: show a small window around it.
+                var pad = Math.Max(1, Math.Ceiling(maxValue * 0.05));
+                var tightMax = maxValue + pad;
+                axisScale = ChartAxisScale.SuggestYAxis(tightMax);
+                // Shift down after rounding so min hugs data on mobile.
+                var tightMin = Math.Max(0, ChartAxisScale.SuggestYAxisMin(minValue));
+                // MudBlazor has no YAxisSuggestedMin, so bake the window into the tick step and mark zero not required.
+                // Use the tighter max; min will auto-hug because RequireZero is false and we keep step small.
+                axisScale = new ChartAxisScale.Scale(axisScale.Value.TickStep, axisScale.Value.Max - (axisScale.Value.Max - tightMax) + pad);
+                _ = tightMin;
+            }
+            else if (range / Math.Max(1, maxValue) < 0.35)
+            {
+                // High base with small variation like 80 to 82 kg: tighten max to just above data.
+                var target = maxValue * 1.06;
+                axisScale = ChartAxisScale.SuggestYAxis(target);
+                // If suggested max wastes >40% of space, clamp to a tighter max.
+                var paddedRange = (maxValue - minValue) * 1.5 + 2;
+                var tightMax = minValue + paddedRange;
+                var tightScale = ChartAxisScale.SuggestYAxis(tightMax);
+                if (axisScale.Value.Max > tightMax * 1.25)
+                    axisScale = tightScale;
+            }
+            else
+            {
+                axisScale = maxValue > 0 ? ChartAxisScale.SuggestYAxis(maxValue) : null;
+            }
+        }
+        else
+        {
+            axisScale = maxValue > 0 ? ChartAxisScale.SuggestYAxis(maxValue) : null;
+        }
+
+        var isWeightMetric = _metric == ChartMetric.BestWeight || _metric == ChartMetric.Volume;
         _chartOptions = new LineChartOptions
         {
-            YAxisRequireZeroPoint = false,
-            ShowDataMarkers = false,
-            MaxNumYAxisTicks = 5,
+            YAxisRequireZeroPoint = _metric == ChartMetric.Volume || _metric == ChartMetric.TotalReps || _metric == ChartMetric.TotalTime,
+            ShowDataMarkers = count <= 12,
+            MaxNumYAxisTicks = 4,
             YAxisTicks = axisScale is { } s ? Math.Max(1, (int)Math.Ceiling(s.TickStep)) : 1,
-            YAxisToStringFunc = FormatYAxisTick,
+            YAxisToStringFunc = isWeightMetric ? FormatWeightTick : FormatYAxisTick,
             YAxisSuggestedMax = axisScale?.Max,
             XAxisLabelRotation = rotateXLabels ? -35 : 0
         };
     }
 
-    private double GetMetricValue(ExerciseSessionProgressEntry row) => _metric switch
+    private bool IsPrSession(string sessionId) => _prSessionIds.Contains(sessionId);
+
+    private double GetMetricValue(ExerciseSessionProgressEntry row)
     {
-        ChartMetric.BestWeight when _logType == ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.ToDisplay(
-            ((EffectiveBodyweightKg ?? ArbitraryBodyweightKg) * (_bodyweightPercent ?? 100) / 100.0) + (row.BestWeightKg ?? 0),
-            WeightUnitService.Current),
-        ChartMetric.BestWeight => row.BestWeightKg is { } kg
-            ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
-            : 0,
-        ChartMetric.TotalReps or ChartMetric.TotalTime => row.TotalReps,
-        _ => ExerciseWeightFormatter.ToDisplay(row.TotalVolumeKg, WeightUnitService.Current)
-    };
+        var raw = _metric switch
+        {
+            ChartMetric.BestWeight when _logType == ExerciseLogType.BodyweightReps => ExerciseWeightFormatter.ToDisplay(
+                ((EffectiveBodyweightKg ?? ArbitraryBodyweightKg) * (_bodyweightPercent ?? 100) / 100.0) + (row.BestWeightKg ?? 0),
+                WeightUnitService.Current),
+            ChartMetric.BestWeight => row.BestWeightKg is { } kg
+                ? ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
+                : 0,
+            ChartMetric.TotalReps or ChartMetric.TotalTime => row.TotalReps,
+            _ => ExerciseWeightFormatter.ToDisplay(row.TotalVolumeKg, WeightUnitService.Current)
+        };
+
+        // Round so the chart never shows 176.3696 or 12.3400001 on the Y axis.
+        return _metric == ChartMetric.TotalReps || _metric == ChartMetric.TotalTime
+            ? Math.Round(raw)
+            : Math.Round(raw, 1, MidpointRounding.AwayFromZero);
+    }
 
     private string GetSeriesName()
     {
@@ -459,6 +549,9 @@ else
 
     private static string FormatYAxisTick(double value) =>
         value.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string FormatWeightTick(double value) =>
+        value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
 
     private string FormatBestWeight(double? weight) =>
         ExerciseWeightFormatter.FormatEffectiveWeight(weight, _bodyweightKg, _bodyweightPercent, WeightUnitService.Current, _logType);

@@ -1436,11 +1436,14 @@ button.plan-card__start,
 .plan-add-exercise__input { flex:1 1 0; min-width:0; }
 .plan-add-exercise__input .mud-input-control { min-width:0; }
 .plan-add-exercise__input .mud-autocomplete { min-width:0; }
-.plan-add-exercise__input .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
-.plan-add-exercise__input .mud-input-adornment .mud-icon-button .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
-.plan-exercise-sheet__body .mud-autocomplete { min-width:0; }
-.plan-exercise-sheet__body .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
 .plan-add-exercise__btn.mud-button-root { height:40px !important; min-height:40px !important; flex-shrink:0; align-self:center; }
+
+/* Autocomplete: prevent flex clipping and oversized adornment button everywhere */
+.mud-autocomplete { min-width:0; }
+.mud-autocomplete .mud-input-control { min-width:0; }
+.mud-autocomplete .mud-input-adornment .mud-icon-button { width:32px !important; height:32px !important; min-width:32px !important; min-height:32px !important; }
+.mud-autocomplete .mud-input-adornment .mud-icon-button .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
+.plan-exercise-sheet__body .mud-autocomplete { min-width:0; }
 
 /* Home plans header */
 .home-plans-header { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; margin-bottom:8px !important; }

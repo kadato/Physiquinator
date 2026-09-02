@@ -16,7 +16,7 @@
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
             <MudStack Spacing="3" Class="plan-exercise-sheet__body">
-                <ExerciseNameAutocomplete Value="_name"
+                <ExerciseNameAutocomplete Value="@_name"
                                           ValueChanged="OnNameChanged"
                                           InputId="exercise-sheet-name-input"
                                           Label="@("Exercise name")"

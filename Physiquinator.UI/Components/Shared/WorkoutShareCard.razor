@@ -3,7 +3,7 @@
 @namespace Physiquinator.UI.Components.Shared
 
 <div class="share-card-wrap" aria-hidden="true">
-    <div class="share-card" data-share-card>
+    <div class="share-card @(Theme == "dark" ? "share-card--dark" : "")" data-share-card>
         <header class="share-card__header">
             <svg class="share-card__logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <g fill="currentColor">
@@ -18,11 +18,14 @@
         <p class="share-card__date">@DateLabel</p>
 
         <div class="share-card__stats">
-            <div class="share-card__stat">
-                <span class="share-card__stat-value">@DurationLabel</span>
-                <span class="share-card__stat-label">Duration</span>
-            </div>
-            @if (!string.IsNullOrEmpty(VolumeLabel))
+            @if (IncludeDuration)
+            {
+                <div class="share-card__stat">
+                    <span class="share-card__stat-value">@DurationLabel</span>
+                    <span class="share-card__stat-label">Duration</span>
+                </div>
+            }
+            @if (IncludeVolume && !string.IsNullOrEmpty(VolumeLabel))
             {
                 <div class="share-card__stat">
                     <span class="share-card__stat-value">@VolumeLabel</span>
@@ -35,10 +38,10 @@
             </div>
         </div>
 
-        @if (Exercises.Any())
+        @if (IncludeSets && FilteredExercises.Any())
         {
             <div class="share-card__exercises">
-                @foreach (var group in Exercises)
+                @foreach (var group in FilteredExercises)
                 {
                     <section class="share-card__exercise">
                         <h3 class="share-card__exercise-name">@group.ExerciseName</h3>
@@ -88,4 +91,31 @@
 
     [Parameter]
     public IReadOnlyList<ShareCardExercise> Exercises { get; set; } = [];
+
+    [Parameter]
+    public string Theme { get; set; } = "light";
+
+    [Parameter]
+    public bool IncludeVolume { get; set; } = true;
+
+    [Parameter]
+    public bool IncludeDuration { get; set; } = true;
+
+    [Parameter]
+    public bool IncludeSets { get; set; } = true;
+
+    [Parameter]
+    public HashSet<string>? IncludedExerciseNames { get; set; }
+
+    private IEnumerable<ShareCardExercise> FilteredExercises
+    {
+        get
+        {
+            if (!IncludeSets)
+                return [];
+            if (IncludedExerciseNames == null)
+                return Exercises;
+            return Exercises.Where(e => IncludedExerciseNames.Contains(e.ExerciseName));
+        }
+    }
 }

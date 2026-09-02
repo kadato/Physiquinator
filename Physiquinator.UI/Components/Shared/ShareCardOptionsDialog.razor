@@ -1,0 +1,123 @@
+@using Physiquinator.UI.Models
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-items-center gap-3">
+            <span class="dialog-title-icon-box" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Share" Size="Size.Small" />
+            </span>
+            <MudText Typo="Typo.h6" Class="fw-bold">Share workout</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="3" Class="py-2">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @($"{Exercises.Count} exercises in this session")
+            </MudText>
+
+            <MudDivider />
+
+            <MudText Typo="Typo.subtitle2" Class="fw-bold">Include</MudText>
+            <MudStack Spacing="1">
+                <MudCheckBox @bind-Value="_includeDuration" Label="Duration" Color="Color.Primary" Dense="true" />
+                <MudCheckBox @bind-Value="_includeVolume" Label="Volume" Color="Color.Primary" Dense="true" />
+                <MudCheckBox @bind-Value="_includeSets" Label="Exercise details" Color="Color.Primary" Dense="true" />
+            </MudStack>
+
+            <MudDivider />
+
+            <MudText Typo="Typo.subtitle2" Class="fw-bold">Theme</MudText>
+            <MudSelect T="string" @bind-Value="_theme" Label="Theme" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense">
+                <MudSelectItem Value="@("light")">Light</MudSelectItem>
+                <MudSelectItem Value="@("dark")">Dark</MudSelectItem>
+            </MudSelect>
+
+            <MudDivider />
+
+            <MudText Typo="Typo.subtitle2" Class="fw-bold">Exercises</MudText>
+            @if (Exercises.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">No exercises logged.</MudText>
+            }
+            else
+            {
+                @foreach (var ex in Exercises)
+                {
+                    var name = ex.ExerciseName;
+                    <MudCheckBox Value="@GetExerciseChecked(name)"
+                                 ValueChanged="@((bool v) => OnExerciseToggled(name, v))"
+                                 Label="@($"{name} ({ex.Sets.Count} sets)")"
+                                 Color="Color.Primary"
+                                 Dense="true" />
+                }
+                @if (Exercises.Count > 1)
+                {
+                    <MudStack Row="true" Spacing="1" Class="mt-1">
+                        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SelectAll">Select all</MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="SelectNone">Clear all</MudButton>
+                    </MudStack>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Confirm">Share</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<WorkoutShareCard.ShareCardExercise> Exercises { get; set; } = [];
+
+    private bool _includeVolume = true;
+    private bool _includeDuration = true;
+    private bool _includeSets = true;
+    private string _theme = "light";
+    private readonly Dictionary<string, bool> _exerciseIncluded = new(StringComparer.OrdinalIgnoreCase);
+
+    protected override void OnParametersSet()
+    {
+        foreach (var ex in Exercises.Where(ex => !_exerciseIncluded.ContainsKey(ex.ExerciseName)))
+        {
+            _exerciseIncluded[ex.ExerciseName] = true;
+        }
+
+        var toRemove = _exerciseIncluded.Keys
+            .Where(k => !Exercises.Any(e => string.Equals(e.ExerciseName, k, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        foreach (var k in toRemove)
+            _exerciseIncluded.Remove(k);
+    }
+
+    private bool GetExerciseChecked(string name) =>
+        _exerciseIncluded.TryGetValue(name, out var v) && v;
+
+    private void OnExerciseToggled(string name, bool value) =>
+        _exerciseIncluded[name] = value;
+
+    private void SelectAll()
+    {
+        foreach (var key in _exerciseIncluded.Keys.ToList())
+            _exerciseIncluded[key] = true;
+    }
+
+    private void SelectNone()
+    {
+        foreach (var key in _exerciseIncluded.Keys.ToList())
+            _exerciseIncluded[key] = false;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Confirm()
+    {
+        var included = new HashSet<string>(
+            _exerciseIncluded.Where(kv => kv.Value).Select(kv => kv.Key),
+            StringComparer.OrdinalIgnoreCase);
+        var options = new ShareCardOptions(_includeVolume, _includeDuration, _includeSets, _theme, included);
+        MudDialog.Close(DialogResult.Ok(options));
+    }
+}

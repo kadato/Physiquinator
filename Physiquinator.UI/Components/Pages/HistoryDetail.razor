@@ -291,8 +291,13 @@ else
                       DateLabel="@ShareDateLabel"
                       DurationLabel="@(DurationLabel ?? "-")"
                       VolumeLabel="@TotalVolumeLabel"
-                      SetsLogged="@TotalSetCount"
-                      Exercises="@ShareCardExercises" />
+                      SetsLogged="@ShareSetsLogged"
+                      Exercises="@ShareCardExercises"
+                      Theme="@ShareTheme"
+                      IncludeVolume="@ShareIncludeVolume"
+                      IncludeDuration="@ShareIncludeDuration"
+                      IncludeSets="@ShareIncludeSets"
+                      IncludedExerciseNames="@ShareIncludedExerciseNames" />
 }
 
 
@@ -319,6 +324,7 @@ else
     private string? _editingSetId;
     private string _editRepsText = "";
     private string _editWeightText = "";
+    private ShareCardOptions? _shareOptions;
 
 
     private void GoPlan(Guid planId) => Navigation.NavigateTo(AppRoutes.Plan(planId));
@@ -729,10 +735,31 @@ else
         return "-";
     }
 
-    /// <summary>Builds a readable text summary of the session for sharing.</summary>
     private async Task ShareSessionAsync()
     {
         if (_session == null) return;
+
+        var parameters = new DialogParameters<ShareCardOptionsDialog>
+        {
+            { x => x.Exercises, ShareCardExercises }
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ShareCardOptionsDialog>("Share options", parameters, options);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled) return;
+        if (result.Data is not ShareCardOptions shareOptions) return;
+
+        _shareOptions = shareOptions;
+        StateHasChanged();
+        await Task.Delay(50);
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(50);
 
         var fileName = FileTransferNames.PngFileName(
             FileTransferNames.SafeFileStem(_session.PlanName),
@@ -753,11 +780,39 @@ else
         {
             Snackbar.Add(string.Format("Share failed: {0}", ex.Message), Severity.Error);
         }
+        finally
+        {
+            _shareOptions = null;
+            StateHasChanged();
+        }
     }
 
     private string ShareDateLabel => _session == null
         ? ""
         : UiDateFormats.LocalDateTimeCompact(_session.StartedAtUtc);
+
+    private string ShareTheme => _shareOptions?.Theme ?? "light";
+
+    private bool ShareIncludeVolume => _shareOptions?.IncludeVolume ?? true;
+
+    private bool ShareIncludeDuration => _shareOptions?.IncludeDuration ?? true;
+
+    private bool ShareIncludeSets => _shareOptions?.IncludeSets ?? true;
+
+    private HashSet<string>? ShareIncludedExerciseNames => _shareOptions?.IncludedExerciseNames;
+
+    private int ShareSetsLogged
+    {
+        get
+        {
+            if (_shareOptions == null) return TotalSetCount;
+            if (!_shareOptions.IncludeSets) return TotalSetCount;
+            if (_shareOptions.IncludedExerciseNames == null) return TotalSetCount;
+            return ShareCardExercises
+                .Where(e => _shareOptions.IncludedExerciseNames.Contains(e.ExerciseName))
+                .Sum(e => e.Sets.Count);
+        }
+    }
 
     /// <summary>One compact line for start and end. The end shows time only on the same day.</summary>
     private string SessionRangeLabel

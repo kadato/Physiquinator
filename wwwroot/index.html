@@ -16,7 +16,9 @@
             } else {
                 theme = preference;
             }
+            var lightThemes = { "light": 1, "tokyo-night-light": 1, "solarized-light": 1, "github-light": 1 };
             document.documentElement.dataset.theme = theme;
+            document.documentElement.dataset.themeMode = lightThemes[theme] ? "light" : "dark";
         })();
     </script>
     <style>
@@ -30,8 +32,8 @@
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/tokens.css?v=85" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=85" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/tokens.css?v=87" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=87" />
     <link rel="stylesheet" href="Physiquinator.styles.css" />
     <style>
         /* MAUI WebView2 fallback. Shell only if stylesheets fail to load */

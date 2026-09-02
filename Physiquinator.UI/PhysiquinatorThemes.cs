@@ -53,4 +53,52 @@ public static class PhysiquinatorThemes
             DefaultBorderRadius = "0px"
         }
     };
+
+    /// <summary>Builds a MudTheme whose palettes follow the resolved CSS tokens for the effective theme.</summary>
+    public static MudTheme ForTheme(string? effectiveTheme)
+    {
+        var p = DesignTokens.Resolve(effectiveTheme);
+
+        // Build fresh theme so CSS variables and Mud palettes stay aligned per theme.
+        return new MudTheme
+        {
+            PaletteLight = new PaletteLight
+            {
+                Primary = p.VoltFill,
+                PrimaryContrastText = p.VoltFg,
+                Secondary = p.Purple,
+                Tertiary = p.Magenta,
+                Success = p.Success,
+                Info = p.Cyan,
+                Warning = p.Yellow,
+                Error = p.Error,
+                Background = p.Paper,
+                Surface = p.Chip2,
+                AppbarBackground = p.Paper,
+                TextPrimary = p.Ink,
+                TextSecondary = p.Stone,
+                LinesDefault = p.HairlineStrong,
+                Divider = p.Hairline,
+            },
+            PaletteDark = new PaletteDark
+            {
+                Primary = p.VoltFill,
+                PrimaryContrastText = p.VoltFg,
+                Secondary = p.Cyan,
+                Tertiary = p.Purple,
+                Success = p.Success,
+                Info = p.Cyan,
+                Warning = p.Yellow,
+                Error = p.Error,
+                Background = p.Paper,
+                Surface = p.Chip2,
+                AppbarBackground = p.Paper,
+                TextPrimary = p.Ink,
+                TextSecondary = p.Stone,
+                LinesDefault = p.Hairline,
+                Divider = p.HairlineStrong,
+            },
+            LayoutProperties = new LayoutProperties { DefaultBorderRadius = "0px" }
+        };
+    }
 }

@@ -8,7 +8,7 @@
 @inject NavigationManager Navigation
 @inject ThemeService ThemeService
 
-<MudThemeProvider Theme="PhysiquinatorThemes.Default" IsDarkMode="_isDark" />
+<MudThemeProvider Theme="_mudTheme" IsDarkMode="_isDark" />
 <main class="auth-shell">
     <MudPaper Elevation="6" Class="auth-card">
         <div class="auth-brand">Physiquinator</div>
@@ -79,6 +79,7 @@
     private string? _error;
     private bool _busy;
     private bool _isDark;
+    private MudBlazor.MudTheme _mudTheme = PhysiquinatorThemes.Default;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,13 +94,19 @@
             // Theme stays at the service default when JS interop is unavailable.
         }
 
-        _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
+        SyncTheme();
         ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void SyncTheme()
+    {
+        _isDark = ThemePreference.IsDarkTheme(ThemeService.EffectiveTheme);
+        _mudTheme = PhysiquinatorThemes.ForTheme(ThemeService.EffectiveTheme);
     }
 
     private void OnThemeChanged()
     {
-        _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
+        SyncTheme();
         _ = InvokeAsync(StateHasChanged);
     }
 

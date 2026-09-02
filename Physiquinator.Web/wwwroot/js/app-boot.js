@@ -5,7 +5,10 @@
     var preference = localStorage.getItem(key) || "system";
     var isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     var theme = preference === "system" ? (isDark ? "dark" : "light") : preference;
+    var lightThemes = { "light": 1, "tokyo-night-light": 1, "solarized-light": 1, "github-light": 1 };
+    var mode = lightThemes[theme] ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme-mode", mode);
 })();
 
 // Fallback for browsers without :has() - hide the HTML splash when Blazor renders.

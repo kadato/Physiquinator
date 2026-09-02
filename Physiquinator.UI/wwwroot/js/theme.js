@@ -92,6 +92,9 @@
     let mediaQuery = null;
     let mediaListener = null;
 
+    const lightThemes = new Set(["light", "tokyo-night-light", "solarized-light", "github-light"]);
+    const isLightTheme = (theme) => lightThemes.has(theme);
+
     const getPreference = () => localStorage.getItem(storageKey) || "system";
     const getSystemTheme = () =>
         window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -100,6 +103,7 @@
 
     const applyTheme = (theme) => {
         document.documentElement.setAttribute("data-theme", theme);
+        document.documentElement.setAttribute("data-theme-mode", isLightTheme(theme) ? "light" : "dark");
     };
 
     const notify = (theme) => {

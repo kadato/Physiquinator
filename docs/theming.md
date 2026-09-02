@@ -14,7 +14,9 @@ Change the palette in `tokens.css` and `DesignTokens.cs` together. `Physiquinato
 
 ## How themes switch
 
-`ThemeService` writes `html[data-theme="light"]` or `html[data-theme="dark"]` and `wwwroot/js/theme.js` persists the preference in `localStorage` under `physiquinator-theme-preference`. All components use `var(--pl-*)` variables, so switching the attribute repaints the app with no code change.
+`ThemeService` writes `html[data-theme="..."]` and `wwwroot/js/theme.js` persists the preference in `localStorage` under `physiquinator-theme-preference`. All components use `var(--pl-*)` variables, so switching the attribute repaints the app with no code change.
+
+Available themes: `system` (follow OS), `light` / `dark` (Physiquinator defaults), `tokyo-night`, `tokyo-night-storm`, `tokyo-night-moon`, `tokyo-night-light` (Tokyo Night family), `dracula`, `monokai`, `one-dark-pro`, `nord`, `solarized-dark`, `solarized-light`, `github-dark`, `github-light`, `night-owl` (most popular VS Code themes). `ThemePreference` in `Physiquinator.Core` is the source of truth for ids, display names, and dark/light grouping.
 
 ## Adding a new theme
 
@@ -60,7 +62,7 @@ Preview the new theme by setting `document.documentElement.dataset.theme = "fore
 
 ## Cache busting
 
-`tokens.css` and `app-overrides.css` are referenced with `?v=85` in `wwwroot/index.html`, `Physiquinator.Web/Components/App.razor`, and `Physiquinator.Wasm/wwwroot/index.html`. Bump the number when you change either file so WebView2 and browsers fetch the new sheet.
+`tokens.css` and `app-overrides.css` are referenced with `?v=87` in `wwwroot/index.html`, `Physiquinator.Web/Components/App.razor`, and `Physiquinator.Wasm/wwwroot/index.html`. Bump the number when you change either file so WebView2 and browsers fetch the new sheet.
 
 ## Past drift that is now fixed
 

@@ -46,7 +46,7 @@ html, body, #app, button, input, select, textarea, .mud-typography, .mud-button,
 }
 #app { display:flex; flex-direction:column; flex:1 1 0%; min-height:0; overflow:hidden; }
 ::selection { background: var(--pl-ink); color: var(--pl-paper); }
-html[data-theme="dark"] ::selection { background: #4D7FFF; color: #10111A; }
+html[data-theme-mode="dark"] ::selection { background: var(--pl-cyan); color: var(--pl-paper); }
 :focus-visible { outline: 2px solid var(--pl-focus); outline-offset: 2px; }
 * { scrollbar-color: var(--pl-hairline-strong) transparent; scrollbar-width: thin; }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -198,12 +198,12 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
   fill: var(--pl-stone) !important;
 }
 
-html[data-theme="light"] .app-fab--secondary {
+html[data-theme-mode="light"] .app-fab--secondary {
   background: var(--pl-chip-2) !important;
   color: #1A1B26 !important;
   border: 1.5px solid #A39D82 !important;
 }
-html[data-theme="light"] .app-fab--secondary .mud-icon-root {
+html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
   color: #1A1B26 !important;
   fill: #1A1B26 !important;
 }
@@ -673,8 +673,8 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
   transform: translateZ(0);
   transition: color 220ms ease;
 }
-html[data-theme="dark"] .rest-timer-digits {
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .rest-timer-digits {
+  color: var(--pl-yellow) !important;
 }
 .rest-timer-digits--imminent {
   color: #C2410C !important;
@@ -733,28 +733,28 @@ html[data-theme="dark"] .rest-timer-digits {
   color: var(--pl-ink) !important;
   fill: var(--pl-ink) !important;
 }
-html[data-theme="dark"] .rest-timer-icon-btn,
-html[data-theme="dark"] .rest-timer-add-btn {
-  background: #1C2033 !important;
-  color: #FAFF00 !important;
-  border-color: #2D3352 !important;
+html[data-theme-mode="dark"] .rest-timer-icon-btn,
+html[data-theme-mode="dark"] .rest-timer-add-btn {
+  background: var(--pl-chip) !important;
+  color: var(--pl-yellow) !important;
+  border-color: var(--pl-hairline-strong) !important;
   box-shadow: 3px 3px 0 #10111A !important;
 }
-html[data-theme="dark"] .rest-timer-icon-btn:hover,
-html[data-theme="dark"] .rest-timer-add-btn:hover {
-  background: #252B42 !important;
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .rest-timer-icon-btn:hover,
+html[data-theme-mode="dark"] .rest-timer-add-btn:hover {
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-yellow) !important;
 }
-html[data-theme="dark"] .rest-timer-icon-btn .mud-icon-root {
-  color: #FAFF00 !important;
-  fill: #FAFF00 !important;
+html[data-theme-mode="dark"] .rest-timer-icon-btn .mud-icon-root {
+  color: var(--pl-yellow) !important;
+  fill: var(--pl-yellow) !important;
 }
 .rest-timer-controls .mud-icon-button { width:100% !important; min-width:0 !important; height:48px !important; border-radius:var(--radius) !important; border:1.5px solid var(--pl-ink-border) !important; background: var(--pl-chip) !important; color:var(--pl-ink) !important; box-shadow:2px 2px 0 var(--pl-plate-shadow-color) !important; }
 .rest-timer-controls .mud-icon-button[aria-label*="Pause"] { background:color-mix(in srgb, var(--pl-amber) 25%, var(--pl-chip)) !important; border-color:var(--pl-warn-text) !important; color:var(--pl-ink) !important; }
 .rest-timer-controls .mud-button { height:48px !important; width:100% !important; min-width:0 !important; flex:1 1 0 !important; border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.8125rem !important; font-weight:700 !important; letter-spacing:0.12em !important; text-transform:uppercase !important; border:1.5px solid var(--pl-ink-border) !important; box-shadow:2px 2px 0 var(--pl-plate-shadow-color) !important; }
 .rest-timer-edge-track { flex-shrink:0; height:8px; margin:0; background:var(--pl-chip-2); border-top:1.5px solid var(--pl-ink-border); position:relative; overflow:hidden; }
 .rest-timer-edge-fill { width:100%; height:100%; background:var(--pl-volt-fill); border-radius:0; transform:scaleX(0); transform-origin:left; will-change:transform;}
-html[data-theme="dark"] .rest-timer-edge-fill { background:#FAFF00; }
+html[data-theme-mode="dark"] .rest-timer-edge-fill { background: var(--pl-yellow); }
 .rest-timer-edge-fill--imminent { background:#C2410C; }
 .rest-timer-edge-fill--urgent { background:#9F1239; }
 .rest-timer-panel--complete.mud-paper { border-color:var(--pl-success) !important; background:var(--pl-chip) !important; }
@@ -777,7 +777,7 @@ html[data-theme="dark"] .rest-timer-edge-fill { background:#FAFF00; }
 /* Error confirms: pin pairs the audit verified instead of trusting MudBlazor defaults.
    Light: white on #BE123C is 6.4:1. Dark: #10111A on #FF0055 is 4.8:1. */
 .mud-button-filled-error { background:var(--pl-error) !important; color:#FFFFFF !important; border:1px solid var(--pl-error) !important; }
-html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
+html[data-theme-mode="dark"] .mud-button-filled-error { color: var(--pl-paper) !important; }
 .mud-button-outlined { border:var(--hairline-strong) !important; background:var(--pl-chip) !important; color:var(--pl-ink) !important; }
 .mud-chip { border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; letter-spacing:0.08em !important; border:var(--hairline) !important; }
 /* High-Contrast Outlined Inputs & Floating Labels */
@@ -971,14 +971,14 @@ html[data-theme="dark"] .mud-button-filled-error { color:#10111A !important; }
   }
   .activity-heatmap { --heatmap-cell-size: 22px; }
 }
-html[data-theme="light"] .mud-charts-grid path,
-html[data-theme="light"] .mud-charts-gridlines-yaxis path {
+html[data-theme-mode="light"] .mud-charts-grid path,
+html[data-theme-mode="light"] .mud-charts-gridlines-yaxis path {
   stroke: var(--pl-ink) !important;
   stroke-width: 1.2px !important;
   opacity: 0.95 !important;
 }
-html[data-theme="dark"] .mud-charts-grid path,
-html[data-theme="dark"] .mud-charts-gridlines-yaxis path {
+html[data-theme-mode="dark"] .mud-charts-grid path,
+html[data-theme-mode="dark"] .mud-charts-gridlines-yaxis path {
   stroke-width: 0.8px !important;
   opacity: 1 !important;
 }
@@ -1442,35 +1442,35 @@ button.plan-card__start,
 /* Captured to PNG via html2canvas: explicit hex colors only, no var() or color-mix(). */
 .share-card-wrap { position:fixed !important; left:-9999px !important; top:0 !important; width:400px !important; opacity:0 !important; pointer-events:none !important; z-index:-9999 !important; }
 .share-card { width:400px; box-sizing:border-box; padding:24px; color:#1A1B26; }
-html[data-theme="dark"] .share-card { color:#C0CAF5; }
+html[data-theme-mode="dark"] .share-card { color: var(--pl-ink); }
 .share-card__header { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 .share-card__logo { width:30px; height:30px; fill:#1A1B26; flex-shrink:0; }
-html[data-theme="dark"] .share-card__logo { fill:#7AA2F7; }
+html[data-theme-mode="dark"] .share-card__logo { fill: var(--pl-cyan); }
 .share-card__brand { font-size:13px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#565A6E; }
-html[data-theme="dark"] .share-card__brand { color:#787C99; }
+html[data-theme-mode="dark"] .share-card__brand { color: var(--pl-stone); }
 .share-card__plan { margin:0; font-size:24px; font-weight:800; line-height:1.25; letter-spacing:-0.02em; }
 .share-card__date { margin:6px 0 0; font-size:12px; color:#565A6E; }
-html[data-theme="dark"] .share-card__date { color:#787C99; }
+html[data-theme-mode="dark"] .share-card__date { color: var(--pl-stone); }
 .share-card__stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin:20px 0; }
 .share-card__stat { display:flex; flex-direction:column; gap:2px; padding:12px 8px; background:#F5F5F7; text-align:center; }
-html[data-theme="dark"] .share-card__stat { background:#1F2335; }
+html[data-theme-mode="dark"] .share-card__stat { background: var(--pl-chip); }
 .share-card__stat-value { font-size:17px; font-weight:700; white-space:nowrap; color:#1A1B26; }
-html[data-theme="dark"] .share-card__stat-value { color:#7AA2F7; }
+html[data-theme-mode="dark"] .share-card__stat-value { color: var(--pl-cyan); }
 .share-card__stat-label { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#565A6E; }
-html[data-theme="dark"] .share-card__stat-label { color:#787C99; }
+html[data-theme-mode="dark"] .share-card__stat-label { color: var(--pl-stone); }
 .share-card__exercises { margin-top:4px; }
 .share-card__exercise { padding:12px 0; border-top:1px solid #B4B8C5; }
-html[data-theme="dark"] .share-card__exercise { border-top-color:#32344A; }
+html[data-theme-mode="dark"] .share-card__exercise { border-top-color: var(--pl-hairline); }
 .share-card__exercise-name { margin:0 0 8px; font-size:14px; font-weight:700; }
 .share-card__set { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:4px 0; font-size:12px; }
 .share-card__set--warmup { color:#565A6E; }
-html[data-theme="dark"] .share-card__set--warmup { color:#787C99; }
+html[data-theme-mode="dark"] .share-card__set--warmup { color: var(--pl-stone); }
 .share-card__set-label { min-width:0; }
 .share-card__set-metrics { font-weight:700; text-align:right; white-space:nowrap; }
 .share-card__warmup { font-size:9px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#8A5A12; margin-right:6px; }
-html[data-theme="dark"] .share-card__warmup { color:#E0AF68; }
+html[data-theme-mode="dark"] .share-card__warmup { color: var(--pl-yellow); }
 .share-card__footer { margin-top:16px; padding-top:12px; border-top:1px solid #B4B8C5; font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; text-align:center; color:#565A6E; }
-html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#787C99; }
+html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-hairline); color: var(--pl-stone); }
 
 /* Infinite Scroll Tables and Progress Lists for Bodyweight, Exercise Progress, and History Detail */
 /* Column rhythm matches the shared compact table; edit mode keeps a wide action slot. */
@@ -1626,7 +1626,7 @@ html[data-theme="dark"] .share-card__footer { border-top-color:#32344A; color:#7
 .workout-exercise-layout { display:flex; flex-direction:column; gap:12px; }
 .exercise-accordion-card { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; scroll-margin-top:12px; overflow:hidden; }
 .exercise-accordion-card--expanded { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 1px var(--pl-ink) !important; }
-html[data-theme="dark"] .exercise-accordion-card--expanded { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 1px var(--pl-ink) !important; }
+html[data-theme-mode="dark"] .exercise-accordion-card--expanded { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 1px var(--pl-ink) !important; }
 .exercise-accordion-header { display:flex; align-items:center; justify-content:space-between; width:100%; padding:10px 12px 6px !important; background:transparent; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; gap:8px; box-sizing:border-box; min-height:44px !important; }
 .header-left { display:flex !important; align-items:center !important; gap:8px !important; min-width:0 !important; flex:1 !important; padding-left:12px !important; }
 .header-right { display:flex !important; align-items:center !important; gap:6px !important; flex-shrink:0 !important; padding-right:12px !important; }
@@ -1647,16 +1647,16 @@ html[data-theme="dark"] .exercise-accordion-card--expanded { border-color:var(--
   min-width: 38px !important;
   box-sizing: border-box !important;
 }
-html[data-theme="light"] .exercise-index-tag {
+html[data-theme-mode="light"] .exercise-index-tag {
   color: #6D28D9 !important;
   background: #E5E7EB !important;
 }
 .completed-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--radius) !important; background:var(--pl-success); color:var(--pl-ink) !important; flex-shrink:0; }
-html[data-theme="dark"] .completed-icon { color:var(--pl-rubber) !important; }
+html[data-theme-mode="dark"] .completed-icon { color:var(--pl-rubber) !important; }
 .completed-icon .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; }
 .exercise-name { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:-0.015em !important; line-height:1.2 !important; color:var(--pl-ink) !important; text-transform:none !important; }
 .workout-superset-badge { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; padding:0 8px; border-radius:var(--radius); background:var(--pl-amber); color:#10111A; box-sizing:border-box; }
-html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
+html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .exercise-more-menu .mud-icon-button { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; border:1.5px solid var(--hairline-strong) !important; background:var(--pl-chip-2); color:var(--pl-ink) !important; border-radius:var(--radius) !important; box-sizing:border-box; }
 .exercise-more-menu .mud-icon-button .mud-icon-root { color:var(--pl-ink) !important; fill:var(--pl-ink) !important; }
 .set-progress-pill { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; padding:0 10px; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap; box-sizing:border-box; }
@@ -1831,7 +1831,7 @@ html[data-theme="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 
 /* History Session Card Selection */
 .history-session-card--selected { border-color:var(--pl-ink) !important; background:color-mix(in srgb, var(--pl-ink) 8%, var(--pl-chip)) !important; }
-html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-ink) !important; background:color-mix(in srgb, var(--pl-ink) 10%, var(--pl-chip)) !important; }
+html[data-theme-mode="dark"] .history-session-card--selected { border-color:var(--pl-ink) !important; background:color-mix(in srgb, var(--pl-ink) 10%, var(--pl-chip)) !important; }
 .history-session-check { display:flex; align-items:center; justify-content:center; margin-right:8px; }
 
 /* Exercise Progression Controls and Tabs */
@@ -1915,12 +1915,12 @@ html[data-theme="dark"] .history-session-card--selected { border-color:var(--pl-
 }
 .mud-popover .mud-list { background:var(--pl-chip) !important; padding:4px 0 !important; }
 .mud-popover .mud-list-item { font-family:var(--font-mono) !important; font-size:0.875rem !important; font-weight:600 !important; color:var(--pl-ink) !important; min-height:40px !important; }
-html[data-theme="dark"] .mud-popover .mud-list-item { color:var(--pl-ink) !important; }
+html[data-theme-mode="dark"] .mud-popover .mud-list-item { color:var(--pl-ink) !important; }
 .completed-icon { border-radius:0px !important; }
 .completed-icon .mud-icon-root { font-size:20px !important; }
 
 .app-splash { background:#0E0F17 !important; color:#C0CAF5 !important; font-family:var(--font-body) !important; }
-html[data-theme="light"] .app-splash { background:#E7E3D1 !important; color:#1A1B26 !important; }
+html[data-theme-mode="light"] .app-splash { background: var(--pl-paper) !important; color: var(--pl-ink) !important; }
 .mud-dialog.ai-chat-dialog { border:var(--hairline-strong) !important; border-radius:var(--radius) !important; }
 .share-card { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; overflow:hidden; position:relative; }
 .mud-paper:has(.empty-state) { border:var(--hairline) !important; background:var(--pl-chip) !important; }
@@ -1972,7 +1972,7 @@ html[data-theme="light"] .app-splash { background:#E7E3D1 !important; color:#1A1
    +0.02em tracking per DESIGN.md). No global override here on purpose. */
 .mud-paper, .mud-card, .mud-dialog, .mud-snackbar, .mud-chip, .mud-button-root, .mud-input-outlined-border { border-radius:var(--radius) !important; }
 .mud-button-root:focus-visible, .mud-icon-button:focus-visible { outline:2px solid var(--pl-ink) !important; outline-offset:2px !important; }
-html[data-theme="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
+html[data-theme-mode="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
 /* content-visibility removed: it deferred paint of plate shadows on scroll, making box shadows appear delayed */
 .visually-hidden { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
 
@@ -2517,34 +2517,34 @@ html body span.rest-timer-complete-title {
   color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-volt-edge) !important;
 }
-html[data-theme="dark"] .ai-chat-send-button:disabled,
-html[data-theme="dark"] .ai-chat-send-button.mud-button-filled-disabled,
-html[data-theme="dark"] .ai-chat-send-button[disabled] {
+html[data-theme-mode="dark"] .ai-chat-send-button:disabled,
+html[data-theme-mode="dark"] .ai-chat-send-button.mud-button-filled-disabled,
+html[data-theme-mode="dark"] .ai-chat-send-button[disabled] {
   background: var(--pl-chip-2) !important;
   color: var(--pl-stone) !important;
   border-color: var(--pl-hairline-strong) !important;
   opacity: 0.65 !important;
 }
-html[data-theme="dark"] .ai-chat-send-button:disabled .mud-icon-root,
-html[data-theme="dark"] .ai-chat-send-button.mud-button-filled-disabled .mud-icon-root,
-html[data-theme="dark"] .ai-chat-send-button[disabled] .mud-icon-root {
+html[data-theme-mode="dark"] .ai-chat-send-button:disabled .mud-icon-root,
+html[data-theme-mode="dark"] .ai-chat-send-button.mud-button-filled-disabled .mud-icon-root,
+html[data-theme-mode="dark"] .ai-chat-send-button[disabled] .mud-icon-root {
   color: var(--pl-stone) !important;
   fill: var(--pl-stone) !important;
   opacity: 1 !important;
 }
-html[data-theme="dark"] .log-set-btn:disabled,
-html[data-theme="dark"] .bodyweight-log-row__log-btn:disabled,
-html[data-theme="dark"] .plan-card-icon-btn.plan-card__start:disabled,
-html[data-theme="dark"] .home-hero__continue.mud-button-root:disabled,
-html[data-theme="dark"] .ai-quick-btn:disabled {
+html[data-theme-mode="dark"] .log-set-btn:disabled,
+html[data-theme-mode="dark"] .bodyweight-log-row__log-btn:disabled,
+html[data-theme-mode="dark"] .plan-card-icon-btn.plan-card__start:disabled,
+html[data-theme-mode="dark"] .home-hero__continue.mud-button-root:disabled,
+html[data-theme-mode="dark"] .ai-quick-btn:disabled {
   background: var(--pl-chip-2) !important;
   color: var(--pl-stone) !important;
   border-color: var(--pl-hairline-strong) !important;
   opacity: 0.65 !important;
 }
-html[data-theme="dark"] .log-set-btn:disabled .mud-icon-root,
-html[data-theme="dark"] .bodyweight-log-row__log-btn:disabled .mud-icon-root,
-html[data-theme="dark"] .ai-quick-btn:disabled {
+html[data-theme-mode="dark"] .log-set-btn:disabled .mud-icon-root,
+html[data-theme-mode="dark"] .bodyweight-log-row__log-btn:disabled .mud-icon-root,
+html[data-theme-mode="dark"] .ai-quick-btn:disabled {
   color: var(--pl-stone) !important;
   fill: var(--pl-stone) !important;
 }
@@ -2609,7 +2609,7 @@ html[data-theme="dark"] .ai-quick-btn:disabled {
   flex-direction: column;
   gap: 10px;
 }
-html[data-theme="light"] .ai-bridge-summary {
+html[data-theme-mode="light"] .ai-bridge-summary {
   background: var(--pl-chip-2) !important;
   border: 2px solid #10111A !important;
   box-shadow: 3px 3px 0 #10111A !important;
@@ -2634,7 +2634,7 @@ html[data-theme="light"] .ai-bridge-summary {
   text-transform: uppercase;
   color: var(--pl-yellow-text);
 }
-html[data-theme="dark"] .ai-bridge-summary__badge {
+html[data-theme-mode="dark"] .ai-bridge-summary__badge {
   color: var(--pl-yellow);
 }
 .ai-bridge-summary__title {
@@ -2674,7 +2674,7 @@ html[data-theme="dark"] .ai-bridge-summary__badge {
   border: 1.5px solid var(--pl-success);
   color: var(--pl-success);
 }
-html[data-theme="light"] .ai-bridge-stat-chip--ready {
+html[data-theme-mode="light"] .ai-bridge-stat-chip--ready {
   color: #15803d !important;
   background: rgba(34, 197, 94, 0.22) !important;
   border: 1.5px solid #15803d !important;
@@ -2684,7 +2684,7 @@ html[data-theme="light"] .ai-bridge-stat-chip--ready {
   border: 1.5px solid var(--pl-warning, #eab308);
   color: var(--pl-warning, #eab308);
 }
-html[data-theme="light"] .ai-bridge-stat-chip--warn {
+html[data-theme-mode="light"] .ai-bridge-stat-chip--warn {
   color: #854d0e !important;
   background: rgba(234, 179, 8, 0.22) !important;
   border: 1.5px solid #854d0e !important;
@@ -2694,7 +2694,7 @@ html[data-theme="light"] .ai-bridge-stat-chip--warn {
   border: 1.5px solid var(--pl-danger);
   color: var(--pl-danger);
 }
-html[data-theme="light"] .ai-bridge-stat-chip--err {
+html[data-theme-mode="light"] .ai-bridge-stat-chip--err {
   color: #991b1b !important;
   background: rgba(239, 68, 68, 0.22) !important;
   border: 1.5px solid #991b1b !important;
@@ -2722,7 +2722,7 @@ html[data-theme="light"] .ai-bridge-stat-chip--err {
 .ai-bridge-tool-badge strong {
   color: var(--pl-yellow-text);
 }
-html[data-theme="dark"] .ai-bridge-tool-badge strong {
+html[data-theme-mode="dark"] .ai-bridge-tool-badge strong {
   color: var(--pl-yellow);
 }
 
@@ -2741,7 +2741,7 @@ html[data-theme="dark"] .ai-bridge-tool-badge strong {
   display: flex;
   flex-direction: column;
 }
-html[data-theme="light"] .ai-bridge-action-card {
+html[data-theme-mode="light"] .ai-bridge-action-card {
   border: 2px solid #10111A !important;
   box-shadow: 3px 3px 0 #10111A !important;
 }
@@ -2779,7 +2779,7 @@ html[data-theme="light"] .ai-bridge-action-card {
   padding: 2px 6px;
   border: 1px solid var(--pl-hairline-strong);
 }
-html[data-theme="dark"] .ai-bridge-action-card__tag {
+html[data-theme-mode="dark"] .ai-bridge-action-card__tag {
   color: var(--pl-purple);
 }
 .ai-bridge-action-card__tool {
@@ -2806,7 +2806,7 @@ html[data-theme="dark"] .ai-bridge-action-card__tag {
   color: var(--pl-success);
   border: 1px solid var(--pl-success);
 }
-html[data-theme="light"] .ai-bridge-action-card__pill--ok {
+html[data-theme-mode="light"] .ai-bridge-action-card__pill--ok {
   color: #15803d !important;
   border-color: #15803d !important;
 }
@@ -2815,7 +2815,7 @@ html[data-theme="light"] .ai-bridge-action-card__pill--ok {
   color: var(--pl-warning, #eab308);
   border: 1px solid var(--pl-warning, #eab308);
 }
-html[data-theme="light"] .ai-bridge-action-card__pill--warn {
+html[data-theme-mode="light"] .ai-bridge-action-card__pill--warn {
   color: #854d0e !important;
   border-color: #854d0e !important;
 }
@@ -2824,7 +2824,7 @@ html[data-theme="light"] .ai-bridge-action-card__pill--warn {
   color: var(--pl-danger);
   border: 1px solid var(--pl-danger);
 }
-html[data-theme="light"] .ai-bridge-action-card__pill--err {
+html[data-theme-mode="light"] .ai-bridge-action-card__pill--err {
   color: #991b1b !important;
   border-color: #991b1b !important;
 }
@@ -2861,7 +2861,7 @@ html[data-theme="light"] .ai-bridge-action-card__pill--err {
   font-size: 12px;
   font-weight: 700;
 }
-html[data-theme="light"] .ai-bridge-action-card__error-callout {
+html[data-theme-mode="light"] .ai-bridge-action-card__error-callout {
   color: #991b1b !important;
   border-color: #991b1b !important;
 }
@@ -2918,7 +2918,7 @@ html[data-theme="light"] .ai-bridge-action-card__error-callout {
   --pl-bevel-highlight: rgba(255, 255, 255, 0.65);
   --pl-volt-fill: #FAFF00; /* volt fill in light too; ink text keeps 15:1 on it */
 }
-html[data-theme="dark"] {
+html[data-theme-mode="dark"] {
   --pl-plate-shadow-color: #1B1E33;
   --pl-plate-shadow-sm: 4px 4px 0 #1B1E33;
   --pl-plate-shadow-md: 6px 6px 0 #1B1E33;
@@ -2928,7 +2928,7 @@ html[data-theme="dark"] {
 }
 /* System dark fallback before JS sets data-theme: shadows paint correctly on first frame */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme-mode="light"]) {
     --pl-plate-shadow-color: #1B1E33;
     --pl-plate-shadow-sm: 4px 4px 0 #1B1E33;
     --pl-plate-shadow-md: 6px 6px 0 #1B1E33;
@@ -2939,17 +2939,17 @@ html[data-theme="dark"] {
 
 /* Aurora grounds: one cool wash per theme under the 24px grid. Static, cheap,
    decorative only. */
-html[data-theme="dark"] .app-shell {
+html[data-theme-mode="dark"] .app-shell {
   background-image:
     radial-gradient(1000px 500px at 85% -8%, rgba(122, 162, 247, 0.08), transparent 62%),
     radial-gradient(800px 460px at 4% 108%, rgba(187, 154, 247, 0.06), transparent 62%),
     linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
 }
-html[data-theme="dark"] .app-main-scroll {
+html[data-theme-mode="dark"] .app-main-scroll {
   background: transparent;
 }
-html[data-theme="light"] .app-shell {
+html[data-theme-mode="light"] .app-shell {
   background-image:
     radial-gradient(820px 420px at 8% -6%, rgba(14, 116, 144, 0.07), transparent 58%),
     radial-gradient(1100px 520px at 50% -12%, rgba(255, 252, 235, 0.52), transparent 62%),
@@ -2958,7 +2958,7 @@ html[data-theme="light"] .app-shell {
     linear-gradient(to right, var(--pl-grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--pl-grid-line) 1px, transparent 1px);
 }
-html[data-theme="light"] .app-main-scroll {
+html[data-theme-mode="light"] .app-main-scroll {
   background: transparent;
 }
 
@@ -3193,83 +3193,83 @@ html[data-theme="light"] .app-main-scroll {
    Volt stays the only fill bright enough to shout; everything else
    earns attention through border weight and shadow depth.
    ================================================================== */
-html[data-theme="light"] .mud-button-outlined:not(.mud-button-filled-disabled):not(.mud-button-outlined-disabled) {
+html[data-theme-mode="light"] .mud-button-outlined:not(.mud-button-filled-disabled):not(.mud-button-outlined-disabled) {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .mud-button-outlined:not(.mud-button-outlined-disabled):hover {
+html[data-theme-mode="light"] .mud-button-outlined:not(.mud-button-outlined-disabled):hover {
   background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start),
-html[data-theme="light"] .rest-timer-icon-btn,
-html[data-theme="light"] .rest-timer-add-btn {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start),
+html[data-theme-mode="light"] .rest-timer-icon-btn,
+html[data-theme-mode="light"] .rest-timer-add-btn {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover,
-html[data-theme="light"] .rest-timer-icon-btn:hover,
-html[data-theme="light"] .rest-timer-add-btn:hover {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover,
+html[data-theme-mode="light"] .rest-timer-icon-btn:hover,
+html[data-theme-mode="light"] .rest-timer-add-btn:hover {
   background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover .mud-icon-root {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover .mud-icon-root {
   color: var(--pl-yellow-text) !important;
   fill: var(--pl-yellow-text) !important;
 }
 /* All secondary, text, outlined, modal, discard, and icon buttons in light mode must use the tan brutal well (--pl-chip-2 #EDE8D3), never white */
-html[data-theme="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
-html[data-theme="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
-html[data-theme="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss),
-html[data-theme="light"] .btn-premium-ghost,
-html[data-theme="light"] .premium-btn:not(.premium-btn-filled),
-html[data-theme="light"] .dialog-cancel-btn,
-html[data-theme="light"] .home-hero__discard,
-html[data-theme="light"] .plan-card__actions .mud-icon-button:not(.plan-card__start),
-html[data-theme="light"] .plan-card-icon-btn:not(.plan-card__start),
-html[data-theme="light"] .workout-transport__btn {
+html[data-theme-mode="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
+html[data-theme-mode="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
+html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss),
+html[data-theme-mode="light"] .btn-premium-ghost,
+html[data-theme-mode="light"] .premium-btn:not(.premium-btn-filled),
+html[data-theme-mode="light"] .dialog-cancel-btn,
+html[data-theme-mode="light"] .home-hero__discard,
+html[data-theme-mode="light"] .plan-card__actions .mud-icon-button:not(.plan-card__start),
+html[data-theme-mode="light"] .plan-card-icon-btn:not(.plan-card__start),
+html[data-theme-mode="light"] .workout-transport__btn {
   background: var(--pl-chip-2) !important;
 }
-html[data-theme="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
-html[data-theme="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
-html[data-theme="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss):hover,
-html[data-theme="light"] .btn-premium-ghost:hover,
-html[data-theme="light"] .premium-btn:not(.premium-btn-filled):hover,
-html[data-theme="light"] .dialog-cancel-btn:hover,
-html[data-theme="light"] .home-hero__discard:hover,
-html[data-theme="light"] .plan-card__actions .mud-icon-button:not(.plan-card__start):hover,
-html[data-theme="light"] .plan-card-icon-btn:not(.plan-card__start):hover,
-html[data-theme="light"] .workout-transport__btn:hover {
+html[data-theme-mode="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
+html[data-theme-mode="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
+html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss):hover,
+html[data-theme-mode="light"] .btn-premium-ghost:hover,
+html[data-theme-mode="light"] .premium-btn:not(.premium-btn-filled):hover,
+html[data-theme-mode="light"] .dialog-cancel-btn:hover,
+html[data-theme-mode="light"] .home-hero__discard:hover,
+html[data-theme-mode="light"] .plan-card__actions .mud-icon-button:not(.plan-card__start):hover,
+html[data-theme-mode="light"] .plan-card-icon-btn:not(.plan-card__start):hover,
+html[data-theme-mode="light"] .workout-transport__btn:hover {
   background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
 }
-html[data-theme="light"] .app-fab--secondary {
+html[data-theme-mode="light"] .app-fab--secondary {
   background: var(--pl-chip-2) !important;
   color: var(--pl-ink) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .app-fab--secondary:hover {
+html[data-theme-mode="light"] .app-fab--secondary:hover {
   background: var(--pl-chip-2) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme="light"] .app-fab--secondary:hover .mud-icon-root {
+html[data-theme-mode="light"] .app-fab--secondary:hover .mud-icon-root {
   color: var(--pl-yellow-text) !important;
 }
 /* Empty state display icons in light mode: bold volt plate with solid black outline */
-html[data-theme="light"] .empty-state-icon-box {
+html[data-theme-mode="light"] .empty-state-icon-box {
   background: var(--pl-volt-fill) !important;
   border: 2px solid #10111A !important;
   box-shadow: 4px 4px 0 #10111A !important;
   color: #10111A !important;
 }
-html[data-theme="light"] .empty-state-icon {
+html[data-theme-mode="light"] .empty-state-icon {
   color: #10111A !important;
   fill: #10111A !important;
   stroke: #10111A !important;
@@ -3277,55 +3277,55 @@ html[data-theme="light"] .empty-state-icon {
   filter: drop-shadow(1px 1px 0px rgba(16, 17, 26, 0.4));
 }
 /* Ensure no standalone primary icons wash out on light theme */
-html[data-theme="light"] .mud-icon-color-primary:not(.mud-button-filled-primary *):not(.app-fab--primary *):not(.empty-state-icon) {
+html[data-theme-mode="light"] .mud-icon-color-primary:not(.mud-button-filled-primary *):not(.app-fab--primary *):not(.empty-state-icon) {
   color: var(--pl-ink) !important;
   fill: var(--pl-ink) !important;
 }
-html[data-theme="light"] .onboarding-tip__icon {
+html[data-theme-mode="light"] .onboarding-tip__icon {
   color: var(--pl-ink) !important;
   fill: var(--pl-ink) !important;
 }
-html[data-theme="light"] .settings-tab,
-html[data-theme="light"] .exercise-metric-tab,
-html[data-theme="light"] .ai-quick-btn,
-html[data-theme="light"] .history-filter-chip,
-html[data-theme="light"] .progress-exercise-card {
+html[data-theme-mode="light"] .settings-tab,
+html[data-theme-mode="light"] .exercise-metric-tab,
+html[data-theme-mode="light"] .ai-quick-btn,
+html[data-theme-mode="light"] .history-filter-chip,
+html[data-theme-mode="light"] .progress-exercise-card {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-hairline-strong) !important;
   box-shadow: none !important;
 }
-html[data-theme="light"] .settings-tab--active,
-html[data-theme="light"] .exercise-metric-tab--active,
-html[data-theme="light"] .history-filter-chip--selected,
-html[data-theme="light"] .ai-mode-tab--active {
+html[data-theme-mode="light"] .settings-tab--active,
+html[data-theme-mode="light"] .exercise-metric-tab--active,
+html[data-theme-mode="light"] .history-filter-chip--selected,
+html[data-theme-mode="light"] .ai-mode-tab--active {
   background: var(--pl-volt-fill) !important;
   border: 1.5px solid var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
   font-weight: 900 !important;
 }
-html[data-theme="light"] .settings-tab:hover,
-html[data-theme="light"] .exercise-metric-tab:hover,
-html[data-theme="light"] .ai-quick-btn:hover,
-html[data-theme="light"] .history-filter-chip:hover,
-html[data-theme="light"] .progress-exercise-card:hover {
+html[data-theme-mode="light"] .settings-tab:hover,
+html[data-theme-mode="light"] .exercise-metric-tab:hover,
+html[data-theme-mode="light"] .ai-quick-btn:hover,
+html[data-theme-mode="light"] .history-filter-chip:hover,
+html[data-theme-mode="light"] .progress-exercise-card:hover {
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme="light"] .mud-input-outlined-border {
+html[data-theme-mode="light"] .mud-input-outlined-border {
   border-color: var(--pl-ink-border) !important;
   border-width: 1.5px !important;
 }
-html[data-theme="light"] .mud-input-control.mud-input-focused .mud-input-outlined-border {
+html[data-theme-mode="light"] .mud-input-control.mud-input-focused .mud-input-outlined-border {
   border-color: var(--pl-yellow) !important;
   border-width: 2px !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color), 0 0 0 3px color-mix(in srgb, var(--pl-volt-fill) 22%, transparent) !important;
 }
-html[data-theme="light"] .history-session-card,
-html[data-theme="light"] .plan-card.mud-card,
-html[data-theme="light"] .exercise-accordion-card {
+html[data-theme-mode="light"] .history-session-card,
+html[data-theme-mode="light"] .plan-card.mud-card,
+html[data-theme-mode="light"] .exercise-accordion-card {
   border-color: var(--pl-hairline-strong) !important;
 }
-html[data-theme="light"] .home-plans-header__title {
+html[data-theme-mode="light"] .home-plans-header__title {
   background: #FFFFFF !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   border-left: 5px solid var(--pl-volt-fill) !important;
@@ -3391,7 +3391,7 @@ html[data-theme="light"] .home-plans-header__title {
    card's value drops to the AA-safe yellow text token. Volt now prints as
    #6E6400 in light, which passes on the tint directly; the override stays
    harmless because it resolves to the same printed volt ink. */
-html[data-theme="light"] .stat-card:nth-child(1) .stat-card__value {
+html[data-theme-mode="light"] .stat-card:nth-child(1) .stat-card__value {
   color: var(--pl-yellow-text);
 }
 
@@ -3543,7 +3543,7 @@ button.heatmap-cell.heatmap-on {
   background: var(--pl-error) !important;
   color: #FFFFFF !important;
 }
-html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
+html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
   color: #10111A !important;
 }
 .workout-actions-row .premium-btn-error-outlined:active {
@@ -4021,7 +4021,7 @@ html[data-theme="dark"] .workout-actions-row .premium-btn-error-outlined:hover {
   border: 1.5px solid var(--pl-ink);
   cursor: pointer;
 }
-html[data-theme="dark"] .workout-brutal__alert-btn { background: var(--pl-volt-fill); color: var(--pl-volt-fg); border-color: var(--pl-volt-edge); }
+html[data-theme-mode="dark"] .workout-brutal__alert-btn { background: var(--pl-volt-fill); color: var(--pl-volt-fg); border-color: var(--pl-volt-edge); }
 
 /* HUD — instrument cluster, brutal */
 .workout-hud {
@@ -4060,8 +4060,8 @@ html[data-theme="dark"] .workout-brutal__alert-btn { background: var(--pl-volt-f
 }
 .workout-hud__stat--volume .workout-hud__label { color: #0369A1; }
 .workout-hud__stat--sets .workout-hud__label { color: #15803D; }
-html[data-theme="dark"] .workout-hud__stat--volume .workout-hud__label { color: #7AA2F7; }
-html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__label { color: #9ECE6A; }
+html[data-theme-mode="dark"] .workout-hud__stat--volume .workout-hud__label { color: #7AA2F7; }
+html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__label { color: #9ECE6A; }
 .workout-hud__value {
   font-family: var(--font-display);
   font-size: clamp(16px, 4.5vw, 20px) !important;
@@ -4072,8 +4072,8 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__label { color: #9
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-html[data-theme="dark"] .workout-hud__stat--volume .workout-hud__value { color: #C0CAF5 !important; }
-html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C0CAF5 !important; }
+html[data-theme-mode="dark"] .workout-hud__stat--volume .workout-hud__value { color: #C0CAF5 !important; }
+html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C0CAF5 !important; }
 .workout-hud__bar-wrap {
   padding: 10px 14px 10px;
   background: var(--pl-chip-2);
@@ -4274,7 +4274,7 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C
   font-size: 22px !important;
   width: 22px !important;
   height: 22px !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
   fill: #FAFF00 !important;
 }
 .workout-timesup-banner__text {
@@ -4306,7 +4306,7 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
   background: #10111A !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
   padding: 4px 10px !important;
   border: 1.5px solid #10111A !important;
   border-radius: var(--radius);
@@ -4339,7 +4339,7 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C
   min-height: 38px;
   padding: 0 10px;
   background: #10111A !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
   border: 1.5px solid #10111A !important;
   border-radius: var(--radius);
   cursor: pointer;
@@ -4362,12 +4362,12 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C
   font-size: 16px !important;
   width: 16px !important;
   height: 16px !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
   fill: #FAFF00 !important;
 }
 .workout-timesup-banner__btn--ready {
   background: #10111A !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
   border-color: #10111A !important;
 }
 @media (max-width: 380px) {
@@ -4429,7 +4429,7 @@ html[data-theme="dark"] .workout-hud__stat--sets .workout-hud__value { color: #C
   letter-spacing: 0.06em;
   color: var(--pl-purple-text);
 }
-html[data-theme="dark"] .workout-focus__index { color: var(--pl-purple); background: var(--pl-chip-2); }
+html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); background: var(--pl-chip-2); }
 .workout-focus__superset {
   display: inline-flex;
   align-items: center;
@@ -4470,7 +4470,7 @@ html[data-theme="dark"] .workout-focus__index { color: var(--pl-purple); backgro
   border-color: var(--pl-warn-text);
   color: var(--pl-warn-text);
 }
-html[data-theme="dark"] .workout-focus__badge--set {
+html[data-theme-mode="dark"] .workout-focus__badge--set {
   background: #1C2033;
   color: #FAFF00;
   border-color: #2D3352;
@@ -4532,7 +4532,7 @@ html[data-theme="dark"] .workout-focus__badge--set {
   background: var(--pl-chip);
   word-break: break-word;
 }
-html[data-theme="light"] .workout-focus__name {
+html[data-theme-mode="light"] .workout-focus__name {
   color: var(--pl-ink) !important;
 }
 .workout-focus__dots {
@@ -4802,7 +4802,7 @@ html[data-theme="light"] .workout-focus__name {
   box-shadow: 1.5px 1.5px 0 var(--pl-plate-shadow-color);
   flex-shrink: 0;
 }
-html[data-theme="dark"] .workout-next__kicker {
+html[data-theme-mode="dark"] .workout-next__kicker {
   color: #10111A !important;
   background: #FAFF00 !important;
   border-color: #10111A !important;
@@ -4824,7 +4824,7 @@ html[data-theme="dark"] .workout-next__kicker {
   line-height: 1;
   flex-shrink: 0;
 }
-html[data-theme="dark"] .workout-next__set-badge {
+html[data-theme-mode="dark"] .workout-next__set-badge {
   color: #C0CAF5 !important;
   background: #10111A !important;
   border-color: #2D3352 !important;
@@ -4843,7 +4843,7 @@ html[data-theme="dark"] .workout-next__set-badge {
   overflow-wrap: break-word;
   word-break: break-word;
 }
-html[data-theme="dark"] .workout-next__name {
+html[data-theme-mode="dark"] .workout-next__name {
   color: #FFFFFF !important;
 }
 .workout-next__preview {
@@ -4866,8 +4866,8 @@ html[data-theme="dark"] .workout-next__name {
   margin: 0 auto;
   white-space: nowrap;
 }
-html[data-theme="dark"] .workout-next__preview {
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .workout-next__preview {
+  color: var(--pl-yellow) !important;
   background: #10111A !important;
   border-color: #2D3352 !important;
 }
@@ -5031,7 +5031,7 @@ html[data-theme="dark"] .workout-next__preview {
   text-transform: uppercase;
   color: var(--pl-ink);
 }
-html[data-theme="dark"] .workout-rest-takeover__kicker {
+html[data-theme-mode="dark"] .workout-rest-takeover__kicker {
   color: #C0CAF5;
 }
 .workout-rest-takeover__dot {
@@ -5061,8 +5061,8 @@ html[data-theme="dark"] .workout-rest-takeover__kicker {
   color: var(--pl-ink) !important;
   text-shadow: none !important;
 }
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-digits {
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-digits {
+  color: var(--pl-yellow) !important;
 }
 .workout-rest-takeover .rest-timer-digits--imminent {
   color: #C2410C !important;
@@ -5087,7 +5087,7 @@ html[data-theme="dark"] .workout-rest-takeover .rest-timer-digits {
   cursor: default;
   transition: transform 90ms ease;
 }
-html[data-theme="dark"] .workout-rest-takeover__next {
+html[data-theme-mode="dark"] .workout-rest-takeover__next {
   background: #1C2033;
   border-color: #2D3352;
 }
@@ -5118,7 +5118,7 @@ html[data-theme="dark"] .workout-rest-takeover__next {
   border-radius: var(--radius);
   line-height: 1;
 }
-html[data-theme="dark"] .workout-rest-takeover__next-kicker {
+html[data-theme-mode="dark"] .workout-rest-takeover__next-kicker {
   color: #10111A !important;
   background: #FAFF00 !important;
   border-color: #10111A !important;
@@ -5139,7 +5139,7 @@ html[data-theme="dark"] .workout-rest-takeover__next-kicker {
   border-radius: var(--radius);
   line-height: 1;
 }
-html[data-theme="dark"] .workout-rest-takeover__next-set {
+html[data-theme-mode="dark"] .workout-rest-takeover__next-set {
   color: #C0CAF5 !important;
   background: #10111A !important;
   border-color: #2D3352 !important;
@@ -5156,7 +5156,7 @@ html[data-theme="dark"] .workout-rest-takeover__next-set {
   word-break: break-word;
   margin: 4px 0 2px;
 }
-html[data-theme="dark"] .workout-rest-takeover__next-name {
+html[data-theme-mode="dark"] .workout-rest-takeover__next-name {
   color: #FFFFFF !important;
 }
 .workout-rest-takeover__next-preview {
@@ -5177,8 +5177,8 @@ html[data-theme="dark"] .workout-rest-takeover__next-name {
   line-height: 1;
   margin-top: 4px;
 }
-html[data-theme="dark"] .workout-rest-takeover__next-preview {
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .workout-rest-takeover__next-preview {
+  color: var(--pl-yellow) !important;
   background: #10111A !important;
   border-color: #2D3352 !important;
   box-shadow: 3px 3px 0 #000000 !important;
@@ -5228,20 +5228,20 @@ html[data-theme="dark"] .workout-rest-takeover__next-preview {
   color: var(--pl-ink) !important;
   fill: var(--pl-ink) !important;
 }
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-add-btn,
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-icon-btn {
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn,
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn {
   background: #1C2033 !important;
-  color: #FAFF00 !important;
-  border-color: #2D3352 !important;
+  color: var(--pl-yellow) !important;
+  border-color: var(--pl-hairline-strong) !important;
   box-shadow: 3px 3px 0 #10111A !important;
 }
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-add-btn:hover,
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-icon-btn:hover {
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn:hover,
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn:hover {
   background: #252B42 !important;
-  color: #FAFF00 !important;
+  color: var(--pl-yellow) !important;
 }
-html[data-theme="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-icon-root {
-  color: #FAFF00 !important;
+html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-icon-root {
+  color: var(--pl-yellow) !important;
   fill: #FAFF00 !important;
 }
 
@@ -5500,7 +5500,7 @@ html[data-theme="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-icon-ro
   border: 1px solid var(--pl-hairline);
   padding: 2px 6px;
 }
-html[data-theme="dark"] .workout-completed-rail__item-num { color: var(--pl-purple); }
+html[data-theme-mode="dark"] .workout-completed-rail__item-num { color: var(--pl-purple); }
 .workout-completed-rail__item-name {
   flex: 1 1 auto;
   min-width: 0;
@@ -5564,7 +5564,7 @@ html[data-theme="dark"] .workout-completed-rail__item-num { color: var(--pl-purp
   color: #FFFFFF;
   border-color: var(--pl-error);
 }
-html[data-theme="dark"] .workout-actions__btn--discard:hover { color: #10111A; }
+html[data-theme-mode="dark"] .workout-actions__btn--discard:hover { color: #10111A; }
 .workout-actions__btn--end {
   background: var(--pl-volt-fill);
   background-image: linear-gradient(180deg, color-mix(in srgb, var(--pl-volt-fill) 84%, #FFFFFF) 0%, var(--pl-volt-fill) 58%, color-mix(in srgb, var(--pl-volt-fill) 88%, #000000) 100%);
@@ -5687,33 +5687,33 @@ html[data-theme="dark"] .workout-actions__btn--discard:hover { color: #10111A; }
    but lets concrete, hazard, and registration do more work in light.
    Only light theme is touched; dark stays as the reference neon.
    ================================================================== */
-html[data-theme="light"] .stat-card.mud-paper {
+html[data-theme-mode="light"] .stat-card.mud-paper {
   border-width: 1.5px !important;
   border-color: var(--pl-ink-border) !important;
   box-shadow: 5px 5px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .stat-card__label {
+html[data-theme-mode="light"] .stat-card__label {
   background: var(--pl-chip-2) !important;
   border-top: 1.5px solid var(--pl-hairline-strong) !important;
   color: var(--pl-stone) !important;
 }
-html[data-theme="light"] .stat-card:nth-child(1) .stat-card__value {
+html[data-theme-mode="light"] .stat-card:nth-child(1) .stat-card__value {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-volt-fill) 28%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-yellow) 16%, transparent) 100%) !important;
   border-bottom: 3px solid var(--pl-volt-fill) !important;
 }
-html[data-theme="light"] .stat-card:nth-child(2) .stat-card__value {
+html[data-theme-mode="light"] .stat-card:nth-child(2) .stat-card__value {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-cyan) 22%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-cyan) 12%, transparent) 100%) !important;
   border-bottom: 3px solid var(--pl-cyan) !important;
 }
-html[data-theme="light"] .stat-card:nth-child(3) .stat-card__value {
+html[data-theme-mode="light"] .stat-card:nth-child(3) .stat-card__value {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-purple) 22%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-purple) 12%, transparent) 100%) !important;
   border-bottom: 3px solid var(--pl-purple) !important;
 }
-html[data-theme="light"] .stat-card:nth-child(4) .stat-card__value {
+html[data-theme-mode="light"] .stat-card:nth-child(4) .stat-card__value {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-success) 22%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-success) 12%, transparent) 100%) !important;
   border-bottom: 3px solid var(--pl-success) !important;
 }
-html[data-theme="light"] .home-hero.mud-paper {
+html[data-theme-mode="light"] .home-hero.mud-paper {
   border: 2px solid var(--pl-ink-border) !important;
   background-color: var(--pl-chip) !important;
   background-image:
@@ -5721,220 +5721,220 @@ html[data-theme="light"] .home-hero.mud-paper {
     linear-gradient(150deg, color-mix(in srgb, var(--pl-volt-fill) 18%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-cyan) 8%, var(--pl-chip)) 55%, var(--pl-chip) 100%) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .bodyweight-panel.mud-paper,
-html[data-theme="light"] .history-heatmap-panel.mud-paper,
-html[data-theme="light"] .home-heatmap-panel.mud-paper {
+html[data-theme-mode="light"] .bodyweight-panel.mud-paper,
+html[data-theme-mode="light"] .history-heatmap-panel.mud-paper,
+html[data-theme-mode="light"] .home-heatmap-panel.mud-paper {
   border: 1.5px solid var(--pl-ink-border) !important;
   background-color: var(--pl-chip) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .history-session-card__badge-inprogress {
+html[data-theme-mode="light"] .history-session-card__badge-inprogress {
   background: var(--pl-volt-fill) !important;
   color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .load-dot {
+html[data-theme-mode="light"] .load-dot {
   border-width: 1.5px !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 1px 1px 0 rgba(26,27,38,0.12) !important;
 }
-html[data-theme="light"] .plan-card__load-dots .load-dot--5 {
+html[data-theme-mode="light"] .plan-card__load-dots .load-dot--5 {
   background: var(--pl-chip-2) !important;
   border-color: var(--pl-ink-border) !important;
   color: var(--pl-stone) !important;
 }
-html[data-theme="light"] .set-metric-stepper__btn.mud-button-root,
-html[data-theme="light"] .set-metric-stepper__btn {
+html[data-theme-mode="light"] .set-metric-stepper__btn.mud-button-root,
+html[data-theme-mode="light"] .set-metric-stepper__btn {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .set-metric-stepper__value,
-html[data-theme="light"] .set-metric-stepper__input {
+html[data-theme-mode="light"] .set-metric-stepper__value,
+html[data-theme-mode="light"] .set-metric-stepper__input {
   background: var(--pl-chip) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .set-metric-stepper__btn.mud-button-root:hover,
-html[data-theme="light"] .set-metric-stepper__btn:hover {
+html[data-theme-mode="light"] .set-metric-stepper__btn.mud-button-root:hover,
+html[data-theme-mode="light"] .set-metric-stepper__btn:hover {
   background: var(--pl-chip) !important;
   border-color: var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
 }
-html[data-theme="light"] .workout-focus__stepper .set-metric-stepper__btn--compact {
+html[data-theme-mode="light"] .workout-focus__stepper .set-metric-stepper__btn--compact {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .workout-focus__stepper .set-metric-stepper__value--compact,
-html[data-theme="light"] .workout-focus__stepper .set-metric-stepper__input--compact,
-html[data-theme="light"] .workout-focus__history-steppers .set-metric-stepper__value--compact,
-html[data-theme="light"] .workout-focus__history-steppers .set-metric-stepper__input--compact {
+html[data-theme-mode="light"] .workout-focus__stepper .set-metric-stepper__value--compact,
+html[data-theme-mode="light"] .workout-focus__stepper .set-metric-stepper__input--compact,
+html[data-theme-mode="light"] .workout-focus__history-steppers .set-metric-stepper__value--compact,
+html[data-theme-mode="light"] .workout-focus__history-steppers .set-metric-stepper__input--compact {
   background: var(--pl-chip) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .exercise-accordion-card {
+html[data-theme-mode="light"] .exercise-accordion-card {
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .exercise-accordion-card--expanded {
+html[data-theme-mode="light"] .exercise-accordion-card--expanded {
   border-color: var(--pl-ink-border) !important;
   box-shadow: 6px 6px 0 var(--pl-plate-shadow-color), inset 0 0 0 1px var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .workout-deck:has(.workout-rest-takeover) {
+html[data-theme-mode="light"] .workout-deck:has(.workout-rest-takeover) {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 }
-html[data-theme="light"] .workout-rest-card {
+html[data-theme-mode="light"] .workout-rest-card {
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
-html[data-theme="light"] .workout-rest-takeover__next {
+html[data-theme-mode="light"] .workout-rest-takeover__next {
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
-html[data-theme="light"] .workout-hud,
-html[data-theme="light"] .workout-focus,
-html[data-theme="light"] .workout-brutal__header {
+html[data-theme-mode="light"] .workout-hud,
+html[data-theme-mode="light"] .workout-focus,
+html[data-theme-mode="light"] .workout-brutal__header {
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .workout-hud__stat {
+html[data-theme-mode="light"] .workout-hud__stat {
   border-color: var(--pl-hairline) !important;
 }
-html[data-theme="light"] .workout-hud__bar {
+html[data-theme-mode="light"] .workout-hud__bar {
   border: 1.5px solid var(--pl-ink-border) !important;
   background: var(--pl-chip-2) !important;
 }
-html[data-theme="light"] .plan-exercise-row {
+html[data-theme-mode="light"] .plan-exercise-row {
   background: var(--pl-chip) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .plan-exercise-row:hover {
+html[data-theme-mode="light"] .plan-exercise-row:hover {
   border-color: var(--pl-yellow) !important;
 }
-html[data-theme="light"] .plan-exercise-handle {
+html[data-theme-mode="light"] .plan-exercise-handle {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .workout-hud__stat {
+html[data-theme-mode="light"] .workout-hud__stat {
   background: var(--pl-chip) !important;
 }
-html[data-theme="light"] .workout-hud__stat--volume .workout-hud__label {
+html[data-theme-mode="light"] .workout-hud__stat--volume .workout-hud__label {
   color: #0369A1 !important;
 }
-html[data-theme="light"] .workout-hud__stat--sets .workout-hud__label {
+html[data-theme-mode="light"] .workout-hud__stat--sets .workout-hud__label {
   color: #15803D !important;
 }
-html[data-theme="light"] .workout-hud__stat--elapsed .workout-hud__label {
+html[data-theme-mode="light"] .workout-hud__stat--elapsed .workout-hud__label {
   color: #52525B !important;
 }
-html[data-theme="light"] .workout-hud__value {
+html[data-theme-mode="light"] .workout-hud__value {
   color: var(--pl-ink) !important;
 }
-html[data-theme="light"] .workout-hud__fill {
+html[data-theme-mode="light"] .workout-hud__fill {
   background: var(--pl-volt-fill) !important;
   background-image: repeating-linear-gradient(-45deg, #FAFF00 0 8px, #E6EB00 8px 16px) !important;
   border-right: 2px solid #10111A !important;
 }
-html[data-theme="light"] .workout-focus__head {
+html[data-theme-mode="light"] .workout-focus__head {
   background: var(--pl-chip-2) !important;
   border-bottom: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .workout-focus__pill {
+html[data-theme-mode="light"] .workout-focus__pill {
   background: var(--pl-chip-2) !important;
   color: var(--pl-ink) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   font-weight: 900 !important;
 }
-html[data-theme="light"] .workout-focus__pill--done {
+html[data-theme-mode="light"] .workout-focus__pill--done {
   background: #16A34A !important;
   color: #FFFFFF !important;
   border-color: #10111A !important;
 }
-html[data-theme="light"] .workout-focus__dot--done {
+html[data-theme-mode="light"] .workout-focus__dot--done {
   background: #16A34A !important;
   color: #FFFFFF !important;
   border-color: #10111A !important;
 }
-html[data-theme="light"] .workout-focus__dot--active {
+html[data-theme-mode="light"] .workout-focus__dot--active {
   background: #FAFF00 !important;
   color: #10111A !important;
   border: 2px solid #10111A !important;
   box-shadow: 2.5px 2.5px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .workout-focus__steppers {
+html[data-theme-mode="light"] .workout-focus__steppers {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .workout-focus__name {
+html[data-theme-mode="light"] .workout-focus__name {
   color: var(--pl-ink) !important;
 }
-html[data-theme="light"] .workout-focus__log {
+html[data-theme-mode="light"] .workout-focus__log {
   background: #FAFF00 !important;
   color: #10111A !important;
   border: 2px solid #10111A !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .workout-sequence-strip__item {
+html[data-theme-mode="light"] .workout-sequence-strip__item {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .workout-sequence-strip__item--active {
+html[data-theme-mode="light"] .workout-sequence-strip__item--active {
   background: var(--pl-chip) !important;
   border: 2.5px solid var(--pl-ink) !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .workout-sequence-strip__item--active .workout-sequence-strip__name,
-html[data-theme="light"] .workout-sequence-strip__item--active .workout-sequence-strip__num {
+html[data-theme-mode="light"] .workout-sequence-strip__item--active .workout-sequence-strip__name,
+html[data-theme-mode="light"] .workout-sequence-strip__item--active .workout-sequence-strip__num {
   color: var(--pl-ink) !important;
   font-weight: 900 !important;
 }
-html[data-theme="light"] .workout-sequence-strip__pip--active {
+html[data-theme-mode="light"] .workout-sequence-strip__pip--active {
   background: #FAFF00 !important;
   border: 1.5px solid #10111A !important;
 }
-html[data-theme="light"] .workout-sequence-strip__pip--done {
+html[data-theme-mode="light"] .workout-sequence-strip__pip--done {
   background: #16A34A !important;
   border: 1.5px solid #10111A !important;
 }
-html[data-theme="light"] .workout-actions__btn--discard {
+html[data-theme-mode="light"] .workout-actions__btn--discard {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-err-text) !important;
 }
-html[data-theme="light"] .workout-actions__btn--end {
+html[data-theme-mode="light"] .workout-actions__btn--end {
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .app-nav-pill__inner {
+html[data-theme-mode="light"] .app-nav-pill__inner {
   background: var(--pl-chip) !important;
   border: 2px solid var(--pl-ink-border) !important;
   box-shadow: 8px 8px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .mud-dialog {
+html[data-theme-mode="light"] .mud-dialog {
   border: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .mud-dialog-title {
+html[data-theme-mode="light"] .mud-dialog-title {
   background: var(--pl-chip-2) !important;
   border-bottom: 1.5px solid var(--pl-ink-border) !important;
 }
-html[data-theme="light"] .home-plans-new-btn.mud-button-root,
-html[data-theme="light"] .plan-sheet-save-btn,
-html[data-theme="light"] .log-set-btn,
-html[data-theme="light"] .workout-focus__log,
-html[data-theme="light"] .bodyweight-log-row__log-btn,
-html[data-theme="light"] .ai-chat-send-button {
+html[data-theme-mode="light"] .home-plans-new-btn.mud-button-root,
+html[data-theme-mode="light"] .plan-sheet-save-btn,
+html[data-theme-mode="light"] .log-set-btn,
+html[data-theme-mode="light"] .workout-focus__log,
+html[data-theme-mode="light"] .bodyweight-log-row__log-btn,
+html[data-theme-mode="light"] .ai-chat-send-button {
   background: var(--pl-volt-fill) !important;
   color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme="light"] .home-plans-new-btn.mud-button-root:hover,
-html[data-theme="light"] .plan-sheet-save-btn:hover,
-html[data-theme="light"] .log-set-btn:hover,
-html[data-theme="light"] .workout-focus__log:hover {
+html[data-theme-mode="light"] .home-plans-new-btn.mud-button-root:hover,
+html[data-theme-mode="light"] .plan-sheet-save-btn:hover,
+html[data-theme-mode="light"] .log-set-btn:hover,
+html[data-theme-mode="light"] .workout-focus__log:hover {
   background: var(--pl-volt-fill) !important;
   filter: brightness(1.06) !important;
 }
@@ -5970,8 +5970,8 @@ html[data-theme="light"] .workout-focus__log:hover {
 #app .mud-checkbox .mud-icon-button,
 #app .mud-checkbox .mud-button-root.mud-icon-button,
 html #app .mud-checkbox .mud-icon-button,
-html[data-theme="light"] #app .mud-checkbox .mud-icon-button,
-html[data-theme="dark"] #app .mud-checkbox .mud-icon-button {
+html[data-theme-mode="light"] #app .mud-checkbox .mud-icon-button,
+html[data-theme-mode="dark"] #app .mud-checkbox .mud-icon-button {
   width: 20px !important;
   min-width: 20px !important;
   max-width: 20px !important;
@@ -5993,8 +5993,8 @@ html #app .mud-checkbox .mud-icon-button:hover {
   box-shadow: none !important;
   transform: none !important;
 }
-html[data-theme="light"] #app .mud-checkbox .mud-icon-button,
-html[data-theme="light"] #app .mud-checkbox .mud-button-root.mud-icon-button {
+html[data-theme-mode="light"] #app .mud-checkbox .mud-icon-button,
+html[data-theme-mode="light"] #app .mud-checkbox .mud-button-root.mud-icon-button {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: none !important;
@@ -6004,10 +6004,10 @@ html #app .mud-checkbox .mud-button-root.mud-icon-button.mud-checked,
 html #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
 html #app .mud-checkbox .mud-button-root.mud-icon-button.mud-checkbox-true,
 html #app .mud-checkbox .mud-icon-button:has(.mud-checkbox-input:checked),
-html[data-theme="light"] #app .mud-checkbox .mud-icon-button.mud-checked,
-html[data-theme="light"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
-html[data-theme="dark"] #app .mud-checkbox .mud-icon-button.mud-checked,
-html[data-theme="dark"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
+html[data-theme-mode="light"] #app .mud-checkbox .mud-icon-button.mud-checked,
+html[data-theme-mode="light"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
+html[data-theme-mode="dark"] #app .mud-checkbox .mud-icon-button.mud-checked,
+html[data-theme-mode="dark"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
 #app .mud-checkbox .mud-icon-button.mud-checked,
 #app .mud-checkbox .mud-icon-button.mud-checkbox-true {
   background: var(--pl-volt-fill) !important;
@@ -6033,7 +6033,7 @@ html[data-theme="dark"] #app .mud-checkbox .mud-icon-button.mud-checkbox-true,
   background: var(--pl-chip) !important;
   padding: 6px 12px !important;
 }
-html[data-theme="light"] .ai-bridge-field .mud-input.mud-input-outlined {
+html[data-theme-mode="light"] .ai-bridge-field .mud-input.mud-input-outlined {
   background: #FFFFFF !important;
   border-color: var(--pl-ink-border) !important;
 }
@@ -6096,4 +6096,21 @@ html[data-theme="light"] .ai-bridge-field .mud-input.mud-input-outlined {
   line-height: 1.35 !important;
   min-width: 0 !important;
 }
+
+/* Theme picker - settings appearance panel */
+.theme-select-item { display:inline-flex; align-items:center; gap:8px; }
+.theme-select-dot { width:14px; height:14px; display:inline-block; border-radius:2px; flex-shrink:0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); }
+.theme-group-header { opacity:0.7 !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; font-weight:800 !important; letter-spacing:0.12em !important; text-transform:uppercase !important; color:var(--pl-stone) !important; }
+.theme-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:14px; }
+@media (min-width:520px) { .theme-grid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.theme-option { display:flex; flex-direction:column; align-items:stretch; gap:6px; padding:8px; background:var(--pl-chip); border:1.5px solid var(--pl-hairline); border-radius:var(--radius); cursor:pointer; transition: border-color 120ms ease, background 120ms ease, transform 100ms ease; text-align:left; }
+.theme-option:hover { border-color:var(--pl-yellow); background:var(--pl-chip-2); }
+.theme-option--active { border-color:var(--pl-ink) !important; background:var(--pl-chip-2) !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
+html[data-theme-mode="dark"] .theme-option--active { border-color:var(--pl-yellow) !important; }
+.theme-option__preview { display:flex; align-items:center; gap:4px; height:32px; padding:4px 6px; border:1.5px solid; border-radius:var(--radius); position:relative; overflow:hidden; }
+.theme-option__chip { width:22px; height:18px; border:1.5px solid; flex-shrink:0; }
+.theme-option__accent { width:14px; height:14px; border-radius:2px; flex-shrink:0; border:1px solid rgba(0,0,0,0.2); }
+.theme-option__text { font-family:var(--font-display); font-size:11px; font-weight:800; margin-left:auto; }
+.theme-option__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; color:var(--pl-ink); line-height:1.2; }
+.theme-option__group { font-family:var(--font-mono); font-size:0.625rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); margin-top:-4px; }
 

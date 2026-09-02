@@ -18,7 +18,7 @@
         (_useFixedDockPadding ? " app-shell--fixed-dock" : string.Empty);
 }
 
-<MudThemeProvider Theme="PhysiquinatorThemes.Default" @bind-IsDarkMode="_isDark" />
+<MudThemeProvider Theme="_mudTheme" @bind-IsDarkMode="_isDark" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -92,6 +92,7 @@ else
 
 @code {
     private bool _isDark = true;
+    private MudBlazor.MudTheme _mudTheme = PhysiquinatorThemes.Default;
     private bool _showBottomNav = true;
     private bool _useFixedDockPadding;
     private string? _initError;
@@ -199,7 +200,11 @@ else
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private void SyncThemeFromService() => _isDark = ThemeService.EffectiveTheme == ThemePreference.Dark;
+    private void SyncThemeFromService()
+    {
+        _isDark = ThemePreference.IsDarkTheme(ThemeService.EffectiveTheme);
+        _mudTheme = PhysiquinatorThemes.ForTheme(ThemeService.EffectiveTheme);
+    }
 
     private void UpdateNavigationState()
     {

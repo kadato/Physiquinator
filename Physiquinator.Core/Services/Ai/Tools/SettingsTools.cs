@@ -37,14 +37,14 @@ public sealed class GetAppSettingsTool(
 public sealed class ChangeAppThemeTool(ThemeService themeService) : IAiTool
 {
     public string Name => "change_app_theme";
-    public string Description => "Change the application appearance theme ('system', 'light', or 'dark').";
+    public string Description => "Change the application appearance theme. Allowed values: 'system', 'light', 'dark', 'tokyo-night', 'tokyo-night-storm', 'tokyo-night-moon', 'tokyo-night-light', 'dracula', 'monokai', 'one-dark-pro', 'nord', 'solarized-dark', 'solarized-light', 'github-dark', 'github-light', 'night-owl'.";
 
     public object ParametersSchema => new
     {
         type = "object",
         properties = new
         {
-            theme = new { type = "string", description = "Theme preference: 'system', 'light', or 'dark'" }
+            theme = new { type = "string", description = "Theme preference: 'system', 'light', 'dark', 'tokyo-night', 'tokyo-night-storm', 'tokyo-night-moon', 'tokyo-night-light', 'dracula', 'monokai', 'one-dark-pro', 'nord', 'solarized-dark', 'solarized-light', 'github-dark', 'github-light', 'night-owl'" }
         },
         required = new[] { "theme" }
     };
@@ -60,9 +60,9 @@ public sealed class ChangeAppThemeTool(ThemeService themeService) : IAiTool
         }
 
         var theme = themeProp.GetString()!.ToLowerInvariant();
-        if (theme is not ("system" or "light" or "dark"))
+        if (!ThemePreference.IsValidPreference(theme))
         {
-            return JsonSerializer.Serialize(new { success = false, error = "Invalid theme value. Expected 'system', 'light', or 'dark'." });
+            return JsonSerializer.Serialize(new { success = false, error = $"Invalid theme value '{theme}'. Allowed: {string.Join(", ", ThemePreference.AllPreferences)}." });
         }
 
 

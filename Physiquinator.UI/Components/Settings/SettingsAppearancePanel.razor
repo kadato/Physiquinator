@@ -1,5 +1,6 @@
 @using Physiquinator.Core.Services
 @using Physiquinator.UI.Services
+@using Physiquinator.UI.Styles
 @inject ThemeService ThemeService
 @inject UiFeedbackService UiFeedback
 @implements IDisposable
@@ -10,7 +11,7 @@
             <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
             <span class="settings-panel__text">
                 <span class="settings-panel__title" role="heading" aria-level="2">@("Appearance")</span>
-                <span class="settings-panel__subtitle">@("Light or dark mode")</span>
+                <span class="settings-panel__subtitle">@("Theme")</span>
             </span>
         </div>
     </TitleContent>
@@ -18,16 +19,50 @@
         <div class="settings-panel__content">
             <MudSelect T="string"
                        Variant="Variant.Outlined"
-                       Label="@("Light or dark mode")"
+                       Label="@("Theme")"
                        Value="_preference"
                        ValueChanged="OnThemePreferenceChanged">
-                <MudSelectItem Value="@ThemePreference.System">@("Match system")</MudSelectItem>
-                <MudSelectItem Value="@ThemePreference.Light">@("Light (always)")</MudSelectItem>
-                <MudSelectItem Value="@ThemePreference.Dark">@("Dark (always)")</MudSelectItem>
+                @foreach (var group in GroupedOptions)
+                {
+                    <MudSelectItem Value="@($"__group_{group.Key}")" Disabled="true" Class="theme-group-header">@group.Key</MudSelectItem>
+                    @foreach (var opt in group)
+                    {
+                        <MudSelectItem Value="@opt.Id">
+                            <div class="theme-select-item">
+                                <span class="theme-select-dot" style="@DotStyle(opt.Id)"></span>
+                                <span>@opt.DisplayName</span>
+                            </div>
+                        </MudSelectItem>
+                    }
+                }
             </MudSelect>
             <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                @("Active mode:") <strong>@_effectiveThemeLabel</strong>
+                @("Active:") <strong>@_effectiveThemeLabel</strong>
             </MudText>
+
+            <div class="theme-grid" role="group" aria-label="@("Theme picker")">
+                @foreach (var opt in ThemePreference.Options)
+                {
+                    var palette = DesignTokens.Resolve(opt.Id == ThemePreference.System ? _effectiveTheme : opt.Id);
+                    var isSelected = _preference == opt.Id;
+                    <button type="button"
+                            class="theme-option @(isSelected ? "theme-option--active" : "")"
+                            aria-pressed="@(isSelected ? "true" : "false")"
+                            aria-label="@opt.DisplayName"
+                            @onclick="() => OnThemePreferenceChanged(opt.Id)">
+                        <span class="theme-option__preview" style="background:@palette.Paper; border-color:@palette.HairlineStrong; color:@palette.Ink">
+                            <span class="theme-option__chip" style="background:@palette.Chip; border-color:@palette.Hairline"></span>
+                            <span class="theme-option__accent" style="background:@palette.VoltFill"></span>
+                            <span class="theme-option__text" style="color:@palette.Ink">Aa</span>
+                        </span>
+                        <span class="theme-option__label">@opt.DisplayName</span>
+                        @if (opt.Group != "System")
+                        {
+                            <span class="theme-option__group">@opt.Group</span>
+                        }
+                    </button>
+                }
+            </div>
         </div>
     </ChildContent>
 </MudExpansionPanel>
@@ -39,7 +74,7 @@
     private string _preference = ThemePreference.System;
     private string _effectiveTheme = ThemePreference.Dark;
 
-    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
+    private string _effectiveThemeLabel => ThemePreference.GetDisplayName(_effectiveTheme);
 
     protected override void OnInitialized()
     {
@@ -61,8 +96,19 @@
 
     private async Task OnThemePreferenceChanged(string preference)
     {
+        if (preference.StartsWith("__group_", StringComparison.Ordinal))
+            return;
         await ThemeService.SetPreferenceAsync(preference);
         UiFeedback.Success("Theme updated.");
+    }
+
+    private static ILookup<string, ThemePreference.ThemeOption> GroupedOptions =>
+        ThemePreference.Options.ToLookup(o => o.Group);
+
+    private string DotStyle(string id)
+    {
+        var p = DesignTokens.Resolve(id == ThemePreference.System ? _effectiveTheme : id);
+        return $"background:{p.Paper}; border:1.5px solid {p.HairlineStrong}; color:{p.Ink}";
     }
 
     public void Dispose()

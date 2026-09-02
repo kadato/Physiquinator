@@ -48,7 +48,8 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
         {
             var suffix = GetSuffix();
             var key = PreferenceKeys.ThemePreference + suffix;
-            return _preferences.Get(key, ThemePreference.System);
+            var stored = _preferences.Get(key, ThemePreference.System);
+            return ThemePreference.IsValidPreference(stored) ? stored : ThemePreference.System;
         }
         catch
         {
@@ -101,10 +102,13 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
     }
 
     /// <summary>
-    /// Persists theme preference (system, light, or dark), updates the webview <c>data-theme</c>, and the platform shell.
+    /// Persists theme preference (system and all VS Code themes), updates the webview <c>data-theme</c>, and the platform shell.
     /// </summary>
     public async Task SetPreferenceAsync(string preference)
     {
+        if (!ThemePreference.IsValidPreference(preference))
+            throw new ArgumentException($"Unknown theme '{preference}'.", nameof(preference));
+
         await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
         var effective = await _js.InvokeAsync<string>("physiquinatorTheme.setPreference", preference, GetSuffix()).ConfigureAwait(true);

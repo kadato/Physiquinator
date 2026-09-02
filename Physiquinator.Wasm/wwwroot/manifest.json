@@ -1,0 +1,13 @@
+{
+  "name": "Physiquinator",
+  "short_name": "Physiquinator",
+  "description": "Offline workout tracker with rest timer, history, and AI assistant. Data stays on device.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0E0F17",
+  "theme_color": "#FAFF00",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

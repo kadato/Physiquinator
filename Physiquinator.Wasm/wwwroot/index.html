@@ -79,6 +79,9 @@
     <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg?v=2" />
     <link rel="icon" type="image/png" sizes="32x32" href="_content/Physiquinator.UI/favicon.png?v=2" />
     <link rel="apple-touch-icon" sizes="180x180" href="_content/Physiquinator.UI/apple-touch-icon.png?v=2" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#FAFF00" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
 </head>
 
 <body>
@@ -135,6 +138,7 @@
     <script defer src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/wasm-files.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 
 </html>

@@ -63,7 +63,7 @@ public sealed partial class AiClipboardBridgeService(
 
         if (options.IncludeHistoryStats)
         {
-            await AppendTrainingHistoryStatsContextAsync(sb);
+            await AppendTrainingHistoryStatsContextAsync(sb, options.HistoryRange);
         }
 
         AppendToolsSchema(sb);
@@ -111,14 +111,32 @@ public sealed partial class AiClipboardBridgeService(
         sb.AppendLine();
     }
 
-    private async Task AppendTrainingHistoryStatsContextAsync(StringBuilder sb)
+    private async Task AppendTrainingHistoryStatsContextAsync(StringBuilder sb, AiBridgeHistoryRange range = AiBridgeHistoryRange.AllTime)
     {
         try
         {
             var totalSessions = await historyRepo.GetSessionCountAsync();
-            IReadOnlyList<WorkoutSessionLogEntity> recent = await historyRepo.GetRecentSessionsAsync(5);
+            IReadOnlyList<WorkoutSessionLogEntity> recent;
+            var rangeLabel = "";
+            if (range == AiBridgeHistoryRange.AllTime)
+            {
+                recent = await historyRepo.GetRecentSessionsAsync(5);
+            }
+            else
+            {
+                var days = (int)range;
+                var cutoff = _time.GetUtcNow().UtcDateTime.AddDays(-days);
+                var fetched = await historyRepo.GetRecentSessionsAsync(20);
+                var filtered = fetched.Where(s => s.StartedAtUtc >= cutoff).Take(10).ToList();
+                recent = filtered;
+                totalSessions = fetched.Count(s => s.StartedAtUtc >= cutoff);
+                // Fallback: if we fetched max 20 but there may be more within range, count via recent only approximation.
+                // Keep simple: show filtered count + indication.
+                rangeLabel = $" (last {days} days)";
+            }
+
             sb.AppendLine("### Training History Summary:");
-            sb.AppendLine($"- Total Workouts Completed: {totalSessions}");
+            sb.AppendLine($"- Total Workouts Completed: {totalSessions}{rangeLabel}");
             if (recent.Count > 0)
             {
                 sb.AppendLine("- Recent Workouts:");

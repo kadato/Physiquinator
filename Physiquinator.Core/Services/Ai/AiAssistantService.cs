@@ -67,6 +67,68 @@ public sealed class AiAssistantService(
         return client.GetAvailableModelsAsync(settings, CancellationToken.None);
     }
 
+    public async Task<(bool Success, string Message)> TestConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        AiProviderSettings settings = GetSettings();
+        if (!IsConfigured(settings))
+        {
+            return (false, "AI not configured. Enable the assistant and enter an API key in Settings.");
+        }
+
+        var systemMessage = BuildSystemMessage(settings);
+        var testHistory = new List<AiChatMessage>
+        {
+            systemMessage,
+            new()
+            {
+                Role = AiMessageRole.User,
+                Content = "Hello! Respond with a brief 1-sentence confirmation that connection is successful.",
+                Timestamp = _time.GetLocalNow().LocalDateTime
+            }
+        };
+
+        try
+        {
+            var contentBuilder = new StringBuilder();
+            string? errorMessage = null;
+
+            await foreach (StreamingChatChunk chunk in client.StreamChatCompletionAsync(settings, testHistory, null, cancellationToken))
+            {
+                if (chunk.IsError)
+                {
+                    errorMessage = chunk.ErrorMessage;
+                    break;
+                }
+
+                if (!string.IsNullOrEmpty(chunk.DeltaContent))
+                {
+                    contentBuilder.Append(chunk.DeltaContent);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                return (false, errorMessage);
+            }
+
+            var content = contentBuilder.ToString().Trim();
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return (true, "Connected — no content returned.");
+            }
+
+            return (true, content);
+        }
+        catch (OperationCanceledException)
+        {
+            return (false, "Connection test was cancelled.");
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
     public void ClearHistory()
     {
         _messages.Clear();
@@ -400,7 +462,7 @@ public sealed class AiAssistantService(
 
 
 
-    private List<AiChatMessage> BuildApiMessageHistory(AiProviderSettings settings)
+    private string BuildSystemPrompt(AiProviderSettings settings)
     {
         UserProfile activeProfile = userProfileService.GetActiveProfile();
         var activeBw = activeProfile.BodyweightKg?.ToString("F1", CultureInfo.InvariantCulture) ?? "not logged";
@@ -427,11 +489,18 @@ public sealed class AiAssistantService(
             systemPrompt += $"\n\nUser Custom Instructions:\n{settings.CustomSystemPrompt.Trim()}";
         }
 
-        var systemMessage = new AiChatMessage
-        {
-            Role = AiMessageRole.System,
-            Content = systemPrompt
-        };
+        return systemPrompt;
+    }
+
+    private AiChatMessage BuildSystemMessage(AiProviderSettings settings) => new()
+    {
+        Role = AiMessageRole.System,
+        Content = BuildSystemPrompt(settings)
+    };
+
+    private List<AiChatMessage> BuildApiMessageHistory(AiProviderSettings settings)
+    {
+        var systemMessage = BuildSystemMessage(settings);
 
         // If we already have a persistent API history, update the system message and append the latest user message.
         if (_apiHistory.Count > 0)

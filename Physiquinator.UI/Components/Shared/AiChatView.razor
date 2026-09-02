@@ -1,10 +1,14 @@
 @using Physiquinator.Core.Services.Ai
 @using Physiquinator.Core.Models
+@using Physiquinator.Core.Services
+@using Physiquinator.Core.Data
 @using Physiquinator.UI.Services
 @using System.Text.Json
 @using Markdig
 @inject AiAssistantService AiAssistant
 @inject AiClipboardBridgeService BridgeService
+@inject WorkoutPlanService PlanService
+@inject WorkoutHistoryRepository HistoryRepo
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
@@ -150,20 +154,30 @@
 
 		@if (AiAssistant.Messages.Count == 0)
 		{
-			<div class="ai-chat-quick-actions mb-3">
-				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnProgressiveOverloadClick">
-					<span>@("Progressive Overload")</span>
-				</button>
-				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnPerformanceStatsClick">
-					<span>@("Performance Stats")</span>
-				</button>
-				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnDeloadPlanClick">
-					<span>@("Deload Plan")</span>
-				</button>
-				<button type="button" class="ai-quick-btn" disabled="@IsApiKeyMissing" @onclick="OnWorkoutAdviceClick">
-					<span>@("Workout Advice")</span>
-				</button>
-			</div>
+			@if (!IsApiKeyMissing)
+			{
+				<div class="ai-chat-quick-actions mb-3">
+					<button type="button" class="ai-quick-btn" @onclick="OnProgressiveOverloadClick">
+						<span>@("Progressive Overload")</span>
+					</button>
+					<button type="button" class="ai-quick-btn" @onclick="OnPerformanceStatsClick">
+						<span>@("Performance Stats")</span>
+					</button>
+					<button type="button" class="ai-quick-btn" @onclick="OnDeloadPlanClick">
+						<span>@("Deload Plan")</span>
+					</button>
+					<button type="button" class="ai-quick-btn" @onclick="OnWorkoutAdviceClick">
+						<span>@("Workout Advice")</span>
+					</button>
+				</div>
+			}
+			else
+			{
+				<div class="ai-chat-offline-hint mb-3 d-flex align-center gap-2">
+					<MudText Typo="Typo.body2" Class="mud-text-secondary">@("Chat needs an API key. Use Clipboard tab with Gemini or ChatGPT without a key.")</MudText>
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="@(() => SetTab(1))">@("Clipboard")</MudButton>
+				</div>
+			}
 		}
 
 		<div class="ai-chat-input">
@@ -206,6 +220,22 @@
 	else
 	{
 		<div class="ai-bridge-container">
+			<div class="ai-bridge-wizard" role="tablist">
+				<button type="button" role="tab" aria-selected="@(_bridgeStep == BridgeStep.Generate ? "true" : "false")" class="ai-bridge-step @(_bridgeStep >= BridgeStep.Generate ? "active" : "")" @onclick="() => _bridgeStep = BridgeStep.Generate">
+					<span class="ai-bridge-step-badge">1</span> Generate
+				</button>
+				<span class="ai-bridge-step-line" aria-hidden="true"></span>
+				<button type="button" role="tab" aria-selected="@(_bridgeStep == BridgeStep.Paste ? "true" : "false")" class="ai-bridge-step @(_bridgeStep >= BridgeStep.Paste ? "active" : "")" @onclick="() => _bridgeStep = BridgeStep.Paste">
+					<span class="ai-bridge-step-badge">2</span> Paste
+				</button>
+				<span class="ai-bridge-step-line" aria-hidden="true"></span>
+				<button type="button" role="tab" aria-selected="@(_bridgeStep == BridgeStep.Review ? "true" : "false")" class="ai-bridge-step @(_bridgeStep >= BridgeStep.Review ? "active" : "")" @onclick="() => _bridgeStep = BridgeStep.Review" disabled="@(_parsedActions.Count == 0)">
+					<span class="ai-bridge-step-badge">3</span> Review
+				</button>
+			</div>
+
+			@if (_bridgeStep == BridgeStep.Generate)
+			{
 			<div class="ai-bridge-card">
 				<div class="ai-bridge-card__header">
 					<div class="ai-bridge-step-badge">1</div>
@@ -245,6 +275,17 @@
 					<MudCheckBox @bind-Value="_includeStats" Label="@("History stats")" Dense="true" Size="Size.Small" Color="Color.Primary" />
 				</div>
 
+				@if (_includeStats)
+				{
+					<div class="ai-bridge-range mt-2">
+						<MudSelect T="AiBridgeHistoryRange" Value="_historyRange" ValueChanged="OnHistoryRangeChanged" Label="@("History range")" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Class="ai-bridge-range-select">
+							<MudSelectItem Value="AiBridgeHistoryRange.AllTime">@("All time")</MudSelectItem>
+							<MudSelectItem Value="AiBridgeHistoryRange.Last30Days">@("Last 30 days")</MudSelectItem>
+							<MudSelectItem Value="AiBridgeHistoryRange.Last90Days">@("Last 90 days")</MudSelectItem>
+						</MudSelect>
+					</div>
+				}
+
 				<div class="d-flex justify-space-between align-center mt-2">
 					<MudButton Variant="Variant.Filled"
 							   Color="Color.Primary"
@@ -280,9 +321,28 @@
 						<pre>@_generatedPromptPreview</pre>
 					</div>
 				}
-			</div>
 
-			<div class="ai-bridge-card mt-3">
+				<div class="d-flex justify-space-between align-center mt-3">
+					<MudButton Variant="Variant.Text"
+							   Color="Color.Default"
+							   Size="Size.Small"
+							   Disabled="true">
+						@("Back")
+					</MudButton>
+					<MudButton Variant="Variant.Filled"
+							   Color="Color.Primary"
+							   Size="Size.Small"
+							   Disabled="@(string.IsNullOrWhiteSpace(_generatedPromptPreview))"
+							   OnClick="@(() => _bridgeStep = BridgeStep.Paste)">
+						@("Next: Paste")
+					</MudButton>
+				</div>
+			</div>
+			}
+
+			@if (_bridgeStep == BridgeStep.Paste)
+			{
+			<div class="ai-bridge-card">
 				<div class="ai-bridge-card__header">
 					<div class="ai-bridge-step-badge">2</div>
 					<div>
@@ -297,10 +357,16 @@
 								  Placeholder="@("Paste the full response from Gemini or ChatGPT here (including the JSON action block)...")"
 								  Variant="Variant.Outlined"
 								  Margin="Margin.Dense"
-								  Lines="3" />
+								  Lines="5" />
 				</div>
 
 				<div class="d-flex justify-space-between align-center mt-2">
+					<MudButton Variant="Variant.Outlined"
+							   Color="Color.Default"
+							   Size="Size.Small"
+							   OnClick="@(() => _bridgeStep = BridgeStep.Generate)">
+						@("Back")
+					</MudButton>
 					<MudButton Variant="Variant.Filled"
 							   Color="Color.Secondary"
 							   StartIcon="@Icons.Material.Filled.FindInPage"
@@ -309,26 +375,29 @@
 							   OnClick="InspectPastedActions">
 						@("Review actions")
 					</MudButton>
+				</div>
 
-					@if (_parsedActions.Count > 0)
-					{
-						<MudButton Variant="Variant.Filled"
-								   Color="Color.Success"
-								   StartIcon="@Icons.Material.Filled.CheckCircle"
-								   Size="Size.Small"
-								   Disabled="@(_isExecutingActions || !_parsedActions.Any(a => a.IsValid))"
-								   OnClick="ApplyActionsAsync">
-							@if (_isExecutingActions)
-							{
-								<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
-								<span>@("Applying...")</span>
-							}
-							else
-							{
-								<span>@(string.Format("Apply {0} actions", _parsedActions.Count(a => a.IsValid)))</span>
-							}
-						</MudButton>
-					}
+				@if (_hasInspected && _parsedActions.Count == 0)
+				{
+					<div class="ai-bridge-empty mt-3">
+						<MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" />
+						<MudText Typo="Typo.caption" Class="mud-text-secondary">
+							@("No structured actions found in the pasted text. Make sure the AI included the ```json { \"actions\": [...] } ``` block.")
+						</MudText>
+					</div>
+				}
+			</div>
+			}
+
+			@if (_bridgeStep == BridgeStep.Review)
+			{
+			<div class="ai-bridge-card">
+				<div class="ai-bridge-card__header">
+					<div class="ai-bridge-step-badge">3</div>
+					<div>
+						<MudText Typo="Typo.subtitle2" Class="font-weight-bold">@("Review and apply")</MudText>
+						<MudText Typo="Typo.caption" Class="mud-text-secondary">@("Review each action and its diff before applying. Destructive actions are highlighted.")</MudText>
+					</div>
 				</div>
 
 				@if (_parsedActions.Count > 0)
@@ -381,6 +450,7 @@
 						{
 							var action = _parsedActions[i];
 							var index = i + 1;
+							var diff = i < _bridgeDiffs.Count ? _bridgeDiffs[i] : null;
 							<div class="ai-bridge-action-card @GetActionCardClass(action)">
 								<div class="ai-bridge-action-card__head">
 									<div class="ai-bridge-action-card__head-left">
@@ -415,6 +485,47 @@
 									{
 										<p class="ai-bridge-action-card__desc">@action.Description</p>
 									}
+									@if (diff != null && (diff.Added.Count > 0 || diff.Removed.Count > 0 || diff.Modified.Count > 0))
+									{
+										<div class="ai-bridge-diff">
+											@if (diff.Added.Count > 0)
+											{
+												<div class="ai-bridge-diff__row">
+													<span class="ai-bridge-diff__label ai-bridge-diff__added">Added</span>
+													<ul class="ai-bridge-diff__list">
+														@foreach (var item in diff.Added)
+														{
+															<li class="ai-bridge-diff__added">@item</li>
+														}
+													</ul>
+												</div>
+											}
+											@if (diff.Removed.Count > 0)
+											{
+												<div class="ai-bridge-diff__row">
+													<span class="ai-bridge-diff__label ai-bridge-diff__removed">Removed</span>
+													<ul class="ai-bridge-diff__list">
+														@foreach (var item in diff.Removed)
+														{
+															<li class="ai-bridge-diff__removed">@item</li>
+														}
+													</ul>
+												</div>
+											}
+											@if (diff.Modified.Count > 0)
+											{
+												<div class="ai-bridge-diff__row">
+													<span class="ai-bridge-diff__label ai-bridge-diff__modified">Modified</span>
+													<ul class="ai-bridge-diff__list">
+														@foreach (var item in diff.Modified)
+														{
+															<li class="ai-bridge-diff__modified">@item</li>
+														}
+													</ul>
+												</div>
+											}
+										</div>
+									}
 								</div>
 								<details class="ai-bridge-action-card__details">
 									<summary class="ai-bridge-action-card__summary">
@@ -426,6 +537,39 @@
 							</div>
 						}
 					</div>
+
+					<div class="d-flex justify-space-between align-center mt-3 gap-2 flex-wrap">
+						<MudButton Variant="Variant.Outlined"
+								   Color="Color.Default"
+								   Size="Size.Small"
+								   OnClick="@(() => _bridgeStep = BridgeStep.Paste)">
+							@("Back")
+						</MudButton>
+						<div class="d-flex gap-2 align-center">
+							<MudButton Variant="Variant.Text"
+									   Color="Color.Default"
+									   Size="Size.Small"
+									   OnClick="ResetBridge">
+								@("Start over")
+							</MudButton>
+							<MudButton Variant="Variant.Filled"
+									   Color="Color.Success"
+									   StartIcon="@Icons.Material.Filled.CheckCircle"
+									   Size="Size.Small"
+									   Disabled="@(_isExecutingActions || !_parsedActions.Any(a => a.IsValid))"
+									   OnClick="ApplyActionsAsync">
+								@if (_isExecutingActions)
+								{
+									<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+									<span>@("Applying...")</span>
+								}
+								else
+								{
+									<span>@(string.Format("Apply {0} actions", _parsedActions.Count(a => a.IsValid)))</span>
+								}
+							</MudButton>
+						</div>
+					</div>
 				}
 				else if (_hasInspected && _parsedActions.Count == 0)
 				{
@@ -434,6 +578,10 @@
 						<MudText Typo="Typo.caption" Class="mud-text-secondary">
 							@("No structured actions found in the pasted text. Make sure the AI included the ```json { \"actions\": [...] } ``` block.")
 						</MudText>
+					</div>
+					<div class="d-flex justify-space-between align-center mt-3">
+						<MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" OnClick="@(() => _bridgeStep = BridgeStep.Paste)">@("Back")</MudButton>
+						<MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ResetBridge">@("Start over")</MudButton>
 					</div>
 				}
 
@@ -452,9 +600,13 @@
 								<MudText Typo="Typo.body2">@res.Message</MudText>
 							</div>
 						}
+						<div class="d-flex justify-end mt-2">
+							<MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" OnClick="ResetBridge">@("Start over")</MudButton>
+						</div>
 					</div>
 				}
 			</div>
+			}
 		</div>
 	}
 </div>
@@ -473,6 +625,7 @@
 	private bool _includePlans = true;
 	private bool _includeBodyweight = true;
 	private bool _includeStats = true;
+	private AiBridgeHistoryRange _historyRange = AiBridgeHistoryRange.AllTime;
 	private bool _isGeneratingPrompt = false;
 	private string _generatedPromptPreview = string.Empty;
 	private bool _showPromptPreview = false;
@@ -481,6 +634,17 @@
 	private List<AiBridgeAction> _parsedActions = [];
 	private List<AiBridgeActionExecutionResult> _executionResults = [];
 	private bool _isExecutingActions = false;
+	private BridgeStep _bridgeStep = BridgeStep.Generate;
+	private List<AiBridgeDiff> _bridgeDiffs = [];
+
+	private sealed record AiBridgeDiff(
+		string ToolName,
+		string Summary,
+		IReadOnlyList<string> Added,
+		IReadOnlyList<string> Removed,
+		IReadOnlyList<string> Modified);
+
+	private enum BridgeStep { Generate = 1, Paste = 2, Review = 3 }
 
 	private bool IsApiKeyMissing
 	{
@@ -518,6 +682,8 @@
 
 	private void SetGoalPreset(string goal) => _promptGoal = goal;
 
+	private void OnHistoryRangeChanged(AiBridgeHistoryRange value) => _historyRange = value;
+
 	private async Task GenerateAndCopyPromptAsync()
 	{
 		_isGeneratingPrompt = true;
@@ -527,11 +693,16 @@
 			{
 				IncludeWorkoutPlans = _includePlans,
 				IncludeRecentBodyweight = _includeBodyweight,
-				IncludeHistoryStats = _includeStats
+				IncludeHistoryStats = _includeStats,
+				HistoryRange = _historyRange
 			};
 			var prompt = await BridgeService.GeneratePromptAsync(_promptGoal, options);
 			_generatedPromptPreview = prompt;
 			await CopyTextAsync(prompt, "Prompt copied to clipboard! Paste it into Gemini or ChatGPT.");
+			if (!string.IsNullOrWhiteSpace(_generatedPromptPreview))
+			{
+				_bridgeStep = BridgeStep.Paste;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -543,15 +714,415 @@
 		}
 	}
 
-	private void InspectPastedActions()
+	private async Task InspectPastedActions()
 	{
 		_hasInspected = true;
 		_executionResults.Clear();
+		_bridgeDiffs.Clear();
 		_parsedActions = [.. BridgeService.ParseResponse(_pastedResponse)];
 		if (_parsedActions.Count == 0)
+		{
 			Snackbar.Add("No actions found in that response.", Severity.Warning);
+		}
 		else
+		{
+				await BuildDiffsAsync();
+			_bridgeStep = BridgeStep.Review;
 			Snackbar.Add($"Found {_parsedActions.Count(a => a.IsValid)} valid actions. Ready to apply.", Severity.Info);
+		}
+	}
+
+	private void ResetBridge()
+	{
+		_pastedResponse = string.Empty;
+		_parsedActions = [];
+		_bridgeDiffs = [];
+		_executionResults = [];
+		_hasInspected = false;
+		_bridgeStep = BridgeStep.Generate;
+	}
+
+	private async Task BuildDiffsAsync()
+	{
+		var diffs = new List<AiBridgeDiff>(_parsedActions.Count);
+		IReadOnlyList<BodyweightLogEntity>? cachedBodyweightLogs = null;
+		async Task<IReadOnlyList<BodyweightLogEntity>> GetBodyweightLogsAsync()
+		{
+			if (cachedBodyweightLogs != null) return cachedBodyweightLogs;
+			try
+			{
+				cachedBodyweightLogs = await HistoryRepo.GetBodyweightLogsAsync(50);
+			}
+			catch
+			{
+				cachedBodyweightLogs = [];
+			}
+			return cachedBodyweightLogs;
+		}
+
+		foreach (var action in _parsedActions)
+		{
+			if (!action.IsValid)
+			{
+				diffs.Add(new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []));
+				continue;
+			}
+
+			try
+			{
+				var tool = action.ToolName.ToLowerInvariant();
+				if (tool == "create_workout_plan")
+				{
+					var diff = BuildCreatePlanDiff(action);
+					diffs.Add(diff);
+				}
+				else if (tool == "update_workout_plan")
+				{
+					var diff = await BuildUpdatePlanDiffAsync(action);
+					diffs.Add(diff);
+				}
+				else if (tool == "log_bodyweight" || tool == "log_bodyweight_entry")
+				{
+					var diff = await BuildBodyweightDiffAsync(action, GetBodyweightLogsAsync);
+					diffs.Add(diff);
+				}
+				else if (tool == "delete_workout_plan")
+				{
+					var diff = await BuildDeletePlanDiffAsync(action);
+					diffs.Add(diff);
+				}
+				else if (tool == "delete_bodyweight_entry")
+				{
+					var diff = await BuildDeleteBodyweightDiffAsync(action, GetBodyweightLogsAsync);
+					diffs.Add(diff);
+				}
+				else
+				{
+					diffs.Add(new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []));
+				}
+			}
+			catch (Exception ex)
+			{
+				_ = ex.Message;
+				diffs.Add(new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []));
+			}
+		}
+
+		_bridgeDiffs = diffs;
+	}
+
+	private static AiBridgeDiff BuildCreatePlanDiff(AiBridgeAction action)
+	{
+		var exercises = ParseExerciseSummaries(action.ArgumentsJson);
+		return new AiBridgeDiff(action.ToolName, action.HumanSummary, exercises, [], []);
+	}
+
+	private async Task<AiBridgeDiff> BuildUpdatePlanDiffAsync(AiBridgeAction action)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(action.ArgumentsJson);
+			var root = doc.RootElement;
+			Guid? planId = TryExtractPlanId(root);
+			string? newName = TryGetStringProperty(root, "name");
+			List<ExerciseDiffItem> newExercises = [];
+			if (root.TryGetProperty("exercises", out var exArr) && exArr.ValueKind == JsonValueKind.Array)
+			{
+				newExercises = ParseExerciseDiffItems(exArr);
+			}
+
+			if (planId == null || planId == Guid.Empty)
+			{
+				var addedItems = newExercises.Select(FormatExerciseDiffItem).ToList();
+				var modifiedItems = new List<string>();
+				if (!string.IsNullOrWhiteSpace(newName))
+				{
+					modifiedItems.Add($"Rename to \"{newName}\"");
+				}
+				return new AiBridgeDiff(action.ToolName, action.HumanSummary, addedItems, [], modifiedItems);
+			}
+
+			WorkoutPlan? existingPlan = null;
+			try
+			{
+				existingPlan = await PlanService.GetPlanAsync(planId.Value);
+			}
+			catch (Exception ex)
+			{
+				// Plan fetch failed, fallback to summary only.
+				_ = ex.Message;
+			}
+
+			if (existingPlan == null)
+			{
+				var addedFallback = newExercises.Select(FormatExerciseDiffItem).ToList();
+				return new AiBridgeDiff(action.ToolName, action.HumanSummary, addedFallback, [], []);
+			}
+
+			if (newExercises.Count == 0)
+			{
+				var modifiedNameOnly = new List<string>();
+				if (!string.IsNullOrWhiteSpace(newName) && !string.Equals(existingPlan.Name, newName, StringComparison.Ordinal))
+				{
+					modifiedNameOnly.Add($"Rename \"{existingPlan.Name}\" to \"{newName}\"");
+				}
+				return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], modifiedNameOnly);
+			}
+
+			var oldByName = existingPlan.Exercises
+				.GroupBy(e => e.Name.Trim().ToLowerInvariant())
+				.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+			var newByName = newExercises
+				.GroupBy(e => e.Name.Trim().ToLowerInvariant())
+				.ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+			var added = new List<string>();
+			var removed = new List<string>();
+			var modified = new List<string>();
+
+			if (!string.IsNullOrWhiteSpace(newName) && !string.Equals(existingPlan.Name, newName, StringComparison.Ordinal))
+			{
+				modified.Add($"Rename \"{existingPlan.Name}\" to \"{newName}\"");
+			}
+
+				foreach (var kvp in newByName.Where(kvp => !oldByName.ContainsKey(kvp.Key)))
+			{
+				added.Add(FormatExerciseDiffItem(kvp.Value));
+			}
+
+			foreach (var kvp in oldByName.Where(kvp => !newByName.ContainsKey(kvp.Key)))
+			{
+				removed.Add(FormatExistingExercise(kvp.Value));
+			}
+
+			foreach (var kvp in newByName)
+			{
+				if (oldByName.TryGetValue(kvp.Key, out var oldEx))
+				{
+					var newEx = kvp.Value;
+					var deltas = new List<string>();
+					if (oldEx.SetCount != newEx.TargetSets)
+					{
+						deltas.Add($"sets {oldEx.SetCount} to {newEx.TargetSets}");
+					}
+					if ((oldEx.DefaultReps ?? 0) != (newEx.TargetReps ?? 0) && newEx.TargetReps.HasValue)
+					{
+						var oldReps = oldEx.DefaultReps?.ToString() ?? "-";
+						deltas.Add($"reps {oldReps} to {newEx.TargetReps}");
+					}
+					if (Math.Abs((oldEx.DefaultWeightKg ?? -1) - (newEx.TargetWeightKg ?? -1)) > 0.001 && newEx.TargetWeightKg.HasValue)
+					{
+						var oldW = oldEx.DefaultWeightKg.HasValue ? $"{oldEx.DefaultWeightKg.Value:0.##}kg" : "-";
+						var newW = $"{newEx.TargetWeightKg.Value:0.##}kg";
+						var deltaVal = newEx.TargetWeightKg.Value - (oldEx.DefaultWeightKg ?? 0);
+						var sign = deltaVal > 0 ? "+" : "";
+						deltas.Add($"weight {oldW} to {newW} ({sign}{deltaVal:0.##}kg)");
+					}
+					else if (oldEx.DefaultWeightKg.HasValue != newEx.TargetWeightKg.HasValue && newEx.TargetWeightKg == null)
+					{
+						deltas.Add($"weight {oldEx.DefaultWeightKg:0.##}kg to bodyweight");
+					}
+					if (newEx.RestSeconds.HasValue && oldEx.RestIntervalSeconds != newEx.RestSeconds.Value)
+					{
+						deltas.Add($"rest {oldEx.RestIntervalSeconds}s to {newEx.RestSeconds.Value}s");
+					}
+
+					if (deltas.Count > 0)
+					{
+						modified.Add($"{newEx.Name}: {string.Join(", ", deltas)}");
+					}
+					else if (oldEx.RestIntervalSeconds != newEx.RestSeconds || oldEx.SetCount != newEx.TargetSets)
+					{
+						modified.Add($"{newEx.Name}: updated");
+					}
+				}
+			}
+
+			return new AiBridgeDiff(action.ToolName, action.HumanSummary, added, removed, modified);
+		}
+		catch (Exception ex)
+		{
+			// JSON parsing or plan lookup failed, fallback to summary only.
+			_ = ex.Message;
+			return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []);
+		}
+	}
+
+	private static async Task<AiBridgeDiff> BuildBodyweightDiffAsync(AiBridgeAction action, Func<Task<IReadOnlyList<BodyweightLogEntity>>> getLogs)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(action.ArgumentsJson);
+			var root = doc.RootElement;
+			double? weight = null;
+			if (root.TryGetProperty("bodyweightKg", out var bw) && bw.TryGetDouble(out var bwVal)) weight = bwVal;
+			else if (root.TryGetProperty("weightKg", out var w) && w.TryGetDouble(out var wVal)) weight = wVal;
+
+			string? dateStr = null;
+			if (root.TryGetProperty("date", out var d) && d.ValueKind == JsonValueKind.String) dateStr = d.GetString();
+
+			var displayDate = string.IsNullOrWhiteSpace(dateStr) ? DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd") : dateStr!;
+			var summary = weight.HasValue ? $"Log {weight.Value:0.##} kg for {displayDate}" : action.HumanSummary;
+
+			if (weight.HasValue && !string.IsNullOrWhiteSpace(dateStr))
+			{
+				var logs = await getLogs();
+				var existing = logs.FirstOrDefault(l => string.Equals(l.Date, dateStr, StringComparison.Ordinal));
+				if (existing != null)
+				{
+					var delta = weight.Value - existing.BodyweightKg;
+					var sign = delta > 0 ? "+" : "";
+					return new AiBridgeDiff(action.ToolName, summary, [$"{summary} (was {existing.BodyweightKg:0.##} kg, {sign}{delta:0.##}kg)"], [], []);
+				}
+			}
+
+			return new AiBridgeDiff(action.ToolName, summary, [summary], [], []);
+		}
+		catch (Exception ex)
+		{
+			_ = ex.Message;
+			return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []);
+		}
+	}
+
+	private async Task<AiBridgeDiff> BuildDeletePlanDiffAsync(AiBridgeAction action)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(action.ArgumentsJson);
+			var root = doc.RootElement;
+			var planId = TryExtractPlanId(root);
+			if (planId != null)
+			{
+				var plan = await PlanService.GetPlanAsync(planId.Value);
+				if (plan != null)
+				{
+					return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [$"Delete \"{plan.Name}\" ({plan.Exercises.Count} exercises)"], []);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			_ = ex.Message;
+		}
+		return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []);
+	}
+
+	private static async Task<AiBridgeDiff> BuildDeleteBodyweightDiffAsync(AiBridgeAction action, Func<Task<IReadOnlyList<BodyweightLogEntity>>> getLogs)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(action.ArgumentsJson);
+			var root = doc.RootElement;
+			string? dateStr = null;
+			if (root.TryGetProperty("date", out var d) && d.ValueKind == JsonValueKind.String) dateStr = d.GetString();
+			else if (root.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.String) dateStr = idProp.GetString();
+			if (!string.IsNullOrWhiteSpace(dateStr))
+			{
+				var logs = await getLogs();
+				var existing = logs.FirstOrDefault(l => string.Equals(l.Date, dateStr, StringComparison.Ordinal));
+				if (existing != null)
+				{
+					return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [$"Delete {existing.BodyweightKg:0.##} kg for {existing.Date}"], []);
+				}
+				return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [$"Delete entry for {dateStr}"], []);
+			}
+		}
+		catch (Exception ex)
+		{
+			_ = ex.Message;
+		}
+		return new AiBridgeDiff(action.ToolName, action.HumanSummary, [], [], []);
+	}
+
+	private static Guid? TryExtractPlanId(JsonElement root)
+	{
+		string[] keys = ["planId", "id", "plan_id", "planID"];
+		foreach (var key in keys)
+		{
+			if (root.TryGetProperty(key, out var prop) && prop.ValueKind == JsonValueKind.String && Guid.TryParse(prop.GetString(), out var guid))
+			{
+				return guid;
+			}
+		}
+		return null;
+	}
+
+	private static string? TryGetStringProperty(JsonElement root, string propertyName)
+	{
+		if (root.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
+		{
+			return prop.GetString();
+		}
+		return null;
+	}
+
+	private static List<string> ParseExerciseSummaries(string json)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(json);
+			var root = doc.RootElement;
+			if (root.TryGetProperty("exercises", out var arr) && arr.ValueKind == JsonValueKind.Array)
+			{
+				return ParseExerciseDiffItems(arr).Select(FormatExerciseDiffItem).ToList();
+			}
+		}
+		catch (Exception ex)
+		{
+			_ = ex.Message;
+		}
+		return [];
+	}
+
+	private sealed record ExerciseDiffItem(string Name, int TargetSets, int? TargetReps, double? TargetWeightKg, int? RestSeconds);
+
+	private static List<ExerciseDiffItem> ParseExerciseDiffItems(JsonElement array)
+	{
+		var list = new List<ExerciseDiffItem>();
+		foreach (var el in array.EnumerateArray())
+		{
+			if (el.ValueKind != JsonValueKind.Object) continue;
+			var name = el.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String ? n.GetString() ?? "Exercise" : "Exercise";
+			int sets = 4;
+			if (el.TryGetProperty("targetSets", out var ts) && ts.TryGetInt32(out var tsv)) sets = tsv;
+			else if (el.TryGetProperty("sets", out var s) && s.TryGetInt32(out var sv)) sets = sv;
+			else if (el.TryGetProperty("setCount", out var sc) && sc.TryGetInt32(out var scv)) sets = scv;
+
+			int? reps = null;
+			if (el.TryGetProperty("targetReps", out var tr) && tr.TryGetInt32(out var trv)) reps = trv;
+			else if (el.TryGetProperty("reps", out var r) && r.TryGetInt32(out var rv)) reps = rv;
+			else if (el.TryGetProperty("defaultReps", out var dr) && dr.TryGetInt32(out var drv)) reps = drv;
+
+			double? weight = null;
+			if (el.TryGetProperty("targetWeightKg", out var tw) && tw.TryGetDouble(out var twv)) weight = twv;
+			else if (el.TryGetProperty("weightKg", out var wk) && wk.TryGetDouble(out var wkv)) weight = wkv;
+			else if (el.TryGetProperty("defaultWeightKg", out var dw) && dw.TryGetDouble(out var dwv)) weight = dwv;
+
+			int? rest = null;
+			if (el.TryGetProperty("restTimerSeconds", out var rt) && rt.TryGetInt32(out var rtv)) rest = rtv;
+			else if (el.TryGetProperty("restIntervalSeconds", out var ri) && ri.TryGetInt32(out var riv)) rest = riv;
+			else if (el.TryGetProperty("rest", out var r2) && r2.TryGetInt32(out var r2v)) rest = r2v;
+
+			list.Add(new ExerciseDiffItem(name, sets, reps, weight, rest));
+		}
+		return list;
+	}
+
+	private static string FormatExerciseDiffItem(ExerciseDiffItem item)
+	{
+		var repsStr = item.TargetReps.HasValue ? $"{item.TargetReps}" : "?";
+		var weightStr = item.TargetWeightKg.HasValue ? $"{item.TargetWeightKg.Value:0.##}kg" : "bodyweight";
+		var restStr = item.RestSeconds.HasValue ? $", {item.RestSeconds}s rest" : "";
+		return $"{item.Name} {item.TargetSets}x{repsStr} @{weightStr}{restStr}";
+	}
+
+	private static string FormatExistingExercise(ExercisePlan ex)
+	{
+		var repsStr = ex.DefaultReps?.ToString() ?? "?";
+		var weightStr = ex.DefaultWeightKg.HasValue ? $"{ex.DefaultWeightKg.Value:0.##}kg" : "bodyweight";
+		return $"{ex.Name} {ex.SetCount}x{repsStr} @{weightStr}, {ex.RestIntervalSeconds}s rest";
 	}
 
 	private async Task ApplyActionsAsync()

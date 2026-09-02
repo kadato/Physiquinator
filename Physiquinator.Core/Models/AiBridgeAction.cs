@@ -3,12 +3,20 @@ using System.Text.Json.Serialization;
 
 namespace Physiquinator.Core.Models;
 
+public enum AiBridgeHistoryRange
+{
+    AllTime = 0,
+    Last30Days = 30,
+    Last90Days = 90
+}
+
 public sealed class AiBridgePromptOptions
 {
     public bool IncludeWorkoutPlans { get; set; } = true;
     public bool IncludeRecentBodyweight { get; set; } = true;
     public bool IncludeHistoryStats { get; set; } = true;
     public bool IncludeExerciseProgression { get; set; } = false;
+    public AiBridgeHistoryRange HistoryRange { get; set; } = AiBridgeHistoryRange.AllTime;
 }
 
 public sealed class AiBridgeActionDto

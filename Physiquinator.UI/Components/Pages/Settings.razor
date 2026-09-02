@@ -16,6 +16,7 @@
 @inject IAppUpdateService AppUpdateService
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject AiAssistantService AiAssistant
+@inject AiToolRegistry ToolRegistry
 @inject WeightUnitService WeightUnitService
 @inject IAccountService Account
 @implements IDisposable
@@ -367,26 +368,19 @@
                                  </div>
                              }
 
-                             <MudTextField T="string"
-                                           Label="@("Model Name")"
-                                           Variant="Variant.Outlined"
-                                           @bind-Value="_aiSettings.ModelName"
-                                           HelperText="@("For example gpt-4o-mini or deepseek-v4-flash. Any model name works.")" />
-
-                             @if (_availableModels.Count > 0)
-                             {
-                                 <MudSelect T="string"
-                                            Label="@("Fetched models")"
-                                            Variant="Variant.Outlined"
-                                            Placeholder="@("Pick from the models the provider returned")"
-                                            Value="@_pickedFetchedModel"
-                                            ValueChanged="OnFetchedModelPicked">
-                                     @foreach (var model in _availableModels)
-                                     {
-                                         <MudSelectItem T="string" Value="model">@model</MudSelectItem>
-                                     }
-                                 </MudSelect>
-                             }
+                             <MudAutocomplete T="string"
+                                              Label="@("Model Name")"
+                                              Variant="Variant.Outlined"
+                                              Value="@_aiSettings.ModelName"
+                                              ValueChanged="OnModelNameChanged"
+                                              SearchFunc="SearchModels"
+                                              Placeholder="@("Pick or type model, e.g. gpt-4o-mini")"
+                                              HelperText="@("Any model name works.")"
+                                              MaxItems="50"
+                                              Immediate="true"
+                                              CoerceText="true"
+                                              CoerceValue="true"
+                                              Clearable="true" />
 
                             <MudTextField T="string"
                                           Label="@("Custom instructions")"
@@ -436,6 +430,17 @@
                             </div>
                         </MudStack>
                         </form>
+                        <MudText Typo="Typo.subtitle2" Class="mt-4">@("Available tools (15)")</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@("The assistant can call these automatically. You can also say 'log 82 kg today' in chat or clipboard.")</MudText>
+                        <div class="ai-tools-list mt-2">
+                            @foreach (var tool in ToolRegistry.GetAllTools().OrderBy(t => t.Name))
+                            {
+                                <div class="ai-tool-row d-flex justify-space-between align-center py-1">
+                                    <span class="ai-tool-name">@tool.Name</span>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@tool.Description</MudText>
+                                </div>
+                            }
+                        </div>
                     }
                 </div>
 
@@ -737,16 +742,29 @@
     private bool _testingAiConnection;
     private bool _fetchingModels;
     private List<string> _availableModels = [];
-    private string? _pickedFetchedModel;
 
-    /// <summary>Copies a picked fetched model into the free-text model field.</summary>
-    private void OnFetchedModelPicked(string? model)
+    private void OnModelNameChanged(string? value)
     {
-        _pickedFetchedModel = model;
-        if (!string.IsNullOrWhiteSpace(model))
+        _aiSettings.ModelName = value ?? string.Empty;
+    }
+
+    private Task<IEnumerable<string>> SearchModels(string? value, CancellationToken token)
+    {
+        if (_availableModels.Count == 0)
         {
-            _aiSettings.ModelName = model;
+            return Task.FromResult<IEnumerable<string>>([]);
         }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult<IEnumerable<string>>(_availableModels.Take(50));
+        }
+
+        var query = value.Trim();
+        var filtered = _availableModels
+            .Where(m => m.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Take(50);
+        return Task.FromResult<IEnumerable<string>>(filtered);
     }
 
     private async Task FetchModelsAsync()
@@ -820,15 +838,14 @@
         try
         {
             SaveAiSettings(showToast: false);
-            await AiAssistant.SendUserMessageAsync("Hello! Respond with a brief 1-sentence confirmation that connection is successful.");
-            var lastMsg = AiAssistant.Messages.LastOrDefault();
-            if (lastMsg != null && lastMsg.IsError)
+            var (ok, msg) = await AiAssistant.TestConnectionAsync();
+            if (ok)
             {
-                UiFeedback.Error(string.Format("Connection test failed: {0}", lastMsg.Content));
+                UiFeedback.Success("AI connection test successful!");
             }
             else
             {
-                UiFeedback.Success("AI Connection test successful!");
+                UiFeedback.Error(string.Format("Connection test failed: {0}", msg));
             }
         }
         catch (Exception ex)

@@ -1,5 +1,6 @@
 using Microsoft.JSInterop;
 using Physiquinator.Core.Services;
+using Physiquinator.UI.Styles;
 
 namespace Physiquinator.Services;
 
@@ -38,12 +39,15 @@ public sealed class MauiThemeService(
                 return;
             }
 
-            Application.Current.UserAppTheme = Preference switch
+            if (Preference == ThemePreference.System)
             {
-                ThemePreference.Light => AppTheme.Light,
-                ThemePreference.Dark => AppTheme.Dark,
-                _ => AppTheme.Unspecified
-            };
+                Application.Current.UserAppTheme = AppTheme.Unspecified;
+            }
+            else
+            {
+                var isDarkPref = ThemePreference.IsDarkTheme(Preference);
+                Application.Current.UserAppTheme = isDarkPref ? AppTheme.Dark : AppTheme.Light;
+            }
 
             SyncAppResources();
         });
@@ -68,16 +72,17 @@ public sealed class MauiThemeService(
             return;
         }
 
-        var isDark = EffectiveTheme == ThemePreference.Dark;
+        var isDark = ThemePreference.IsDarkTheme(EffectiveTheme);
+        var palette = DesignTokens.Resolve(EffectiveTheme);
 
         Application.Current.Resources["PageBackgroundColor"] =
-            Color.FromArgb(isDark ? "#0E0F17" : "#E7E3D1");
+            Color.FromArgb(palette.Paper);
         Application.Current.Resources["PrimaryTextColor"] =
-            Color.FromArgb(isDark ? "#C0CAF5" : "#1A1B26");
+            Color.FromArgb(palette.Ink);
         Application.Current.Resources["PrimaryButtonBackgroundColor"] =
-            Color.FromArgb("#FAFF00");
+            Color.FromArgb(palette.VoltFill);
         Application.Current.Resources["PrimaryButtonTextColor"] =
-            Color.FromArgb("#10111A");
+            Color.FromArgb(palette.VoltFg);
 
         SystemBarsHelper.Apply(
             (Color)Application.Current.Resources["PageBackgroundColor"],

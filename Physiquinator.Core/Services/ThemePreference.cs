@@ -68,7 +68,7 @@ public static class ThemePreference
         SolarizedLight => false,
         GithubLight => false,
         // "system" is not an effective theme; caller should resolve it first.
-        _ => theme != Light && theme != TokyoNightLight && theme != SolarizedLight && theme != GithubLight
+        _ => theme is not Light and not TokyoNightLight and not SolarizedLight and not GithubLight
     };
 
     public static string GetDisplayName(string? theme) => theme switch

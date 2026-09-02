@@ -904,7 +904,7 @@ public sealed class RestOverlayService : Service
         var colors = GetThemeColors();
 
         // Header detail is the upcoming exercise's weight/rep/set — visible whenever an exercise is queued
-        string detail = string.Empty;
+        var detail = string.Empty;
         if (nextExerciseName != null)
             detail = BuildUpcomingDetail(logType, nextSetIndex, nextSetTotal);
 
@@ -1130,10 +1130,8 @@ public sealed class RestOverlayService : Service
             if (string.IsNullOrEmpty(preference))
                 preference = preferences.Get(PreferenceKeys.ThemePreference, string.Empty);
 
-            if (preference == ThemePreference.Light)
-                return false;
-            if (preference == ThemePreference.Dark)
-                return true;
+            if (ThemePreference.IsValidPreference(preference) && preference != ThemePreference.System)
+                return ThemePreference.IsDarkTheme(preference);
 
             // "system" or unknown: check OS theme
             return (Microsoft.Maui.Controls.Application.Current?.RequestedTheme) != AppTheme.Light;
@@ -1165,19 +1163,14 @@ public sealed class RestOverlayService : Service
         return ld;
     }
 
-    private sealed class OverlayDragListener : Java.Lang.Object, AndroidView.IOnTouchListener
+    private sealed class OverlayDragListener(RestOverlayService service) : Java.Lang.Object, AndroidView.IOnTouchListener
     {
-        private readonly RestOverlayService _service;
+        private readonly RestOverlayService _service = service;
         private float _downRawX;
         private float _downRawY;
         private int _downLpX;
         private int _downLpY;
         private bool _moved;
-
-        public OverlayDragListener(RestOverlayService service)
-        {
-            _service = service;
-        }
 
         public bool OnTouch(AndroidView? v, MotionEvent? e)
         {

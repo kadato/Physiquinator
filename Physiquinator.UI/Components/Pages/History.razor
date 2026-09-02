@@ -39,25 +39,28 @@
                       Variant="Variant.Outlined"
                       Class="mb-2" />
 
-        <MudPaper Class="pa-4 history-heatmap-panel" Elevation="0">
-            <div class="heatmap-legend" role="note" aria-label="Heatmap legend weeks 01 to 53, today hollow circle, scheduled dashed, missed hatch"><span>WEEKS 01-53</span><span class="hm-key"><i class="hm-glyph hm-glyph--today"></i>TODAY</span><span class="hm-key"><i class="hm-glyph hm-glyph--scheduled"></i>SCHEDULED</span><span class="hm-key"><i class="hm-glyph hm-glyph--missed"></i>MISSED</span></div>
-            <ActivityHeatmap CountsByDay="_activityByDay"
-                             Weeks="@HeatmapWeeks"
-                             EndLocal="@_heatmapEndLocal"
-                             GetScheduleForDate="ScheduleService.GetScheduleForDate"
-                             IsDaySelected="IsDaySelected"
-                             SelectionVersion="_selectionVersion"
-                             DaySelectionChanged="OnHeatmapDayTapAsync" />
-        </MudPaper>
+        <div class="history-top-grid">
+            <div class="history-top-grid__left">
+                <MudPaper Class="pa-4 history-heatmap-panel" Elevation="0">
+                    <div class="heatmap-legend" role="note" aria-label="Heatmap legend weeks 01 to 53, today hollow circle, scheduled dashed, missed hatch"><span>WEEKS 01-53</span><span class="hm-key"><i class="hm-glyph hm-glyph--today"></i>TODAY</span><span class="hm-key"><i class="hm-glyph hm-glyph--scheduled"></i>SCHEDULED</span><span class="hm-key"><i class="hm-glyph hm-glyph--missed"></i>MISSED</span></div>
+                    <ActivityHeatmap CountsByDay="_activityByDay"
+                                     Weeks="@HeatmapWeeks"
+                                     EndLocal="@_heatmapEndLocal"
+                                     GetScheduleForDate="ScheduleService.GetScheduleForDate"
+                                     IsDaySelected="IsDaySelected"
+                                     SelectionVersion="_selectionVersion"
+                                     DaySelectionChanged="OnHeatmapDayTapAsync" />
+                </MudPaper>
 
-        <div class="history-stats">
-            <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@("Streak")" />
-            <StatCard Value="@_summary.LongestStreakWorkoutDays.ToString()" Label="@("Longest streak")" />
-            <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@("This week")" />
-            <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="@("Last week")" />
-        </div>
+                <div class="history-stats">
+                    <StatCard Value="@_summary.CurrentStreakWorkoutDays.ToString()" Label="@("Streak")" />
+                    <StatCard Value="@_summary.LongestStreakWorkoutDays.ToString()" Label="@("Longest streak")" />
+                    <StatCard Value="@_summary.ThisWeekSessionCount.ToString()" Label="@("This week")" />
+                    <StatCard Value="@_summary.LastWeekSessionCount.ToString()" Label="@("Last week")" />
+                </div>
+            </div>
 
-        <MudPaper Class="pa-3 bodyweight-panel" Elevation="0">
+            <MudPaper Class="pa-3 bodyweight-panel history-top-grid__right" Elevation="0">
             <div class="bodyweight-panel__header">
                 <div class="bodyweight-panel__left">
                     <MudText Typo="Typo.h2" Class="bodyweight-panel__title">@("Bodyweight")</MudText>
@@ -99,6 +102,7 @@
                 </button>
             </div>
         </MudPaper>
+        </div>
 
         @if (_selectedDays.Count > 0)
         {
@@ -191,6 +195,13 @@
                         </button>
                     </div>
                     <div class="history-select-bar__right">
+                        <button type="button"
+                                class="history-select-bar__btn history-select-bar__btn--compare"
+                                disabled="@(_selectedSessionIds.Count != 2)"
+                                @onclick="OpenComparisonAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.CompareArrows" Size="Size.Small" />
+                            <span>@("Compare")</span>
+                        </button>
                         <button type="button"
                                 class="history-select-bar__btn history-select-bar__btn--delete"
                                 disabled="@(_selectedSessionIds.Count == 0)"
@@ -443,6 +454,75 @@
             options.RequireInteraction = true;
             options.OnClick = _ => RestoreSessionsAsync(deleted);
         });
+    }
+
+    private async Task OpenComparisonAsync()
+    {
+        if (_selectedSessionIds.Count != 2)
+        {
+            Snackbar.Add("Select exactly 2 sessions to compare.", Severity.Warning);
+            return;
+        }
+
+        var ids = _selectedSessionIds.ToList();
+        var sessionA = await HistoryRepo.GetSessionAsync(ids[0]);
+        var sessionB = await HistoryRepo.GetSessionAsync(ids[1]);
+        if (sessionA == null || sessionB == null)
+        {
+            Snackbar.Add("Could not load sessions.", Severity.Error);
+            return;
+        }
+
+        if (sessionA.StartedAtUtc > sessionB.StartedAtUtc)
+        {
+            (sessionA, sessionB) = (sessionB, sessionA);
+        }
+
+        var setsA = (await HistoryRepo.GetSetsForSessionAsync(sessionA.Id)).ToList();
+        var setsB = (await HistoryRepo.GetSetsForSessionAsync(sessionB.Id)).ToList();
+
+        double? bodyweightA = UserProfileService.GetActiveProfile()?.BodyweightKg;
+        double? bodyweightB = bodyweightA;
+        if (bodyweightA is not > 0)
+        {
+            try
+            {
+                var logs = await HistoryRepo.GetBodyweightLogsAsync(500);
+                var dateA = DateOnly.FromDateTime(sessionA.StartedAtUtc.ToLocalTime());
+                var dateB = DateOnly.FromDateTime(sessionB.StartedAtUtc.ToLocalTime());
+                var matchA = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateA) ?? logs.FirstOrDefault();
+                var matchB = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateB) ?? logs.FirstOrDefault();
+                if (matchA != null && matchA.BodyweightKg > 0)
+                {
+                    bodyweightA = matchA.BodyweightKg;
+                }
+                if (matchB != null && matchB.BodyweightKg > 0)
+                {
+                    bodyweightB = matchB.BodyweightKg;
+                }
+            }
+            catch (Exception)
+            {
+                // Bodyweight logs are best-effort for compare deltas; ignore lookup failures.
+            }
+        }
+
+        var parameters = new DialogParameters<SessionCompareDialog>
+        {
+            { x => x.SessionA, sessionA },
+            { x => x.SetsA, setsA },
+            { x => x.SessionB, sessionB },
+            { x => x.SetsB, setsB },
+            { x => x.BodyweightKgA, bodyweightA },
+            { x => x.BodyweightKgB, bodyweightB },
+        };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+        };
+        await DialogService.ShowAsync<SessionCompareDialog>("Compare sessions", parameters, options);
     }
 
     private async Task RestoreSessionAsync(WorkoutSessionLogEntity? session, IReadOnlyList<WorkoutSetLogEntity> sets)

@@ -7,9 +7,9 @@ namespace Physiquinator.UI.Services;
 /// </summary>
 public static class UiServiceCollectionExtensions
 {
-	public static IServiceCollection AddPhysiquinatorUiServices(this IServiceCollection services)
-	{
-		services.AddScoped<UiFeedbackService>();
-		return services;
-	}
+    public static IServiceCollection AddPhysiquinatorUiServices(this IServiceCollection services)
+    {
+        services.AddScoped<UiFeedbackService>();
+        return services;
+    }
 }

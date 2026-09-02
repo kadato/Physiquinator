@@ -149,11 +149,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
 
         try
         {
-            await _js.InvokeVoidAsync("physiquinatorTheme.dispose").ConfigureAwait(true);
-        }
-        catch (JSDisconnectedException)
-        {
-            // WebView or scope already torn down.
+            await JsSafeInvoker.InvokeVoidSafeAsync(_js, "physiquinatorTheme.dispose").ConfigureAwait(true);
         }
         finally
         {

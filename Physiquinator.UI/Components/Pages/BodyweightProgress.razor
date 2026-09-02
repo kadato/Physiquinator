@@ -3,9 +3,10 @@
 @using System.Globalization
 @using System.Linq
 @using MudBlazor.Charts
+@using Physiquinator.UI.Services
 @inject WorkoutHistoryRepository HistoryRepo
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar
+@inject UiFeedbackService UiFeedback
 @inject WeightUnitService WeightUnitService
 @inject IJSRuntime JS
 
@@ -335,19 +336,15 @@ else
         if (result is { Canceled: false } && result.Data is double displayWeight)
         {
             var kg = ExerciseWeightFormatter.ToKg(displayWeight, WeightUnitService.Current);
-            try
-            {
-                await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, kg);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add(string.Format("Could not update entry: {0}", ex.Message), Severity.Error);
-                return;
-            }
-
-            _allEntries = await LoadEntriesAsync();
-            ApplyRangeAndRebuild();
-            Snackbar.Add("Entry updated.", Severity.Success);
+            await UiFeedback.TryExecuteAsync(
+                async () =>
+                {
+                    await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, kg);
+                    _allEntries = await LoadEntriesAsync();
+                    ApplyRangeAndRebuild();
+                },
+                "Entry updated.",
+                "Could not update entry");
         }
     }
 
@@ -368,37 +365,25 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add(string.Format("Could not delete entry: {0}", ex.Message), Severity.Error);
+            UiFeedback.Error("Could not delete entry", ex);
             return;
         }
 
         _allEntries = await LoadEntriesAsync();
         ApplyRangeAndRebuild();
-        Snackbar.Add("Entry deleted.", Severity.Success, options =>
-        {
-            options.Action = "Undo";
-            options.ActionColor = Color.Primary;
-            options.RequireInteraction = true;
-            options.OnClick = _ => RestoreEntryAsync(entry);
-        });
+        UiFeedback.SuccessWithUndo("Entry deleted.", () => RestoreEntryAsync(entry));
     }
 
-    private async Task RestoreEntryAsync(BodyweightEntry entry)
-    {
-        try
-        {
-            await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, entry.BodyweightKg);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Could not restore entry: {0}", ex.Message), Severity.Error);
-            return;
-        }
-
-        _allEntries = await LoadEntriesAsync();
-        ApplyRangeAndRebuild();
-        Snackbar.Add("Entry restored.", Severity.Success);
-    }
+    private async Task RestoreEntryAsync(BodyweightEntry entry) =>
+        await UiFeedback.TryExecuteAsync(
+            async () =>
+            {
+                await HistoryRepo.UpsertBodyweightLogAsync(entry.DateOnly, entry.BodyweightKg);
+                _allEntries = await LoadEntriesAsync();
+                ApplyRangeAndRebuild();
+            },
+            "Entry restored.",
+            "Could not restore entry");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -424,14 +409,7 @@ else
     {
         if (_sentinelObserved)
         {
-            try
-            {
-                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
-            }
-            catch (JSDisconnectedException)
-            {
-                // WebView disposed
-            }
+            await Physiquinator.UI.Services.JsSafeInvoker.RunSafeAsync(() => InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId));
             _sentinelObserved = false;
         }
 

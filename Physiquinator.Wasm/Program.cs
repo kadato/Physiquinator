@@ -50,8 +50,8 @@ builder.Services.AddPhysiquinatorUiServices();
 
 // Browser platform implementations.
 builder.Services.AddSingleton<WasmDbPersistence>();
-builder.Services.AddSingleton<INotificationService, WasmNoopNotificationService>();
-builder.Services.AddSingleton<IVibrationService, WasmNoopVibrationService>();
+builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
+builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
 builder.Services.AddSingleton<IAppUpdateService, WasmNoopUpdateService>();
 builder.Services.AddSingleton<IFileTransferService, WasmFileTransferService>();
 

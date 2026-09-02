@@ -1,49 +1,13 @@
 using Microsoft.JSInterop;
-using Physiquinator.Core.Models;
 using Physiquinator.Core.Services;
 
 namespace Physiquinator.Wasm.Services;
 
 /// <summary>
-/// Browser platform services. Notifications, vibration, overlay timers, and
-/// in-app updates are native-only features and become no-ops here. The rest
-/// timer keeps running inside the page exactly like the desktop host.
-/// File transfer uses browser downloads and the file picker.
+/// Browser platform services. In-app updates are native-only and become no-ops
+/// here. File transfer uses browser downloads and the file picker. Notifications
+/// and vibration use the shared core no-op implementations.
 /// </summary>
-public sealed class WasmNoopNotificationService : INotificationService
-{
-    public Task EnsurePermissionAsync() => Task.CompletedTask;
-
-    public bool SupportsNotifications => false;
-
-    public bool SupportsOverlay => false;
-
-    public bool HasOverlayPermission() => false;
-
-    public Task RequestOverlayPermissionAsync() => Task.CompletedTask;
-
-    public void CancelAllRestNotifications()
-    {
-    }
-
-    public Task ShowRestCompleteNowAsync(string description) => Task.CompletedTask;
-
-    public Task ShowWorkoutTimerUiAsync(WorkoutTimerState state) => Task.CompletedTask;
-
-    public Task HideWorkoutTimerUiAsync() => Task.CompletedTask;
-
-    public Task ScheduleRestEndAlarmAsync(DateTime restEndsAtUtc, string title, string description) => Task.CompletedTask;
-
-    public Task CancelRestEndAlarmAsync() => Task.CompletedTask;
-}
-
-public sealed class WasmNoopVibrationService : IVibrationService
-{
-    public void Vibrate(TimeSpan duration)
-    {
-    }
-}
-
 public sealed class WasmNoopUpdateService : IAppUpdateService
 {
     private static readonly Version Version = new(1, 0, 0);

@@ -1602,7 +1602,7 @@ else
             {
                 // Ignore cancellation, circuit is gone
             }
-            catch (Exception ex) when (ex.GetType().Name.Contains("JSDisconnected"))
+            catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
             {
                 // Ignore disconnect, circuit is gone
             }
@@ -1641,7 +1641,7 @@ else
             {
                 // Ignore cancellation, circuit is gone
             }
-            catch (Exception ex) when (ex.GetType().Name.Contains("JSDisconnected"))
+            catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
             {
                 // Ignore disconnect, circuit is gone
             }

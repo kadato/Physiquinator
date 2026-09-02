@@ -114,14 +114,7 @@
 
     public async ValueTask DisposeAsync()
     {
-        try
-        {
-            await DestroySortableAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // WebView disposed
-        }
+        await Physiquinator.UI.Services.JsSafeInvoker.RunSafeAsync(() => DestroySortableAsync().AsTask());
 
         _dotNetRef?.Dispose();
     }

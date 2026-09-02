@@ -1,4 +1,5 @@
 using Physiquinator.Core.Data;
+using Physiquinator.Core.Services;
 
 namespace Physiquinator.Wasm.Services;
 
@@ -7,7 +8,9 @@ namespace Physiquinator.Wasm.Services;
 /// The files are plain relative paths. WasmDbPersistence syncs their bytes with
 /// Cache Storage so they survive reloads.
 /// </summary>
-public sealed class WasmDatabasePathProvider : IDatabasePathProvider
+public sealed class WasmDatabasePathProvider : DatabasePathProviderBase
 {
-    public string GetDatabasePath(Guid profileId) => $"physiquinator-{profileId}.db3";
+    protected override string DatabaseDirectory => string.Empty;
+
+    public override string GetDatabasePath(Guid profileId) => $"physiquinator-{profileId}.db3";
 }

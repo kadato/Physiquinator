@@ -588,7 +588,7 @@
 
 	private async Task ScrollToBottomAsync()
 	{
-		await JsSafeInvoker.ScrollToBottomAsync(JS, _messagesElement);
+		await Physiquinator.UI.Services.JsSafeInvoker.ScrollToBottomAsync(JS, _messagesElement);
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -614,7 +614,7 @@
 	private async Task CopyTextAsync(string content, string successMessage)
 	{
 		if (string.IsNullOrWhiteSpace(content)) return;
-		var copied = await JsSafeInvoker.TryCopyTextAsync(JS, content);
+		var copied = await Physiquinator.UI.Services.JsSafeInvoker.TryCopyTextAsync(JS, content);
 		if (copied)
 			Snackbar.Add(successMessage, Severity.Success);
 		else

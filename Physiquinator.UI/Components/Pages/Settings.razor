@@ -4,26 +4,21 @@
 @using Physiquinator.Core.Models
 @using Physiquinator.Core.Formatting
 @using Physiquinator.UI.Components.Shared
-@inject ThemeService ThemeService
+@using Physiquinator.UI.Components.Settings
+@using Physiquinator.UI.Services
 @inject RestAlertSettingsService RestAlertSettings
 @inject INotificationService RestNotifications
-@inject WorkoutPlanService PlanService
-@inject WorkoutHistoryService HistoryService
 @inject AppDataResetService AppDataReset
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar
+@inject UiFeedbackService UiFeedback
 @inject WorkoutScheduleService WorkoutSchedule
-@inject IFileTransferService FileTransfer
 @inject IAppUpdateService AppUpdateService
 @inject AppUpdateSettingsService AppUpdateSettings
 @inject AiAssistantService AiAssistant
-@inject TimeProvider TimeProvider
-@inject BackupRestoreService BackupRestore
 @inject WeightUnitService WeightUnitService
 @inject IAccountService Account
 @implements IDisposable
-
 
 <PageTitle>@("Settings")</PageTitle>
 
@@ -81,33 +76,7 @@
             <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (PanelMatches(AppearanceKeywords))
         {
-            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
-                <TitleContent>
-                    <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
-                        <span class="settings-panel__text">
-                            <span class="settings-panel__title" role="heading" aria-level="2">@("Appearance")</span>
-                            <span class="settings-panel__subtitle">@("Light or dark mode")</span>
-                        </span>
-                    </div>
-                </TitleContent>
-            <ChildContent>
-                <div class="settings-panel__content">
-                    <MudSelect T="string"
-                               Variant="Variant.Outlined"
-                               Label="@("Light or dark mode")"
-                               Value="_preference"
-                               ValueChanged="OnThemePreferenceChanged">
-                        <MudSelectItem Value="@ThemePreference.System">@("Match system")</MudSelectItem>
-                        <MudSelectItem Value="@ThemePreference.Light">@("Light (always)")</MudSelectItem>
-                        <MudSelectItem Value="@ThemePreference.Dark">@("Dark (always)")</MudSelectItem>
-                    </MudSelect>
-                    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
-                        @("Active mode:") <strong>@_effectiveThemeLabel</strong>
-                    </MudText>
-                </div>
-            </ChildContent>
-        </MudExpansionPanel>
+            <SettingsAppearancePanel Expanded="@SearchActive" />
         }
 
         @if (PanelMatches(UnitsKeywords))
@@ -481,80 +450,7 @@
         <MudExpansionPanels Class="settings-panels" MultiExpansion="true">
         @if (PanelMatches(BackupKeywords))
         {
-            <MudExpansionPanel Class="settings-panel" Expanded="true">
-                <TitleContent>
-                    <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
-                        <span class="settings-panel__text">
-                            <span class="settings-panel__title" role="heading" aria-level="2">@("Backup")</span>
-                            <span class="settings-panel__subtitle">@("Export or import plans and history")</span>
-                        </span>
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <div class="settings-panel__content">
-                        <MudAlert Severity="Severity.Info" Class="mb-3 settings-local-banner">
-                            <div class="d-flex align-items-center gap-2">
-                                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
-                                <span>@("All data is stored locally on this device.")</span>
-                            </div>
-                        </MudAlert>
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                            @("Export plans, workout history, bodyweight logs, schedule, and settings into a single backup file.")
-                        </MudText>
-                    <div class="settings-btn-group">
-                        <MudButton Variant="Variant.Outlined"
-                                   OnClick="ExportAllData"
-                                   StartIcon="@Icons.Material.Filled.Upload">
-                            @("Export all data")
-                        </MudButton>
-                        <MudButton Variant="Variant.Outlined" OnClick="ImportAllData" StartIcon="@Icons.Material.Filled.Download">
-                            @("Import all data")
-                        </MudButton>
-                    </div>
-
-                    <MudDivider Class="my-4" />
-
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                        @("Export or import workout plans as JSON.")
-                    </MudText>
-                    <div class="settings-btn-group">
-                        <MudButton Variant="Variant.Outlined"
-                                   Disabled="@(_planCount == 0)"
-                                   OnClick="ExportAllPlans"
-                                   StartIcon="@Icons.Material.Filled.Upload">
-                            @("Export all plans")
-                        </MudButton>
-                        <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
-                            @("Import plans")
-                        </MudButton>
-                    </div>
-                    @if (_planCount == 0)
-                    {
-                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Create a plan first to enable export.")</MudText>
-                    }
-
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
-                        @("Export or import workout history JSON. Importing merges sessions by ID.")
-                    </MudText>
-                    <div class="settings-btn-group">
-                        <MudButton Variant="Variant.Outlined"
-                                   Disabled="@(_historySessionCount == 0)"
-                                   OnClick="ExportHistory"
-                                   StartIcon="@Icons.Material.Filled.Upload">
-                            @("Export history")
-                        </MudButton>
-                        <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
-                            @("Import history")
-                        </MudButton>
-                    </div>
-                    @if (_historySessionCount == 0)
-                    {
-                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Finish at least one workout to enable export.")</MudText>
-                    }
-                </div>
-            </ChildContent>
-        </MudExpansionPanel>
+            <SettingsBackupPanel />
         }
     </MudExpansionPanels>
     }
@@ -665,14 +561,10 @@
 </MudStack>
 
 @code {
-    private string _preference = ThemePreference.System;
-    private string _effectiveTheme = ThemePreference.Dark;
     private WeightUnit _weightUnit = WeightUnit.Kilograms;
     private bool _restAlertsEnabled = true;
     private bool _restSoundVibrationEnabled = true;
     private bool _overlayPermissionGranted = true;
-    private int _planCount;
-    private int _historySessionCount;
     private int _addTimeSeconds = 30;
 
     private string _settingsSearch = "";
@@ -753,8 +645,6 @@
         && !DataTabVisible
         && !AboutTabVisible;
 
-    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
-
     private static readonly DayOfWeek[] ScheduleDayOrder =
     [
         DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
@@ -812,16 +702,14 @@
         SyncFromService();
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        ThemeService.ThemeChanged += HandleSettingsChanged;
         RestAlertSettings.Changed += HandleSettingsChanged;
         WorkoutSchedule.Changed += HandleSettingsChanged;
         _overlayPermissionGranted = RestNotifications.HasOverlayPermission();
-        await RefreshPlanCountAsync();
-        await RefreshHistoryCountAsync();
         _currentVersion = AppUpdateService.CurrentVersion.ToString();
         _autoCheckEnabled = AppUpdateSettings.AutoCheckEnabled;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -870,16 +758,16 @@
             _availableModels = await AiAssistant.FetchAvailableModelsAsync();
             if (_availableModels.Count > 0)
             {
-                Snackbar.Add(string.Format("Fetched {0} available models!", _availableModels.Count), Severity.Success);
+                UiFeedback.Success(string.Format("Fetched {0} available models!", _availableModels.Count));
             }
             else
             {
-                Snackbar.Add("No models returned. Verify Base URL and API key.", Severity.Warning);
+                UiFeedback.Warning("No models returned. Verify Base URL and API key.");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add(string.Format("Failed to fetch models: {0}", ex.Message), Severity.Error);
+            UiFeedback.Error("Failed to fetch models", ex);
         }
         finally
         {
@@ -887,11 +775,8 @@
         }
     }
 
-
     private void SyncFromService()
     {
-        _preference = ThemeService.Preference;
-        _effectiveTheme = ThemeService.EffectiveTheme;
         _restAlertsEnabled = RestAlertSettings.Enabled;
         _restSoundVibrationEnabled = RestAlertSettings.SoundVibrationEnabled;
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
@@ -904,7 +789,7 @@
     {
         WeightUnitService.Set(unit);
         _weightUnit = unit;
-        Snackbar.Add(string.Format("Weights now shown in {0}.", ExerciseWeightFormatter.UnitSuffix(unit)), Severity.Success);
+        UiFeedback.Success(string.Format("Weights now shown in {0}.", ExerciseWeightFormatter.UnitSuffix(unit)));
     }
 
     private void OnAiEnabledChanged(bool enabled)
@@ -922,13 +807,11 @@
         await FetchModelsAsync();
     }
 
-
-
     private void SaveAiSettings(bool showToast = true)
     {
         AiAssistant.SaveSettings(_aiSettings);
         if (showToast)
-            Snackbar.Add("AI Assistant settings saved.", Severity.Success);
+            UiFeedback.Success("AI Assistant settings saved.");
     }
 
     private async Task TestAiConnectionAsync()
@@ -941,16 +824,16 @@
             var lastMsg = AiAssistant.Messages.LastOrDefault();
             if (lastMsg != null && lastMsg.IsError)
             {
-                Snackbar.Add(string.Format("Connection test failed: {0}", lastMsg.Content), Severity.Error);
+                UiFeedback.Error(string.Format("Connection test failed: {0}", lastMsg.Content));
             }
             else
             {
-                Snackbar.Add("AI Connection test successful!", Severity.Success);
+                UiFeedback.Success("AI Connection test successful!");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add(string.Format("Test failed: {0}", ex.Message), Severity.Error);
+            UiFeedback.Error("Test failed", ex);
         }
         finally
         {
@@ -962,7 +845,6 @@
     {
         Navigation.NavigateTo(AppRoutes.Ai);
     }
-
 
     private async Task ToggleScheduleDayAsync(DayOfWeek day)
     {
@@ -982,234 +864,21 @@
     {
         RestAlertSettings.SetEnabled(enabled);
         _restAlertsEnabled = enabled;
-        Snackbar.Add(enabled ? "Rest notifications on." : "Rest notifications off.", Severity.Success);
+        UiFeedback.Success(enabled ? "Rest notifications on." : "Rest notifications off.");
     }
 
     private void OnRestSoundVibrationChanged(bool enabled)
     {
         RestAlertSettings.SetSoundVibrationEnabled(enabled);
         _restSoundVibrationEnabled = enabled;
-        Snackbar.Add(enabled ? "Sound and vibration on." : "Sound and vibration off.", Severity.Success);
+        UiFeedback.Success(enabled ? "Sound and vibration on." : "Sound and vibration off.");
     }
 
     private void OnAutoCheckEnabledChanged(bool enabled)
     {
         AppUpdateSettings.SetAutoCheckEnabled(enabled);
         _autoCheckEnabled = enabled;
-        Snackbar.Add(enabled ? "Automatic update checks on." : "Automatic update checks off.", Severity.Success);
-    }
-
-    private async Task OnThemePreferenceChanged(string preference)
-    {
-        await ThemeService.SetPreferenceAsync(preference);
-        Snackbar.Add("Theme updated.", Severity.Success);
-    }
-
-    private async Task RefreshPlanCountAsync()
-    {
-        var plans = await PlanService.GetAllPlansAsync();
-        _planCount = plans.Count;
-    }
-
-    private async Task RefreshHistoryCountAsync()
-    {
-        _historySessionCount = await HistoryService.GetSessionCountAsync();
-    }
-
-    private async Task ExportAllPlans()
-    {
-        try
-        {
-            var json = await PlanService.ExportAllPlansToJsonAsync();
-            await FileTransfer.ExportJsonAsync(FileTransferNames.JsonFileName("physiquinator_plans", TimeProvider.GetLocalNow()), json);
-            Snackbar.Add("All plans exported.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task ImportPlans()
-    {
-        try
-        {
-            var json = await FileTransfer.PickJsonAsync("Select workout plan JSON file");
-            if (json == null)
-                return;
-
-            PlanImportPreview preview;
-            try
-            {
-                preview = await PlanService.PreviewPlansImportAsync(json);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-                return;
-            }
-
-            var proceed = await ShowImportPreviewAsync(
-                "Import plans",
-                [
-                    ("Plans in file", preview.Total.ToString()),
-                    ("New plans", preview.New.ToString()),
-                    ("Will overwrite", preview.Overwritten.ToString()),
-                ],
-                "Plans with the same ID replace the existing one. Everything else is added.");
-
-            if (!proceed)
-                return;
-
-            var importedCount = 0;
-            try
-            {
-                var plans = await PlanService.ImportPlansFromJsonAsync(json);
-                importedCount = plans.Count;
-            }
-            catch
-            {
-                await PlanService.ImportPlanFromJsonAsync(json);
-                importedCount = 1;
-            }
-
-            await RefreshPlanCountAsync();
-            Snackbar.Add(string.Format("Imported {0} plans.", importedCount), Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task ExportHistory()
-    {
-        try
-        {
-            var json = await HistoryService.ExportToJsonAsync();
-            await FileTransfer.ExportJsonAsync(
-                FileTransferNames.JsonFileName("physiquinator_history", TimeProvider.GetLocalNow()),
-                json,
-                "Export workout history");
-            Snackbar.Add("Workout history exported.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task ImportHistory()
-    {
-        try
-        {
-            var json = await FileTransfer.PickJsonAsync("Select workout history JSON file");
-            if (json == null)
-                return;
-
-            var preview = await WorkoutHistoryService.PreviewImportAsync(json);
-
-            var proceed = await ShowImportPreviewAsync(
-                "Import history",
-                [
-                    ("Workouts in file", preview.Sessions.ToString()),
-                    ("Set logs", preview.Sets.ToString()),
-                    ("Bodyweight entries", preview.BodyweightEntries.ToString()),
-                ],
-                "Import merges by session and set id. Existing matching entries are replaced.");
-
-            if (!proceed)
-                return;
-
-            var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
-            await RefreshHistoryCountAsync();
-            Snackbar.Add(string.Format("Imported {0} workouts and {1} set logs.", sessions, sets), Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task ExportAllData()
-    {
-        try
-        {
-            var json = await BackupRestore.ExportAllDataAsync();
-            await FileTransfer.ExportJsonAsync(
-                FileTransferNames.JsonFileName("physiquinator_backup", TimeProvider.GetLocalNow()),
-                json,
-                "Export all data");
-            Snackbar.Add("Full backup exported.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Export failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task ImportAllData()
-    {
-        try
-        {
-            var json = await FileTransfer.PickJsonAsync("Select full backup JSON file");
-            if (json == null)
-                return;
-
-            var preview = await BackupRestoreService.PreviewImportAsync(json);
-
-            var proceed = await ShowImportPreviewAsync(
-                "Import all data",
-                [
-                    ("Plans", preview.PlansImported.ToString()),
-                    ("Workouts", preview.SessionsImported.ToString()),
-                    ("Set logs", preview.SetsImported.ToString()),
-                    ("Schedule entries", preview.SchedulesImported.ToString()),
-                    ("Settings", preview.PreferencesImported.ToString()),
-                ],
-                "Everything in the backup is merged into this device. Existing matching entries are replaced.");
-
-            if (!proceed)
-                return;
-
-            var result = await BackupRestore.ImportAllDataAsync(json);
-            SyncFromService();
-            await RefreshPlanCountAsync();
-            await RefreshHistoryCountAsync();
-            Snackbar.Add(
-                string.Format("Restored {0} plans, {1} workouts, {2} sets, {3} schedule entries, {4} settings.",
-                    result.PlansImported, result.SessionsImported, result.SetsImported,
-                    result.SchedulesImported, result.PreferencesImported),
-                Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Import failed: {0}", ex.Message), Severity.Error);
-        }
-    }
-
-    private async Task<bool> ShowImportPreviewAsync(
-        string title,
-        IReadOnlyList<(string Label, string Value)> rows,
-        string note)
-    {
-        var parameters = new DialogParameters<ImportPreviewDialog>
-        {
-            { x => x.Title, title },
-            { x => x.Rows, rows },
-            { x => x.Note, note },
-        };
-
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true,
-        };
-
-        var dialog = await DialogService.ShowAsync<ImportPreviewDialog>("Import", parameters, options);
-        var result = await dialog.Result;
-        return result is { Canceled: false };
+        UiFeedback.Success(enabled ? "Automatic update checks on." : "Automatic update checks off.");
     }
 
     private async Task RemoveAllDataAsync()
@@ -1223,19 +892,16 @@
         if (!confirmed)
             return;
 
-        try
-        {
-            await AppDataReset.ClearAllLocalDataAsync();
-            SyncFromService();
-            await RefreshPlanCountAsync();
-            await RefreshHistoryCountAsync();
-            Snackbar.Add("All local data has been removed.", Severity.Success);
+        var ok = await UiFeedback.TryExecuteAsync(
+            async () =>
+            {
+                await AppDataReset.ClearAllLocalDataAsync();
+                SyncFromService();
+            },
+            "All local data has been removed.",
+            "Could not remove data");
+        if (ok)
             Navigation.NavigateTo(AppRoutes.Home);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format("Could not remove data: {0}", ex.Message), Severity.Error);
-        }
     }
 
     private async Task CheckForUpdatesAsync()
@@ -1252,11 +918,11 @@
             _downloadUrl = result.DownloadUrl;
             if (!_updateAvailable)
             {
-                Snackbar.Add("You are on the latest version.", Severity.Success);
+                UiFeedback.Success("You are on the latest version.");
             }
             else if (string.IsNullOrEmpty(_downloadUrl))
             {
-                Snackbar.Add("A newer version is available, but in-app updates are not supported on this platform.", Severity.Info);
+                UiFeedback.Info("A newer version is available, but in-app updates are not supported on this platform.");
             }
             else if (result.Latest is { } release)
             {
@@ -1279,7 +945,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add(string.Format("Could not check for updates: {0}", ex.Message), Severity.Error);
+            UiFeedback.Error("Could not check for updates", ex);
         }
         finally
         {
@@ -1289,7 +955,6 @@
 
     public void Dispose()
     {
-        ThemeService.ThemeChanged -= HandleSettingsChanged;
         RestAlertSettings.Changed -= HandleSettingsChanged;
         WorkoutSchedule.Changed -= HandleSettingsChanged;
     }

@@ -1,9 +1,8 @@
 using Physiquinator.Core.Models;
-using Physiquinator.Core.Services;
 
-namespace Physiquinator.Web.Services;
+namespace Physiquinator.Core.Services;
 
-/// <summary>No-op notifications for the browser debug host.</summary>
+/// <summary>Shared no-op notifications for hosts without native alerts (web, wasm, tests).</summary>
 public sealed class NoopNotificationService : INotificationService
 {
     public Task EnsurePermissionAsync() => Task.CompletedTask;

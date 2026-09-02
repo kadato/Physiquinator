@@ -1,13 +1,12 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace Physiquinator.UI.Services;
+namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Wraps IJSRuntime calls that may fail when the circuit or WebView disconnects.
-/// Central place so pages do not repeat JSDisconnectedException catch blocks.
+/// Core counterpart to Physiquinator.UI.Services.JsSafeInvoker so Core services do not need a UI reference.
 /// </summary>
-public static class JsSafeInvoker
+internal static class JsSafeInvoker
 {
     public static async Task InvokeVoidSafeAsync(IJSRuntime js, string identifier, params object?[] args)
     {
@@ -22,6 +21,14 @@ public static class JsSafeInvoker
         catch (OperationCanceledException)
         {
             // Operation canceled, ignore.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Module disposed during teardown.
+        }
+        catch (InvalidOperationException)
+        {
+            // JS runtime not available, for example prerendering.
         }
         catch (Exception ex) when (IsJSDisconnected(ex))
         {
@@ -41,25 +48,20 @@ public static class JsSafeInvoker
         }
         catch (OperationCanceledException)
         {
-            // Operation canceled.
+            return default;
+        }
+        catch (ObjectDisposedException)
+        {
+            return default;
+        }
+        catch (InvalidOperationException)
+        {
             return default;
         }
         catch (Exception ex) when (IsJSDisconnected(ex))
         {
-            // JSDisconnected via reflection.
             return default;
         }
-    }
-
-    public static async Task<bool> TryCopyTextAsync(IJSRuntime js, string text, string helper = "physiquinatorHelpers.copyText")
-    {
-        var result = await InvokeSafeAsync<bool>(js, helper, text);
-        return result;
-    }
-
-    public static async Task ScrollToBottomAsync(IJSRuntime js, ElementReference element, string helper = "physiquinatorHelpers.scrollToBottom")
-    {
-        await InvokeVoidSafeAsync(js, helper, element);
     }
 
     public static async Task RunSafeAsync(Func<Task> action)
@@ -75,6 +77,14 @@ public static class JsSafeInvoker
         catch (OperationCanceledException)
         {
             // Operation canceled, ignore.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Module disposed during teardown.
+        }
+        catch (InvalidOperationException)
+        {
+            // JS runtime not available.
         }
         catch (Exception ex) when (IsJSDisconnected(ex))
         {
@@ -95,6 +105,14 @@ public static class JsSafeInvoker
         catch (OperationCanceledException)
         {
             // Operation canceled, ignore.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Module disposed during teardown.
+        }
+        catch (InvalidOperationException)
+        {
+            // JS runtime not available.
         }
         catch (Exception ex) when (IsJSDisconnected(ex))
         {

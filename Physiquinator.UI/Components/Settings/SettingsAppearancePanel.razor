@@ -1,0 +1,72 @@
+@using Physiquinator.Core.Services
+@using Physiquinator.UI.Services
+@inject ThemeService ThemeService
+@inject UiFeedbackService UiFeedback
+@implements IDisposable
+
+<MudExpansionPanel Class="settings-panel" Expanded="@Expanded">
+    <TitleContent>
+        <div class="settings-panel__header">
+            <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Palette" Size="Size.Small" /></span>
+            <span class="settings-panel__text">
+                <span class="settings-panel__title" role="heading" aria-level="2">@("Appearance")</span>
+                <span class="settings-panel__subtitle">@("Light or dark mode")</span>
+            </span>
+        </div>
+    </TitleContent>
+    <ChildContent>
+        <div class="settings-panel__content">
+            <MudSelect T="string"
+                       Variant="Variant.Outlined"
+                       Label="@("Light or dark mode")"
+                       Value="_preference"
+                       ValueChanged="OnThemePreferenceChanged">
+                <MudSelectItem Value="@ThemePreference.System">@("Match system")</MudSelectItem>
+                <MudSelectItem Value="@ThemePreference.Light">@("Light (always)")</MudSelectItem>
+                <MudSelectItem Value="@ThemePreference.Dark">@("Dark (always)")</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">
+                @("Active mode:") <strong>@_effectiveThemeLabel</strong>
+            </MudText>
+        </div>
+    </ChildContent>
+</MudExpansionPanel>
+
+@code {
+    [Parameter]
+    public bool Expanded { get; set; }
+
+    private string _preference = ThemePreference.System;
+    private string _effectiveTheme = ThemePreference.Dark;
+
+    private string _effectiveThemeLabel => _effectiveTheme == ThemePreference.Light ? "Light" : "Dark";
+
+    protected override void OnInitialized()
+    {
+        SyncFromService();
+        ThemeService.ThemeChanged += HandleThemeChanged;
+    }
+
+    private void SyncFromService()
+    {
+        _preference = ThemeService.Preference;
+        _effectiveTheme = ThemeService.EffectiveTheme;
+    }
+
+    private void HandleThemeChanged()
+    {
+        SyncFromService();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnThemePreferenceChanged(string preference)
+    {
+        await ThemeService.SetPreferenceAsync(preference);
+        UiFeedback.Success("Theme updated.");
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= HandleThemeChanged;
+    }
+}

@@ -251,7 +251,11 @@ else
         {
             await JSRuntime.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
         }
-        catch (JSDisconnectedException)
+        catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
+        {
+            Navigation.NavigateTo(AppRoutes.Home);
+        }
+        catch (OperationCanceledException)
         {
             Navigation.NavigateTo(AppRoutes.Home);
         }
@@ -259,14 +263,7 @@ else
 
     private async Task OnSkipClicked()
     {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("physiquinator.focusMain");
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone. Nothing to focus.
-        }
+        await Physiquinator.UI.Services.JsSafeInvoker.InvokeVoidSafeAsync(JSRuntime, "physiquinator.focusMain");
     }
 
     public void Dispose()

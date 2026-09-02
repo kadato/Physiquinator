@@ -1,0 +1,289 @@
+@using Physiquinator.Core.Services
+@using Physiquinator.UI.Components.Shared
+@using Physiquinator.UI.Services
+@inject WorkoutPlanService PlanService
+@inject WorkoutHistoryService HistoryService
+@inject BackupRestoreService BackupRestore
+@inject IFileTransferService FileTransfer
+@inject IDialogService DialogService
+@inject UiFeedbackService UiFeedback
+@inject TimeProvider TimeProvider
+
+<MudExpansionPanel Class="settings-panel" Expanded="true">
+    <TitleContent>
+        <div class="settings-panel__header">
+            <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Backup" Size="Size.Small" /></span>
+            <span class="settings-panel__text">
+                <span class="settings-panel__title" role="heading" aria-level="2">@("Backup")</span>
+                <span class="settings-panel__subtitle">@("Export or import plans and history")</span>
+            </span>
+        </div>
+    </TitleContent>
+    <ChildContent>
+        <div class="settings-panel__content">
+            <MudAlert Severity="Severity.Info" Class="mb-3 settings-local-banner">
+                <div class="d-flex align-items-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                    <span>@("All data is stored locally on this device.")</span>
+                </div>
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @("Export plans, workout history, bodyweight logs, schedule, and settings into a single backup file.")
+            </MudText>
+            <div class="settings-btn-group">
+                <MudButton Variant="Variant.Outlined"
+                           OnClick="ExportAllData"
+                           StartIcon="@Icons.Material.Filled.Upload">
+                    @("Export all data")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="ImportAllData" StartIcon="@Icons.Material.Filled.Download">
+                    @("Import all data")
+                </MudButton>
+            </div>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @("Export or import workout plans as JSON.")
+            </MudText>
+            <div class="settings-btn-group">
+                <MudButton Variant="Variant.Outlined"
+                           Disabled="@(_planCount == 0)"
+                           OnClick="ExportAllPlans"
+                           StartIcon="@Icons.Material.Filled.Upload">
+                    @("Export all plans")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="ImportPlans" StartIcon="@Icons.Material.Filled.Download">
+                    @("Import plans")
+                </MudButton>
+            </div>
+            @if (_planCount == 0)
+            {
+                <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Create a plan first to enable export.")</MudText>
+            }
+
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
+                @("Export or import workout history JSON. Importing merges sessions by ID.")
+            </MudText>
+            <div class="settings-btn-group">
+                <MudButton Variant="Variant.Outlined"
+                           Disabled="@(_historySessionCount == 0)"
+                           OnClick="ExportHistory"
+                           StartIcon="@Icons.Material.Filled.Upload">
+                    @("Export history")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="ImportHistory" StartIcon="@Icons.Material.Filled.Download">
+                    @("Import history")
+                </MudButton>
+            </div>
+            @if (_historySessionCount == 0)
+            {
+                <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Finish at least one workout to enable export.")</MudText>
+            }
+        </div>
+    </ChildContent>
+</MudExpansionPanel>
+
+@code {
+    private int _planCount;
+    private int _historySessionCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshPlanCountAsync();
+        await RefreshHistoryCountAsync();
+    }
+
+    private async Task RefreshPlanCountAsync()
+    {
+        var plans = await PlanService.GetAllPlansAsync();
+        _planCount = plans.Count;
+    }
+
+    private async Task RefreshHistoryCountAsync()
+    {
+        _historySessionCount = await HistoryService.GetSessionCountAsync();
+    }
+
+    private async Task ExportAllPlans() =>
+        await UiFeedback.TryExecuteAsync(
+            async () =>
+            {
+                var json = await PlanService.ExportAllPlansToJsonAsync();
+                await FileTransfer.ExportJsonAsync(FileTransferNames.JsonFileName("physiquinator_plans", TimeProvider.GetLocalNow()), json);
+            },
+            "All plans exported.",
+            "Export failed");
+
+    private async Task ImportPlans()
+    {
+        try
+        {
+            var json = await FileTransfer.PickJsonAsync("Select workout plan JSON file");
+            if (json == null)
+                return;
+
+            PlanImportPreview preview;
+            try
+            {
+                preview = await PlanService.PreviewPlansImportAsync(json);
+            }
+            catch (Exception ex)
+            {
+                UiFeedback.Error(ex.Message);
+                return;
+            }
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import plans",
+                [
+                    ("Plans in file", preview.Total.ToString()),
+                    ("New plans", preview.New.ToString()),
+                    ("Will overwrite", preview.Overwritten.ToString()),
+                ],
+                "Plans with the same ID replace the existing one. Everything else is added.");
+
+            if (!proceed)
+                return;
+
+            var importedCount = 0;
+            try
+            {
+                var plans = await PlanService.ImportPlansFromJsonAsync(json);
+                importedCount = plans.Count;
+            }
+            catch
+            {
+                await PlanService.ImportPlanFromJsonAsync(json);
+                importedCount = 1;
+            }
+
+            await RefreshPlanCountAsync();
+            UiFeedback.Success(string.Format("Imported {0} plans.", importedCount));
+        }
+        catch (Exception ex)
+        {
+            UiFeedback.Error("Import failed", ex);
+        }
+    }
+
+    private async Task ExportHistory() =>
+        await UiFeedback.TryExecuteAsync(
+            async () =>
+            {
+                var json = await HistoryService.ExportToJsonAsync();
+                await FileTransfer.ExportJsonAsync(
+                    FileTransferNames.JsonFileName("physiquinator_history", TimeProvider.GetLocalNow()),
+                    json,
+                    "Export workout history");
+            },
+            "Workout history exported.",
+            "Export failed");
+
+    private async Task ImportHistory()
+    {
+        try
+        {
+            var json = await FileTransfer.PickJsonAsync("Select workout history JSON file");
+            if (json == null)
+                return;
+
+            var preview = await WorkoutHistoryService.PreviewImportAsync(json);
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import history",
+                [
+                    ("Workouts in file", preview.Sessions.ToString()),
+                    ("Set logs", preview.Sets.ToString()),
+                    ("Bodyweight entries", preview.BodyweightEntries.ToString()),
+                ],
+                "Import merges by session and set id. Existing matching entries are replaced.");
+
+            if (!proceed)
+                return;
+
+            var (sessions, sets) = await HistoryService.ImportFromJsonAsync(json);
+            await RefreshHistoryCountAsync();
+            UiFeedback.Success(string.Format("Imported {0} workouts and {1} set logs.", sessions, sets));
+        }
+        catch (Exception ex)
+        {
+            UiFeedback.Error("Import failed", ex);
+        }
+    }
+
+    private async Task ExportAllData() =>
+        await UiFeedback.TryExecuteAsync(
+            async () =>
+            {
+                var json = await BackupRestore.ExportAllDataAsync();
+                await FileTransfer.ExportJsonAsync(
+                    FileTransferNames.JsonFileName("physiquinator_backup", TimeProvider.GetLocalNow()),
+                    json,
+                    "Export all data");
+            },
+            "Full backup exported.",
+            "Export failed");
+
+    private async Task ImportAllData()
+    {
+        try
+        {
+            var json = await FileTransfer.PickJsonAsync("Select full backup JSON file");
+            if (json == null)
+                return;
+
+            var preview = await BackupRestoreService.PreviewImportAsync(json);
+
+            var proceed = await ShowImportPreviewAsync(
+                "Import all data",
+                [
+                    ("Plans", preview.PlansImported.ToString()),
+                    ("Workouts", preview.SessionsImported.ToString()),
+                    ("Set logs", preview.SetsImported.ToString()),
+                    ("Schedule entries", preview.SchedulesImported.ToString()),
+                    ("Settings", preview.PreferencesImported.ToString()),
+                ],
+                "Everything in the backup is merged into this device. Existing matching entries are replaced.");
+
+            if (!proceed)
+                return;
+
+            var result = await BackupRestore.ImportAllDataAsync(json);
+            await RefreshPlanCountAsync();
+            await RefreshHistoryCountAsync();
+            UiFeedback.Success(
+                string.Format("Restored {0} plans, {1} workouts, {2} sets, {3} schedule entries, {4} settings.",
+                    result.PlansImported, result.SessionsImported, result.SetsImported,
+                    result.SchedulesImported, result.PreferencesImported));
+        }
+        catch (Exception ex)
+        {
+            UiFeedback.Error("Import failed", ex);
+        }
+    }
+
+    private async Task<bool> ShowImportPreviewAsync(
+        string title,
+        IReadOnlyList<(string Label, string Value)> rows,
+        string note)
+    {
+        var parameters = new DialogParameters<ImportPreviewDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Rows, rows },
+            { x => x.Note, note },
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<ImportPreviewDialog>("Import", parameters, options);
+        var result = await dialog.Result;
+        return result is { Canceled: false };
+    }
+}

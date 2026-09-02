@@ -517,14 +517,7 @@ else
     {
         if (_sentinelObserved)
         {
-            try
-            {
-                await InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId);
-            }
-            catch (JSDisconnectedException)
-            {
-                // WebView disposed
-            }
+            await Physiquinator.UI.Services.JsSafeInvoker.RunSafeAsync(() => InfiniteScrollInterop.DisposeAsync(JS, LoadMoreSentinelId));
             _sentinelObserved = false;
         }
 

@@ -85,23 +85,6 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         });
 
     /// <summary>Runs a JS call, swallowing exceptions raised during WebView teardown.</summary>
-    private static async Task InvokeSafeAsync(Func<Task> action)
-    {
-        try
-        {
-            await action();
-        }
-        catch (JSDisconnectedException)
-        {
-            // WebView or JS runtime already torn down
-        }
-        catch (ObjectDisposedException)
-        {
-            // Module reference disposed during teardown
-        }
-        catch (InvalidOperationException)
-        {
-            // JS runtime not available, for example prerendering.
-        }
-    }
+    private static Task InvokeSafeAsync(Func<Task> action) =>
+        JsSafeInvoker.RunSafeAsync(action);
 }

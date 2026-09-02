@@ -14,15 +14,45 @@ public static class InfiniteScrollInterop
     public static async ValueTask ObserveAsync<T>(IJSRuntime js, string sentinelId, DotNetObjectReference<T> dotNetRef, string methodName)
         where T : class
     {
-        var module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
-        await module.InvokeVoidAsync("observe", sentinelId, dotNetRef, methodName);
-        await module.DisposeAsync();
+        try
+        {
+            var module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            await module.InvokeVoidAsync("observe", sentinelId, dotNetRef, methodName);
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone, ignore.
+        }
+        catch (OperationCanceledException)
+        {
+            // Operation canceled, ignore.
+        }
+        catch (Exception ex) when (JsSafeInvoker.IsJSDisconnected(ex))
+        {
+            // JSDisconnected via reflection, ignore.
+        }
     }
 
     public static async ValueTask DisposeAsync(IJSRuntime js, string sentinelId)
     {
-        var module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
-        await module.InvokeVoidAsync("dispose", sentinelId);
-        await module.DisposeAsync();
+        try
+        {
+            var module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            await module.InvokeVoidAsync("dispose", sentinelId);
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone, ignore.
+        }
+        catch (OperationCanceledException)
+        {
+            // Operation canceled, ignore.
+        }
+        catch (Exception ex) when (JsSafeInvoker.IsJSDisconnected(ex))
+        {
+            // JSDisconnected via reflection, ignore.
+        }
     }
 }

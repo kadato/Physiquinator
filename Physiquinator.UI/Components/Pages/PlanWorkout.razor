@@ -105,17 +105,13 @@ else
                 }
 
                 <form @onsubmit="AddExerciseAsync" @onsubmit:preventDefault class="plan-add-exercise">
-                    <MudTextField @bind-Value="NewExerciseName"
-                                  id="new-exercise-input"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Placeholder="@("Add exercise…")"
-                                  Class="plan-add-exercise__input"
-                                  Immediate="true"
-                                  autocapitalize="words"
-                                  autocomplete="off"
-                                  enterkeyhint="done"
-                                  @onfocus="OnAddExerciseFocus" />
+                    <ExerciseNameAutocomplete @bind-Value="NewExerciseName"
+                                              InputId="new-exercise-input"
+                                              Placeholder="@("Add exercise…")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Dense="true"
+                                              Class="plan-add-exercise__input" />
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                Size="Size.Small"
@@ -280,18 +276,6 @@ else
         NewExerciseName = "";
         BumpSortable();
         await EditExerciseAsync(exercise, isNew: true, insertAtEnd: true);
-    }
-
-    private async Task OnAddExerciseFocus()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", "#new-exercise-input");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Scroll to input failed");
-        }
     }
 
     private async Task EditExerciseAsync(int index)

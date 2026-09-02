@@ -1,7 +1,5 @@
 @using Physiquinator.Core.Models
 @using Physiquinator.Core.Formatting
-@inject IJSRuntime JS
-@inject WorkoutHistoryRepository HistoryRepository
 @inject WeightUnitService WeightUnitService
 
 <MudDialog Class="plan-exercise-sheet">
@@ -18,24 +16,13 @@
     <DialogContent>
         <form @onsubmit="Confirm" @onsubmit:preventDefault class="plan-exercise-sheet__form">
             <MudStack Spacing="3" Class="plan-exercise-sheet__body">
-                <MudAutocomplete T="string"
-                                 Value="_name"
-                                 ValueChanged="OnNameChanged"
-                                 TextChanged="OnNameChanged"
-                                 id="exercise-sheet-name-input"
-                                 Variant="Variant.Outlined"
-                                 Label="@("Exercise name")"
-                                 Placeholder="@("For example, bench press")"
-                                 SearchFunc="SearchExerciseNamesAsync"
-                                 CoerceText="true"
-                                 CoerceValue="true"
-                                 ResetValueOnEmptyText="false"
-                                 Immediate="true"
-                                 MaxItems="80"
-                                 Dense="false"
-                                 autocapitalize="words"
-                                 autocomplete="off"
-                                 @onfocus="OnExerciseNameFocus" />
+                <ExerciseNameAutocomplete Value="_name"
+                                          ValueChanged="OnNameChanged"
+                                          InputId="exercise-sheet-name-input"
+                                          Label="@("Exercise name")"
+                                          Placeholder="@("For example, bench press")"
+                                          Variant="Variant.Outlined"
+                                          Dense="false" />
                 <MudText Typo="Typo.caption" Class="plan-exercise-sheet__catalog-hint">
                     @("Type to search 120+ popular exercises, or enter any custom name.")
                 </MudText>
@@ -168,7 +155,6 @@
     private double? _bodyweightPercent;
     private ExerciseLogType _logType = ExerciseLogType.WeightAndReps;
     private string _supersetGroupId = "";
-    private List<string> _exerciseNames = [];
     private string _nameAtOpen = "";
 
     private bool ConfirmDisabled => string.IsNullOrWhiteSpace(_name);
@@ -236,7 +222,7 @@
         return AutoSaveAsync();
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _name = Exercise.Name;
         _nameAtOpen = Exercise.Name;
@@ -248,18 +234,6 @@
         _bodyweightPercent = Exercise.BodyweightPercent;
         _logType = Exercise.LogType;
         _supersetGroupId = Exercise.SupersetGroupId ?? "";
-        var historyNames = await HistoryRepository.GetExerciseNamesAsync(100);
-        _exerciseNames = [.. ExerciseCatalog.MergeSuggestionNames(historyNames)];
-    }
-
-    private Task<IEnumerable<string>> SearchExerciseNamesAsync(string? text, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            return Task.FromResult<IEnumerable<string>>(_exerciseNames);
-
-        var query = text.Trim();
-        return Task.FromResult<IEnumerable<string>>(
-            _exerciseNames.Where(n => n.Contains(query, StringComparison.OrdinalIgnoreCase)));
     }
 
     /// <summary>
@@ -321,17 +295,5 @@
         _logType = type;
         StateHasChanged();
         await AutoSaveAsync();
-    }
-
-    private async Task OnExerciseNameFocus()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", "#exercise-sheet-name-input");
-        }
-        catch (Exception)
-        {
-            // JS interop might not be ready or fail during initialization/disposal.
-        }
     }
 }

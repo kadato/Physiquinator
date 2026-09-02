@@ -1,0 +1,107 @@
+@using Physiquinator.Core.Models
+@using Physiquinator.Core.Data
+@inject WorkoutHistoryRepository HistoryRepository
+@inject IJSRuntime JS
+
+<MudAutocomplete T="string"
+                 Value="@Value"
+                 ValueChanged="OnInternalValueChanged"
+                 TextChanged="OnInternalTextChanged"
+                 SearchFunc="SearchAsync"
+                 Variant="@Variant"
+                 Margin="@Margin"
+                 Dense="@Dense"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 MaxItems="80"
+                 CoerceText="true"
+                 CoerceValue="true"
+                 ResetValueOnEmptyText="false"
+                 Immediate="true"
+                 Class="@Class"
+                 id="@InputId"
+                 autocapitalize="words"
+                 autocomplete="off"
+                 @onfocus="OnFocusAsync" />
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string? InputId { get; set; }
+
+    [Parameter]
+    public Variant Variant { get; set; } = Variant.Outlined;
+
+    [Parameter]
+    public Margin Margin { get; set; } = Margin.None;
+
+    [Parameter]
+    public bool Dense { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private List<string> _suggestions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var historyNames = await HistoryRepository.GetExerciseNamesAsync(100);
+        _suggestions = [.. ExerciseCatalog.MergeSuggestionNames(historyNames)];
+    }
+
+    private Task<IEnumerable<string>> SearchAsync(string? text, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Task.FromResult<IEnumerable<string>>(_suggestions);
+        }
+
+        var query = text.Trim();
+        return Task.FromResult<IEnumerable<string>>(
+            _suggestions.Where(n => n.Contains(query, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private Task OnInternalValueChanged(string? value) => HandleChangedAsync(value);
+
+    private Task OnInternalTextChanged(string? text) => HandleChangedAsync(text);
+
+    private async Task HandleChangedAsync(string? newValue)
+    {
+        var normalized = newValue ?? "";
+        if (string.Equals(Value, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Value = normalized;
+        await ValueChanged.InvokeAsync(normalized);
+    }
+
+    private async Task OnFocusAsync()
+    {
+        if (string.IsNullOrWhiteSpace(InputId))
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("physiquinator.scrollSelectorIntoView", $"#{InputId}");
+        }
+        catch
+        {
+            // JS interop may not be available during prerender.
+        }
+    }
+}

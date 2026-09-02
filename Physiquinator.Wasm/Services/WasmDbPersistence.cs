@@ -20,11 +20,11 @@ public sealed class WasmDbPersistence(IJSRuntime js, ILogger<WasmDbPersistence> 
         try
         {
             var module = await GetModuleAsync(cancellationToken).WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
-            string[] names = await module.InvokeAsync<string[]>("listDatabases", cancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
+            var names = await module.InvokeAsync<string[]>("listDatabases", cancellationToken).AsTask().WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
             foreach (var name in names)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                byte[]? bytes = await module.InvokeAsync<byte[]?>("loadDatabase", cancellationToken, name).AsTask().WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
+                var bytes = await module.InvokeAsync<byte[]?>("loadDatabase", cancellationToken, name).AsTask().WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
                 if (bytes == null || bytes.Length == 0)
                 {
                     continue;
@@ -73,7 +73,7 @@ public sealed class WasmDbPersistence(IJSRuntime js, ILogger<WasmDbPersistence> 
                     logger.LogDebug(ex, "Checkpoint skipped for {File}", file);
                 }
 
-                byte[] bytes = await File.ReadAllBytesAsync(file, cancellationToken);
+                var bytes = await File.ReadAllBytesAsync(file, cancellationToken);
                 await module.InvokeVoidAsync("saveDatabase", cancellationToken, Path.GetFileName(file), bytes).AsTask().WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
                 logger.LogInformation("Exported {Name} to Cache Storage ({Length} bytes)", Path.GetFileName(file), bytes.Length);
             }

@@ -182,6 +182,25 @@ async function loginWithDemo(page) {
     await delay(1000);
 }
 
+// Clicks away any visible MudBlazor snackbars via their close buttons, then
+// waits until none remain. The provider element itself stays in the DOM, so
+// waiting for `.mud-snackbar` detached never resolves; close them instead.
+async function dismissSnackbars(page) {
+    // Give a freshly triggered snackbar a beat to render before dismissing.
+    await page.waitForSelector('.mud-snackbar-content, .mud-alert', { state: 'visible', timeout: 1500 }).catch(() => {});
+    for (let i = 0; i < 5; i++) {
+        const closeBtn = page.locator('.mud-snackbar button').first();
+        const visible = await closeBtn.isVisible().catch(() => false);
+        if (!visible) break;
+        await closeBtn.click().catch(() => {});
+        await delay(300);
+    }
+    await page.waitForFunction(
+        () => !document.querySelector('.mud-snackbar .mud-snackbar-content, .mud-snackbar .mud-alert'),
+        { timeout: 5000 }
+    ).catch(() => {});
+}
+
 // Configures the AI provider once so quick actions work against the mock server.
 async function configureAiSettings(page) {
     console.log('Configuring AI settings against the mock server...');
@@ -203,9 +222,7 @@ async function configureAiSettings(page) {
     await page.getByLabel('API Key', { exact: false }).fill('dummy-key-for-screenshots');
     await page.getByLabel('Model Name').fill('gpt-4o-mini');
     await page.getByRole('button', { name: 'Save settings' }).click();
-    // Wait for success snackbar to appear and then disappear naturally
-    await page.waitForSelector('.mud-snackbar', { state: 'visible', timeout: 4000 }).catch(() => {});
-    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 4000 }).catch(() => {});
+    await dismissSnackbars(page);
     await delay(300);
     console.log('AI settings saved.');
 }
@@ -217,31 +234,26 @@ async function selectTheme(page, themeName) {
     // Revisiting /settings while already there keeps the active tab, so pin
     // the General tab where the Appearance panel lives.
     await page.locator('.settings-tab:has-text("General")').click();
-    await page.locator('.settings-panel:has-text("Appearance") .mud-expand-panel-header').click();
-    await page.waitForSelector('.mud-select', { timeout: 10000 });
+    const targetLabel = themeName === 'light' ? 'Physiquinator Light' : 'Physiquinator Dark';
+    await page.waitForSelector('.theme-grid', { timeout: 10000 }).catch(async () => {
+        await page.locator('.settings-panel:has-text("Appearance") .mud-expand-panel-header').click();
+        await page.waitForSelector('.theme-grid', { timeout: 10000 });
+    });
     await delay(500);
 
-    await page.click('.mud-select');
+    // The Appearance panel offers both a MudSelect dropdown and a theme-grid
+    // of buttons. Click the grid button directly: it is stable and avoids
+    // dropdown text that changes with theme renames.
+    await page.locator(`button.theme-option[aria-label="${targetLabel}"]`).click();
+    await dismissSnackbars(page);
     await delay(500);
-
-    if (themeName === 'light') {
-        await page.click('.mud-list-item:has-text("Light (always)")');
-    } else {
-        await page.click('.mud-list-item:has-text("Dark (always)")');
-    }
-    // Theme change shows a "Theme updated" snackbar for 3s. Wait for it to
-    // appear and disappear so captures stay clean.
-    await page.waitForSelector('.mud-snackbar', { state: 'visible', timeout: 3000 }).catch(() => {});
-    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 4000 }).catch(() => {});
-    await delay(300);
 }
 
 async function capture(page, name) {
     const filepath = path.join(DOCS_DIR, name);
     console.log(`Capturing screenshot: ${name}`);
 
-    // Ensure any stray snackbar is gone before capture
-    await page.waitForSelector('.mud-snackbar', { state: 'detached', timeout: 1000 }).catch(() => {});
+    await dismissSnackbars(page);
     // Hide scrollbar briefly for a cleaner screenshot
     await page.evaluate(() => {
         document.documentElement.style.overflow = 'hidden';
@@ -258,9 +270,30 @@ async function capture(page, name) {
 
 // Starts each theme pass from an identical state: the web host holds chat
 // history and AI settings in memory, so restarting it clears both. The demo
-// account database survives on disk, so any active workout is discarded here.
+// account database lives on disk, so wipe it too; the host reseeds on next
+// launch. Any active workout therefore starts from the same seeded plans.
 async function beginPass(page) {
     await stopWebHost();
+    try {
+        fs.rmSync(TEMP_DATA_DIR, { recursive: true, force: true });
+    } catch {}
+    fs.mkdirSync(TEMP_DATA_DIR, { recursive: true });
+    // The web host mirrors its SQLite files into the browser's IndexedDB and
+    // restores them on page load, so a server-side wipe alone resurrects the
+    // previous pass. Clear browser storage before logging in fresh.
+    try {
+        await page.context().clearCookies();
+    } catch {}
+    await page.evaluate(async () => {
+        try {
+            const dbs = await indexedDB.databases();
+            await Promise.all(dbs.map(d => d.name ? new Promise(res => {
+                const req = indexedDB.deleteDatabase(d.name);
+                req.onsuccess = req.onerror = req.onblocked = () => res();
+            }) : Promise.resolve()));
+        } catch {}
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    }).catch(() => {});
     await startWebHost();
     await loginWithDemo(page);
 

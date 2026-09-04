@@ -43,7 +43,7 @@
                 aria-selected="@(_activeTabIndex == 0)"
                 class="settings-tab @(_activeTabIndex == 0 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 0">
-            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Class="settings-tab__icon settings-tab__icon--general" />
             <span>@("General")</span>
         </button>
         <button type="button"
@@ -51,7 +51,7 @@
                 aria-selected="@(_activeTabIndex == 1)"
                 class="settings-tab @(_activeTabIndex == 1 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 1">
-            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" Class="settings-tab__icon settings-tab__icon--ai" />
             <span>@("AI")</span>
         </button>
         <button type="button"
@@ -59,7 +59,7 @@
                 aria-selected="@(_activeTabIndex == 2)"
                 class="settings-tab @(_activeTabIndex == 2 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 2">
-            <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" Class="settings-tab__icon settings-tab__icon--data" />
             <span>@("Data")</span>
         </button>
         <button type="button"
@@ -67,7 +67,7 @@
                 aria-selected="@(_activeTabIndex == 3)"
                 class="settings-tab @(_activeTabIndex == 3 ? "settings-tab--active" : "")"
                 @onclick="() => _activeTabIndex = 3">
-            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="settings-tab__icon settings-tab__icon--about" />
             <span>@("About")</span>
         </button>
     </div>
@@ -85,7 +85,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--units"><MudIcon Icon="@Icons.Material.Outlined.Straighten" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Units")</span>
                             <span class="settings-panel__subtitle">@("How weights are displayed")</span>
@@ -115,7 +115,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--timer"><MudIcon Icon="@Icons.Material.Outlined.Timer" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Rest timer")</span>
                             <span class="settings-panel__subtitle">@("Notifications and rest time")</span>
@@ -203,7 +203,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--profiles"><MudIcon Icon="@Icons.Material.Outlined.People" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("User profiles")</span>
                             <span class="settings-panel__subtitle">@("Create, switch, and manage profiles")</span>
@@ -223,7 +223,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--schedule"><MudIcon Icon="@Icons.Material.Outlined.EventRepeat" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Workout schedule")</span>
                             <span class="settings-panel__subtitle">@("Keep your streak alive on rest days")</span>
@@ -274,7 +274,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.Logout" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--account"><MudIcon Icon="@Icons.Material.Outlined.Logout" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Account")</span>
                             <span class="settings-panel__subtitle">@("Sign out of this account")</span>
@@ -306,7 +306,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="true">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--ai"><MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("AI Assistant")</span>
                             <span class="settings-panel__subtitle">@("Configure AI provider")</span>
@@ -468,7 +468,7 @@
             <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--update"><MudIcon Icon="@Icons.Material.Outlined.SystemUpdate" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Updates")</span>
                             <span class="settings-panel__subtitle">@(string.Format("Version {0}", _currentVersion))</span>
@@ -532,7 +532,7 @@
             <MudExpansionPanel Class="settings-panel settings-panel--danger" Expanded="@SearchActive">
                 <TitleContent>
                     <div class="settings-panel__header">
-                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
+                        <span class="settings-panel__icon settings-panel__icon--danger"><MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" /></span>
                         <span class="settings-panel__text">
                             <span class="settings-panel__title" role="heading" aria-level="2">@("Remove all data")</span>
                             <span class="settings-panel__subtitle">@("Permanently delete local data on this device")</span>

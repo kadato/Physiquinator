@@ -129,14 +129,19 @@
 }
 
 .plan-card-icon-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 44px !important;
     height: 44px !important;
     min-width: 44px !important;
     min-height: 44px !important;
+    padding: 0 !important;
     border-radius: var(--radius) !important;
     border: 1.5px solid var(--hairline-strong) !important;
     background: var(--pl-chip-2) !important;
     color: var(--pl-ink) !important;
+    box-sizing: border-box !important;
 }
 
 .plan-card-icon-btn .mud-icon-root {

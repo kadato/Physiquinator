@@ -208,6 +208,15 @@
     .compare-header { grid-template-columns: 1fr; }
     .compare-table { min-width: 520px; }
 }
+html[data-theme-mode="light"] .compare-header__label,
+html[data-theme-mode="light"] .compare-header__date,
+html[data-theme-mode="light"] .compare-header__stat-label,
+html[data-theme-mode="light"] .compare-table__type-hint,
+html[data-theme-mode="light"] .compare-table__subtle,
+html[data-theme-mode="light"] .compare-table__only-badge,
+html[data-theme-mode="light"] .compare-legend {
+    color: var(--pl-ink-2) !important;
+}
 </style>
 
 @code {

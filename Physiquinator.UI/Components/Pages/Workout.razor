@@ -120,7 +120,7 @@ else
                                         @onclick="() => AddRestTime(RestAlertSettings.AddTimeSeconds)"
                                         aria-label="@(string.Format("Add {0} seconds of rest", RestAlertSettings.AddTimeSeconds))">
                                     <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                                    <span>+@(RestAlertSettings.AddTimeSeconds)S</span>
+                                    <span>@(RestAlertSettings.AddTimeSeconds)S</span>
                                 </button>
                                 <button type="button"
                                         class="workout-timesup-banner__btn workout-timesup-banner__btn--reset"

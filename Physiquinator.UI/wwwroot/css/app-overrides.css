@@ -124,7 +124,7 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 .app-shell--immersive .app-main-scroll { padding-bottom:0; }
 .app-shell--immersive .app-nav-pill { display:none; }
 .app-shell--immersive .app-rail { display:none !important; }
-@media (min-width:960px) { .app-nav-pill__inner { height:52px; } .app-nav-tab { flex-direction:row; gap:8px; padding:0 20px; } .app-nav-tab__label { font-size:0.6875rem; } }
+@media (min-width:960px) { .app-nav-pill__inner { height:52px; } .app-nav-tab { flex-direction:row; gap:6px; padding:0 10px; justify-content:center; } .app-nav-tab__label { font-size:0.6875rem; } }
 .app-fab {
   position: fixed !important;
   z-index: 1400 !important;
@@ -677,8 +677,18 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
   background:var(--pl-error) !important; color:#FFFFFF !important;
   border-color:var(--pl-error) !important;
 }
+html[data-theme-mode="dark"] .history-action-btn--delete:hover {
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .history-action-btn--delete:hover .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
 .history-action-btn--chevron {
   color:var(--pl-stone); cursor:default;
+}
+html[data-theme-mode="light"] .history-action-btn--chevron {
+  color: var(--pl-ink-2) !important;
 }
 .history-session-card:hover .history-action-btn--chevron {
   color:var(--pl-yellow); border-color:var(--pl-yellow);
@@ -784,27 +794,55 @@ html[data-theme-mode="dark"] .rest-timer-digits {
   color: var(--pl-ink) !important;
 }
 .rest-timer-icon-btn .mud-icon-root {
-  font-size: 26px !important;
-  width: 26px !important;
-  height: 26px !important;
-  color: var(--pl-ink) !important;
-  fill: var(--pl-ink) !important;
+  font-size: 24px !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+.rest-timer-add-btn {
+  color: var(--pl-ok-text) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+.rest-timer-add-btn .mud-icon-root {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+.rest-timer-icon-btn--reset .mud-icon-root {
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
+}
+.rest-timer-icon-btn--skip .mud-icon-root {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn,
 html[data-theme-mode="dark"] .rest-timer-add-btn {
   background: var(--pl-chip) !important;
-  color: var(--pl-yellow) !important;
   border-color: var(--pl-hairline-strong) !important;
   box-shadow: 3px 3px 0 #10111A !important;
+}
+html[data-theme-mode="dark"] .rest-timer-add-btn {
+  color: var(--pl-success-text) !important;
+}
+html[data-theme-mode="dark"] .rest-timer-add-btn .mud-icon-root {
+  color: var(--pl-success-text) !important;
+  fill: var(--pl-success-text) !important;
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn:hover,
 html[data-theme-mode="dark"] .rest-timer-add-btn:hover {
   background: var(--pl-chip-2) !important;
-  color: var(--pl-yellow) !important;
 }
-html[data-theme-mode="dark"] .rest-timer-icon-btn .mud-icon-root {
-  color: var(--pl-yellow) !important;
-  fill: var(--pl-yellow) !important;
+html[data-theme-mode="dark"] .rest-timer-icon-btn--reset .mud-icon-root {
+  color: var(--pl-yellow-text) !important;
+  fill: var(--pl-yellow-text) !important;
+}
+html[data-theme-mode="dark"] .rest-timer-icon-btn--skip .mud-icon-root {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
 }
 .rest-timer-controls .mud-icon-button { width:100% !important; min-width:0 !important; height:48px !important; border-radius:var(--radius) !important; border:1.5px solid var(--pl-ink-border) !important; background: var(--pl-chip) !important; color:var(--pl-ink) !important; box-shadow:2px 2px 0 var(--pl-plate-shadow-color) !important; }
 .rest-timer-controls .mud-icon-button[aria-label*="Pause"] { background:color-mix(in srgb, var(--pl-amber) 25%, var(--pl-chip)) !important; border-color:var(--pl-warn-text) !important; color:var(--pl-ink) !important; }
@@ -1296,11 +1334,18 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
 }
 .dialog-title-icon-box--error {
   background: var(--pl-error) !important;
-  color: #1A1B26 !important;
+  color: #FFFFFF !important;
 }
 .dialog-title-icon-box--error .mud-icon-root {
-  color: #1A1B26 !important;
-  fill: #1A1B26 !important;
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--error {
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--error .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
 }
 
 .plan-sheet-save-btn {
@@ -1411,9 +1456,32 @@ button.plan-card__start,
    the narrowest supported panel (~256px at 320px viewport), hence 11vw max. */
 .rest-timer-display--complete { min-height:clamp(4rem,18vw,5.8rem) !important; display:flex !important; align-items:center; justify-content:center; min-width:0; }
 .rest-timer-complete-content { display:flex; align-items:center; justify-content:center; width:100%; min-width:0; padding:10px 16px; box-sizing:border-box; animation:rest-complete-bounce 350ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-@keyframes rest-complete-bounce { 0%{transform:scale(0.92); opacity:0;} 100%{transform:scale(1); opacity:1;} }
-.rest-timer-complete-icon-box { display:none; }
-.rest-timer-complete-text { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; width:100%; min-width:0; }
+.rest-timer-complete-icon-box {
+  display: inline-grid !important;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--pl-chip-2);
+  border: 1.5px solid var(--pl-ok-text);
+  border-radius: var(--radius);
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
+  margin-right: 12px;
+}
+.rest-timer-complete-icon-box .mud-icon-root {
+  font-size: 26px !important;
+  width: 26px !important;
+  height: 26px !important;
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="dark"] .rest-timer-complete-icon-box {
+  border-color: var(--pl-success-text);
+}
+html[data-theme-mode="dark"] .rest-timer-complete-icon-box .mud-icon-root {
+  color: var(--pl-success-text) !important;
+  fill: var(--pl-success-text) !important;
+}
 .rest-timer-complete-title { font-family:'Departure Mono','JetBrains Mono',monospace; font-size:clamp(26px, 7.8vw, 66px); font-weight:900; letter-spacing:0.015em; line-height:1; color:var(--pl-ok-text); text-align:center; white-space:normal; overflow-wrap:anywhere; max-width:100%; min-width:0; }
 .rest-timer-complete-subtitle { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-stone); text-align:center; max-width:100%; }
 @media (max-width: 360px) {
@@ -1749,8 +1817,8 @@ html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-ha
 .exercise-accordion-card--expanded { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 1px var(--pl-ink) !important; }
 html[data-theme-mode="dark"] .exercise-accordion-card--expanded { border-color:var(--pl-ink) !important; box-shadow:inset 0 0 0 1px var(--pl-ink) !important; }
 .exercise-accordion-header { display:flex; align-items:center; justify-content:space-between; width:100%; padding:10px 12px 6px !important; background:transparent; border:none; cursor:pointer; text-align:left; font:inherit; color:inherit; gap:8px; box-sizing:border-box; min-height:44px !important; }
-.header-left { display:flex !important; align-items:center !important; gap:8px !important; min-width:0 !important; flex:1 !important; padding-left:12px !important; }
-.header-right { display:flex !important; align-items:center !important; gap:6px !important; flex-shrink:0 !important; padding-right:12px !important; }
+.header-left { display:flex !important; align-items:center !important; gap:8px !important; min-width:0 !important; flex:1 !important; padding-left:0 !important; }
+.header-right { display:flex !important; align-items:center !important; gap:6px !important; flex-shrink:0 !important; padding-right:0 !important; }
 .exercise-index-tag {
   display: inline-flex !important;
   align-items: center !important;
@@ -1772,16 +1840,18 @@ html[data-theme-mode="light"] .exercise-index-tag {
   color: #6D28D9 !important;
   background: #E5E7EB !important;
 }
-.completed-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--radius) !important; background:var(--pl-success); color:var(--pl-ink) !important; flex-shrink:0; }
-html[data-theme-mode="dark"] .completed-icon { color:var(--pl-rubber) !important; }
-.completed-icon .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; }
+.completed-icon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:var(--radius) !important; background:var(--pl-success); color:#FFFFFF !important; flex-shrink:0; }
+.completed-icon .mud-icon-root { font-size:16px !important; width:16px !important; height:16px !important; color:#FFFFFF !important; fill:#FFFFFF !important; }
+html[data-theme-mode="dark"] .completed-icon { color:#10111A !important; }
+html[data-theme-mode="dark"] .completed-icon .mud-icon-root { color:#10111A !important; fill:#10111A !important; }
 .exercise-name { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:-0.015em !important; line-height:1.2 !important; color:var(--pl-ink) !important; text-transform:none !important; }
 .workout-superset-badge { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; padding:0 8px; border-radius:var(--radius); background:var(--pl-amber); color:#10111A; box-sizing:border-box; }
 html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .exercise-more-menu .mud-icon-button { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; border:1.5px solid var(--hairline-strong) !important; background:var(--pl-chip-2); color:var(--pl-ink) !important; border-radius:var(--radius) !important; box-sizing:border-box; }
 .exercise-more-menu .mud-icon-button .mud-icon-root { color:var(--pl-ink) !important; fill:var(--pl-ink) !important; }
 .set-progress-pill { display:inline-flex; align-items:center; justify-content:center; height:36px; min-height:36px; padding:0 10px; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap; box-sizing:border-box; }
-.set-progress-pill--completed { background:var(--pl-success) !important; color:#10111A !important; border-color:var(--pl-success) !important; font-weight:800 !important; }
+.set-progress-pill--completed { background:var(--pl-success) !important; color:#FFFFFF !important; border-color:var(--pl-success) !important; font-weight:800 !important; }
+html[data-theme-mode="dark"] .set-progress-pill--completed { color:#10111A !important; }
 .exercise-accordion-card .mud-card-content { padding:0 12px 12px 12px !important; }
 .set-logging-rows { display:flex; flex-direction:column; gap:6px !important; padding-top:0 !important; }
 .set-active-panel { display:flex; flex-direction:column; gap:6px !important; padding:10px 12px !important; background:var(--pl-chip-2); border:1.5px solid var(--hairline-strong); border-radius:var(--radius); position:relative; }
@@ -1885,7 +1955,6 @@ html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .settings-card__header { display:flex; align-items:center; gap:8px; margin-bottom:8px; min-width:0; }
 .settings-card__header .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; color:var(--pl-stone) !important; flex-shrink:0; }
 .settings-card__title { font-family:var(--font-display) !important; font-size:1rem !important; font-weight:800 !important; letter-spacing:0.02em !important; line-height:1.25 !important; margin:0 !important; color:var(--pl-ink); }
-.settings-panel__icon { background:transparent !important; border:none !important; color:var(--pl-stone) !important; }
 
 /* Settings section tabs, premium wrapping segmented control */
 .settings-tab-row { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
@@ -1897,11 +1966,80 @@ html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 
 /* Settings expansion panel headers, title and subtitle as distinct rows */
 .settings-panel__header { display:flex; align-items:center; gap:12px; min-width:0; width:100%; max-width:100%; text-align:left; box-sizing:border-box; }
-.settings-panel__icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; flex-shrink:0; color:var(--pl-stone); }
-.settings-panel__icon .mud-icon-root { font-size:18px !important; width:18px !important; height:18px !important; }
+.settings-panel__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  background: var(--pl-chip-2);
+  border: 1.5px solid var(--pl-hairline-strong);
+  transition: all 120ms ease;
+  color: var(--pl-ink);
+}
+.settings-panel__icon .mud-icon-root {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: inherit !important;
+}
+.settings-panel__icon--appearance { color: var(--pl-purple-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--appearance { color: var(--pl-purple) !important; }
+
+.settings-panel__icon--units { color: var(--pl-cyan-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--units { color: var(--pl-cyan) !important; }
+
+.settings-panel__icon--timer { color: var(--pl-warn-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--timer { color: var(--pl-yellow) !important; }
+
+.settings-panel__icon--profiles { color: var(--pl-cyan-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--profiles { color: var(--pl-cyan) !important; }
+
+.settings-panel__icon--schedule { color: var(--pl-ok-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--schedule { color: var(--pl-success) !important; }
+
+.settings-panel__icon--ai { color: var(--pl-purple-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--ai { color: var(--pl-purple) !important; }
+
+.settings-panel__icon--backup { color: var(--pl-cyan-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--backup { color: var(--pl-plate-blue) !important; }
+
+.settings-panel__icon--update { color: var(--pl-ok-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--update { color: var(--pl-success) !important; }
+
+.settings-panel__icon--account { color: var(--pl-err-text) !important; }
+html[data-theme-mode="dark"] .settings-panel__icon--account { color: var(--pl-error) !important; }
+
+.settings-panel__icon--danger,
+.settings-panel--danger .settings-panel__icon {
+  color: var(--pl-err-text) !important;
+  border-color: color-mix(in srgb, var(--pl-err-text) 45%, var(--pl-hairline-strong)) !important;
+}
+html[data-theme-mode="dark"] .settings-panel__icon--danger,
+html[data-theme-mode="dark"] .settings-panel--danger .settings-panel__icon {
+  color: var(--pl-error) !important;
+}
+
+.settings-card__icon {
+  color: var(--pl-cyan-text) !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0;
+}
+html[data-theme-mode="dark"] .settings-card__icon {
+  color: var(--pl-cyan) !important;
+}
 .settings-panel__text { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; max-width:100%; overflow:hidden; }
 .settings-panel__title { font-family:var(--font-display); font-size:1rem; font-weight:800; letter-spacing:0.02em; text-transform:uppercase; color:var(--pl-ink); line-height:1.2; overflow-wrap:break-word; word-break:break-word; white-space:normal !important; }
 .settings-panel__subtitle { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--pl-stone); line-height:1.35; white-space:normal !important; overflow-wrap:break-word !important; word-break:break-word !important; }
+html[data-theme-mode="light"] .settings-panel__subtitle { color: var(--pl-ink-2); }
+html[data-theme-mode="light"] .settings-tab { color: var(--pl-ink-2); }
+html[data-theme-mode="light"] .settings-schedule-day { color: var(--pl-ink-2); }
+html[data-theme-mode="light"] .app-nav-tab { color: var(--pl-ink-2); }
+html[data-theme-mode="light"] .mud-text-secondary { color: var(--pl-ink-2) !important; }
 .settings-panel__content { display:flex; flex-direction:column; gap:10px; padding-top:6px; min-width:0; max-width:100%; }
 .settings-panels { display:flex; flex-direction:column; gap:8px; width:100%; min-width:0; max-width:100%; }
 .settings-panel.mud-expand-panel { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; overflow:hidden !important; min-width:0; max-width:100%; }
@@ -1946,7 +2084,7 @@ html[data-theme-mode="dark"] .workout-superset-badge { color:var(--pl-rubber); }
 .history-select-bar__btn { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); cursor:pointer; transition:all 120ms ease; }
 .history-select-bar__btn:hover { background:var(--pl-chip-2); border-color:var(--pl-ink); }
 .history-select-bar__btn--delete { color:var(--pl-err-text) !important; border-color:color-mix(in srgb, var(--pl-err-text) 45%, transparent) !important; }
-.history-select-bar__btn--delete:hover:not(:disabled) { background:var(--pl-error) !important; color:#1A1B26 !important; border-color:var(--pl-error) !important; }
+.history-select-bar__btn--delete:hover:not(:disabled) { background:var(--pl-error) !important; color:#FFFFFF !important; border-color:var(--pl-error) !important; }
 .history-select-bar__btn--delete:disabled { opacity:0.4; cursor:not-allowed; }
 .history-select-bar__btn--compare { color:var(--pl-ink) !important; }
 .history-select-bar__btn--compare:disabled { opacity:0.4; cursor:not-allowed; }
@@ -2433,7 +2571,7 @@ html body span.rest-timer-complete-title {
   background: var(--pl-volt-fill);
   color: var(--pl-volt-fg);
   border-radius: var(--radius);
-  margin-left: 8px;
+  margin-left: 0;
 }
 
 #main-content:focus,
@@ -3535,7 +3673,7 @@ html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.ap
 /* All secondary, text, outlined, modal, discard, and icon buttons in light mode must use the tan brutal well (--pl-chip-2 #EDE8D3), never white */
 html[data-theme-mode="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
 html[data-theme-mode="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log),
-html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss),
+html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss):not(.workout-actions__btn--end):not(.ai-bridge-step),
 html[data-theme-mode="light"] .btn-premium-ghost,
 html[data-theme-mode="light"] .premium-btn:not(.premium-btn-filled),
 html[data-theme-mode="light"] .dialog-cancel-btn,
@@ -3547,7 +3685,7 @@ html[data-theme-mode="light"] .workout-transport__btn {
 }
 html[data-theme-mode="light"] .mud-button:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
 html[data-theme-mode="light"] .mud-button-root:not(.mud-button-filled):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.workout-focus__log):hover,
-html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss):hover,
+html[data-theme-mode="light"] button:not(.mud-button-filled):not(.app-fab--primary):not(.settings-tab--active):not(.exercise-metric-tab--active):not(.history-filter-chip--selected):not(.ai-mode-tab--active):not(.home-plans-new-btn):not(.plan-sheet-save-btn):not(.log-set-btn):not(.bodyweight-log-row__log-btn):not(.ai-chat-send-button):not(.home-hero__continue):not(.plan-card__start):not(.history-card-continue-btn):not(.heatmap-cell):not(.workout-focus__log):not(.set-metric-stepper__value):not(.workout-timesup-banner__btn):not(.workout-timesup-banner__dismiss-icon):not(.workout-timesup-banner__dismiss):not(.workout-actions__btn--end):not(.ai-bridge-step):hover,
 html[data-theme-mode="light"] .btn-premium-ghost:hover,
 html[data-theme-mode="light"] .premium-btn:not(.premium-btn-filled):hover,
 html[data-theme-mode="light"] .dialog-cancel-btn:hover,
@@ -3571,35 +3709,141 @@ html[data-theme-mode="light"] .app-fab--secondary:hover {
 html[data-theme-mode="light"] .app-fab--secondary:hover .mud-icon-root {
   color: var(--pl-yellow-text) !important;
 }
-/* Empty state display icons in light mode: bold volt plate with solid black outline */
+/* Empty state display icons: bold brutalist plate with high-contrast colored icon */
 html[data-theme-mode="light"] .empty-state-icon-box {
-  background: var(--pl-volt-fill) !important;
-  border: 2px solid #10111A !important;
-  box-shadow: 4px 4px 0 #10111A !important;
-  color: #10111A !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+  color: var(--pl-cyan-text) !important;
 }
 html[data-theme-mode="light"] .empty-state-icon {
-  color: #10111A !important;
-  fill: #10111A !important;
-  stroke: #10111A !important;
-  stroke-width: 0.5px !important;
-  filter: drop-shadow(1px 1px 0px rgba(16, 17, 26, 0.4));
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
+  stroke: none !important;
+  filter: none !important;
 }
-/* Ensure no standalone primary icons wash out on light theme */
-html[data-theme-mode="light"] .mud-icon-color-primary:not(.mud-button-filled-primary *):not(.app-fab--primary *):not(.empty-state-icon) {
-  color: var(--pl-ink) !important;
-  fill: var(--pl-ink) !important;
+
+/* ==================================================================
+   SEMANTIC ICON COLORS - Purposeful palette with WCAG AA (>= 4.5:1)
+   contrast in both Dark and Light themes. Never flatten to plain ink.
+   ================================================================== */
+.mud-icon-color-primary:not(.mud-button-filled-primary *):not(.app-fab--primary *):not(.empty-state-icon) {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
 }
-html[data-theme-mode="light"] .onboarding-tip__icon {
-  color: var(--pl-ink) !important;
-  fill: var(--pl-ink) !important;
+html[data-theme-mode="dark"] .mud-icon-color-primary:not(.mud-button-filled-primary *):not(.app-fab--primary *):not(.empty-state-icon) {
+  color: var(--pl-cyan) !important;
+  fill: var(--pl-cyan) !important;
+}
+
+.mud-icon-color-secondary:not(.mud-button-filled-secondary *):not(.app-fab--secondary *) {
+  color: var(--pl-purple-text) !important;
+  fill: var(--pl-purple-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-color-secondary:not(.mud-button-filled-secondary *):not(.app-fab--secondary *) {
+  color: var(--pl-purple) !important;
+  fill: var(--pl-purple) !important;
+}
+
+.mud-icon-color-info:not(.mud-button-filled-info *) {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-color-info:not(.mud-button-filled-info *) {
+  color: var(--pl-cyan) !important;
+  fill: var(--pl-cyan) !important;
+}
+
+.mud-icon-color-warning:not(.mud-button-filled-warning *) {
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-color-warning:not(.mud-button-filled-warning *) {
+  color: var(--pl-yellow) !important;
+  fill: var(--pl-yellow) !important;
+}
+
+.mud-icon-color-success:not(.mud-button-filled-success *) {
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-color-success:not(.mud-button-filled-success *) {
+  color: var(--pl-success) !important;
+  fill: var(--pl-success) !important;
+}
+
+.mud-icon-color-error:not(.mud-button-filled-error *) {
+  color: var(--pl-err-text) !important;
+  fill: var(--pl-err-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-color-error:not(.mud-button-filled-error *) {
+  color: var(--pl-error) !important;
+  fill: var(--pl-error) !important;
+}
+
+/* Standalone icon buttons with semantic colors */
+.mud-icon-button-color-primary:not(.mud-button-filled):not(.plan-card__start) {
+  color: var(--pl-cyan-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-primary:not(.mud-button-filled):not(.plan-card__start) {
+  color: var(--pl-cyan) !important;
+}
+.mud-icon-button-color-secondary:not(.mud-button-filled) {
+  color: var(--pl-purple-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-secondary:not(.mud-button-filled) {
+  color: var(--pl-purple) !important;
+}
+.mud-icon-button-color-info:not(.mud-button-filled) {
+  color: var(--pl-cyan-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-info:not(.mud-button-filled) {
+  color: var(--pl-cyan) !important;
+}
+.mud-icon-button-color-warning:not(.mud-button-filled) {
+  color: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-warning:not(.mud-button-filled) {
+  color: var(--pl-yellow) !important;
+}
+.mud-icon-button-color-success:not(.mud-button-filled) {
+  color: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-success:not(.mud-button-filled) {
+  color: var(--pl-success) !important;
+}
+.mud-icon-button-color-error:not(.mud-button-filled) {
+  color: var(--pl-err-text) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button-color-error:not(.mud-button-filled) {
+  color: var(--pl-error) !important;
+}
+
+/* Onboarding Tips Icon Colors */
+.onboarding-tip__icon {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
+}
+html[data-theme-mode="dark"] .onboarding-tip__icon {
+  color: var(--pl-cyan) !important;
+  fill: var(--pl-cyan) !important;
+}
+.onboarding-tip--warning .mud-icon-root {
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="dark"] .onboarding-tip--warning .mud-icon-root {
+  color: var(--pl-yellow) !important;
+  fill: var(--pl-yellow) !important;
 }
 html[data-theme-mode="light"] .settings-tab,
 html[data-theme-mode="light"] .exercise-metric-tab,
+html[data-theme-mode="light"] .ai-mode-tab,
 html[data-theme-mode="light"] .ai-quick-btn,
 html[data-theme-mode="light"] .history-filter-chip,
 html[data-theme-mode="light"] .progress-exercise-card {
   background: var(--pl-chip-2) !important;
+  color: var(--pl-ink-2) !important;
   border: 1.5px solid var(--pl-hairline-strong) !important;
   box-shadow: none !important;
 }
@@ -3608,9 +3852,17 @@ html[data-theme-mode="light"] .exercise-metric-tab--active,
 html[data-theme-mode="light"] .history-filter-chip--selected,
 html[data-theme-mode="light"] .ai-mode-tab--active {
   background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
   font-weight: 900 !important;
+}
+html[data-theme-mode="light"] .settings-tab--active .mud-icon-root,
+html[data-theme-mode="light"] .exercise-metric-tab--active .mud-icon-root,
+html[data-theme-mode="light"] .history-filter-chip--selected .mud-icon-root,
+html[data-theme-mode="light"] .ai-mode-tab--active .mud-icon-root {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
 }
 html[data-theme-mode="light"] .settings-tab:hover,
 html[data-theme-mode="light"] .exercise-metric-tab:hover,
@@ -3633,11 +3885,6 @@ html[data-theme-mode="light"] .history-session-card,
 html[data-theme-mode="light"] .plan-card.mud-card,
 html[data-theme-mode="light"] .exercise-accordion-card {
   border-color: var(--pl-hairline-strong) !important;
-}
-html[data-theme-mode="light"] .home-plans-header__title {
-  background: #FFFFFF !important;
-  border: 1.5px solid var(--pl-ink-border) !important;
-  border-left: 5px solid var(--pl-volt-fill) !important;
 }
 
 /* Copy Share and PR buttons: Text variant premium plates were missing the machined shadow. All premium-btn and related table buttons now carry the same plate. */
@@ -3895,20 +4142,20 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
 .home-plans-header__title {
   display: inline-flex !important;
   align-items: center !important;
-  padding: 7px 12px !important;
-  background: var(--pl-chip) !important;
+  padding: 0 !important;
+  background: transparent !important;
   background-image: none !important;
-  border: 1.5px solid var(--pl-hairline-strong) !important;
-  border-left: 4px solid var(--pl-volt-fill) !important;
-  border-radius: var(--radius) !important;
+  border: none !important;
+  border-left: none !important;
+  border-radius: 0 !important;
+  font-family: var(--font-display) !important;
   font-size: 18px !important;
-  font-weight: 900 !important;
+  font-weight: 800 !important;
   letter-spacing: 0.04em !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   color: var(--pl-ink) !important;
-  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
-  margin-bottom: 6px !important;
-  margin-right: 6px !important;
+  box-shadow: none !important;
+  margin: 0 !important;
 }
 /* Diagram and section plates: give the shadow room to breathe */
 .bodyweight-panel__title,
@@ -4471,7 +4718,10 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
 .workout-hud__dot--done {
   background: var(--pl-success);
   border-color: var(--pl-success);
-  color: #10111A;
+  color: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .workout-hud__dot--done {
+  color: #10111A !important;
 }
 .workout-hud__dot--active {
   background: var(--pl-volt-fill);
@@ -4543,8 +4793,8 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   gap: 10px;
   padding: 12px 14px;
   background: var(--pl-volt-fill);
-  border-bottom: 2px solid #10111A;
-  color: #10111A;
+  border-bottom: 2px solid var(--pl-volt-edge);
+  color: var(--pl-volt-fg);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.5), 0 3px 0 rgba(16, 17, 26, 0.25);
   animation: timesup-banner-slide 220ms cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -4573,8 +4823,8 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   place-items: center;
   width: 36px;
   height: 36px;
-  background: #10111A;
-  border: 1.5px solid #10111A;
+  background: var(--pl-volt-fg);
+  border: 1.5px solid var(--pl-volt-fg);
   border-radius: var(--radius);
   flex-shrink: 0;
   box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.35);
@@ -4583,8 +4833,8 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   font-size: 22px !important;
   width: 22px !important;
   height: 22px !important;
-  color: var(--pl-yellow) !important;
-  fill: #FAFF00 !important;
+  color: var(--pl-volt-fill) !important;
+  fill: var(--pl-volt-fill) !important;
 }
 .workout-timesup-banner__text {
   display: flex;
@@ -4605,7 +4855,7 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #10111A;
+  color: var(--pl-volt-fg) !important;
   line-height: 1;
 }
 .workout-timesup-banner__set-badge {
@@ -4614,10 +4864,10 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   font-weight: 900 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
-  background: #10111A !important;
-  color: var(--pl-yellow) !important;
+  background: var(--pl-volt-fg) !important;
+  color: var(--pl-volt-fill) !important;
   padding: 4px 10px !important;
-  border: 1.5px solid #10111A !important;
+  border: 1.5px solid var(--pl-volt-fg) !important;
   border-radius: var(--radius);
   line-height: 1.1;
   box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.4) !important;
@@ -4630,13 +4880,13 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #10111A;
+  color: var(--pl-volt-fg) !important;
   line-height: 1.1;
   word-break: break-word;
 }
 .workout-timesup-banner__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
   width: 100%;
 }
@@ -4645,39 +4895,59 @@ html[data-theme-mode="dark"] .workout-hud__stat--sets .workout-hud__value { colo
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 38px;
-  padding: 0 10px;
+  min-height: 40px;
+  padding: 0 12px;
   background: #10111A !important;
-  color: var(--pl-yellow) !important;
+  color: #FFFFFF !important;
   border: 1.5px solid #10111A !important;
   border-radius: var(--radius);
   cursor: pointer;
   font-family: var(--font-mono) !important;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.4) !important;
   transition: transform 90ms ease, background 120ms ease;
 }
+.workout-timesup-banner__btn span {
+  color: #FFFFFF !important;
+  font-weight: 900 !important;
+}
+.workout-timesup-banner__btn .mud-icon-root {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.workout-timesup-banner__btn--add .mud-icon-root {
+  color: #00E5FF !important;
+  fill: #00E5FF !important;
+}
+.workout-timesup-banner__btn--reset .mud-icon-root {
+  color: #FAFF00 !important;
+  fill: #FAFF00 !important;
+}
+.workout-timesup-banner__btn--ready .mud-icon-root {
+  color: #A3E635 !important;
+  fill: #A3E635 !important;
+}
 .workout-timesup-banner__btn:hover {
-  background: #252836 !important;
+  background: #24283B !important;
+  color: #FFFFFF !important;
+  border-color: #24283B !important;
+}
+.workout-timesup-banner__btn:hover span {
+  color: #FFFFFF !important;
 }
 .workout-timesup-banner__btn:active {
   transform: translate(1px, 1px);
   box-shadow: none !important;
 }
-.workout-timesup-banner__btn .mud-icon-root {
-  font-size: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
-  color: var(--pl-yellow) !important;
-  fill: #FAFF00 !important;
-}
 .workout-timesup-banner__btn--ready {
   background: #10111A !important;
-  color: var(--pl-yellow) !important;
+  color: #FFFFFF !important;
   border-color: #10111A !important;
+  font-weight: 900 !important;
 }
 @media (max-width: 380px) {
   .workout-timesup-banner {
@@ -4855,8 +5125,11 @@ html[data-theme-mode="dark"] .workout-focus__badge--set {
 }
 .workout-focus__pill--done {
   background: var(--pl-success) !important;
-  border-color: #10111A !important;
+  border-color: var(--pl-success) !important;
   color: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .workout-focus__pill--done {
+  color: #10111A !important;
 }
 .workout-focus__menu-btn {
   width: 36px;
@@ -4921,8 +5194,11 @@ html[data-theme-mode="light"] .workout-focus__name {
 .workout-focus__dot--warmup { border-style: dashed; }
 .workout-focus__dot--done {
   background: var(--pl-success);
-  border-color: #10111A;
+  border-color: var(--pl-success);
   color: #FFFFFF;
+}
+html[data-theme-mode="dark"] .workout-focus__dot--done {
+  color: #10111A;
 }
 .workout-focus__dot--active {
   background: var(--pl-volt-fill);
@@ -5471,9 +5747,9 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next {
   font-weight: 900 !important;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #10111A !important;
-  background: #FAFF00 !important;
-  border: 1.5px solid #10111A !important;
+  color: var(--pl-volt-fg) !important;
+  background: var(--pl-volt-fill) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
   padding: 3px 10px;
   border-radius: var(--radius);
@@ -5808,10 +6084,13 @@ html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-ic
   display: inline-grid;
   place-items: center;
   background: var(--pl-success);
-  color: #10111A;
+  color: #FFFFFF !important;
   font-size: 11px;
   font-weight: 900;
   border: 1px solid var(--pl-success);
+}
+html[data-theme-mode="dark"] .workout-completed-rail__check {
+  color: #10111A !important;
 }
 .workout-completed-rail__summary-right {
   display: inline-flex;
@@ -5823,6 +6102,9 @@ html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-ic
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--pl-stone);
+}
+html[data-theme-mode="light"] .workout-completed-rail__summary-right {
+  color: var(--pl-ink-2);
 }
 .workout-completed-rail__icon {
   transition: transform 180ms ease;
@@ -5879,11 +6161,14 @@ html[data-theme-mode="dark"] .workout-completed-rail__item-num { color: var(--pl
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 800;
-  color: var(--pl-ink);
+  color: #FFFFFF !important;
   background: var(--pl-success);
   border: 1px solid var(--pl-success);
   padding: 2px 6px;
   white-space: nowrap;
+}
+html[data-theme-mode="dark"] .workout-completed-rail__item-meta {
+  color: #10111A !important;
 }
 .workout-completed-rail__item-chevron .mud-icon-root {
   font-size: 16px !important;
@@ -5958,13 +6243,16 @@ html[data-theme-mode="dark"] .workout-actions__btn--discard:hover { color: #1011
   display: inline-flex;
   padding: 4px 10px;
   background: var(--pl-success);
-  color: #10111A;
+  color: #FFFFFF !important;
   border: 1.5px solid var(--pl-success);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+html[data-theme-mode="dark"] .workout-done__plate {
+  color: #10111A !important;
 }
 .workout-done__title {
   margin: 0;
@@ -6267,7 +6555,18 @@ html[data-theme-mode="light"] .workout-actions__btn--discard {
   color: var(--pl-err-text) !important;
 }
 html[data-theme-mode="light"] .workout-actions__btn--end {
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+html[data-theme-mode="light"] .workout-actions__btn--end .mud-icon-root {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
+}
+html[data-theme-mode="light"] .workout-actions__btn--end:hover {
+  background: var(--pl-volt-fill) !important;
+  filter: brightness(1.08) !important;
 }
 html[data-theme-mode="light"] .app-nav-pill__inner {
   background: var(--pl-chip) !important;
@@ -6474,6 +6773,268 @@ html[data-theme-mode="dark"] .theme-option--active { border-color:var(--pl-yello
 .theme-option__text { font-family:var(--font-display); font-size:11px; font-weight:800; margin-left:auto; }
 .theme-option__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; color:var(--pl-ink); line-height:1.2; }
 .theme-option__group { font-family:var(--font-mono); font-size:0.625rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-stone); margin-top:-4px; }
+
+/* Dialog actions & onboarding contrast */
+html[data-theme-mode="light"] .mud-dialog-actions {
+  border-top: 1.5px solid var(--pl-ink-border) !important;
+}
+.mud-dialog-actions .mud-button-text {
+  color: var(--pl-ink) !important;
+}
+html[data-theme-mode="light"] .rest-timer-complete-subtitle {
+  color: var(--pl-ink-2) !important;
+}
+.onboarding-tip {
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border-radius: var(--radius) !important;
+}
+.onboarding-tip--warning {
+  border-color: var(--pl-amber) !important;
+  background: color-mix(in srgb, var(--pl-amber) 10%, var(--pl-chip)) !important;
+}
+
+/* ==================================================================
+   SKELETON SCREENS & LOADING PLACEHOLDERS
+   Brutalist plate shimmer with zero radius, crisp hairline borders,
+   and high contrast in both dark and light modes.
+   ================================================================== */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-block {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--pl-chip) 0%,
+    var(--pl-chip-2) 50%,
+    var(--pl-chip) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border: 1.5px solid var(--pl-hairline-strong);
+  border-radius: var(--radius) !important;
+  box-sizing: border-box;
+}
+
+html[data-theme-mode="light"] .skeleton-block {
+  background: linear-gradient(
+    90deg,
+    var(--pl-chip) 0%,
+    color-mix(in srgb, var(--pl-ink) 12%, var(--pl-chip)) 50%,
+    var(--pl-chip) 100%
+  );
+  background-size: 200% 100%;
+  border: 1.5px solid var(--pl-ink-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block {
+    animation: none !important;
+  }
+}
+
+/* Skeleton Layout Containers */
+.home-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.home-skeleton__overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.home-skeleton__hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--pl-chip);
+  border: 1.5px solid var(--pl-hairline-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--pl-plate-shadow-md);
+}
+html[data-theme-mode="light"] .home-skeleton__hero {
+  border-color: var(--pl-ink-border);
+}
+.home-skeleton__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.home-skeleton__plans {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workout-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.workout-skeleton__top {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.workout-skeleton__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.workout-skeleton__exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.history-skeleton__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 600px) {
+  .history-skeleton__stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.history-skeleton__sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.detail-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--pl-chip);
+  border: 1.5px solid var(--pl-hairline-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--pl-plate-shadow-md);
+}
+html[data-theme-mode="light"] .detail-skeleton__card {
+  border-color: var(--pl-ink-border);
+}
+.detail-skeleton__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 600px) {
+  .detail-skeleton__stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Tab semantic icon accents & high contrast in both themes */
+.settings-tab:not(.settings-tab--active) .settings-tab__icon--general {
+  color: var(--pl-yellow-text) !important;
+  fill: var(--pl-yellow-text) !important;
+}
+html[data-theme-mode="dark"] .settings-tab:not(.settings-tab--active) .settings-tab__icon--general {
+  color: var(--pl-yellow) !important;
+  fill: var(--pl-yellow) !important;
+}
+.settings-tab:not(.settings-tab--active) .settings-tab__icon--ai {
+  color: var(--pl-purple-text) !important;
+  fill: var(--pl-purple-text) !important;
+}
+html[data-theme-mode="dark"] .settings-tab:not(.settings-tab--active) .settings-tab__icon--ai {
+  color: var(--pl-purple) !important;
+  fill: var(--pl-purple) !important;
+}
+.settings-tab:not(.settings-tab--active) .settings-tab__icon--data {
+  color: var(--pl-cyan-text) !important;
+  fill: var(--pl-cyan-text) !important;
+}
+html[data-theme-mode="dark"] .settings-tab:not(.settings-tab--active) .settings-tab__icon--data {
+  color: var(--pl-cyan) !important;
+  fill: var(--pl-cyan) !important;
+}
+.settings-tab:not(.settings-tab--active) .settings-tab__icon--about {
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="dark"] .settings-tab:not(.settings-tab--active) .settings-tab__icon--about {
+  color: var(--pl-success-text) !important;
+  fill: var(--pl-success-text) !important;
+}
+.settings-tab--active .settings-tab__icon {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
+}
+
+/* AI Mode Tabs inactive icon color */
+.ai-mode-tab:not(.ai-mode-tab--active) .mud-icon-root {
+  color: var(--pl-purple-text) !important;
+  fill: var(--pl-purple-text) !important;
+}
+html[data-theme-mode="dark"] .ai-mode-tab:not(.ai-mode-tab--active) .mud-icon-root {
+  color: var(--pl-purple) !important;
+  fill: var(--pl-purple) !important;
+}
+.ai-mode-tab--active .mud-icon-root {
+  color: var(--pl-volt-fg) !important;
+  fill: var(--pl-volt-fg) !important;
+}
+
+/* Dialog icon boxes: crisp brutalist outline & shadow */
+.dialog-title-icon-box {
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme-mode="light"] .dialog-title-icon-box {
+  border: 1.5px solid var(--pl-ink-border) !important;
+}
+
+/* Dialog actions contrast */
+html[data-theme-mode="light"] .dialog-cancel-btn {
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-ink) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+}
+html[data-theme-mode="light"] .dialog-confirm-btn {
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+
+/* Workout skeleton container plates */
+.workout-skeleton__top,
+.workout-skeleton__exercise {
+  background: var(--pl-chip);
+  border: 1.5px solid var(--pl-hairline-strong);
+  box-shadow: var(--pl-plate-shadow-sm);
+  padding: 12px;
+}
+html[data-theme-mode="light"] .workout-skeleton__top,
+html[data-theme-mode="light"] .workout-skeleton__exercise {
+  border-color: var(--pl-ink-border);
+}
 
 /* Final override: autocomplete dropdown toggle must be borderless and not clip - must be last to win */
 #app .mud-autocomplete .mud-input-adornment .mud-icon-button.mud-input-adornment-icon-button,

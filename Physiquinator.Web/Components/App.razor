@@ -21,12 +21,14 @@
     <script src="js/app-boot.js"></script>
     <style>
         /* Pre-CSS paint colors match the Tokyo Night tokens in app-overrides.css. */
+        html[data-theme-mode="dark"] body,
         html[data-theme="dark"] body {
             background-color: #0E0F17 !important;
             color: #C0CAF5;
         }
+        html[data-theme-mode="light"] body,
         html[data-theme="light"] body {
-            background-color: #D5D6DB !important;
+            background-color: #E7E3D1 !important;
             color: #1A1B26;
         }
         /* Startup splash - void #0E0F17 with volt plate centered: matches native MauiSplashScreen
@@ -59,6 +61,7 @@
             height: min(68vmin, 320px);
             display: block;
         }
+        html[data-theme-mode="light"] .app-splash,
         html[data-theme="light"] .app-splash {
             background-color: #E7E3D1;
             color: #1A1B26;

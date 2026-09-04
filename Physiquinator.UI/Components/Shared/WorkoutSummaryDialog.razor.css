@@ -82,7 +82,7 @@
 }
 
 .wsd__stat-value--duration {
-    color: var(--pl-yellow);
+    color: var(--pl-yellow-text);
     background: color-mix(in srgb, var(--pl-yellow) 12%, transparent);
 }
 
@@ -183,4 +183,11 @@
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     color: var(--pl-stone);
+}
+
+html[data-theme-mode="light"] .wsd__title-plan,
+html[data-theme-mode="light"] .wsd__prs-overline,
+html[data-theme-mode="light"] .wsd__pr-detail,
+html[data-theme-mode="light"] .wsd__no-prs {
+    color: var(--pl-ink-2);
 }

@@ -54,7 +54,10 @@
             <button type="button"
                     class="rest-timer-add-btn"
                     aria-label="@(string.Format("Add {0} seconds of rest", AddRestSeconds))"
-                    @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">+@AddTimeLabel</button>
+                    @onclick="() => OnAddTime.InvokeAsync(AddRestSeconds)">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="rest-timer-add-btn__icon" />
+                <span>@AddTimeLabel</span>
+            </button>
             <button type="button"
                     class="rest-timer-icon-btn rest-timer-icon-btn--reset"
                     aria-label="@("Reset rest")"

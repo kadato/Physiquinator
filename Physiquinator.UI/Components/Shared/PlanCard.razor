@@ -27,10 +27,15 @@
                     <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
                 </button>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Size="Size.Small"
                                Class="plan-card-icon-btn"
                                aria-label="@(string.Format("Edit {0}", PlanName))"
                                OnClick="OnEdit" />
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="plan-card-icon-btn" Dense="true" AriaLabel="@("Plan options")">
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                         Size="Size.Small"
+                         Class="plan-card-icon-btn"
+                         Dense="true"
+                         AriaLabel="@("Plan options")">
                     <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
                                  Disabled="@(!CanMoveUp)"
                                  OnClick="OnMoveUp">Move up</MudMenuItem>

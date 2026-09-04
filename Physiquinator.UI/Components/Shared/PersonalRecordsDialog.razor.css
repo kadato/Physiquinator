@@ -103,3 +103,8 @@
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
 }
+
+html[data-theme-mode="light"] .pr-dialog-row__date,
+html[data-theme-mode="light"] .pr-dialog-row__chevron {
+    color: var(--pl-ink-2) !important;
+}

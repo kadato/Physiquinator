@@ -238,6 +238,14 @@ else
         if (path == "history" || path == "settings")
             return false;
 
+        // AI Assistant page: provides its own header back button to avoid overlapping the chat composer.
+        if (path == "ai" || path == "assistant")
+            return false;
+
+        // History detail and progress subpages: provide their own header back button in PageHeader.
+        if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal) || path == "history/bodyweight")
+            return false;
+
         // Exclude plan editor route which has its own Close/Cancel and Save FABs
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))
             return false;
@@ -247,7 +255,7 @@ else
         if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal))
             return false;
 
-        return true;
+        return false;
     }
 
     private async Task GoBack()

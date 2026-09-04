@@ -43,3 +43,35 @@
 		max-width: 100%;
 	}
 }
+
+.ai-header-btn {
+	width: 44px;
+	height: 44px;
+	min-width: 44px;
+	min-height: 44px;
+	border-radius: var(--radius);
+	border: var(--hairline-strong);
+	background: var(--pl-chip-2);
+	color: var(--pl-ink);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	padding: 0;
+	transition: all 120ms ease;
+	box-sizing: border-box;
+}
+.ai-header-btn:hover {
+	background: var(--pl-chip);
+	border-color: var(--pl-yellow);
+	color: var(--pl-yellow);
+}
+.ai-header-btn:active {
+	transform: scale(0.96);
+}
+.ai-header-btn .mud-icon-root {
+	font-size: 18px !important;
+	width: 18px !important;
+	height: 18px !important;
+	color: inherit;
+}

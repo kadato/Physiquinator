@@ -15,7 +15,7 @@
 
 <PageTitle>@("Session")</PageTitle>
 
-<PageHeader Title="@("Session")">
+<PageHeader Title="@("Session")" ShowBackButton="true">
     @if (_ready && _session != null)
     {
         <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="premium-btn" OnClick="CopySessionAsync" aria-label="@("Copy session")" />

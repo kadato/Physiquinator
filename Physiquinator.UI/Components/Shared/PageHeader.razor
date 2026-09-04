@@ -1,5 +1,16 @@
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
 <div class="@($"page-header mb-3 {Class}".Trim())">
-    <MudText Typo="Typo.h1" Class="@($"page-header__title {TitleClass}".Trim())">@Title</MudText>
+    <div class="page-header__title-group d-inline-flex align-center gap-2">
+        @if (ShowBackButton)
+        {
+            <button type="button" class="page-header__back-btn" aria-label="@("Go back")" @onclick="HandleBack">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            </button>
+        }
+        <MudText Typo="Typo.h1" Class="@($"page-header__title {TitleClass}".Trim())">@Title</MudText>
+    </div>
     @if (ChildContent != null)
     {
         <div class="page-header__actions d-flex align-center gap-1">@ChildContent</div>
@@ -17,5 +28,30 @@
     public string? TitleClass { get; set; }
 
     [Parameter]
+    public bool ShowBackButton { get; set; }
+
+    [Parameter]
+    public EventCallback OnBack { get; set; }
+
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private async Task HandleBack()
+    {
+        if (OnBack.HasDelegate)
+        {
+            await OnBack.InvokeAsync();
+        }
+        else
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
+            }
+            catch
+            {
+                Navigation.NavigateTo(AppRoutes.Home);
+            }
+        }
+    }
 }

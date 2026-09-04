@@ -74,6 +74,8 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
   background: transparent;
 }
 .app-page-container { padding-left: var(--page-x) !important; padding-right: var(--page-x) !important; padding-top: 16px !important; padding-bottom: 24px !important; max-width: var(--page-max) !important; margin-inline:auto !important; }
+.app-shell:not(.app-shell--immersive) .app-page-container { padding-bottom: calc(var(--app-nav-pill-bottom, 12px) + var(--app-nav-pill-height, 56px) + 28px) !important; }
+.app-shell--fixed-dock .app-page-container { padding-bottom: calc(var(--app-fab-bottom, 80px) + 24px) !important; }
 .mud-icon-root { user-select:none; width:1em; height:1em; display:inline-block; fill:currentColor; flex-shrink:0; }
 .mud-icon-root.mud-svg-icon { width:1em; height:1em; }
 .mud-icon-button { display:inline-flex !important; align-items:center !important; justify-content:center !important; width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; padding:0 !important; border-radius:var(--radius) !important; font-size:1.25rem !important; color:inherit; background:var(--pl-chip-2); border:1.5px solid var(--hairline-strong); transition:transform 100ms ease, background 120ms ease; }
@@ -458,11 +460,11 @@ h1:focus-visible,
 @keyframes fab-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
 .home-page { display:flex; flex-direction:column; gap:16px; }
 .app-fab-page-padding {
-  padding-bottom: 72px !important;
+  padding-bottom: 96px !important;
 }
 @media (min-width: 769px) {
   .app-fab-page-padding {
-    padding-bottom: 32px !important;
+    padding-bottom: 48px !important;
   }
 }
 .home-header { margin-bottom:0 !important; }
@@ -488,7 +490,7 @@ h1:focus-visible,
 .home-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; }
 .stat-card.mud-paper { display:grid; grid-template-rows:1fr 32px; gap:0; min-height:88px; padding:0 !important; border:1.5px solid var(--pl-hairline-strong) !important; border-radius:var(--radius); background:var(--pl-chip); overflow:hidden; position:relative; transition:border-color 150ms ease; }
 .stat-card.mud-paper:hover { border-color:var(--pl-yellow) !important; }
-.stat-card__value { display:grid; place-items:center; place-content:center; text-align:center; padding:4px 6px; font-family:var(--font-display); font-weight:800; line-height:1.1; letter-spacing:0.02em; font-variant-numeric:tabular-nums; color:var(--pl-ink); white-space:normal; overflow-wrap:anywhere; font-size:1.375rem; min-height:0; }
+.stat-card__value { display:grid; place-items:center; place-content:center; text-align:center; padding:4px 6px; font-family:var(--font-display); font-weight:800; line-height:1.1; letter-spacing:0.02em; font-variant-numeric:tabular-nums; color:var(--pl-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(1rem, 3.8vw, 1.375rem); min-height:0; }
 .stat-card:nth-child(1) .stat-card__value { color:var(--pl-yellow); background:color-mix(in srgb, var(--pl-yellow) 12%, transparent); }
 .stat-card:nth-child(2) .stat-card__value { color:var(--pl-cyan-text); background:color-mix(in srgb, var(--pl-cyan) 12%, transparent); }
 .stat-card:nth-child(3) .stat-card__value { color:var(--pl-purple-text); background:color-mix(in srgb, var(--pl-purple) 12%, transparent); }
@@ -601,6 +603,9 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 /* Three-tile rows (bodyweight, exercise progress, session detail) use 3 columns without orphan cqi */
 .history-stats:has(.stat-card:nth-child(3):last-child) { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .history-stats:has(.stat-card:nth-child(3):last-child) .stat-card__value { font-size:1.375rem; }
+@media (max-width: 480px) {
+  .history-stats:has(.stat-card:nth-child(3):last-child) .stat-card__value { font-size: 0.8125rem !important; padding: 4px 2px !important; }
+}
 .history-stats .stat-card.mud-paper { min-height:76px; }
 .history-session-list { display:flex; flex-direction:column; gap:10px; width:100%; }
 .history-session-card {
@@ -1963,6 +1968,26 @@ html[data-theme-mode="dark"] .set-progress-pill--completed { color:#10111A !impo
 .settings-tab:hover { border-color:var(--pl-hairline-strong); color:var(--pl-ink); background:var(--pl-chip-2); }
 .settings-tab--active, .settings-tab--active:hover { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border-color:var(--pl-ink) !important; font-weight:900 !important; box-shadow: var(--pl-plate-shadow-sm) !important; }
 .settings-tab:focus-visible { outline:2px solid var(--pl-focus); outline-offset:-2px; }
+
+@media (max-width: 480px) {
+  .settings-tab-row {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+  .settings-tab {
+    flex: none !important;
+    min-width: 0 !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
+    font-size: 0.625rem !important;
+  }
+  .settings-tab .mud-icon-root {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
 
 /* Settings expansion panel headers, title and subtitle as distinct rows */
 .settings-panel__header { display:flex; align-items:center; gap:12px; min-width:0; width:100%; max-width:100%; text-align:left; box-sizing:border-box; }

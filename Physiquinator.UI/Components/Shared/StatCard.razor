@@ -13,8 +13,6 @@
     [Parameter]
     public string? ValueClass { get; set; }
 
-    // Formatters glue units to numbers with a no-break space ("9,002 kg").
-    // Inside a narrow centered card that forces a mid-unit break, so the
-    // card wraps at the space instead.
-    private string DisplayValue => Value.Replace("\u00A0", " ");
+    // Keep numbers and units grouped so digits never wrap mid-number
+    private string DisplayValue => Value;
 }

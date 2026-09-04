@@ -17,23 +17,31 @@
 
 <div class="ai-chat-view @(IsDialog ? "ai-chat-view--dialog" : "ai-chat-view--page")">
 	<div class="ai-chat-view__header">
-		<div class="ai-mode-tabs" role="tablist">
-			<button type="button"
-					role="tab"
-					aria-selected="@(_activeTab == 0 ? "true" : "false")"
-					class="ai-mode-tab @(_activeTab == 0 ? "ai-mode-tab--active" : "")"
-					@onclick="@(() => SetTab(0))">
-				<MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" />
-				<span>@("Chat")</span>
-			</button>
-			<button type="button"
-					role="tab"
-					aria-selected="@(_activeTab == 1 ? "true" : "false")"
-					class="ai-mode-tab @(_activeTab == 1 ? "ai-mode-tab--active" : "")"
-					@onclick="@(() => SetTab(1))">
-				<MudIcon Icon="@Icons.Material.Filled.ContentPaste" Size="Size.Small" />
-				<span>@("Clipboard")</span>
-			</button>
+		<div class="d-inline-flex align-center gap-2">
+			@if (!IsDialog)
+			{
+				<button type="button" class="ai-header-btn ai-header-btn--back" aria-label="@("Go back")" @onclick="GoBack">
+					<MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+				</button>
+			}
+			<div class="ai-mode-tabs" role="tablist">
+				<button type="button"
+						role="tab"
+						aria-selected="@(_activeTab == 0 ? "true" : "false")"
+						class="ai-mode-tab @(_activeTab == 0 ? "ai-mode-tab--active" : "")"
+						@onclick="@(() => SetTab(0))">
+					<MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" />
+					<span>@("Chat")</span>
+				</button>
+				<button type="button"
+						role="tab"
+						aria-selected="@(_activeTab == 1 ? "true" : "false")"
+						class="ai-mode-tab @(_activeTab == 1 ? "ai-mode-tab--active" : "")"
+						@onclick="@(() => SetTab(1))">
+					<MudIcon Icon="@Icons.Material.Filled.ContentPaste" Size="Size.Small" />
+					<span>@("Clipboard")</span>
+				</button>
+			</div>
 		</div>
 
 		<div class="ai-chat-view__header-actions">
@@ -1282,6 +1290,18 @@
 		if (!action.IsValid) return "ai-bridge-action-card--invalid";
 		if (action.IsDestructive) return "ai-bridge-action-card--warn";
 		return "ai-bridge-action-card--valid";
+	}
+
+	private async Task GoBack()
+	{
+		try
+		{
+			await JS.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
+		}
+		catch
+		{
+			Navigation.NavigateTo(AppRoutes.Home);
+		}
 	}
 
 	public void Dispose()

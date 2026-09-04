@@ -11,6 +11,8 @@ name: Deploy Web (Cloudflare Pages)
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -46,4 +48,5 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: pages deploy ./artifacts/wasm-publish/wwwroot --project-name=physiquinator --commit-dirty=true
+        command: pages deploy ./artifacts/wasm-publish/wwwroot --project-name=physiquinator --branch=main --commit-dirty=true
+

@@ -873,7 +873,11 @@ html[data-theme-mode="dark"] .rest-timer-edge-fill { background: var(--pl-yellow
 .premium-table.mud-paper, .mud-card.mud-paper { border:var(--hairline) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; overflow:hidden; }
 .premium-table .mud-table-head .mud-table-cell { background:var(--pl-chip-2) !important; }
 .mud-button-root { border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; letter-spacing:0.12em !important; text-transform:uppercase !important; font-weight:700 !important; min-height:44px !important; transition:background 120ms ease, border-color 120ms ease, opacity 120ms ease !important; }
-.mud-button-filled-primary { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border:1px solid var(--pl-accent-bg) !important; }
+.mud-button-filled-primary:not(:disabled):not(.mud-button-filled-disabled) { background:var(--pl-accent-bg) !important; color:var(--pl-accent-fg) !important; border:1px solid var(--pl-accent-bg) !important; }
+.mud-button-filled-primary:disabled,
+.mud-button-filled-primary.mud-button-filled-disabled {
+  border: 1.5px solid var(--pl-hairline-strong) !important;
+}
 /* Error confirms: pin pairs the audit verified instead of trusting MudBlazor defaults.
    Light: white on #BE123C is 6.4:1. Dark: #10111A on #FF0055 is 4.8:1. */
 .mud-button-filled-error { background:var(--pl-error) !important; color:#FFFFFF !important; border:1px solid var(--pl-error) !important; }
@@ -2568,14 +2572,15 @@ html body span.rest-timer-complete-title {
 
 /* Contrast Surface Plates for Section Titles */
 .home-plans-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--pl-chip);
-  border: 1.5px solid var(--hairline-strong);
-  border-radius: var(--radius);
-  margin-bottom: 12px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 4px 0 8px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 8px !important;
 }
 .home-plans-header__title {
   font-family: var(--font-display) !important;
@@ -3451,7 +3456,6 @@ html[data-theme-mode="light"] .app-main-scroll {
 .settings-card.mud-paper,
 .settings-panel.mud-expand-panel,
 .plan-details-card,
-.home-plans-header,
 .history-filter-bar,
 .ai-chat-messages,
 .ai-chat-input,
@@ -4024,7 +4028,7 @@ button.heatmap-cell.heatmap-on {
   .workout-session-stats, .exercise-progress-chart, .bodyweight-chart-panel,
   .history-heatmap-panel.mud-paper, .home-heatmap-panel.mud-paper,
   .activity-heatmap-card, .settings-card.mud-paper, .settings-panel.mud-expand-panel,
-  .plan-details-card, .home-plans-header, .history-filter-bar, .ai-chat-messages,
+  .plan-details-card, .history-filter-bar, .ai-chat-messages,
   .ai-chat-input, .ai-bridge-card, .app-nav-pill__inner, .app-fab, .workout-undo-fab,
   .mud-dialog, .mud-snackbar, .mud-popover.mud-popover-open,
   .mud-button-filled, .mud-button-outlined, .mud-icon-button,
@@ -6369,7 +6373,7 @@ html[data-theme-mode="light"] .stat-card.mud-paper {
 html[data-theme-mode="light"] .stat-card__label {
   background: var(--pl-chip-2) !important;
   border-top: 1.5px solid var(--pl-hairline-strong) !important;
-  color: var(--pl-stone) !important;
+  color: var(--pl-ink-2) !important;
 }
 html[data-theme-mode="light"] .stat-card:nth-child(1) .stat-card__value {
   background-image: linear-gradient(155deg, color-mix(in srgb, var(--pl-volt-fill) 28%, var(--pl-chip)) 0%, color-mix(in srgb, var(--pl-yellow) 16%, transparent) 100%) !important;
@@ -6415,7 +6419,7 @@ html[data-theme-mode="light"] .load-dot {
 html[data-theme-mode="light"] .plan-card__load-dots .load-dot--5 {
   background: var(--pl-chip-2) !important;
   border-color: var(--pl-ink-border) !important;
-  color: var(--pl-stone) !important;
+  color: var(--pl-ink) !important;
 }
 html[data-theme-mode="light"] .set-metric-stepper__btn.mud-button-root,
 html[data-theme-mode="light"] .set-metric-stepper__btn {
@@ -6502,14 +6506,22 @@ html[data-theme-mode="light"] .workout-hud__stat--sets .workout-hud__label {
   color: #15803D !important;
 }
 html[data-theme-mode="light"] .workout-hud__stat--elapsed .workout-hud__label {
-  color: #52525B !important;
+  color: #27272A !important;
+}
+html[data-theme-mode="light"] .workout-hud__bar-label {
+  color: var(--pl-ink-2) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] .workout-hud__bar-pct {
+  color: var(--pl-ink) !important;
+  font-weight: 900 !important;
 }
 html[data-theme-mode="light"] .workout-hud__value {
   color: var(--pl-ink) !important;
 }
 html[data-theme-mode="light"] .workout-hud__fill {
   background: var(--pl-volt-fill) !important;
-  background-image: repeating-linear-gradient(-45deg, #FAFF00 0 8px, #E6EB00 8px 16px) !important;
+  background-image: repeating-linear-gradient(-45deg, #E6EB00 0 8px, #10111A 8px 10px, #FAFF00 10px 18px) !important;
   border-right: 2px solid #10111A !important;
 }
 html[data-theme-mode="light"] .workout-focus__head {
@@ -6523,12 +6535,12 @@ html[data-theme-mode="light"] .workout-focus__pill {
   font-weight: 900 !important;
 }
 html[data-theme-mode="light"] .workout-focus__pill--done {
-  background: #16A34A !important;
+  background: #0B6A32 !important;
   color: #FFFFFF !important;
   border-color: #10111A !important;
 }
 html[data-theme-mode="light"] .workout-focus__dot--done {
-  background: #16A34A !important;
+  background: #0B6A32 !important;
   color: #FFFFFF !important;
   border-color: #10111A !important;
 }
@@ -6556,6 +6568,10 @@ html[data-theme-mode="light"] .workout-sequence-strip__item {
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
 }
+html[data-theme-mode="light"] .workout-sequence-strip__item:not(.workout-sequence-strip__item--active) .workout-sequence-strip__num {
+  color: var(--pl-ink-2) !important;
+  font-weight: 800 !important;
+}
 html[data-theme-mode="light"] .workout-sequence-strip__item--active {
   background: var(--pl-chip) !important;
   border: 2.5px solid var(--pl-ink) !important;
@@ -6571,8 +6587,38 @@ html[data-theme-mode="light"] .workout-sequence-strip__pip--active {
   border: 1.5px solid #10111A !important;
 }
 html[data-theme-mode="light"] .workout-sequence-strip__pip--done {
-  background: #16A34A !important;
+  background: #0B6A32 !important;
   border: 1.5px solid #10111A !important;
+}
+html[data-theme-mode="light"] .workout-sequence-strip__pip:not(.workout-sequence-strip__pip--done):not(.workout-sequence-strip__pip--active) {
+  border-color: var(--pl-ink-border) !important;
+  background: var(--pl-chip) !important;
+}
+html[data-theme-mode="light"] .workout-completed-rail__check {
+  background: #0B6A32 !important;
+  border-color: #0B6A32 !important;
+  color: #FFFFFF !important;
+}
+html[data-theme-mode="light"] .workout-completed-rail__item-meta {
+  background: #0B6A32 !important;
+  border-color: #0B6A32 !important;
+  color: #FFFFFF !important;
+}
+html[data-theme-mode="light"] .workout-completed-rail__item-chevron .mud-icon-root {
+  color: var(--pl-ink-2) !important;
+}
+html[data-theme-mode="light"] .completed-icon {
+  background: #0B6A32 !important;
+  color: #FFFFFF !important;
+}
+html[data-theme-mode="light"] .rest-timer-edge-fill {
+  background: var(--pl-ink) !important;
+}
+html[data-theme-mode="light"] .rest-timer-edge-fill--imminent {
+  background: #C2410C !important;
+}
+html[data-theme-mode="light"] .rest-timer-edge-fill--urgent {
+  background: #9F1239 !important;
 }
 html[data-theme-mode="light"] .workout-actions__btn--discard {
   background: var(--pl-chip-2) !important;
@@ -6851,12 +6897,44 @@ html[data-theme-mode="light"] .rest-timer-complete-subtitle {
 html[data-theme-mode="light"] .skeleton-block {
   background: linear-gradient(
     90deg,
-    var(--pl-chip) 0%,
-    color-mix(in srgb, var(--pl-ink) 12%, var(--pl-chip)) 50%,
-    var(--pl-chip) 100%
+    var(--pl-chip-2) 0%,
+    color-mix(in srgb, var(--pl-ink) 22%, var(--pl-chip-2)) 50%,
+    var(--pl-chip-2) 100%
   );
   background-size: 200% 100%;
   border: 1.5px solid var(--pl-ink-border);
+}
+html[data-theme-mode="light"] .set-metric-stepper__label {
+  color: var(--pl-ink-2) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] .set-metric-stepper__value-unit {
+  color: var(--pl-ink-2) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] .mud-table .mud-table-head .mud-table-cell,
+html[data-theme-mode="light"] .infinite-table-head,
+html[data-theme-mode="light"] th {
+  color: var(--pl-ink) !important;
+  font-weight: 800 !important;
+}
+html[data-theme-mode="light"] .mud-typography-caption.mud-text-secondary {
+  color: var(--pl-ink-2) !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+}
+html[data-theme-mode="light"] .mud-progress-circular-primary,
+html[data-theme-mode="light"] .mud-progress-circular-primary svg circle {
+  stroke: var(--pl-ink) !important;
+  color: var(--pl-ink) !important;
+}
+html[data-theme-mode="light"] .mud-progress-linear-primary {
+  background-color: var(--pl-chip-2) !important;
+  border: 1px solid var(--pl-ink-border) !important;
+}
+html[data-theme-mode="light"] .mud-progress-linear-primary .mud-progress-linear-bar {
+  background-color: var(--pl-volt-fill) !important;
+  border-right: 2px solid var(--pl-ink-border) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

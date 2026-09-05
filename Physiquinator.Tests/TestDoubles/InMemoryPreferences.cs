@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Physiquinator.Core.Services;
 
 namespace Physiquinator.Tests.TestDoubles;
@@ -5,7 +6,7 @@ namespace Physiquinator.Tests.TestDoubles;
 /// <summary>In-memory <see cref="IAppPreferences"/> backed by a dictionary.</summary>
 public sealed class InMemoryPreferences : IAppPreferences
 {
-    private readonly Dictionary<string, string> _values = [];
+    private readonly ConcurrentDictionary<string, string> _values = new();
 
     public string Get(string key, string defaultValue) =>
         _values.TryGetValue(key, out var value) ? value : defaultValue;

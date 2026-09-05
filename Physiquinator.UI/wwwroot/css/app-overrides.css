@@ -864,8 +864,8 @@ html[data-theme-mode="dark"] .rest-timer-edge-fill { background: var(--pl-yellow
 .rest-timer-complete-icon { color:var(--pl-success) !important; fill:var(--pl-success) !important; }
 .set-metric-stepper__row { display:flex; align-items:stretch; gap:6px; width:100%; }
 .set-metric-stepper__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-stone); }
-.set-metric-stepper__btn.mud-button-root { flex:0 0 44px; width:44px !important; min-width:44px !important; max-width:44px; height:44px !important; min-height:44px !important; padding:0 !important; font-family:var(--font-display) !important; font-size:22px !important; font-weight:700 !important; line-height:1; border-radius:var(--radius) !important; border:var(--hairline) !important; background:var(--pl-chip-2) !important; color:var(--pl-ink) !important; box-shadow:none !important; }
-.set-metric-stepper__value, .set-metric-stepper__input { flex:1 1 auto; min-width:0; min-height:44px; border-radius:var(--radius); font-family:var(--font-display); font-size:22px; font-weight:800; border:var(--hairline-strong); background:var(--pl-chip); color:var(--pl-ink); display:inline-flex; align-items:center; justify-content:center; text-align:center; }
+.set-metric-stepper__btn.mud-button-root { flex:0 0 56px; width:56px !important; min-width:56px !important; max-width:56px; height:56px !important; min-height:56px !important; padding:0 !important; font-family:var(--font-display) !important; font-size:30px !important; font-weight:700 !important; line-height:1; border-radius:var(--radius) !important; border:var(--hairline) !important; background:var(--pl-chip-2) !important; color:var(--pl-ink) !important; box-shadow:none !important; }
+.set-metric-stepper__value, .set-metric-stepper__input { flex:1 1 auto; min-width:0; min-height:56px; border-radius:var(--radius); font-family:var(--font-display); font-size:22px; font-weight:800; border:var(--hairline-strong); background:var(--pl-chip); color:var(--pl-ink); display:inline-flex; align-items:center; justify-content:center; text-align:center; }
 .set-metric-stepper__value { cursor:ew-resize; user-select:none; }
 .set-metric-stepper__value-unit { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-left:6px; opacity:1; }
 .mud-table .mud-table-head .mud-table-cell { font-family:var(--font-mono) !important; font-weight:700 !important; font-size:0.6875rem !important; letter-spacing:0.12em !important; text-transform:uppercase !important; color:var(--pl-stone) !important; background:var(--pl-chip-2) !important; border-bottom:var(--hairline-strong) !important; }
@@ -1609,9 +1609,9 @@ body:has(.mud-dialog) .app-main-scroll::-webkit-scrollbar,
 .bodyweight-log-row__log-btn .mud-icon-root { font-size:22px !important; width:22px !important; height:22px !important; }
 
 /* Set Metric Stepper Global Polish */
-.set-metric-stepper__btn, .set-metric-stepper__btn.mud-button-root { flex:0 0 48px !important; width:48px !important; min-width:48px !important; max-width:48px !important; height:48px !important; min-height:48px !important; padding:0 !important; font-family:var(--font-display) !important; font-size:26px !important; font-weight:700 !important; line-height:1 !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; border-radius:var(--radius) !important; border:var(--hairline-strong) !important; background:var(--pl-chip-2) !important; color:var(--pl-ink) !important; box-shadow:none !important; cursor:pointer !important; }
-.set-metric-stepper__value, .set-metric-stepper__value--compact { height:48px !important; min-height:48px !important; font-size:22px !important; font-weight:800 !important; }
-.set-metric-stepper__input, .set-metric-stepper__input--compact { height:48px !important; min-height:48px !important; font-size:22px !important; font-weight:800 !important; }
+.set-metric-stepper__btn, .set-metric-stepper__btn.mud-button-root { flex:0 0 56px !important; width:56px !important; min-width:56px !important; max-width:56px !important; height:56px !important; min-height:56px !important; padding:0 !important; font-family:var(--font-display) !important; font-size:30px !important; font-weight:700 !important; line-height:1 !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; border-radius:var(--radius) !important; border:var(--hairline-strong) !important; background:var(--pl-chip-2) !important; color:var(--pl-ink) !important; box-shadow:none !important; cursor:pointer !important; }
+.set-metric-stepper__value, .set-metric-stepper__value--compact { height:56px !important; min-height:56px !important; font-size:22px !important; font-weight:800 !important; }
+.set-metric-stepper__input, .set-metric-stepper__input--compact { height:56px !important; min-height:56px !important; font-size:22px !important; font-weight:800 !important; }
 
 /* Offscreen Share Card */
 /* Captured to PNG via html2canvas: explicit hex colors only, no var() or color-mix(). */
@@ -4944,21 +4944,11 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-weight: 900 !important;
 }
 .workout-timesup-banner__btn .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
   font-size: 18px !important;
   width: 18px !important;
   height: 18px !important;
-}
-.workout-timesup-banner__btn--add .mud-icon-root {
-  color: #00E5FF !important;
-  fill: #00E5FF !important;
-}
-.workout-timesup-banner__btn--reset .mud-icon-root {
-  color: #FAFF00 !important;
-  fill: #FAFF00 !important;
-}
-.workout-timesup-banner__btn--ready .mud-icon-root {
-  color: #A3E635 !important;
-  fill: #A3E635 !important;
 }
 .workout-timesup-banner__btn:hover {
   background: #24283B !important;
@@ -5338,11 +5328,11 @@ html[data-theme-mode="dark"] .workout-focus__dot--done {
   gap: 6px;
 }
 .workout-focus__stepper .set-metric-stepper__btn--compact {
-  width: 52px !important;
-  min-width: 52px !important;
-  height: 52px !important;
-  min-height: 52px !important;
-  font-size: 26px !important;
+  width: 60px !important;
+  min-width: 60px !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  font-size: 30px !important;
   font-weight: 900 !important;
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-hairline-strong) !important;
@@ -5355,8 +5345,8 @@ html[data-theme-mode="dark"] .workout-focus__dot--done {
   background: var(--pl-chip) !important;
 }
 .workout-focus__stepper .set-metric-stepper__value--compact {
-  height: 52px !important;
-  min-height: 52px !important;
+  height: 60px !important;
+  min-height: 60px !important;
   font-size: 22px !important;
   font-weight: 900 !important;
   background: var(--pl-chip) !important;
@@ -5643,15 +5633,15 @@ html[data-theme-mode="dark"] .workout-next__preview {
   gap: 6px;
 }
 .workout-focus__history-steppers .set-metric-stepper__btn--compact {
-  width: 36px !important;
-  min-width: 36px !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  font-size: 16px !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  font-size: 24px !important;
 }
 .workout-focus__history-steppers .set-metric-stepper__value--compact {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 48px !important;
+  min-height: 48px !important;
   font-size: 16px !important;
 }
 
@@ -6318,8 +6308,8 @@ html[data-theme-mode="dark"] .workout-done__plate {
   .workout-focus__controls { padding: 10px; gap: 6px; }
   .workout-focus__log { width: 68px !important; min-width: 68px !important; }
   .workout-focus__log-label { font-size: 10px !important; letter-spacing: 0.1em !important; }
-  .workout-focus__stepper .set-metric-stepper__btn--compact { width: 48px !important; min-width: 48px !important; height: 48px !important; font-size: 24px !important; }
-  .workout-focus__stepper .set-metric-stepper__value--compact { height: 48px !important; font-size: 20px !important; }
+  .workout-focus__stepper .set-metric-stepper__btn--compact { width: 56px !important; min-width: 56px !important; height: 56px !important; font-size: 28px !important; }
+  .workout-focus__stepper .set-metric-stepper__value--compact { height: 56px !important; font-size: 20px !important; }
 }
 
 /* Removed duplicates: hide legacy expand labels and duplicated strips */

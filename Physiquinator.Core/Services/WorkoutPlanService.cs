@@ -31,6 +31,13 @@ public sealed class WorkoutPlanService(WorkoutPlanRepository repository)
         InvalidatePlanCache();
     }
 
+    /// <summary>Persists all plans and their exercises in a single transaction.</summary>
+    public async Task SavePlansAsync(IReadOnlyList<WorkoutPlan> plans)
+    {
+        await _repository.SavePlansAsync(plans);
+        InvalidatePlanCache();
+    }
+
     public async Task DeletePlanAsync(Guid id)
     {
         await _repository.DeletePlanAsync(id);

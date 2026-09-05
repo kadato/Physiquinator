@@ -40,13 +40,25 @@ public sealed class AppDatabase
             System.Diagnostics.Debug.WriteLine(ex);
         }
 
-        await _database.CreateTableAsync<WorkoutPlanEntity>();
-        await _database.CreateTableAsync<ExercisePlanEntity>();
-        await _database.CreateTableAsync<WorkoutSessionLogEntity>();
-        await _database.CreateTableAsync<WorkoutSetLogEntity>();
-        await _database.CreateTableAsync<BodyweightLogEntity>();
-        await _database.CreateTableAsync<WorkoutScheduleHistoryEntity>();
-        await MigrateAsync(_database);
+        // Fast path for steady-state launches: user_version lives in the
+        // database file itself, so a current version means this code already
+        // created every table and index. Skip straight past CreateTable and
+        // Migrate. Fresh files report version 0 and take the full path below.
+        // When adding a table or a column, bump CurrentSchemaVersion so
+        // existing installs take the full path again.
+        var userVersion = await _database.ExecuteScalarAsync<int>("PRAGMA user_version;").ConfigureAwait(false);
+        if (userVersion >= CurrentSchemaVersion)
+            return;
+
+        // Table creation runs sequentially: the shared connection cannot
+        // overlap write transactions, and DDL counts as writes.
+        await _database.CreateTableAsync<WorkoutPlanEntity>().ConfigureAwait(false);
+        await _database.CreateTableAsync<ExercisePlanEntity>().ConfigureAwait(false);
+        await _database.CreateTableAsync<WorkoutSessionLogEntity>().ConfigureAwait(false);
+        await _database.CreateTableAsync<WorkoutSetLogEntity>().ConfigureAwait(false);
+        await _database.CreateTableAsync<BodyweightLogEntity>().ConfigureAwait(false);
+        await _database.CreateTableAsync<WorkoutScheduleHistoryEntity>().ConfigureAwait(false);
+        await MigrateAsync(_database).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -94,6 +106,22 @@ public sealed class AppDatabase
 
     private const int CurrentSchemaVersion = 1;
 
+#pragma warning disable S1144 // Row type is populated via reflection by sqlite-net.
+#pragma warning disable S3459 // Unassigned members should be removed.
+    private sealed class PragmaColumnRow
+    {
+        public string? Name { get; set; }
+    }
+#pragma warning restore S3459
+#pragma warning restore S1144
+
+    private static HashSet<string> ToColumnSet(List<PragmaColumnRow> rows)
+    {
+        return new HashSet<string>(
+            rows.Where(r => !string.IsNullOrEmpty(r.Name)).Select(r => r.Name!),
+            StringComparer.Ordinal);
+    }
+
     /// <summary>sqlite-net CreateTable does not add columns on existing installs.</summary>
     private static async Task MigrateAsync(SQLiteAsyncConnection db)
     {
@@ -101,40 +129,47 @@ public sealed class AppDatabase
         if (userVersion >= CurrentSchemaVersion)
             return;
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSessionLogs') WHERE name='PlanSnapshotJson'").ConfigureAwait(false) == 0)
+        // One column listing per table instead of one existence query per
+        // column. Missing columns are decided in memory below.
+        List<PragmaColumnRow> sessionColumns = await db.QueryAsync<PragmaColumnRow>(
+            "SELECT name AS Name FROM pragma_table_info('WorkoutSessionLogs')").ConfigureAwait(false);
+        List<PragmaColumnRow> exerciseColumns = await db.QueryAsync<PragmaColumnRow>(
+            "SELECT name AS Name FROM pragma_table_info('ExercisePlans')").ConfigureAwait(false);
+        List<PragmaColumnRow> planColumns = await db.QueryAsync<PragmaColumnRow>(
+            "SELECT name AS Name FROM pragma_table_info('WorkoutPlans')").ConfigureAwait(false);
+        List<PragmaColumnRow> setColumns = await db.QueryAsync<PragmaColumnRow>(
+            "SELECT name AS Name FROM pragma_table_info('WorkoutSetLogs')").ConfigureAwait(false);
+
+        HashSet<string> sessionColumnNames = ToColumnSet(sessionColumns);
+        HashSet<string> exerciseColumnNames = ToColumnSet(exerciseColumns);
+        HashSet<string> planColumnNames = ToColumnSet(planColumns);
+        HashSet<string> setColumnNames = ToColumnSet(setColumns);
+
+        if (!sessionColumnNames.Contains("PlanSnapshotJson"))
             await db.ExecuteAsync("ALTER TABLE WorkoutSessionLogs ADD COLUMN PlanSnapshotJson TEXT").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultReps'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("DefaultReps"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultReps INTEGER").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='DefaultWeightKg'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("DefaultWeightKg"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN DefaultWeightKg REAL").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutPlans') WHERE name='SortOrder'").ConfigureAwait(false) == 0)
+        if (!planColumnNames.Contains("SortOrder"))
             await db.ExecuteAsync("ALTER TABLE WorkoutPlans ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='LogType'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("LogType"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN LogType INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='WarmupSetCount'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("WarmupSetCount"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN WarmupSetCount INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='SupersetGroupId'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("SupersetGroupId"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN SupersetGroupId TEXT").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('ExercisePlans') WHERE name='BodyweightPercent'").ConfigureAwait(false) == 0)
+        if (!exerciseColumnNames.Contains("BodyweightPercent"))
             await db.ExecuteAsync("ALTER TABLE ExercisePlans ADD COLUMN BodyweightPercent REAL").ConfigureAwait(false);
 
-        if (await db.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM pragma_table_info('WorkoutSetLogs') WHERE name='IsWarmup'").ConfigureAwait(false) == 0)
+        if (!setColumnNames.Contains("IsWarmup"))
             await db.ExecuteAsync("ALTER TABLE WorkoutSetLogs ADD COLUMN IsWarmup INTEGER NOT NULL DEFAULT 0").ConfigureAwait(false);
 
         // sqlite-net only creates indexed-column indexes on a freshly created

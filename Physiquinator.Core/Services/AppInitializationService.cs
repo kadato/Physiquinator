@@ -38,6 +38,11 @@ public sealed class AppInitializationService(
 
             if (preferences.IsDefaultProfile)
             {
+                // Seeding writes run one at a time. The shared SQLite
+                // connection cannot hold two write transactions at once, so
+                // overlapping the seeders fails with "already in a
+                // transaction". History needs the plan rows, so it still runs
+                // after plans finish.
                 var didSeedPlans = await demoSeeder.SeedDemoDataIfNeededAsync().ConfigureAwait(false);
 
                 if (didSeedPlans)
@@ -46,16 +51,8 @@ public sealed class AppInitializationService(
                     NotifyProgress();
                 }
 
-                // History and extras are independent of each other. Run in
-                // parallel so the total first-launch seeding time is the max
-                // rather than the sum.
-                var historyTask = demoSeeder.SeedDemoHistoryIfNeededAsync();
-                var extrasTask = demoSeeder.SeedDemoExtrasIfNeededAsync();
-
-                await Task.WhenAll(historyTask, extrasTask).ConfigureAwait(false);
-
-                var didSeedHistory = historyTask.Result;
-                var didSeedExtras = extrasTask.Result;
+                var didSeedHistory = await demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
+                var didSeedExtras = await demoSeeder.SeedDemoExtrasIfNeededAsync().ConfigureAwait(false);
 
                 if (didSeedPlans || didSeedHistory || didSeedExtras)
                 {

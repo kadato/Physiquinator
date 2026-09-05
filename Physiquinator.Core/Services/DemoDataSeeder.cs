@@ -23,6 +23,11 @@ public sealed class DemoDataSeeder(
     private static readonly IReadOnlyList<DayOfWeek> s_demoScheduleDays =
         [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday, DayOfWeek.Sunday];
 
+    // Plan snapshots are identical on every seed, so serialize them once per
+    // process instead of rebuilding the plans and re-serializing on each call.
+    private static readonly Lazy<FrozenDictionary<Guid, string>> s_planSnapshots =
+        new(BuildPlanSnapshots, LazyThreadSafetyMode.ExecutionAndPublication);
+
     private readonly WorkoutPlanService _planService = planService;
     private readonly AppDatabase _database = database;
     private readonly WorkoutHistoryRepository _historyRepository = historyRepository;
@@ -43,19 +48,8 @@ public sealed class DemoDataSeeder(
             return false;
         }
 
-        var demoPlans = new List<WorkoutPlan>
-        {
-            DemoPlans.CreatePushDayPlan(),
-            DemoPlans.CreatePullDayPlan(),
-            DemoPlans.CreateLegDayPlan(),
-            DemoPlans.CreateFullBodyPlan()
-        };
-
-        for (var i = 0; i < demoPlans.Count; i++)
-        {
-            demoPlans[i].SortOrder = i;
-            await _planService.SavePlanAsync(demoPlans[i]);
-        }
+        // One transaction for all four plans instead of one per plan.
+        await _planService.SavePlansAsync(CreateDemoPlans());
 
         await SetDemoScheduleIfUnsetAsync();
 
@@ -85,25 +79,27 @@ public sealed class DemoDataSeeder(
             return false;
         }
 
-        var snapshots = new Dictionary<Guid, string>
-        {
-            [DemoDataIds.PushPlan] = JsonSerializer.Serialize(DemoPlans.CreatePushDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
-            [DemoDataIds.PullPlan] = JsonSerializer.Serialize(DemoPlans.CreatePullDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
-            [DemoDataIds.LegPlan] = JsonSerializer.Serialize(DemoPlans.CreateLegDayPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan),
-            [DemoDataIds.FullBodyPlan] = JsonSerializer.Serialize(DemoPlans.CreateFullBodyPlan(), PhysiquinatorJsonContext.Default.WorkoutPlan)
-        }.ToFrozenDictionary();
-
         DateTime todayUtc = _time.GetUtcNow().UtcDateTime.Date;
         List<DemoSessionSpec> specs = DemoScheduleGenerator.GenerateDemoSchedule(todayUtc);
 
+        // The session-count gate above means the tables hold no demo rows, and
+        // the whole insert runs in one transaction, so plain bulk inserts are
+        // atomic here: a crash rolls everything back and the next launch
+        // retries from an empty table. Collect first, write once.
+        var sessions = new List<WorkoutSessionLogEntity>(specs.Count);
+        var sets = new List<WorkoutSetLogEntity>(specs.Count * 24);
+        FrozenDictionary<Guid, string> snapshots = s_planSnapshots.Value;
+        for (var i = 0; i < specs.Count; i++)
+        {
+            DemoSessionSpec spec = specs[i];
+            BuildSession(sessions, sets, i, spec, todayUtc, snapshots[spec.PlanId]);
+        }
+
         await _database.Database.RunInTransactionAsync(conn =>
         {
-            for (var i = 0; i < specs.Count; i++)
-            {
-                DemoSessionSpec spec = specs[i];
-                SeedSession(conn, i, spec, todayUtc, snapshots[spec.PlanId]);
-            }
-        });
+            conn.InsertAll(sessions, false);
+            conn.InsertAll(sets, false);
+        }).ConfigureAwait(false);
 
         _preferences.Set(DemoHistorySeedCompletedKey, true);
         return true;
@@ -130,11 +126,14 @@ public sealed class DemoDataSeeder(
         DateTime todayUtc = _time.GetUtcNow().UtcDateTime.Date;
         List<BodyweightLogEntity> entries = DemoScheduleGenerator.GenerateDemoBodyweights(todayUtc);
 
-        await _database.Database.RunInTransactionAsync(conn =>
+        if (entries.Count == 0)
         {
-            for (var i = 0; i < entries.Count; i++)
-                conn.InsertOrReplace(entries[i]);
-        });
+            _preferences.Set(DemoExtrasSeedCompletedKey, true);
+            return true;
+        }
+
+        // Bulk insert in its own transaction instead of one statement per row.
+        await _database.Database.InsertAllAsync(entries).ConfigureAwait(false);
 
         SetProfileBodyweight(entries[^1].BodyweightKg);
 
@@ -142,8 +141,35 @@ public sealed class DemoDataSeeder(
         return true;
     }
 
-    private static void SeedSession(
-        SQLite.SQLiteConnection conn,
+    private static List<WorkoutPlan> CreateDemoPlans()
+    {
+        var plans = new List<WorkoutPlan>
+        {
+            DemoPlans.CreatePushDayPlan(),
+            DemoPlans.CreatePullDayPlan(),
+            DemoPlans.CreateLegDayPlan(),
+            DemoPlans.CreateFullBodyPlan()
+        };
+        for (var i = 0; i < plans.Count; i++)
+            plans[i].SortOrder = i;
+        return plans;
+    }
+
+    private static FrozenDictionary<Guid, string> BuildPlanSnapshots()
+    {
+        List<WorkoutPlan> plans = CreateDemoPlans();
+        return new Dictionary<Guid, string>
+        {
+            [plans[0].Id] = JsonSerializer.Serialize(plans[0], PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [plans[1].Id] = JsonSerializer.Serialize(plans[1], PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [plans[2].Id] = JsonSerializer.Serialize(plans[2], PhysiquinatorJsonContext.Default.WorkoutPlan),
+            [plans[3].Id] = JsonSerializer.Serialize(plans[3], PhysiquinatorJsonContext.Default.WorkoutPlan)
+        }.ToFrozenDictionary();
+    }
+
+    private static void BuildSession(
+        List<WorkoutSessionLogEntity> sessions,
+        List<WorkoutSetLogEntity> sets,
         int i,
         DemoSessionSpec spec,
         DateTime todayUtc,
@@ -157,37 +183,32 @@ public sealed class DemoDataSeeder(
             ? started.AddMinutes(spec.DurationMinutes)
             : (DateTime?)null;
 
-        var planName = GetPlanName(spec.PlanId);
-
-        var session = new WorkoutSessionLogEntity
+        sessions.Add(new WorkoutSessionLogEntity
         {
             Id = DemoDataIds.SessionId(i),
             WorkoutPlanId = spec.PlanId.ToString(),
-            PlanName = planName,
+            PlanName = GetPlanName(spec.PlanId),
             StartedAtUtc = started,
             EndedAtUtc = ended,
             PlanSnapshotJson = planSnapshotJson
-        };
+        });
 
-        conn.InsertOrReplace(session);
-
-        List<WorkoutSetLogEntity> sets;
+        List<WorkoutSetLogEntity> sessionSets;
         if (!spec.Ended)
         {
             var benchKg = DemoSetBuilders.BenchWeightKg(spec.PlanTypeOrdinal, deload: false);
-            sets = DemoSetBuilders.BuildInProgressPushSets(i, started, benchKg);
+            sessionSets = DemoSetBuilders.BuildInProgressPushSets(i, started, benchKg);
         }
         else if (spec.PlanId == DemoDataIds.PushPlan)
-            sets = DemoSetBuilders.BuildCompletedPushSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+            sessionSets = DemoSetBuilders.BuildCompletedPushSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
         else if (spec.PlanId == DemoDataIds.PullPlan)
-            sets = DemoSetBuilders.BuildCompletedPullSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+            sessionSets = DemoSetBuilders.BuildCompletedPullSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
         else if (spec.PlanId == DemoDataIds.LegPlan)
-            sets = DemoSetBuilders.BuildCompletedLegSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+            sessionSets = DemoSetBuilders.BuildCompletedLegSets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
         else
-            sets = DemoSetBuilders.BuildCompletedFullBodySets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
+            sessionSets = DemoSetBuilders.BuildCompletedFullBodySets(i, started, ended!.Value, spec.PlanTypeOrdinal, spec.IsDeload);
 
-        foreach (WorkoutSetLogEntity set in sets)
-            conn.InsertOrReplace(set);
+        sets.AddRange(sessionSets);
     }
 
     private async Task<bool> HasAllDemoPlansAsync()

@@ -8,6 +8,10 @@
     <!-- Links the e_sqlite3 static library into the wasm runtime so sqlite-net-pcl
          works in-browser (see tools/wasm-spike for the proof). -->
     <WasmBuildNative>true</WasmBuildNative>
+    <!-- All app formatting and parsing uses InvariantCulture explicitly, and
+         time zones come from the browser rather than ICU, so ship without ICU
+         data files (icudt_*.dat, ~2.7 MB). This also skips ICU init at boot. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
     <!-- The linker emits documented-but-noisy WASM0001 varargs warnings for
          sqlite3_config/sqlite3_db_config; they are never called at runtime.
          S8970: [Inject] members need null-forgiving init, matching the UI library. -->

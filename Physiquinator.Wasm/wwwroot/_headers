@@ -10,6 +10,29 @@
 /_framework/*
   Cache-Control: public, max-age=31536000, immutable
 
+# The two loader scripts are NOT fingerprinted: dotnet.js carries the
+# per-publish hashed resource names. Detach the immutable rule above
+# (duplicate Cache-Control values would join with a comma) so returning
+# visitors revalidate them and never boot a stale loader against files
+# that no longer exist after a deploy.
+/_framework/blazor.webassembly.js
+  ! Cache-Control
+  Cache-Control: public, max-age=0, must-revalidate
+/_framework/dotnet.js
+  ! Cache-Control
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Entry points: always revalidate so updates and the offline fallback
+# reach visitors immediately.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+/service-worker.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 /_content/*
   Cache-Control: public, max-age=31536000, immutable
 

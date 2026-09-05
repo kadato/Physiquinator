@@ -36,9 +36,11 @@ jobs:
 
     # .NET emits precompressed .br and .gz siblings. Pages compresses at the edge
     # itself, so shipping them would only double the upload size.
+    # Source maps (.map) are only fetched with devtools open; never ship them.
     - name: Remove precompressed duplicates
       run: |
         find ./artifacts/wasm-publish/wwwroot -type f \( -name '*.br' -o -name '*.gz' \) -delete
+        find ./artifacts/wasm-publish/wwwroot -type f -name '*.map' -delete
         echo "File count: $(find ./artifacts/wasm-publish/wwwroot -type f | wc -l)"
 
     - name: Deploy to Cloudflare Pages

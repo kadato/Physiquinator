@@ -11,14 +11,14 @@
         </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3" Class="py-2">
+        <MudStack Spacing="3">
             <MudText Typo="Typo.body1" Class="mud-text-secondary">
                 @("Sample workout plans (Push, Pull, Legs) and one year of mock history are preloaded in the") <strong>Demo User</strong> @("profile.")
             </MudText>
 
             <MudPaper Class="pa-4 onboarding-tip" Elevation="0">
                 <MudStack Spacing="2">
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="onboarding-tip__header">
                         <MudIcon Icon="@Icons.Material.Filled.GroupAdd" Class="onboarding-tip__icon" Size="Size.Medium" />
                         <MudText Typo="Typo.subtitle1" Class="fw-semibold">@("Multi-user profiles")</MudText>
                     </div>
@@ -30,8 +30,8 @@
 
             <MudPaper Class="pa-4 onboarding-tip onboarding-tip--warning" Elevation="0">
                 <MudStack Spacing="2">
-                    <div class="d-flex align-items-center gap-2">
-                        <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Warning" Size="Size.Medium" />
+                    <div class="onboarding-tip__header">
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Class="onboarding-tip__icon" Color="Color.Warning" Size="Size.Medium" />
                         <MudText Typo="Typo.subtitle1" Class="fw-semibold">@("Removing demo data")</MudText>
                     </div>
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">
@@ -42,7 +42,7 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" FullWidth="true" Class="py-2 mt-2">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" FullWidth="true" Class="py-2">
             @("Get started")
         </MudButton>
     </DialogActions>

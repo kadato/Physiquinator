@@ -1,8 +1,8 @@
 <MudDialog>
     <TitleContent>
         <div class="d-flex align-items-center gap-3">
-            <span class="dialog-title-icon-box @(ConfirmColor == Color.Error ? "dialog-title-icon-box--error" : "")" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.HelpOutline" Size="Size.Small" />
+            <span class="dialog-title-icon-box @IconBoxClass" aria-hidden="true">
+                <MudIcon Icon="@DialogIcon" Size="Size.Small" />
             </span>
             <MudText Typo="Typo.h6" Class="fw-bold">@Title</MudText>
         </div>
@@ -34,6 +34,42 @@
 
     [Parameter]
     public Color ConfirmColor { get; set; } = Color.Error;
+
+    private string IconBoxClass => ConfirmColor switch
+    {
+        Color.Error => "dialog-title-icon-box--error",
+        Color.Warning => "dialog-title-icon-box--warning",
+        Color.Success => "dialog-title-icon-box--success",
+        _ => ""
+    };
+
+    private string DialogIcon
+    {
+        get
+        {
+            if (ConfirmColor == Color.Error)
+            {
+                var lower = Title?.ToLowerInvariant() ?? "";
+                if (lower.Contains("delete") || lower.Contains("remove") || lower.Contains("discard") || lower.Contains("clear"))
+                {
+                    return Icons.Material.Filled.DeleteForever;
+                }
+                return Icons.Material.Filled.WarningAmber;
+            }
+
+            if (ConfirmColor == Color.Warning)
+            {
+                return Icons.Material.Filled.WarningAmber;
+            }
+
+            if (ConfirmColor == Color.Success)
+            {
+                return Icons.Material.Filled.CheckCircleOutline;
+            }
+
+            return Icons.Material.Filled.HelpOutline;
+        }
+    }
 
     private void Cancel() => MudDialog.Cancel();
 

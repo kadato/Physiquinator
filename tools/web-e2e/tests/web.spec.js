@@ -10,12 +10,12 @@ async function registerAndExpectHome(page) {
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 30_000 });
 
     // Switch to registration mode, then submit.
-    await page.getByRole('button', { name: /create an account/i }).click();
-    await expect(page.getByRole('button', { name: 'Create account' })).toBeVisible();
+    await page.getByRole('button', { name: /create an account|register/i }).click();
+    await expect(page.getByRole('button', { name: /create account|register/i })).toBeVisible();
 
     await page.getByLabel('Username').fill(username);
     await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Create account' }).click();
+    await page.getByRole('button', { name: /create account|register/i }).click();
 
     await expect(page.getByText('Your plans')).toBeVisible({ timeout: 60_000 });
 }
@@ -52,9 +52,9 @@ test('login with the wrong password shows an error', async ({ page }) => {
 
 test('one-click demo login opens the app', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('button', { name: 'Try the demo' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('button', { name: /try the demo|explore demo/i })).toBeVisible({ timeout: 30_000 });
 
-    await page.getByRole('button', { name: 'Try the demo' }).click();
+    await page.getByRole('button', { name: /try the demo|explore demo/i }).click();
     await expect(page.getByText('Your plans')).toBeVisible({ timeout: 60_000 });
 });
 

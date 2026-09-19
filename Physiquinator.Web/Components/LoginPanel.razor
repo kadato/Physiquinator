@@ -53,9 +53,11 @@
                       Immediate="true"
                       @onkeydown="HandleEnterKey" />
 
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Secondary"
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
                    FullWidth="true"
+                   Size="Size.Large"
+                   Class="mb-3"
                    Disabled="_busy"
                    OnClick="SubmitAsync">
             @(_mode == AuthMode.Login ? "Sign in" : "Register")
@@ -63,6 +65,7 @@
 
         <MudButton Variant="Variant.Text"
                    FullWidth="true"
+                   Class="mt-1"
                    Disabled="_busy"
                    OnClick="ToggleModeAsync">
             @(_mode == AuthMode.Login ? "Need an account? Register" : "Already registered? Sign in")

@@ -128,6 +128,19 @@ else
                 }
             </ProgressChartShell>
 
+            <div class="section-plate-header mt-3 mb-2">
+                <div class="section-plate-header__title-group">
+                    <span class="section-plate-title">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                        @("Session logs")
+                    </span>
+                    @if (_rows.Count > 0)
+                    {
+                        <span class="home-plans-count-chip">@_rows.Count</span>
+                    }
+                </div>
+            </div>
+
             <MudPaper Class="premium-table" Elevation="0">
                 <div class="infinite-table-list">
                     <div class="infinite-table-head @(_logType == ExerciseLogType.Duration ? "infinite-table-head--4" : "infinite-table-head--5")">

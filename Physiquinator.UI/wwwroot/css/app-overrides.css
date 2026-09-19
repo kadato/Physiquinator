@@ -29,7 +29,7 @@
    workout.css is split for modular loading; app-overrides keeps the fallback import for MAUI. */
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-html, body { margin:0; padding:0; width:100%; height:100%; min-height:100dvh; overflow:hidden; background: var(--pl-paper); color: var(--pl-ink); scrollbar-gutter: stable; }
+html, body { margin:0; padding:0; width:100%; height:100%; min-height:100dvh; overflow:hidden; background: var(--pl-paper); color: var(--pl-ink); }
 body { display:flex; flex-direction:column; font-family: var(--font-body); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 /* Camera hole / display cutout and tall screens (20:9, 21:9): the page is
    edge-to-edge (SafeAreaEdges=None) and the status-bar-safe-area div
@@ -520,10 +520,23 @@ h1:focus-visible,
 .home-plans-header__title-group { display:flex; align-items:center; gap:10px; }
 .home-plans-header__title { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:0.04em !important; text-transform:uppercase !important; margin:0 !important; }
 .home-plans-count-chip {
-  display:inline-flex; align-items:center; justify-content:center; height:24px; min-width:24px; padding:0 8px;
-  font-family:var(--font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em;
-  background:var(--pl-volt-fill); color:var(--pl-volt-fg); border:1.5px solid var(--pl-volt-edge);
-  border-radius:var(--radius); font-weight:900;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 5px 10px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  color: var(--pl-ink) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box !important;
 }
 .home-plans-new-btn.mud-button-root { background:var(--pl-volt-fill) !important; color:var(--pl-volt-fg) !important; border:1.5px solid var(--pl-volt-edge) !important; font-family:var(--font-mono) !important; font-weight:800 !important; letter-spacing:0.08em !important; text-transform:uppercase !important; border-radius:var(--radius) !important; }
 .home-heatmap-panel.mud-paper, .history-heatmap-panel.mud-paper { overflow:hidden; max-width:100%; border:1.5px solid var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip) !important; box-shadow:none !important; position:relative; padding:12px !important; }
@@ -581,7 +594,7 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 .plan-card-handle { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px; border:none; background:transparent; color:var(--pl-stone); cursor:grab; touch-action:none; padding:0; flex-shrink:0; }
 .plan-card-handle:active { cursor:grabbing; }
 .plan-card-handle .mud-icon-root { font-size:20px !important; width:20px !important; height:20px !important; }
-.plan-card-name { font-family:var(--font-display) !important; font-weight:800 !important; font-size:16px !important; letter-spacing:-0.015em !important; overflow:hidden; word-break:break-word; white-space:normal; flex:1; }
+.plan-card-name { font-family:var(--font-display) !important; font-weight:900 !important; font-size:18px !important; letter-spacing:-0.015em !important; text-transform:uppercase !important; overflow:hidden; word-break:break-word; white-space:normal; flex:1; }
 .plan-card__actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
 .plan-card__actions .mud-icon-button { width:44px !important; height:44px !important; min-width:44px !important; min-height:44px !important; border-radius:var(--radius) !important; border:var(--hairline) !important; background:var(--pl-chip) !important; }
 /* The START play control is the card's one primary action. MudBlazor emits
@@ -660,27 +673,55 @@ button.heatmap-cell.heatmap-today.heatmap-selected { box-shadow:inset 0 0 0 2.5p
 }
 
 .history-session-card__right {
-  display:flex; align-items:center; gap:8px; flex-shrink:0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .history-session-card__actions {
-  display:flex; align-items:center; gap:6px; flex-shrink:0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .history-action-btn {
-  width:36px; height:36px; min-width:36px; min-height:36px;
-  display:inline-flex; align-items:center; justify-content:center;
-  border-radius:var(--radius); border:1.5px solid var(--hairline-strong);
-  background:var(--pl-chip-2); color:var(--pl-ink);
-  cursor:pointer; padding:0; transition:all 120ms ease;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: var(--radius) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-ink) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease, box-shadow 100ms ease !important;
+}
+.history-action-btn:hover {
+  background: var(--pl-chip) !important;
+  border-color: var(--pl-yellow) !important;
+}
+.history-action-btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
 }
 .history-action-btn .mud-icon-root {
-  font-size:18px !important; width:18px !important; height:18px !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
 }
 .history-action-btn--delete {
-  color:var(--pl-error) !important;
+  color: var(--pl-error) !important;
 }
 .history-action-btn--delete:hover {
-  background:var(--pl-error) !important; color:#FFFFFF !important;
-  border-color:var(--pl-error) !important;
+  background: var(--pl-error) !important;
+  color: #FFFFFF !important;
+  border-color: var(--pl-error) !important;
 }
 html[data-theme-mode="dark"] .history-action-btn--delete:hover {
   color: #10111A !important;
@@ -690,25 +731,44 @@ html[data-theme-mode="dark"] .history-action-btn--delete:hover .mud-icon-root {
   fill: #10111A !important;
 }
 .history-action-btn--chevron {
-  color:var(--pl-stone); cursor:default;
+  color: var(--pl-ink) !important;
+  cursor: pointer !important;
 }
 html[data-theme-mode="light"] .history-action-btn--chevron {
-  color: var(--pl-ink-2) !important;
+  color: var(--pl-ink) !important;
 }
 .history-session-card:hover .history-action-btn--chevron {
-  color:var(--pl-yellow); border-color:var(--pl-yellow);
+  color: var(--pl-yellow-text) !important;
+  border-color: var(--pl-yellow) !important;
 }
 
 .history-card-continue-btn {
-  display:inline-flex; align-items:center; gap:4px;
-  height:36px; padding:0 12px;
-  font-family:var(--font-mono); font-size:0.6875rem; font-weight:800;
-  letter-spacing:0.08em; text-transform:uppercase;
-  background:var(--pl-volt-fill); color:var(--pl-volt-fg);
-  border:1.5px solid var(--pl-volt-edge); border-radius:var(--radius);
-  cursor:pointer; transition:all 120ms ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: transform 100ms ease, filter 120ms ease, box-shadow 100ms ease !important;
 }
-.history-card-continue-btn:hover { filter:brightness(1.08); }
+.history-card-continue-btn:hover { filter: brightness(1.08) !important; }
+.history-card-continue-btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
 .rest-timer-panel.mud-paper {
   border: 2px solid var(--pl-ink-border) !important;
   border-radius: var(--radius) !important;
@@ -878,10 +938,17 @@ html[data-theme-mode="dark"] .rest-timer-edge-fill { background: var(--pl-yellow
 .mud-button-filled-primary.mud-button-filled-disabled {
   border: 1.5px solid var(--pl-hairline-strong) !important;
 }
-/* Error confirms: pin pairs the audit verified instead of trusting MudBlazor defaults.
-   Light: white on #BE123C is 6.4:1. Dark: #10111A on #FF0055 is 4.8:1. */
-.mud-button-filled-error { background:var(--pl-error) !important; color:#FFFFFF !important; border:1px solid var(--pl-error) !important; }
+/* Error, Warning, and Success confirms: pin pairs the audit verified instead of trusting MudBlazor defaults.
+   Light: white on #BE123C is 6.4:1, white on #B45309 is 4.7:1, white on #0F7A3E is 5.1:1.
+   Dark: #10111A on #FF0055 is 4.8:1, #10111A on #FAFF00 is 13.5:1, #10111A on #A3E635 is 11.2:1. */
+.mud-button-filled-error { background:var(--pl-error) !important; color:#FFFFFF !important; border:1.5px solid var(--pl-error) !important; }
 html[data-theme-mode="dark"] .mud-button-filled-error { color: var(--pl-paper) !important; }
+
+.mud-button-filled-warning { background:var(--pl-warning) !important; color:#FFFFFF !important; border:1.5px solid var(--pl-warning) !important; }
+html[data-theme-mode="dark"] .mud-button-filled-warning { color: #10111A !important; border-color: var(--pl-warning) !important; }
+
+.mud-button-filled-success { background:var(--pl-success) !important; color:#FFFFFF !important; border:1.5px solid var(--pl-success) !important; }
+html[data-theme-mode="dark"] .mud-button-filled-success { color: #10111A !important; border-color: var(--pl-success) !important; }
 .mud-button-outlined { border:var(--hairline-strong) !important; background:var(--pl-chip) !important; color:var(--pl-ink) !important; }
 .mud-chip { border-radius:var(--radius) !important; font-family:var(--font-mono) !important; font-size:0.6875rem !important; letter-spacing:0.08em !important; border:var(--hairline) !important; }
 /* High-Contrast Outlined Inputs & Floating Labels */
@@ -1111,15 +1178,35 @@ textarea { font-size:max(16px, 1em); }
   transform: none !important;
 }
 .mud-popover.mud-popover-open {
-  border: 1.5px solid var(--hairline-strong) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   border-radius: var(--radius) !important;
   background: var(--pl-chip) !important;
-  box-shadow: var(--pl-plate-shadow-md) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
   z-index: 2100 !important;
+}
+.mud-popover.mud-popover-open.mud-popover-top-left,
+.mud-popover.mud-popover-open.mud-popover-top-right,
+.mud-popover.mud-popover-open.mud-popover-top-center {
+  box-shadow: 4px -4px 0 var(--pl-plate-shadow-color) !important;
+  margin-top: -4px !important;
+}
+.mud-popover.mud-popover-open.mud-popover-bottom-left,
+.mud-popover.mud-popover-open.mud-popover-bottom-right,
+.mud-popover.mud-popover-open.mud-popover-bottom-center {
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+  margin-top: 4px !important;
+}
+.mud-popover:has(.mud-list),
+.mud-popover.overflow-y-auto:has(.mud-list) {
+  overflow: hidden !important;
+  overflow-y: hidden !important;
 }
 .mud-popover .mud-list {
   background: var(--pl-chip) !important;
   padding: 4px 0 !important;
+  max-height: inherit !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 .mud-popover .mud-list-item {
   font-family: var(--font-mono) !important;
@@ -1159,6 +1246,12 @@ textarea { font-size:max(16px, 1em); }
   padding-right: calc(12px + env(safe-area-inset-right, 0px)) !important;
   box-sizing: border-box !important;
   overflow-y: auto !important;
+  scrollbar-width: none !important;
+}
+.mud-dialog-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .mud-dialog {
   border: 1.5px solid var(--hairline-strong) !important;
@@ -1343,6 +1436,7 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
 }
 .dialog-title-icon-box--error {
   background: var(--pl-error) !important;
+  background-image: none !important;
   color: #FFFFFF !important;
 }
 .dialog-title-icon-box--error .mud-icon-root {
@@ -1353,6 +1447,40 @@ html[data-theme-mode="dark"] .dialog-title-icon-box--error {
   color: #10111A !important;
 }
 html[data-theme-mode="dark"] .dialog-title-icon-box--error .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
+
+.dialog-title-icon-box--warning {
+  background: var(--pl-warning) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+.dialog-title-icon-box--warning .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--warning {
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--warning .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
+
+.dialog-title-icon-box--success {
+  background: var(--pl-success) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+.dialog-title-icon-box--success .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--success {
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--success .mud-icon-root {
   color: #10111A !important;
   fill: #10111A !important;
 }
@@ -1388,29 +1516,154 @@ html[data-theme-mode="dark"] .dialog-title-icon-box--error .mud-icon-root {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 2px 0 4px !important;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
+  padding: 0 !important;
+  margin-top: 4px !important;
   margin-bottom: 10px !important;
   width: 100% !important;
 }
 .plan-section-header__title {
-  display: inline !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  border-left: 0 !important;
-  border-radius: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 5px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
   font-family: var(--font-display) !important;
   font-size: 15px !important;
   font-weight: 900 !important;
-  letter-spacing: 0.04em !important;
-  line-height: 1 !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.2 !important;
   text-transform: uppercase !important;
   color: var(--pl-ink) !important;
   margin: 0 !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+
+/* Universal Section Headers & Machined Plate Titles */
+.section-plate-header,
+.history-section-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 !important;
+  margin-top: 8px !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+}
+
+.home-plans-header__title-group,
+.history-section-header__title-group,
+.section-plate-header__title-group,
+.plan-section-header__title-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.section-plate-title,
+.history-section-header__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 5px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-display) !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  margin: 0 !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+}
+
+.section-plate-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px 8px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-stone) !important;
+  box-shadow: 1px 1px 0 var(--pl-plate-shadow-color) !important;
+  margin-bottom: 8px !important;
+}
+
+/* Plan Page Subtitle Badge & Name Field */
+.plan-page__name-badge,
+.plan-page__subtitle {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 5px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  font-family: var(--font-display) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  margin-bottom: 12px !important;
+}
+.plan-page__name-tag {
+  font-family: var(--font-mono) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-stone) !important;
+  padding-right: 6px;
+  border-right: 1.5px solid var(--pl-hairline-strong);
+}
+.plan-page__name-text {
+  color: var(--pl-ink) !important;
+}
+.plan-details-card__name-input input {
+  font-family: var(--font-display) !important;
+  font-size: 1.125rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.plan-card-icon-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border-radius: var(--radius) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-ink) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  box-sizing: border-box !important;
+  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease, box-shadow 100ms ease !important;
+}
+.plan-card-icon-btn:hover {
+  background: var(--pl-chip) !important;
+  border-color: var(--pl-yellow) !important;
+}
+.plan-card-icon-btn:active {
+  transform: translate(3px, 3px) !important;
   box-shadow: none !important;
+}
+.plan-card-icon-btn .mud-icon-root {
+  color: var(--pl-ink) !important;
+  fill: var(--pl-ink) !important;
 }
 
 .plan-card__start.mud-button-root,
@@ -1423,8 +1676,9 @@ button.plan-card__start,
   background: var(--pl-volt-fill) !important;
   background-color: var(--pl-volt-fill) !important;
   color: var(--pl-volt-fg) !important;
-  border: 1.5px solid var(--pl-volt-edge) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
 }
 .mud-icon-button.plan-card__start .mud-icon-root,
 .plan-card-icon-btn.plan-card__start .mud-icon-root,
@@ -1512,8 +1766,37 @@ html[data-theme-mode="dark"] .rest-timer-complete-icon-box .mud-icon-root {
 .plan-add-exercise { display:flex; align-items:center; gap:8px; margin-top:12px; width:100%; min-width:0; }
 .plan-add-exercise__input { flex:1 1 0; min-width:0; }
 .plan-add-exercise__input .mud-input-control { min-width:0; }
-.plan-add-exercise__input .mud-autocomplete { min-width:0; }
-.plan-add-exercise__btn.mud-button-root { height:40px !important; min-height:40px !important; flex-shrink:0; align-self:center; }
+.plan-add-exercise__btn.mud-button-root {
+  height: 40px !important;
+  min-height: 40px !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  flex-shrink: 0;
+  align-self: center;
+  transition: transform 100ms ease, filter 120ms ease, box-shadow 100ms ease !important;
+}
+.plan-add-exercise__btn.mud-button-root:not(:disabled) {
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+}
+.plan-add-exercise__btn.mud-button-root:not(:disabled):hover {
+  filter: brightness(1.08) !important;
+}
+.plan-add-exercise__btn.mud-button-root:not(:disabled):active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
+.plan-add-exercise__btn.mud-button-root:disabled {
+  opacity: 0.55 !important;
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-stone) !important;
+  box-shadow: none !important;
+}
 
 /* Autocomplete: prevent flex clipping and oversized adornment button everywhere */
 .mud-autocomplete { min-width:0; }
@@ -1575,38 +1858,73 @@ body:has(.mud-dialog) .app-main-scroll::-webkit-scrollbar,
 .bodyweight-panel__title { font-family:var(--font-display) !important; font-size:18px !important; font-weight:800 !important; letter-spacing:0.02em !important; text-transform:uppercase !important; margin:0 !important; color:var(--pl-ink); }
 .bodyweight-panel__latest-text { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; color:var(--pl-stone); letter-spacing:0.04em; white-space:nowrap; }
 .bodyweight-panel__details-link {
-  display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px;
-  font-family:var(--font-mono); font-size:0.6875rem; font-weight:800;
-  letter-spacing:0.08em; text-transform:uppercase; color:var(--pl-ink);
-  background:var(--pl-chip-2); border:1.5px solid var(--hairline-strong);
-  border-radius:var(--radius); cursor:pointer; text-decoration:none;
-  flex-shrink:0; transition:all 120ms ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  background: var(--pl-chip-2) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease, box-shadow 100ms ease !important;
 }
-.bodyweight-panel__details-link:hover { background:var(--pl-chip); border-color:var(--pl-yellow); color:var(--pl-yellow); }
-.bodyweight-log-row { display:flex; align-items:center; gap:8px; width:100%; flex-wrap:nowrap; }
-.bodyweight-log-row .set-metric-stepper__row { flex:1 1 auto; min-width:0; }
+.bodyweight-panel__details-link:hover {
+  background: var(--pl-chip) !important;
+  border-color: var(--pl-yellow) !important;
+  color: var(--pl-yellow-text) !important;
+}
+.bodyweight-panel__details-link:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
+.bodyweight-log-row { display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: nowrap; }
+.bodyweight-log-row .set-metric-stepper__row { flex: 1 1 auto; min-width: 0; }
 .bodyweight-log-row__log-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  border-radius: var(--radius);
-  border: 1.5px solid var(--pl-volt-edge);
-  background: var(--pl-volt-fill);
-  color: var(--pl-volt-fg);
-  cursor: pointer;
-  padding: 0;
-  transition: transform 100ms ease, background 120ms ease, opacity 120ms ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  border-radius: var(--radius) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background: var(--pl-volt-fill) !important;
+  color: var(--pl-volt-fg) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: transform 100ms ease, background 120ms ease, opacity 120ms ease, box-shadow 100ms ease !important;
   touch-action: manipulation;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
-.bodyweight-log-row__log-btn:hover:not(:disabled) { filter:brightness(1.08); }
-.bodyweight-log-row__log-btn:active:not(:disabled) { transform:scale(0.96); }
-.bodyweight-log-row__log-btn:disabled { opacity:0.38; cursor:not-allowed; }
-.bodyweight-log-row__log-btn .mud-icon-root { font-size:22px !important; width:22px !important; height:22px !important; }
+.bodyweight-log-row__log-btn:hover:not(:disabled) { filter: brightness(1.08) !important; }
+.bodyweight-log-row__log-btn:active:not(:disabled) {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
+.bodyweight-log-row__log-btn:disabled {
+  opacity: 0.45 !important;
+  background: var(--pl-chip-2) !important;
+  border-color: var(--pl-ink-border) !important;
+  color: var(--pl-stone) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+.bodyweight-log-row__log-btn .mud-icon-root { font-size: 26px !important; width: 26px !important; height: 26px !important; }
 
 /* Set Metric Stepper Global Polish */
 .set-metric-stepper__btn, .set-metric-stepper__btn.mud-button-root { flex:0 0 56px !important; width:56px !important; min-width:56px !important; max-width:56px !important; height:56px !important; min-height:56px !important; padding:0 !important; font-family:var(--font-display) !important; font-size:30px !important; font-weight:700 !important; line-height:1 !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; border-radius:var(--radius) !important; border:var(--hairline-strong) !important; background:var(--pl-chip-2) !important; color:var(--pl-ink) !important; box-shadow:none !important; cursor:pointer !important; }
@@ -1711,21 +2029,40 @@ html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-ha
 }
 .plan-exercise-row:hover { border-color: var(--pl-yellow) !important; }
 .plan-exercise-row__main { display: flex; align-items: center; gap: 8px; flex: 1 1 0%; min-width: 0; max-width: 100%; }
-.plan-exercise-handle {
+.plan-card-handle {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
-  border: 1.5px solid var(--hairline-strong) !important;
+  min-height: 32px !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  background: var(--pl-chip) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: var(--pl-ink) !important;
+  border-radius: var(--radius) !important;
+  box-sizing: border-box !important;
+}
+
+.plan-exercise-handle {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   border-radius: var(--radius) !important;
   background: var(--pl-chip-2) !important;
-  color: var(--pl-stone) !important;
+  color: var(--pl-ink) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
   cursor: grab !important;
   touch-action: none;
   padding: 0 !important;
   flex-shrink: 0;
+  box-sizing: border-box !important;
 }
 .plan-exercise-handle:active { cursor: grabbing !important; }
 .plan-exercise-handle .mud-icon-root { font-size: 18px !important; width: 18px !important; height: 18px !important; }
@@ -1761,10 +2098,21 @@ html[data-theme-mode="dark"] .share-card__footer { border-top-color: var(--pl-ha
   height: 36px !important;
   min-width: 36px !important;
   min-height: 36px !important;
-  border: 1.5px solid var(--hairline-strong) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   background: var(--pl-chip-2) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
   border-radius: var(--radius) !important;
   color: var(--pl-ink) !important;
+  box-sizing: border-box !important;
+  transition: transform 100ms ease, background 120ms ease, border-color 120ms ease, box-shadow 100ms ease !important;
+}
+.plan-exercise-row__menu .mud-icon-button:hover {
+  background: var(--pl-chip) !important;
+  border-color: var(--pl-yellow) !important;
+}
+.plan-exercise-row__menu .mud-icon-button:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
 }
 /* Drag and drop feedback: both home plan cards and plan exercise rows share the
    same Sortable contract: ghost is the placeholder left behind, chosen is the
@@ -2225,10 +2573,9 @@ html[data-theme-mode="dark"] .exercise-progress-date__pr-icon.mud-icon-root { co
 .mud-popover-provider { z-index:2000 !important; }
 .mud-popover.mud-popover-open {
   z-index:2100 !important;
-  border:var(--hairline-strong) !important;
-  border-radius:0px !important;
+  border:1.5px solid var(--pl-ink-border) !important;
+  border-radius:var(--radius) !important;
   background:var(--pl-chip) !important;
-  box-shadow: var(--pl-plate-shadow-md) !important;
 }
 .mud-popover .mud-list { background:var(--pl-chip) !important; padding:4px 0 !important; }
 .mud-popover .mud-list-item { font-family:var(--font-mono) !important; font-size:0.875rem !important; font-weight:600 !important; color:var(--pl-ink) !important; min-height:40px !important; }
@@ -2583,25 +2930,21 @@ html body span.rest-timer-complete-title {
   margin-bottom: 8px !important;
 }
 .home-plans-header__title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 5px 12px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
   font-family: var(--font-display) !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
   font-weight: 900 !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.2 !important;
   text-transform: uppercase !important;
   color: var(--pl-ink) !important;
-}
-.home-plans-count-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 8px;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  background: var(--pl-volt-fill);
-  color: var(--pl-volt-fg);
-  border-radius: var(--radius);
-  margin-left: 0;
+  margin: 0 !important;
 }
 
 #main-content:focus,
@@ -2611,7 +2954,8 @@ html body span.rest-timer-complete-title {
 
 /* Universal solid background for buttons and icon buttons */
 .home-hero .mud-icon-button,
-.home-hero__discard-btn {
+.home-hero__discard-btn,
+.home-hero__discard {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--hairline-strong) !important;
   border-radius: var(--radius) !important;
@@ -2619,9 +2963,16 @@ html body span.rest-timer-complete-title {
   box-shadow: none !important;
 }
 .home-hero .mud-icon-button:hover,
-.home-hero__discard-btn:hover {
-  background: color-mix(in srgb, #FF0055 15%, var(--pl-chip-2)) !important;
-  border-color: #FF0055 !important;
+.home-hero__discard-btn:hover,
+.home-hero__discard:hover {
+  background: color-mix(in srgb, var(--pl-error) 15%, var(--pl-chip-2)) !important;
+  border-color: var(--pl-error) !important;
+  color: var(--pl-error) !important;
+}
+.home-hero .mud-icon-button:hover .mud-icon-root,
+.home-hero__discard:hover .mud-icon-root {
+  color: var(--pl-error) !important;
+  fill: var(--pl-error) !important;
 }
 
 .dialog-cancel-btn.mud-button-root {
@@ -3535,7 +3886,7 @@ html[data-theme-mode="light"] .app-main-scroll {
 .ai-chat-send-button,
 .history-card-continue-btn,
 .app-fab--primary,
-.dialog-title-icon-box {
+.dialog-title-icon-box:not(.dialog-title-icon-box--error):not(.dialog-title-icon-box--warning):not(.dialog-title-icon-box--success) {
   background-image: linear-gradient(
     180deg,
     color-mix(in srgb, var(--pl-volt-fill) 80%, #FFFFFF) 0%,
@@ -3623,7 +3974,12 @@ html[data-theme-mode="light"] .app-main-scroll {
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
 .mud-popover.mud-popover-open {
-  box-shadow: var(--pl-plate-shadow-md) !important;
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+.mud-popover.mud-popover-open.mud-popover-top-left,
+.mud-popover.mud-popover-open.mud-popover-top-right,
+.mud-popover.mud-popover-open.mud-popover-top-center {
+  box-shadow: 4px -4px 0 var(--pl-plate-shadow-color) !important;
 }
 /* Snackbars clear the fixed bottom nav pill so toasts never cover navigation */
 .mud-snackbar-location-bottom-left,
@@ -3680,7 +4036,7 @@ html[data-theme-mode="light"] .mud-button-outlined:not(.mud-button-outlined-disa
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start),
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard),
 html[data-theme-mode="light"] .rest-timer-icon-btn,
 html[data-theme-mode="light"] .rest-timer-add-btn {
   background: var(--pl-chip-2) !important;
@@ -3688,14 +4044,14 @@ html[data-theme-mode="light"] .rest-timer-add-btn {
   color: var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover,
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard):hover,
 html[data-theme-mode="light"] .rest-timer-icon-btn:hover,
 html[data-theme-mode="light"] .rest-timer-add-btn:hover {
   background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):hover .mud-icon-root {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard):hover .mud-icon-root {
   color: var(--pl-yellow-text) !important;
   fill: var(--pl-yellow-text) !important;
 }
@@ -3924,7 +4280,7 @@ html[data-theme-mode="light"] .exercise-accordion-card {
 .history-detail-table__btn.mud-icon-button {
   box-shadow: var(--pl-plate-shadow-sm) !important;
   background: var(--pl-chip-2) !important;
-  border: 1.5px solid var(--pl-hairline-strong) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
 }
 .premium-btn.mud-button-root:hover,
 .exercise-progress-table__open.mud-icon-button:hover,
@@ -3937,8 +4293,8 @@ html[data-theme-mode="light"] .exercise-accordion-card {
 .exercise-progress-table__open.mud-icon-button:active,
 .pr-dialog-close.mud-button-root:active,
 .history-detail-table__btn.mud-icon-button:active {
-  transform: translate(2px, 2px) !important;
-  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight) !important;
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
 }
 
 /* Focused inputs get a hard volt ring, zero blur. */
@@ -4168,30 +4524,36 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
    plates with hard shadows. Menu and card names stay typographic to
    avoid overuse. Diagram titles get clearance for their shadow.
    ================================================================== */
-.home-plans-header__title {
+.home-plans-header__title,
+.home-plans-count-chip {
   display: inline-flex !important;
   align-items: center !important;
-  padding: 0 !important;
-  background: transparent !important;
+  justify-content: center !important;
+  padding: 5px 12px !important;
+  background: var(--pl-chip) !important;
   background-image: none !important;
-  border: none !important;
-  border-left: none !important;
-  border-radius: 0 !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
   font-family: var(--font-display) !important;
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.04em !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
   line-height: 1.2 !important;
+  text-transform: uppercase !important;
   color: var(--pl-ink) !important;
-  box-shadow: none !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
   margin: 0 !important;
+  box-sizing: border-box !important;
 }
-/* Diagram and section plates: give the shadow room to breathe */
-.bodyweight-panel__title,
-.settings-card__title,
-.exercise-progress-chart .settings-card__title,
-.history-detail-table .settings-card__title,
-.history-detail-plan-table .settings-card__title {
+.home-plans-count-chip {
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 5px 10px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
+}
+/* Diagram and section plates: general fallback cards stay flat, machined plates take chip styles */
+.settings-card__title {
   display: inline !important;
   padding: 0 !important;
   background: transparent !important;
@@ -4206,8 +4568,22 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
   margin: 0 !important;
 }
 .bodyweight-panel__title {
-  border-left: 0 !important;
-  font-size: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
+  background: var(--pl-chip) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--pl-plate-shadow-sm) !important;
+  font-family: var(--font-display) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  margin: 0 !important;
+  border-left: 1.5px solid var(--pl-ink-border) !important;
 }
 /* Settings panel headers */
 .settings-panel__title {
@@ -4429,9 +4805,12 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
    Interactive cards keep only transform/background transitions, never box-shadow. */
 :where(.page-header__title,
 .home-plans-header__title,
+.home-plans-count-chip,
 .bodyweight-panel__title,
 .settings-card__title,
 .plan-section-header__title,
+.section-plate-title,
+.history-section-header__title,
 .mud-dialog-title .mud-typography-h6,
 .dialog-header-bar__title,
 .ai-chat-empty__title) {
@@ -4478,9 +4857,12 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
 .exercise-accordion-header .exercise-name,
 .settings-panel__title,
 .home-plans-header__title,
+.home-plans-count-chip,
 .bodyweight-panel__title,
 .settings-card__title,
-.plan-section-header__title {
+.plan-section-header__title,
+.section-plate-title,
+.history-section-header__title {
   position: static !important;
   color: var(--pl-ink) !important;
 }
@@ -4490,9 +4872,12 @@ html[data-theme-mode="dark"] .workout-actions-row .premium-btn-error-outlined:ho
 .exercise-accordion-header .exercise-name::after,
 .settings-panel__title::after,
 .home-plans-header__title::after,
+.home-plans-count-chip::after,
 .bodyweight-panel__title::after,
 .settings-card__title::after,
-.plan-section-header__title::after {
+.plan-section-header__title::after,
+.section-plate-title::after,
+.history-section-header__title::after {
   content: none !important;
   display: none !important;
 }
@@ -7104,6 +7489,81 @@ html[data-theme-mode="light"] .dialog-title-icon-box {
   border: 1.5px solid var(--pl-ink-border) !important;
 }
 
+.dialog-title-icon-box--error,
+html[data-theme-mode="light"] .dialog-title-icon-box--error {
+  background: var(--pl-error) !important;
+  background-image: none !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #FFFFFF !important;
+}
+.dialog-title-icon-box--error .mud-icon-root,
+html[data-theme-mode="light"] .dialog-title-icon-box--error .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--error {
+  background: var(--pl-error) !important;
+  background-image: none !important;
+  border: 1.5px solid #10111A !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--error .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
+
+.dialog-title-icon-box--warning,
+html[data-theme-mode="light"] .dialog-title-icon-box--warning {
+  background: var(--pl-warning) !important;
+  background-image: none !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #FFFFFF !important;
+}
+.dialog-title-icon-box--warning .mud-icon-root,
+html[data-theme-mode="light"] .dialog-title-icon-box--warning .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--warning {
+  background: var(--pl-warning) !important;
+  background-image: none !important;
+  border: 1.5px solid #10111A !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--warning .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
+
+.dialog-title-icon-box--success,
+html[data-theme-mode="light"] .dialog-title-icon-box--success {
+  background: var(--pl-success) !important;
+  background-image: none !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #FFFFFF !important;
+}
+.dialog-title-icon-box--success .mud-icon-root,
+html[data-theme-mode="light"] .dialog-title-icon-box--success .mud-icon-root {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--success {
+  background: var(--pl-success) !important;
+  background-image: none !important;
+  border: 1.5px solid #10111A !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
+  color: #10111A !important;
+}
+html[data-theme-mode="dark"] .dialog-title-icon-box--success .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
+}
+
 /* Dialog actions contrast */
 html[data-theme-mode="light"] .dialog-cancel-btn {
   background: var(--pl-chip-2) !important;
@@ -7114,6 +7574,96 @@ html[data-theme-mode="light"] .dialog-cancel-btn {
 html[data-theme-mode="light"] .dialog-confirm-btn {
   border: 1.5px solid var(--pl-ink-border) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
+}
+
+/* Semantic icon buttons contrast in light mode */
+html[data-theme-mode="light"] .mud-icon-button.mud-error-text,
+html[data-theme-mode="light"] .mud-icon-button-color-error:not(.mud-button-filled),
+html[data-theme-mode="light"] .home-hero__discard {
+  color: var(--pl-err-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-error-text .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-error:not(.mud-button-filled) .mud-icon-root,
+html[data-theme-mode="light"] .home-hero__discard .mud-icon-root {
+  color: var(--pl-err-text) !important;
+  fill: var(--pl-err-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-error-text:not(.mud-button-disabled):hover,
+html[data-theme-mode="light"] .mud-icon-button-color-error:not(.mud-button-disabled):hover,
+html[data-theme-mode="light"] .home-hero__discard:hover {
+  background: color-mix(in srgb, var(--pl-error) 15%, var(--pl-chip-2)) !important;
+  border-color: var(--pl-error) !important;
+  color: var(--pl-err-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-error-text:not(.mud-button-disabled):hover .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-error:not(.mud-button-disabled):hover .mud-icon-root,
+html[data-theme-mode="light"] .home-hero__discard:hover .mud-icon-root {
+  color: var(--pl-err-text) !important;
+  fill: var(--pl-err-text) !important;
+}
+
+html[data-theme-mode="light"] .mud-icon-button.mud-warning-text,
+html[data-theme-mode="light"] .mud-icon-button-color-warning:not(.mud-button-filled) {
+  color: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-warning-text .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-warning:not(.mud-button-filled) .mud-icon-root {
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-warning-text:not(.mud-button-disabled):hover,
+html[data-theme-mode="light"] .mud-icon-button-color-warning:not(.mud-button-disabled):hover {
+  background: color-mix(in srgb, var(--pl-warning) 15%, var(--pl-chip-2)) !important;
+  border-color: var(--pl-warning) !important;
+  color: var(--pl-warn-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-warning-text:not(.mud-button-disabled):hover .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-warning:not(.mud-button-disabled):hover .mud-icon-root {
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
+}
+
+html[data-theme-mode="light"] .mud-icon-button.mud-success-text,
+html[data-theme-mode="light"] .mud-icon-button-color-success:not(.mud-button-filled) {
+  color: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-success-text .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-success:not(.mud-button-filled) .mud-icon-root {
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-success-text:not(.mud-button-disabled):hover,
+html[data-theme-mode="light"] .mud-icon-button-color-success:not(.mud-button-disabled):hover {
+  background: color-mix(in srgb, var(--pl-success) 15%, var(--pl-chip-2)) !important;
+  border-color: var(--pl-success) !important;
+  color: var(--pl-ok-text) !important;
+}
+html[data-theme-mode="light"] .mud-icon-button.mud-success-text:not(.mud-button-disabled):hover .mud-icon-root,
+html[data-theme-mode="light"] .mud-icon-button-color-success:not(.mud-button-disabled):hover .mud-icon-root {
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+
+/* Semantic icon buttons contrast in dark mode */
+html[data-theme-mode="dark"] .mud-icon-button.mud-error-text,
+html[data-theme-mode="dark"] .home-hero__discard {
+  color: var(--pl-error) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button.mud-error-text .mud-icon-root,
+html[data-theme-mode="dark"] .home-hero__discard .mud-icon-root {
+  color: var(--pl-error) !important;
+  fill: var(--pl-error) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button.mud-error-text:hover,
+html[data-theme-mode="dark"] .home-hero__discard:hover {
+  background: color-mix(in srgb, var(--pl-error) 20%, var(--pl-chip-2)) !important;
+  border-color: var(--pl-error) !important;
+  color: var(--pl-error) !important;
+}
+html[data-theme-mode="dark"] .mud-icon-button.mud-error-text:hover .mud-icon-root,
+html[data-theme-mode="dark"] .home-hero__discard:hover .mud-icon-root {
+  color: var(--pl-error) !important;
+  fill: var(--pl-error) !important;
 }
 
 /* Workout skeleton container plates */

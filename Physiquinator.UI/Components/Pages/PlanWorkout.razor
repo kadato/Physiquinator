@@ -29,7 +29,10 @@ else
 
     @if (!IsNew && !string.IsNullOrWhiteSpace(PlanName))
     {
-        <MudText Typo="Typo.body2" Class="mud-text-secondary plan-page__subtitle mb-3">@PlanName</MudText>
+        <div class="plan-page__name-badge mb-3">
+            <span class="plan-page__name-tag">@("Plan")</span>
+            <span class="plan-page__name-text">@PlanName</span>
+        </div>
     }
 
     <MudForm @bind-IsValid="_formValid">
@@ -49,6 +52,7 @@ else
                                       Required="true"
                                       RequiredError="@("Plan name is required")"
                                       Immediate="true"
+                                      Class="plan-details-card__name-input"
                                       autocapitalize="words"
                                       autocomplete="off"
                                       enterkeyhint="done" />
@@ -78,7 +82,13 @@ else
 
             <section class="plan-section">
                 <div class="plan-section-header">
-                    <span class="plan-section-header__title">@("Exercises")</span>
+                    <div class="plan-section-header__title-group">
+                        <span class="plan-section-header__title">@("Exercises")</span>
+                        @if (Exercises.Count > 0)
+                        {
+                            <span class="home-plans-count-chip">@Exercises.Count</span>
+                        }
+                    </div>
                 </div>
 
                 @if (!Exercises.Any())

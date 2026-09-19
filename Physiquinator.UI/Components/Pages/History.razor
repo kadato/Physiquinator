@@ -218,6 +218,19 @@
                 </div>
             }
 
+            <div class="history-section-header">
+                <div class="history-section-header__title-group">
+                    <span class="history-section-header__title">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                        @("Workout logs")
+                    </span>
+                    @if (_listSessions != null && _listSessions.Count > 0)
+                    {
+                        <span class="home-plans-count-chip">@_listSessions.Count</span>
+                    }
+                </div>
+            </div>
+
             <div class="history-session-list">
                 @foreach (var s in _listSessions ?? [])
                 {

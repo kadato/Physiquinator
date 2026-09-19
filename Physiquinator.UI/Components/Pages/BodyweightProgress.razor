@@ -77,6 +77,19 @@ else
                 </div>
             </ProgressChartShell>
 
+            <div class="section-plate-header mt-3 mb-2">
+                <div class="section-plate-header__title-group">
+                    <span class="section-plate-title">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                        @("Weight logs")
+                    </span>
+                    @if (_entries.Count > 0)
+                    {
+                        <span class="home-plans-count-chip">@_entries.Count</span>
+                    }
+                </div>
+            </div>
+
             <MudPaper Class="premium-table bodyweight-table" Elevation="0">
                 <div class="infinite-table-list">
                     <div class="infinite-table-head infinite-table-head--3">

@@ -36,7 +36,10 @@ else
 {
     <MudStack Spacing="3" Class="app-fab-page-padding">
         <MudPaper Class="pa-3 settings-card" Elevation="0">
-            <MudText Typo="Typo.h2" Class="settings-card__title">@_session.PlanName</MudText>
+            <div class="plan-page__name-badge mb-2">
+                <span class="plan-page__name-tag">Session</span>
+                <span class="plan-page__name-text">@_session.PlanName</span>
+            </div>
             <MudText Typo="Typo.body2" Class="mud-text-secondary">@SessionRangeLabel</MudText>
             <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
                 @if (_session.EndedAtUtc == null && _planGuid is { } activePlanId)
@@ -72,9 +75,14 @@ else
         @if (_planGuid is { } pg && _distinctExerciseNames.Count > 0)
         {
             <MudPaper Class="pa-3 settings-card" Elevation="0">
-                <div class="settings-card__header">
-                    <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Progress by exercise")</MudText>
+                <div class="settings-card__header mb-2">
+                    <div class="section-plate-header__title-group">
+                        <span class="section-plate-title">
+                            <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Size="Size.Small" />
+                            @("Progress by exercise")
+                        </span>
+                        <span class="home-plans-count-chip">@_distinctExerciseNames.Count</span>
+                    </div>
                 </div>
                 <div class="progress-exercise-grid">
                     @foreach (var name in _distinctExerciseNames)
@@ -95,9 +103,14 @@ else
         @if (_snapshot != null && _snapshot.Exercises.Count > 0)
         {
             <MudPaper Elevation="0" Class="premium-table history-detail-plan-table">
-                <div class="pa-3 pb-1 d-flex align-center gap-2">
-                    <MudIcon Icon="@Icons.Material.Outlined.Assignment" Class="settings-card__icon" />
-                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Plan when you trained")</MudText>
+                <div class="pa-3 pb-2 d-flex align-center gap-2">
+                    <div class="section-plate-header__title-group">
+                        <span class="section-plate-title">
+                            <MudIcon Icon="@Icons.Material.Outlined.Assignment" Size="Size.Small" />
+                            @("Plan when you trained")
+                        </span>
+                        <span class="home-plans-count-chip">@_snapshot.Exercises.Count</span>
+                    </div>
                 </div>
                 <div class="infinite-table-list">
                     <div class="infinite-table-head @(SnapshotHasTargets ? "history-detail-plan-head--4" : "history-detail-plan-head--3")">
@@ -147,8 +160,17 @@ else
         else
         {
             <MudPaper Elevation="0" Class="premium-table history-detail-table">
-                <div class="pa-3 pb-1 d-flex align-center justify-space-between">
-                    <MudText Typo="Typo.h2" Class="settings-card__title">@("Sets")</MudText>
+                <div class="pa-3 pb-2 d-flex align-center justify-space-between flex-wrap gap-2">
+                    <div class="section-plate-header__title-group">
+                        <span class="section-plate-title">
+                            <MudIcon Icon="@Icons.Material.Outlined.FitnessCenter" Size="Size.Small" />
+                            @("Sets")
+                        </span>
+                        @if (_sets.Any())
+                        {
+                            <span class="home-plans-count-chip">@_sets.Count</span>
+                        }
+                    </div>
                     @if (_sets.Any())
                     {
                         @if (_editMode)

@@ -27,6 +27,7 @@
                     <span>@("All data is stored locally on this device.")</span>
                 </div>
             </MudAlert>
+            <span class="section-plate-tag">@("All data backup")</span>
             <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                 @("Export plans, workout history, bodyweight logs, schedule, and settings into a single backup file.")
             </MudText>
@@ -43,6 +44,7 @@
 
             <MudDivider Class="my-4" />
 
+            <span class="section-plate-tag">@("Workout plans")</span>
             <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                 @("Export or import workout plans as JSON.")
             </MudText>
@@ -62,7 +64,10 @@
                 <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">@("Create a plan first to enable export.")</MudText>
             }
 
-            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4 mb-3">
+            <MudDivider Class="my-4" />
+
+            <span class="section-plate-tag">@("Workout history")</span>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
                 @("Export or import workout history JSON. Importing merges sessions by ID.")
             </MudText>
             <div class="settings-btn-group">

@@ -162,6 +162,20 @@
                             @("The + button on the rest timer adds this many seconds.")
                         </MudText>
                     </MudStack>
+
+                    <MudSelect T="WorkoutWakeLockMode"
+                               Variant="Variant.Outlined"
+                               Label="@("Keep screen on")"
+                               Class="mt-4"
+                               Value="_wakeLockMode"
+                               ValueChanged="OnWakeLockModeChanged">
+                        <MudSelectItem Value="WorkoutWakeLockMode.RestOnly">@("Only during rest countdown, default to save battery")</MudSelectItem>
+                        <MudSelectItem Value="WorkoutWakeLockMode.Always">@("Always keep screen on during a workout")</MudSelectItem>
+                        <MudSelectItem Value="WorkoutWakeLockMode.Never">@("Follow the system screen timeout")</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.body2" Class="mt-1 mud-text-secondary">
+                        @("Controls when the screen stays on during a workout.")
+                    </MudText>
                     <MudStack Spacing="0" Class="mt-4">
                         <MudText Typo="Typo.body2" Class="font-weight-semibold">@("Floating timer")</MudText>
                         @if (RestNotifications.SupportsOverlay)
@@ -571,6 +585,7 @@
     private bool _restSoundVibrationEnabled = true;
     private bool _overlayPermissionGranted = true;
     private int _addTimeSeconds = 30;
+    private WorkoutWakeLockMode _wakeLockMode = WorkoutWakeLockMode.RestOnly;
 
     private string _settingsSearch = "";
     private int _activeTabIndex;
@@ -620,7 +635,7 @@
 
     private static readonly string[] AppearanceKeywords = ["appearance", "theme", "dark", "light", "mode", "tokyo", "dracula", "monokai", "nord", "solarized", "github", "night owl", "one dark"];
     private static readonly string[] UnitsKeywords = ["units", "kg", "lb", "weight"];
-    private static readonly string[] RestTimerKeywords = ["rest", "timer", "notification", "sound", "vibration", "overlay"];
+    private static readonly string[] RestTimerKeywords = ["rest", "timer", "notification", "sound", "vibration", "overlay", "screen", "battery", "wake", "lock"];
     private static readonly string[] ProfilesKeywords = ["profiles", "profile", "user", "multi"];
     private static readonly string[] ScheduleKeywords = ["schedule", "streak", "days", "training"];
     private static readonly string[] SignOutKeywords = ["account", "sign out", "signout", "logout"];
@@ -798,6 +813,7 @@
         _restAlertsEnabled = RestAlertSettings.Enabled;
         _restSoundVibrationEnabled = RestAlertSettings.SoundVibrationEnabled;
         _addTimeSeconds = RestAlertSettings.AddTimeSeconds;
+        _wakeLockMode = RestAlertSettings.WakeLockMode;
         _scheduleDays = [.. WorkoutSchedule.Days];
         _aiSettings = AiAssistant.GetSettings();
         _weightUnit = WeightUnitService.Current;
@@ -889,6 +905,20 @@
         RestAlertSettings.SetSoundVibrationEnabled(enabled);
         _restSoundVibrationEnabled = enabled;
         UiFeedback.Success(enabled ? "Sound and vibration on." : "Sound and vibration off.");
+    }
+
+    private void OnWakeLockModeChanged(WorkoutWakeLockMode mode)
+    {
+        RestAlertSettings.SetWakeLockMode(mode);
+        _wakeLockMode = mode;
+        var msg = mode switch
+        {
+            WorkoutWakeLockMode.RestOnly => "Screen stays on only during the rest countdown.",
+            WorkoutWakeLockMode.Always => "Screen stays on during the whole workout.",
+            WorkoutWakeLockMode.Never => "Screen follows the system screen timeout.",
+            _ => "Screen wake lock mode updated."
+        };
+        UiFeedback.Success(msg);
     }
 
     private void OnAutoCheckEnabledChanged(bool enabled)

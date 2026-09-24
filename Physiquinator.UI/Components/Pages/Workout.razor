@@ -52,7 +52,8 @@ else
             </div>
         }
 
-        <WorkoutHud ElapsedLabel="@ElapsedLabel"
+        <WorkoutHud @ref="_hud"
+                   ElapsedLabel="@ElapsedLabel"
                    VolumeLabel="@(SessionVolumeLabel ?? "0 " + UnitSuffix)"
                    TotalCompletedSets="@TotalCompletedSets"
                    TotalSetsCount="@TotalSetsCount"
@@ -162,10 +163,10 @@ else
                         </div>
                         <div class="workout-focus__head-right">
                             <div class="workout-focus__menu" @onclick:stopPropagation="true">
-                                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" PopoverClass="workout-focus__menu-popover">
                                     <ActivatorContent>
                                         <button type="button" class="workout-focus__menu-btn" aria-label="@(string.Format("Actions for {0}", FocusedExercise.Name))" @onclick="@context.ToggleAsync">
-                                            <span class="workout-focus__menu-dots"><i></i><i></i><i></i></span>
+                                            <MudIcon Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" />
                                         </button>
                                     </ActivatorContent>
                                     <ChildContent>
@@ -414,6 +415,7 @@ else
     private bool _isLoading = true;
     private DotNetObjectReference<Workout>? _dotNetRef;
     private RestTimerPanel? _restPanel;
+    private WorkoutHud? _hud;
     private string? _historySessionId;
     private double? _bodyweightKg;
     private bool _undoVisible;
@@ -429,6 +431,31 @@ else
     private int _activeExerciseIndex;
     private readonly Dictionary<int, int> _activeSetIndices = new();
     private int? _restNextExerciseOverride;
+    private string _lastElapsedLabel = "";
+
+    private async Task UpdateWakeLockAsync()
+    {
+        if (_disposed) return;
+
+        bool wantWakeLock = RestAlertSettings.WakeLockMode switch
+        {
+            WorkoutWakeLockMode.Always => true,
+            WorkoutWakeLockMode.RestOnly => SessionService.IsResting,
+            WorkoutWakeLockMode.Never => false,
+            _ => SessionService.IsResting
+        };
+
+        try
+        {
+            await TimerInterop.SetKeepScreenOnAsync(wantWakeLock);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UpdateWakeLockAsync failed: {ex}");
+        }
+    }
+
+    private void OnRestAlertSettingsChanged() => _ = InvokeAsync(UpdateWakeLockAsync);
 
     private string ElapsedLabel
     {
@@ -665,6 +692,7 @@ else
     {
         SessionService.RestCompletedWhileBackground += OnSessionRestCompletedWhileBackground;
         SessionService.RestStateChanged += OnSessionRestStateChanged;
+        RestAlertSettings.Changed += OnRestAlertSettingsChanged;
 
         _dotNetRef = DotNetObjectReference.Create(this);
         _bodyweightKg = UserProfileService.GetActiveProfile().BodyweightKg;
@@ -675,13 +703,18 @@ else
         _elapsedTimer = new System.Threading.Timer(
             _ => OnElapsedTick(),
             null,
-            TimeSpan.FromSeconds(30),
-            TimeSpan.FromSeconds(30));
+            TimeSpan.FromSeconds(60),
+            TimeSpan.FromSeconds(60));
     }
 
     private void OnElapsedTick()
     {
-        _ = InvokeAsync(SafeStateHasChangedAsync);
+        var current = ElapsedLabel;
+        if (current != _lastElapsedLabel)
+        {
+            _lastElapsedLabel = current;
+            _ = InvokeAsync(SafeStateHasChangedAsync);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -731,7 +764,7 @@ else
                 _overlayPermissionMissing = RestNotifications.SupportsOverlay && !RestNotifications.HasOverlayPermission();
             }
 
-            await TimerInterop.SetKeepScreenOnAsync(true);
+            await UpdateWakeLockAsync();
             await TimerInterop.RegisterBackHandlerAsync(_dotNetRef!);
 
             string? pendingRest = RestTimer.CapturePendingSnapshot();
@@ -1545,6 +1578,15 @@ else
             await ScrollRestTimerIntoViewAsync();
         }
 
+        if (_hud != null)
+        {
+            _hud.Refresh(OverallProgressPct);
+        }
+        if (_restPanel != null)
+        {
+            _restPanel.Refresh();
+        }
+
         await SafeStateHasChangedAsync();
     }
 
@@ -1582,10 +1624,18 @@ else
             if (!_isRestComplete) return;
 
             _isRestComplete = false;
-            _lastRestDurationSeconds = seconds;
+            _lastRestDurationSeconds = FocusedExercise?.RestIntervalSeconds > 0 ? FocusedExercise.RestIntervalSeconds : seconds;
             SessionService.StartRest(seconds);
             await StartJsTimerAsync();
             await ScrollRestTimerIntoViewAsync();
+            if (_hud != null)
+            {
+                _hud.Refresh(OverallProgressPct);
+            }
+            if (_restPanel != null)
+            {
+                _restPanel.Refresh();
+            }
             await SafeStateHasChangedAsync();
             return;
         }
@@ -1596,6 +1646,14 @@ else
         if (remainingMs > 0)
         {
             await StartJsTimerAsync(remainingMs, continueMode: true);
+        }
+        if (_hud != null)
+        {
+            _hud.Refresh(OverallProgressPct);
+        }
+        if (_restPanel != null)
+        {
+            _restPanel.Refresh();
         }
         await SafeStateHasChangedAsync();
     }
@@ -1618,6 +1676,7 @@ else
     private void OnSessionRestStateChanged(object? sender, EventArgs e) =>
         EnqueueRestUpdate(async () =>
         {
+            await UpdateWakeLockAsync();
             if (!SessionService.IsResting)
             {
                 await TimerInterop.StopTimerAsync();
@@ -1640,6 +1699,7 @@ else
         EnqueueRestUpdate(async () =>
         {
             await TimerInterop.StopTimerAsync();
+            await UpdateWakeLockAsync();
             _isRestComplete = true;
             if (_restNextExerciseOverride.HasValue)
             {
@@ -1750,6 +1810,7 @@ else
             var done = SessionService.TickRest();
             if (done)
             {
+                await UpdateWakeLockAsync();
                 _isRestComplete = true;
                 if (_restNextExerciseOverride.HasValue)
                 {
@@ -1767,10 +1828,14 @@ else
                 _restPanel.Refresh();
             }
 
-            await SafeStateHasChangedAsync();
+            if (_hud != null)
+            {
+                _hud.Refresh(OverallProgressPct);
+            }
 
             if (done)
             {
+                await SafeStateHasChangedAsync();
                 await PlayRestCompleteAlertsAsync();
                 await ScrollActiveCardIntoViewAsync();
                 return true;
@@ -1894,6 +1959,7 @@ else
         HideUndoToast();
         SessionService.RestCompletedWhileBackground -= OnSessionRestCompletedWhileBackground;
         SessionService.RestStateChanged -= OnSessionRestStateChanged;
+        RestAlertSettings.Changed -= OnRestAlertSettingsChanged;
         _dotNetRef?.Dispose();
     }
 

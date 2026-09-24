@@ -73,7 +73,8 @@
         </div>
 
         <div class="rest-timer-edge-track" aria-hidden="true">
-            <div class="rest-timer-edge-fill @EdgeFillClass"></div>
+            <div class="rest-timer-edge-fill @EdgeFillClass"
+                 style="transform: scaleX(@(ProgressFraction.ToString("F4", System.Globalization.CultureInfo.InvariantCulture))); @(ShouldSnap ? "transition: none !important;" : "")"></div>
         </div>
     </div>
 </MudPaper>
@@ -182,6 +183,28 @@
     }
 
     private string AddTimeLabel => FormatSeconds(AddRestSeconds);
+
+    private int _prevRemainingSeconds = -1;
+
+    private bool ShouldSnap => IsRestComplete || ProgressFraction <= 0 || RestSecondsRemaining >= _prevRemainingSeconds;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        _prevRemainingSeconds = RestSecondsRemaining;
+    }
+
+    private double ProgressFraction
+    {
+        get
+        {
+            if (IsRestComplete) return 1.0;
+            var total = SessionService.ActiveRestDurationSeconds;
+            if (total <= 0) return 0.0;
+            var remaining = RestSecondsRemaining;
+            var elapsed = Math.Max(0, total - remaining);
+            return Math.Clamp((double)elapsed / total, 0.0, 1.0);
+        }
+    }
 
     private static string FormatSeconds(int seconds)
     {

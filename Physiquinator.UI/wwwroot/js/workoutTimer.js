@@ -1,9 +1,6 @@
 let sharedCtx = null;
 let restTimerActive = false;
 let restTimerId = null;
-let rafId = null;
-let restStartTime = 0;
-let restTotalMs = 0;
 let chainGeneration = 0;
 
 // ---- Keep-screen-on (wake lock) ------------------------------------------
@@ -59,28 +56,6 @@ export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs,
     }
 
     if (restTimerActive && restTimerId !== null) {
-        if (continueMode) {
-            // Extension (+N s), overlay action, or routine sync: continue from
-            // the bar's current position and reach 100% exactly when the new
-            // remaining time elapses. Using elapsed + remaining as the scale
-            // keeps this correct even when the remaining time exceeds the
-            // original interval (adding more than the default rest time).
-            const currentProgress = Math.min(Math.max((performance.now() - restStartTime) / restTotalMs, 0), 1);
-            const elapsedMs = currentProgress * restTotalMs;
-            restTotalMs = elapsedMs + totalMs;
-            restStartTime = performance.now() - elapsedMs;
-        } else {
-            // Fresh/restart/reset: re-anchor to the true fraction of the
-            // active interval (0 for a fresh rest or reset).
-            const activeMs = Math.max(activeDurationMs || totalMs, 1);
-            const fraction = Math.min(Math.max(1 - totalMs / activeMs, 0), 1);
-            restTotalMs = activeMs;
-            restStartTime = performance.now() - fraction * activeMs;
-        }
-        // A leftover chain (for example, the page was disposed without stopRestTimer
-        // being reached, then remounted) may still tick a stale dotNetRef.
-        // Bump the generation to kill it and always reschedule with the new
-        // reference, or the countdown freezes after navigation.
         chainGeneration++;
         scheduleTick(dotNetRef, intervalMs);
         return;
@@ -89,38 +64,7 @@ export function startRestTimer(dotNetRef, intervalMs, totalMs, activeDurationMs,
     stopRestTimer();
     restTimerActive = true;
     chainGeneration++;
-    if (continueMode) {
-        // Re-arm with no live animation: start from the true fraction of the
-        // active interval.
-        const activeMs = Math.max(activeDurationMs || totalMs, 1);
-        const fraction = Math.min(Math.max(1 - totalMs / activeMs, 0), 1);
-        restTotalMs = activeMs;
-        restStartTime = performance.now() - fraction * activeMs;
-    } else {
-        restTotalMs = Math.max(activeDurationMs || totalMs, 1);
-        restStartTime = performance.now();
-    }
-
-    startProgressRaf();
     scheduleTick(dotNetRef, intervalMs);
-}
-
-function startProgressRaf() {
-    function update() {
-        if (!restTimerActive) return;
-        const elapsed = performance.now() - restStartTime;
-        const progress = Math.min(elapsed / restTotalMs, 1);
-
-        const fill = document.querySelector('.rest-timer-edge-fill');
-        if (fill) {
-            fill.style.transform = `scaleX(${progress})`;
-        }
-
-        if (progress < 1) {
-            rafId = requestAnimationFrame(update);
-        }
-    }
-    rafId = requestAnimationFrame(update);
 }
 
 let undoKeyHandler = null;
@@ -251,10 +195,6 @@ window.physiquinatorBack = {
 
 export function stopRestTimer() {
     restTimerActive = false;
-    if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-    }
     if (restTimerId !== null) {
         clearTimeout(restTimerId);
         restTimerId = null;

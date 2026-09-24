@@ -40,4 +40,13 @@
 
     [Parameter]
     public int OverallProgressPct { get; set; }
+
+    public void Refresh(int? progressPct = null)
+    {
+        if (progressPct.HasValue)
+        {
+            OverallProgressPct = progressPct.Value;
+        }
+        StateHasChanged();
+    }
 }

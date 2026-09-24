@@ -47,6 +47,9 @@ public sealed class RestOverlayService : Service
 
     private const long TickerIntervalMs = 1000;
 
+    /// <summary>True while the overlay service is actively running as a foreground service for a workout.</summary>
+    public static bool IsRunning { get; private set; }
+
     /// <summary>MainActivity pings the service on app lifecycle changes so the
     /// bubble can be shown/hidden without a polling ticker running in the
     /// foreground.</summary>
@@ -75,6 +78,8 @@ public sealed class RestOverlayService : Service
     private bool _dismissed;
     private bool _wasForeground = true;
     private bool _stopping;
+    private ScreenStateReceiver? _screenReceiver;
+    private bool _isScreenInteractive = true;
 
     // Current weight and reps being edited in the overlay
     private double _currentWeightKg;
@@ -145,12 +150,27 @@ public sealed class RestOverlayService : Service
                 // bubble countdown freezes for the rest of the workout.
                 System.Diagnostics.Debug.WriteLine($"RestOverlayService ticker failed: {ex}");
             }
-            // Only reschedule while the ticker is still wanted. StopTicker
-            // must win even when it runs mid-tick.
-            if (_tickerRunning)
+            // Reschedule only while the ticker is still wanted and the screen is on.
+            // StopTicker takes priority even when it runs mid-tick.
+            if (_tickerRunning && _isScreenInteractive)
                 _handler?.PostDelayed(tick, TickerIntervalMs);
         };
         _tickAction = tick;
+
+        try
+        {
+            var powerManager = GetSystemService(PowerService) as PowerManager;
+            _isScreenInteractive = powerManager?.IsInteractive ?? true;
+            _screenReceiver = new ScreenStateReceiver(this);
+            var filter = new IntentFilter();
+            filter.AddAction(Intent.ActionScreenOff);
+            filter.AddAction(Intent.ActionScreenOn);
+            RegisterReceiver(_screenReceiver, filter);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RestOverlayService screen receiver registration failed: {ex}");
+        }
     }
 
     public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
@@ -161,11 +181,28 @@ public sealed class RestOverlayService : Service
         // in the foreground costs no wakeups.
         if (intent?.Action is ActionForegrounded or ActionBackgrounded)
         {
+            WorkoutSessionService? session = ResolveSession();
+            if (!IsRunning || session?.CurrentPlan == null)
+            {
+                RemoveOverlayView();
+                IsRunning = false;
+                StopSelf();
+                return StartCommandResult.NotSticky;
+            }
+
             UpdateOverlayVisibility();
             return StartCommandResult.NotSticky;
         }
 
         WorkoutTimerState state = intent != null ? ReadState(intent) : ReadSessionState();
+
+        WorkoutSessionService? workoutSession = ResolveSession();
+        if (workoutSession?.CurrentPlan == null && string.IsNullOrEmpty(state.PlanName))
+        {
+            IsRunning = false;
+            StopSelf();
+            return StartCommandResult.NotSticky;
+        }
 
         Notification notification = AndroidRestNotificationService.BuildWorkoutNotification(this, state, ResolveSettings()?.AddTimeSeconds ?? RestAlertSettingsService.DefaultAddTimeSeconds);
         if (Build.VERSION.SdkInt >= BuildVersionCodes.UpsideDownCake)
@@ -173,6 +210,7 @@ public sealed class RestOverlayService : Service
         else
             StartForeground(AndroidRestNotificationService.OngoingRestNotificationId, notification);
 
+        IsRunning = true;
         UpdateOverlayVisibility();
 
         return StartCommandResult.NotSticky;
@@ -181,8 +219,15 @@ public sealed class RestOverlayService : Service
     public override void OnDestroy()
     {
         _stopping = true;
+        IsRunning = false;
         StopTicker();
         _handler = null;
+
+        if (_screenReceiver != null)
+        {
+            try { UnregisterReceiver(_screenReceiver); } catch { }
+            _screenReceiver = null;
+        }
 
         RemoveOverlayView();
 
@@ -192,13 +237,14 @@ public sealed class RestOverlayService : Service
     public override IBinder? OnBind(Intent? intent) => null;
 
     /// <summary>
-    /// Starts the one-second ticker. Called only when the overlay view is
-    /// visible (app backgrounded and bubble not dismissed), so a workout in
-    /// the foreground does not wake the CPU for the whole session.
+    /// Starts the one-second ticker. Runs only when the overlay view is
+    /// visible while the app is in the background and not dismissed. This keeps
+    /// a foreground workout from waking the CPU for the whole session.
+    /// Does not run while the screen is off.
     /// </summary>
     private void StartTicker()
     {
-        if (_tickerRunning || _stopping)
+        if (_tickerRunning || _stopping || !_isScreenInteractive)
             return;
 
         _tickerRunning = true;
@@ -215,11 +261,58 @@ public sealed class RestOverlayService : Service
         _handler?.RemoveCallbacks(_tickAction!);
     }
 
+    private void OnScreenOff()
+    {
+        _isScreenInteractive = false;
+        // Pause the ticker while the screen is off so the CPU can enter deep sleep.
+        StopTicker();
+    }
+
+    private void OnScreenOn()
+    {
+        _isScreenInteractive = true;
+        // If the overlay view is visible, refresh the UI immediately and resume the ticker.
+        if (_overlayView != null && !_dismissed && !_wasForeground)
+        {
+            try { UpdateTicker(); } catch { }
+            StartTicker();
+        }
+    }
+
+    private sealed class ScreenStateReceiver(RestOverlayService service) : BroadcastReceiver
+    {
+        private readonly WeakReference<RestOverlayService> _serviceRef = new(service);
+
+        public override void OnReceive(Context? context, Intent? intent)
+        {
+            if (!_serviceRef.TryGetTarget(out var service) || service._stopping)
+                return;
+
+            if (intent?.Action == Intent.ActionScreenOff)
+            {
+                service.OnScreenOff();
+            }
+            else if (intent?.Action == Intent.ActionScreenOn)
+            {
+                service.OnScreenOn();
+            }
+        }
+    }
+
     /// <summary>Shows the overlay only while the app is in the background and not dismissed by the user.</summary>
     private void UpdateOverlayVisibility()
     {
         if (_stopping)
             return;
+
+        WorkoutSessionService? session = ResolveSession();
+        if (session?.CurrentPlan == null)
+        {
+            RemoveOverlayView();
+            IsRunning = false;
+            StopSelf();
+            return;
+        }
 
         var foreground = MainActivity.IsInForeground;
         if (foreground)
@@ -267,6 +360,14 @@ public sealed class RestOverlayService : Service
     {
         if (_overlayView != null)
             return;
+
+        WorkoutSessionService? session = ResolveSession();
+        if (session?.CurrentPlan == null)
+        {
+            IsRunning = false;
+            StopSelf();
+            return;
+        }
 
         try
         {
@@ -435,6 +536,7 @@ public sealed class RestOverlayService : Service
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"RestOverlayService overlay failed: {ex}");
+            IsRunning = false;
             StopSelf();
         }
     }
@@ -822,6 +924,7 @@ public sealed class RestOverlayService : Service
         WorkoutSessionService? session = ResolveSession();
         if (session == null || session.CurrentPlan == null)
         {
+            IsRunning = false;
             StopSelf();
             return;
         }

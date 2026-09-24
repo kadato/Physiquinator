@@ -4,6 +4,7 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Views;
 using AndroidX.Activity;
+using Physiquinator.Core.Services;
 using Physiquinator.Platforms.Android.Services;
 using Physiquinator.Services;
 using AndroidView = global::Android.Views.View;
@@ -71,16 +72,21 @@ public class MainActivity : MauiAppCompatActivity
 
     /// <summary>
     /// Tells the rest-timer overlay service that the app changed foreground
-    /// state so it can show/hide the bubble and start/stop its ticker without
-    /// polling. The service is already running as a foreground service for
-    /// the whole workout. Starting it again while it is not running (no
-    /// workout) fails silently on Android 12+ from the background, which is
-    /// the desired no-op.
+    /// state so it can show or hide the bubble and start or stop its ticker without
+    /// polling. The service runs as a foreground service during an active
+    /// workout. If the service is not running or no workout is active, this is a no-op.
     /// </summary>
     private static void NotifyOverlayVisibilityChange(string action)
     {
+        if (!RestOverlayService.IsRunning)
+            return;
+
         try
         {
+            var session = IPlatformApplication.Current?.Services.GetService(typeof(WorkoutSessionService)) as WorkoutSessionService;
+            if (session?.CurrentPlan == null)
+                return;
+
             Context context = global::Android.App.Application.Context;
             context.StartService(new Intent(context, typeof(RestOverlayService))
                 .SetAction(action)

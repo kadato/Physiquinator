@@ -48,6 +48,13 @@
             </nav>
             <span class="app-rail__lights" aria-hidden="true"><i></i><i></i><i></i></span>
         </header>
+
+        <main class="app-main-scroll" id="main-content" tabindex="-1">
+            <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
+                @Body
+            </MudContainer>
+        </main>
+
         <nav class="app-nav-pill" aria-label="@("Main navigation")">
             <div class="app-nav-pill__inner">
                 <NavLink href="@AppRoutes.Home" class="app-nav-tab" Match="NavLinkMatch.All" ActiveClass="app-nav-tab--active">
@@ -64,12 +71,6 @@
                 </NavLink>
             </div>
         </nav>
-
-        <main class="app-main-scroll" id="main-content" tabindex="-1">
-            <MudContainer MaxWidth="MaxWidth.Small" Class="pb-4 app-page-container">
-                @Body
-            </MudContainer>
-        </main>
 
         @* Paper fade under the fixed chrome so scrolling rows exit cleanly
            instead of colliding with the pill and FABs. *@

@@ -25,7 +25,7 @@
                     data-step="@Step.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                     data-min="@Min.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                     data-is-integer="@IsInteger.ToString().ToLowerInvariant()">
-                @DisplayText
+                <span @key="@DisplayText" class="flap-tick">@DisplayText</span>
                 @if (Compact && !string.IsNullOrEmpty(Unit))
                 {
                     <span class="set-metric-stepper__value-unit"> @Unit</span>

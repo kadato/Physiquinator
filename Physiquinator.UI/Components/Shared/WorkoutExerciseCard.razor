@@ -36,7 +36,7 @@
             @if (CanMoveUp || CanMoveDown || !IsCompleted)
             {
                 <div @onclick:stopPropagation="true" class="exercise-more-menu">
-                    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                    <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" PopoverClass="workout-focus__menu-popover">
                         <ActivatorContent>
                             <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
                                            Size="Size.Small"

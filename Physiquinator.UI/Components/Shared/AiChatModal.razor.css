@@ -107,8 +107,10 @@
     background: var(--pl-chip);
     color: var(--pl-stone);
     cursor: pointer;
-    transition: all 120ms ease;
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, color 120ms ease, border-color 120ms ease;
     white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .ai-mode-tab:hover {
@@ -117,11 +119,20 @@
     background: var(--pl-paper-2);
 }
 
+.ai-mode-tab:active {
+    transform: translate(1px, 1px);
+}
+
 .ai-mode-tab--active {
     background: var(--pl-yellow) !important;
     color: #10111A !important;
     border-color: var(--pl-yellow) !important;
     font-weight: 800 !important;
+}
+
+.ai-mode-tab--active:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
 }
 
 /* ---- API key banner ---- */
@@ -352,13 +363,18 @@
     justify-content: center;
     cursor: pointer;
     padding: 0;
-    transition: all 120ms ease;
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease, color 120ms ease;
     border-radius: var(--radius);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 .ai-header-btn:hover {
     background: var(--pl-chip-2);
     border-color: var(--pl-yellow);
     color: var(--pl-yellow);
+}
+.ai-header-btn:active {
+    transform: translate(2px, 2px);
 }
 
 .ai-quick-btn {
@@ -376,7 +392,12 @@
     text-align: center;
     border-radius: var(--radius);
     cursor: pointer;
-    transition: all 120ms ease;
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease, color 120ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+.ai-quick-btn:active:not(:disabled) {
+    transform: translate(1px, 1px);
 }
 .ai-quick-btn:disabled {
     opacity: 0.45;

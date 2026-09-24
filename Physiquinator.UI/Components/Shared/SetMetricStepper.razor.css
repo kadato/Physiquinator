@@ -26,7 +26,7 @@
     min-height: 56px;
     padding: 0;
     font-family: var(--font-display) !important;
-    font-size: 30px !important;
+    font-size: 33px !important;
     font-weight: 800 !important;
     line-height: 1 !important;
     border-radius: var(--radius);
@@ -34,9 +34,13 @@
     background: var(--pl-chip-2);
     color: var(--pl-ink);
     cursor: pointer;
-    box-shadow: none;
+    box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
     box-sizing: border-box;
-    transition: all 120ms ease;
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease, color 120ms ease;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .set-metric-stepper__btn:hover {
@@ -46,7 +50,11 @@
 }
 
 .set-metric-stepper__btn:active {
-    transform: scale(0.92);
+    transform: translate(2px, 2px);
+    box-shadow: none;
+    border-color: var(--pl-volt-edge);
+    background: var(--pl-chip);
+    color: var(--pl-yellow);
 }
 
 .set-metric-stepper__value {
@@ -81,10 +89,13 @@
 /* Dragging container styles */
 .set-metric-stepper__value--dragging {
     background: var(--pl-chip-2);
-    border-color: var(--pl-hairline-strong);
+    border-color: var(--pl-yellow);
     box-shadow: none;
-    transform: scale(1.02);
     cursor: ew-resize !important;
+}
+
+.set-metric-stepper__value--dragging .flap-tick {
+    animation: none !important;
 }
 
 /* Specific left/right direction styles */
@@ -168,26 +179,35 @@
     min-width: 56px;
     height: 56px;
     padding: 0;
-    font-size: 30px;
+    font-family: var(--font-display);
+    font-size: 33px;
     font-weight: 800;
     line-height: 1;
     border-radius: var(--radius);
-    border: var(--hairline);
+    border: 1.5px solid var(--hairline-strong);
     background: var(--pl-chip-2);
     color: var(--pl-ink);
     cursor: pointer;
-    transition: background-color 0.15s, transform 0.1s;
+    box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease, color 120ms ease;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    box-shadow: none;
     box-sizing: border-box;
+}
+
+.set-metric-stepper__btn--compact:hover {
+    background: var(--pl-chip);
+    border-color: var(--pl-yellow);
+    color: var(--pl-yellow);
 }
 
 .set-metric-stepper__btn--compact:active {
     background: var(--pl-chip);
-    border-color: var(--pl-hairline-strong);
-    transform: scale(0.93);
+    border-color: var(--pl-volt-edge);
+    color: var(--pl-yellow);
+    transform: translate(2px, 2px);
     box-shadow: none;
 }
 

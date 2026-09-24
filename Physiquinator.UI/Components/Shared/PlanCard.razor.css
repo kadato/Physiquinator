@@ -141,7 +141,16 @@
     border: 1.5px solid var(--hairline-strong) !important;
     background: var(--pl-chip-2) !important;
     color: var(--pl-ink) !important;
+    box-shadow: var(--pl-plate-shadow-sm) !important;
     box-sizing: border-box !important;
+    transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.plan-card-icon-btn:active {
+    transform: translate(3px, 3px) !important;
+    box-shadow: none !important;
 }
 
 .plan-card-icon-btn .mud-icon-root {
@@ -166,4 +175,5 @@
     filter: brightness(1.12);
     background: var(--pl-volt-fill) !important;
 }
+
 

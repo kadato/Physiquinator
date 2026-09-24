@@ -12,14 +12,20 @@
     text-align: left;
     color: inherit;
     font: inherit;
-    cursor: pointer;
-    transition: background 120ms ease;
+    transition: background 120ms ease, opacity 90ms ease, transform 90ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pr-dialog-row:hover,
 .pr-dialog-row:focus-visible {
     background: var(--pl-chip-2);
     outline: none;
+}
+
+.pr-dialog-row:active {
+    opacity: 0.85;
+    transform: translate(1px, 1px);
 }
 
 .pr-dialog-row:focus-visible {

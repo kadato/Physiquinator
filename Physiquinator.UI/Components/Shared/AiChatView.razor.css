@@ -58,8 +58,10 @@
 	justify-content: center;
 	cursor: pointer;
 	padding: 0;
-	transition: all 120ms ease;
+	transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease, color 120ms ease;
 	box-sizing: border-box;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
 }
 .ai-header-btn:hover {
 	background: var(--pl-chip);
@@ -67,7 +69,7 @@
 	color: var(--pl-yellow);
 }
 .ai-header-btn:active {
-	transform: scale(0.96);
+	transform: translate(2px, 2px);
 }
 .ai-header-btn .mud-icon-root {
 	font-size: 18px !important;

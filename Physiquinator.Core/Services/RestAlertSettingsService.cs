@@ -93,4 +93,31 @@ public sealed class RestAlertSettingsService(
             Math.Clamp(seconds, MinAddTimeSeconds, MaxAddTimeSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture));
         Changed?.Invoke();
     }
+
+    private string WakeLockModePreferenceKey
+    {
+        get
+        {
+            UserProfile activeProfile = userProfileService.GetActiveProfile();
+            return ProfilePreferenceKeys.For(PreferenceKeys.WorkoutWakeLockMode, activeProfile);
+        }
+    }
+
+    /// <summary>Screen wake lock mode during workouts. Defaults to RestOnly, which stays active only during the rest countdown.</summary>
+    public WorkoutWakeLockMode WakeLockMode
+    {
+        get
+        {
+            var raw = preferences.Get(WakeLockModePreferenceKey, nameof(WorkoutWakeLockMode.RestOnly));
+            return Enum.TryParse<WorkoutWakeLockMode>(raw, true, out var mode)
+                ? mode
+                : WorkoutWakeLockMode.RestOnly;
+        }
+    }
+
+    public void SetWakeLockMode(WorkoutWakeLockMode mode)
+    {
+        preferences.Set(WakeLockModePreferenceKey, mode.ToString());
+        Changed?.Invoke();
+    }
 }

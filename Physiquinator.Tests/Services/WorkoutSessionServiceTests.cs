@@ -148,10 +148,16 @@ public class WorkoutSessionServiceTests
         clock.Advance(TimeSpan.FromSeconds(20));
         Assert.Equal(40, svc.RestSecondsRemaining);
 
+        Assert.Equal(60, svc.ActiveRestDurationSeconds);
         svc.AddRestSeconds(30);
         Assert.Equal(70, svc.RestSecondsRemaining);
+        Assert.Equal(90, svc.ActiveRestDurationSeconds);
 
-        clock.Advance(TimeSpan.FromSeconds(70));
+        svc.ResetRest();
+        Assert.Equal(60, svc.RestSecondsRemaining);
+        Assert.Equal(60, svc.ActiveRestDurationSeconds);
+
+        clock.Advance(TimeSpan.FromSeconds(60));
         Assert.True(svc.TickRest());
     }
 
@@ -575,5 +581,22 @@ public class WorkoutSessionServiceTests
         // Complete final set -> 100%
         svc.CompleteSet(0, 1);
         Assert.Equal(100, svc.CalculateProgressPercentage());
+    }
+
+    [Fact]
+    public async Task InternalTimer_FiresRestCompletedWhileBackground_WhenRestExpires()
+    {
+        var clock = TimeProvider.System;
+        var svc = new WorkoutSessionService(clock);
+        svc.StartWorkout(SamplePlan());
+
+        var completedTcs = new TaskCompletionSource<bool>();
+        svc.RestCompletedWhileBackground += (_, _) => completedTcs.TrySetResult(true);
+
+        svc.RestoreRestState(clock.GetUtcNow().UtcDateTime.AddMilliseconds(50), 1);
+
+        var completed = await Task.WhenAny(completedTcs.Task, Task.Delay(2000));
+        Assert.Same(completedTcs.Task, completed);
+        Assert.False(svc.IsResting);
     }
 }

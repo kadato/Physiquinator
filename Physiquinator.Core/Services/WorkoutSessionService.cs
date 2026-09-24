@@ -13,6 +13,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     private System.Threading.Timer? _internalTimer;
 
     private DateTime? _restEndsAtUtc;
+    private int _baseRestDurationSeconds;
     private int _activeRestDurationSeconds;
     private bool _isResting;
 
@@ -225,7 +226,8 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     {
         if (CurrentPlan == null) return;
 
-        _activeRestDurationSeconds = Math.Max(0, restIntervalSeconds);
+        _baseRestDurationSeconds = Math.Max(0, restIntervalSeconds);
+        _activeRestDurationSeconds = _baseRestDurationSeconds;
 
         if (_activeRestDurationSeconds == 0)
         {
@@ -235,7 +237,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
-        StartInternalTimer();
+        ArmInternalTimer();
         RaiseRestStateChangedIfChanged();
     }
 
@@ -278,11 +280,13 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
     public void ResetRest()
     {
-        if (_activeRestDurationSeconds <= 0) return;
+        var duration = _baseRestDurationSeconds > 0 ? _baseRestDurationSeconds : _activeRestDurationSeconds;
+        if (duration <= 0) return;
 
+        _activeRestDurationSeconds = duration;
         _restEndsAtUtc = UtcNow.AddSeconds(_activeRestDurationSeconds);
         _isResting = true;
-        StartInternalTimer();
+        ArmInternalTimer();
         RaiseRestStateChangedIfChanged();
     }
 
@@ -296,7 +300,9 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
 
         if (_restEndsAtUtc.HasValue)
         {
+            _activeRestDurationSeconds += seconds;
             _restEndsAtUtc = _restEndsAtUtc.Value.AddSeconds(seconds);
+            ArmInternalTimer();
             RaiseRestStateChangedIfChanged();
         }
     }
@@ -315,10 +321,11 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         if (restEndsAtUtc <= UtcNow || activeRestDurationSeconds <= 0)
             return false;
 
+        _baseRestDurationSeconds = activeRestDurationSeconds;
         _activeRestDurationSeconds = activeRestDurationSeconds;
         _restEndsAtUtc = restEndsAtUtc;
         _isResting = true;
-        StartInternalTimer();
+        ArmInternalTimer();
         RaiseRestStateChangedIfChanged();
         return true;
     }
@@ -338,6 +345,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     {
         _isResting = false;
         _restEndsAtUtc = null;
+        _baseRestDurationSeconds = 0;
         _activeRestDurationSeconds = 0;
         StopInternalTimer();
     }
@@ -348,13 +356,28 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         RaiseRestStateChangedIfChanged();
     }
 
-    private void StartInternalTimer()
+    private void ArmInternalTimer()
     {
-        // One-second tick: the JS bridge drives the visible countdown at the
-        // same cadence, and the exact rest-end alarm is the precise path, so
-        // this timer only needs to notice expiry while the app is not ticking
-        // (backgrounded). A slower tick keeps the CPU in deep sleep longer.
-        _internalTimer ??= new System.Threading.Timer(OnInternalTimerTick, null, 1000, 1000);
+        if (!_isResting || !_restEndsAtUtc.HasValue)
+        {
+            StopInternalTimer();
+            return;
+        }
+
+        var delay = _restEndsAtUtc.Value - UtcNow;
+        if (delay <= TimeSpan.Zero)
+        {
+            StopRest();
+            RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        // Schedule directly for the remaining duration instead of polling every second.
+        // This avoids repeated thread-pool wakeups while resting in the background.
+        if (_internalTimer == null)
+            _internalTimer = new System.Threading.Timer(OnInternalTimerTick, null, delay, Timeout.InfiniteTimeSpan);
+        else
+            _internalTimer.Change(delay, Timeout.InfiniteTimeSpan);
     }
 
     private void StopInternalTimer()
@@ -371,10 +394,16 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
             return;
         }
 
-        if (UtcNow >= _restEndsAtUtc.Value)
+        var remaining = _restEndsAtUtc.Value - UtcNow;
+        if (remaining <= TimeSpan.Zero)
         {
             StopRest();
             RestCompletedWhileBackground?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            // If the timer fires early because of operating system clock granularity, rearm for the remaining time.
+            _internalTimer?.Change(remaining, Timeout.InfiniteTimeSpan);
         }
     }
 

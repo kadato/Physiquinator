@@ -13,6 +13,7 @@ public static class PreferenceKeys
     public const string RestAlertsEnabled = "rest_alerts_enabled";
     public const string RestNotifSoundVibration = "rest_notif_sound_vibration";
     public const string RestAddTimeSeconds = "rest_add_time_seconds";
+    public const string WorkoutWakeLockMode = "workout_wake_lock_mode";
     public const string RestTimerSnapshot = "rest_timer_snapshot_v1";
     public const string ThemePreference = "physiquinator-theme-preference";
     public const string WeightUnitPreference = "physiquinator-weight-unit";

@@ -3,6 +3,17 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     var requestId = System.Diagnostics.Activity.Current?.Id ?? HttpContextAccessor.HttpContext?.TraceIdentifier;
+    var statusCode = HttpContextAccessor.HttpContext?.Request.Query["statusCode"].ToString();
+    var isNotFound = statusCode == "404";
+    if (HttpContextAccessor.HttpContext is { } http && int.TryParse(statusCode, out var code) && code >= 400 && code < 600)
+    {
+        http.Response.StatusCode = code;
+    }
+    var title = isNotFound ? "Page not found - Physiquinator" : "Something went wrong - Physiquinator";
+    var heading = isNotFound ? "Page not found" : "Something went wrong";
+    var message = isNotFound
+        ? "There's nothing at this address. Check the URL or head back home. Your data is safe."
+        : "An unexpected error occurred while processing your request. Your data is safe. Try again, and if the problem persists, reload the page.";
 }
 
 <!DOCTYPE html>
@@ -10,7 +21,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Something went wrong - Physiquinator</title>
+    <title>@title</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0B0C10; color: #F3F4F6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .error-page { text-align: center; padding: 2rem; max-width: 34rem; }
@@ -22,8 +33,8 @@
 </head>
 <body>
     <div class="error-page">
-        <h1>Something went wrong</h1>
-        <p>An unexpected error occurred while processing your request. Your data is safe - try again, and if the problem persists, reload the page.</p>
+        <h1>@heading</h1>
+        <p>@message</p>
         <a href="/">Back to home</a>
         <br />
         <br />

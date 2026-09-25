@@ -49,7 +49,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.Cookie.Name = "physiquinator-auth";
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Production uses Always so the session cookie never travels over plain
+        // HTTP. Development uses SameAsRequest so sign-in works over plain
+        // http://localhost without a dev certificate.
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+        options.Cookie.HttpOnly = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(30);
         options.SlidingExpiration = true;
     });
@@ -83,7 +89,7 @@ builder.Services.AddScoped<WebDbSyncService>();
 
 builder.Services.AddHttpLogging(options =>
 {
-    // No headers and cookies in logs - the auth cookie must never be written to logs.
+    // No headers and cookies in logs. The auth cookie must never be written to logs.
     options.LoggingFields = HttpLoggingFields.RequestMethod
         | HttpLoggingFields.RequestPath
         | HttpLoggingFields.RequestQuery
@@ -107,13 +113,22 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddHealthChecks().AddCheck<WebStorageHealthCheck>("storage");
 
+// The HSTS checklist item wants a long max-age with subdomains and no preload list.
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = false;
+});
+
 builder.Services.AddPhysiquinatorMcpServer(builder.Configuration);
 
 WebApplication app = builder.Build();
 
 // PaaS routers (Render, Fly, ...) terminate TLS and forward the original
-// scheme via X-Forwarded-Proto, so trust those headers. Known-proxy lists stay
-// empty (the documented pattern for routers with dynamic IPs).
+// scheme via X-Forwarded-Proto, so trust those headers. Leaving the
+// known-proxy lists empty matches the documented pattern for routers with
+// dynamic IPs.
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -125,6 +140,12 @@ app.UsePhysiquinatorSecurityHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // Missing static files and unknown API paths re-execute the error page,
+    // which echoes the original status code. Blazor-routed paths render
+    // Routes.razor NotFound client-side with a 200 status instead. The
+    // interactive circuit has no HttpContext to set another status from. The
+    // WASM demo documents the same SPA tradeoff in wwwroot/_redirects.
+    app.UseStatusCodePagesWithReExecute("/Error", "?statusCode={0}");
     app.UseHsts();
 }
 
@@ -171,6 +192,14 @@ app.MapPhysiquinatorMcp(builder.Configuration);
 app.MapPhysiquinatorBrowserDbRestore();
 app.MapPhysiquinatorAuth();
 app.MapHealthChecks("/healthz");
+
+// The api-catalog file has no extension, so static-file middleware skips it.
+// Serve the file explicitly as JSON per RFC 9727.
+app.MapGet("/.well-known/api-catalog", async context =>
+{
+    context.Response.ContentType = "application/json";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, ".well-known", "api-catalog"));
+});
 
 if (!app.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(builder.Configuration["Mcp:ApiKey"]))
 {

@@ -1,0 +1,6 @@
+# Physiquinator - security.txt
+# RFC 9116: https://www.rfc-editor.org/rfc/rfc9116
+Contact: https://github.com/kadato/Physiquinator/issues
+Expires: 2027-09-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://physiquinator.pages.dev/.well-known/security.txt

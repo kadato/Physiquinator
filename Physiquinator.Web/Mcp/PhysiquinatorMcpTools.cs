@@ -18,11 +18,12 @@ public static class PhysiquinatorMcpTools
     private const string ConfirmationRequestKey = "physiquinator-confirm";
     private const string ConfirmProperty = "confirm";
 
-    private static readonly HashSet<string> DestructiveToolNames = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> DestructiveToolNames =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "delete_workout_plan",
         "delete_bodyweight_entry"
-    };
+    ];
 
     public static async ValueTask<ListToolsResult> ListToolsAsync(
         RequestContext<ListToolsRequestParams> context,

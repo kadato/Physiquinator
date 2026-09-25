@@ -72,10 +72,7 @@ public static class WebAuthEndpoints
     private static IResult Error(string message, int statusCode) =>
         Results.Json(new { message }, statusCode: statusCode);
 
-    private static async Task LogoutAsync(HttpContext context)
-    {
-        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    }
+    private static async Task LogoutAsync(HttpContext context) => await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
     private static async Task SignInAsync(HttpContext context, WebUser user)
     {

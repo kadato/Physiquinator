@@ -88,14 +88,12 @@ builder.Services.AddSingleton<IAppUpdateService, NoopAppUpdateService>();
 builder.Services.AddScoped<WebDbSyncService>();
 
 builder.Services.AddHttpLogging(options =>
-{
     // No headers and cookies in logs. The auth cookie must never be written to logs.
     options.LoggingFields = HttpLoggingFields.RequestMethod
         | HttpLoggingFields.RequestPath
         | HttpLoggingFields.RequestQuery
         | HttpLoggingFields.ResponseStatusCode
-        | HttpLoggingFields.Duration;
-});
+        | HttpLoggingFields.Duration);
 
 builder.Services.AddRateLimiter(options =>
 {

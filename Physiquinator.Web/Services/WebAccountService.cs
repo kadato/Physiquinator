@@ -17,7 +17,18 @@ public sealed class WebAccountService(IJSRuntime jsRuntime, NavigationManager na
     {
         try
         {
-            await jsRuntime.InvokeVoidAsync("physiquinatorAuth.logout");
+            try
+            {
+                await jsRuntime.InvokeVoidAsync("physiquinatorAuth.logout");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit gone, still navigate home below.
+            }
+            catch (OperationCanceledException)
+            {
+                // Operation canceled, still navigate home below.
+            }
         }
         finally
         {

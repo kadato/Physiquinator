@@ -11,11 +11,37 @@ public sealed class WebFileTransferService(IJSRuntime jsRuntime) : IFileTransfer
 {
     private const string PickerAccept = ".json,application/json";
 
-    public Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan") =>
-        jsRuntime.InvokeVoidAsync("physiquinatorFiles.download", fileName, json).AsTask();
+    public async Task ExportJsonAsync(string fileName, string json, string shareTitle = "Export Workout Plan")
+    {
+        try
+        {
+            await jsRuntime.InvokeVoidAsync("physiquinatorFiles.download", fileName, json);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone, ignore. Genuine JS failures still bubble to the caller's feedback.
+        }
+        catch (OperationCanceledException)
+        {
+            // Operation canceled, ignore.
+        }
+    }
 
-    public Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share") =>
-        jsRuntime.InvokeVoidAsync("physiquinatorFiles.downloadBytes", fileName, Convert.ToBase64String(pngBytes)).AsTask();
+    public async Task ExportImageAsync(string fileName, byte[] pngBytes, string shareTitle = "Share")
+    {
+        try
+        {
+            await jsRuntime.InvokeVoidAsync("physiquinatorFiles.downloadBytes", fileName, Convert.ToBase64String(pngBytes));
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone, ignore. Genuine JS failures still bubble to the caller's feedback.
+        }
+        catch (OperationCanceledException)
+        {
+            // Operation canceled, ignore.
+        }
+    }
 
     public async Task<string?> PickJsonAsync(string pickerTitle)
     {

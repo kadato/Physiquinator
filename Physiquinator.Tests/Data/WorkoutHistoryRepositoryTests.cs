@@ -18,10 +18,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         _sut = new WorkoutHistoryRepository(_db, TimeProvider.System);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.Database.CloseAsync();
-    }
+    public async Task DisposeAsync() => await _db.Database.CloseAsync();
 
     [Fact]
     public async Task GetRecentSessionsAsync_ReturnsEmpty_WhenNoSessions()
@@ -151,10 +148,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetExerciseSetLogRowsAsync_ReturnsEmpty_WhenNoMatches()
-    {
-        Assert.Empty(await _sut.GetExerciseSetLogRowsAsync(Guid.NewGuid(), "Anything"));
-    }
+    public async Task GetExerciseSetLogRowsAsync_ReturnsEmpty_WhenNoMatches() => Assert.Empty(await _sut.GetExerciseSetLogRowsAsync(Guid.NewGuid(), "Anything"));
 
     [Fact]
     public async Task GetLatestSetMetricsForExerciseAsync_UsesMostRecentAcrossSessionsForSamePlan()
@@ -177,10 +171,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetLatestSetMetricsForExerciseAsync_ReturnsNull_WhenNoMatchingLogs()
-    {
-        Assert.Null(await _sut.GetLatestSetMetricsForExerciseAsync(Guid.NewGuid(), "Anything"));
-    }
+    public async Task GetLatestSetMetricsForExerciseAsync_ReturnsNull_WhenNoMatchingLogs() => Assert.Null(await _sut.GetLatestSetMetricsForExerciseAsync(Guid.NewGuid(), "Anything"));
 
     [Fact]
     public async Task GetLatestSetMetricsForExerciseAsync_ScopesByPlanId()
@@ -325,10 +316,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public void TryParsePlanSnapshot_ReturnsNull_ForInvalidJson()
-    {
-        Assert.Null(WorkoutHistoryRepository.TryParsePlanSnapshot("{not json"));
-    }
+    public void TryParsePlanSnapshot_ReturnsNull_ForInvalidJson() => Assert.Null(WorkoutHistoryRepository.TryParsePlanSnapshot("{not json"));
 
     [Fact]
     public void TryParsePlanSnapshot_RoundTripsPlan()
@@ -741,7 +729,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
         Assert.Equal(3, rows.Count);
         Assert.DoesNotContain(rows, r => r.SessionId == otherSession);
 
-        ExerciseProgressRow[] benchRows = rows.Where(r => r.ExerciseName == "Bench").ToArray();
+        ExerciseProgressRow[] benchRows = [.. rows.Where(r => r.ExerciseName == "Bench")];
         Assert.Equal(2, benchRows.Length);
         Assert.Equal(s2, benchRows[0].SessionId);
         Assert.Equal(60, benchRows[0].BestWeightKg);
@@ -792,10 +780,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetExerciseSessionProgressAcrossPlansAsync_ReturnsEmpty_ForUnknownExercise()
-    {
-        Assert.Empty(await _sut.GetExerciseSessionProgressAcrossPlansAsync("Does Not Exist"));
-    }
+    public async Task GetExerciseSessionProgressAcrossPlansAsync_ReturnsEmpty_ForUnknownExercise() => Assert.Empty(await _sut.GetExerciseSessionProgressAcrossPlansAsync("Does Not Exist"));
 
     [Fact]
     public async Task ImportBackupAsync_Idempotent_WhenReImportingSameBackup()
@@ -914,10 +899,7 @@ public class WorkoutHistoryRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetExerciseNamesAsync_ReturnsEmpty_WhenNoLogs()
-    {
-        Assert.Empty(await _sut.GetExerciseNamesAsync());
-    }
+    public async Task GetExerciseNamesAsync_ReturnsEmpty_WhenNoLogs() => Assert.Empty(await _sut.GetExerciseNamesAsync());
 
     [Fact]
     public async Task GetSessionIdsForExerciseNameAsync_MatchesCaseInsensitiveSubstring()

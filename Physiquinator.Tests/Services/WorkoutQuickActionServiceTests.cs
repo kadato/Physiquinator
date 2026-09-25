@@ -24,10 +24,7 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
         _history = new WorkoutHistoryRepository(_db, TimeProvider.System);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.Database.CloseAsync();
-    }
+    public async Task DisposeAsync() => await _db.Database.CloseAsync();
 
     private async Task<(WorkoutSessionService Session, WorkoutQuickActionService Actions, string SessionId)> BuildAsync(WorkoutPlan plan)
     {

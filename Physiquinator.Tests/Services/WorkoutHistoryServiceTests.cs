@@ -20,10 +20,7 @@ public class WorkoutHistoryServiceTests : IAsyncLifetime
         _sut = new WorkoutHistoryService(_repo);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.Database.CloseAsync();
-    }
+    public async Task DisposeAsync() => await _db.Database.CloseAsync();
 
     [Fact]
     public async Task ExportToJsonAsync_ThenImportFromJsonAsync_RoundTrips()

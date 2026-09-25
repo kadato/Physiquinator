@@ -19,10 +19,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         _sut = new WorkoutPlanRepository(_db);
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.Database.CloseAsync();
-    }
+    public async Task DisposeAsync() => await _db.Database.CloseAsync();
 
     // ------------------------------------------------------------
     // Helpers
@@ -33,9 +30,7 @@ public class WorkoutPlanRepositoryTests : IAsyncLifetime
         Name = name,
         RestIntervalSeconds = 60,
         DefaultSetCount = 3,
-        Exercises = Enumerable.Range(0, exerciseCount)
-            .Select(i => new ExercisePlan { Name = $"Ex{i}", SetCount = i + 1, Order = i, RestIntervalSeconds = 30 + (i * 10) })
-            .ToList()
+        Exercises = [.. Enumerable.Range(0, exerciseCount).Select(i => new ExercisePlan { Name = $"Ex{i}", SetCount = i + 1, Order = i, RestIntervalSeconds = 30 + (i * 10) })]
     };
 
     // ------------------------------------------------------------

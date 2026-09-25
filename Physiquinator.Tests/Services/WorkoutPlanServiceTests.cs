@@ -134,10 +134,7 @@ public class WorkoutPlanServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ExportPlanToJsonAsync_UnknownPlan_Throws()
-    {
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ExportPlanToJsonAsync(Guid.NewGuid()));
-    }
+    public async Task ExportPlanToJsonAsync_UnknownPlan_Throws() => await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ExportPlanToJsonAsync(Guid.NewGuid()));
 
     [Fact]
     public async Task ReorderPlansAsync_PersistsNewOrder()

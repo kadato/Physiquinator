@@ -49,14 +49,8 @@ public class AppUpdateSettingsServiceTests
             return defaultValue;
         }
 
-        public void Set(string key, string value)
-        {
-            _store[key] = value;
-        }
+        public void Set(string key, string value) => _store[key] = value;
 
-        public void Set(string key, bool value)
-        {
-            _store[key] = value;
-        }
+        public void Set(string key, bool value) => _store[key] = value;
     }
 }

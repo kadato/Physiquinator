@@ -13,10 +13,7 @@ public class ExerciseCatalogTests
     }
 
     [Fact]
-    public void All_NonEmptyNames()
-    {
-        Assert.All(ExerciseCatalog.All, e => Assert.False(string.IsNullOrWhiteSpace(e.Name)));
-    }
+    public void All_NonEmptyNames() => Assert.All(ExerciseCatalog.All, e => Assert.False(string.IsNullOrWhiteSpace(e.Name)));
 
     [Fact]
     public void All_BodyweightPercentsAreSane()

@@ -28,12 +28,13 @@ public sealed partial class AiClipboardBridgeService(
 
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
-    private static readonly HashSet<string> DestructiveTools =
-    [
-        with(StringComparer.OrdinalIgnoreCase),
+#pragma warning disable IDE0028 // The with(comparer) collection syntax needs preview language; keep the stable-compatible spelling.
+    private static readonly HashSet<string> DestructiveTools = new(StringComparer.OrdinalIgnoreCase)
+    {
         "delete_workout_plan",
         "delete_bodyweight_entry"
-    ];
+    };
+#pragma warning restore IDE0028
 
     public async Task<string> GeneratePromptAsync(string userGoal, AiBridgePromptOptions? options = null)
     {

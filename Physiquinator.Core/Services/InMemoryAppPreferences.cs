@@ -7,7 +7,9 @@ namespace Physiquinator.Core.Services;
 /// </summary>
 public class InMemoryAppPreferences : IAppPreferences
 {
-    protected readonly Dictionary<string, string> Values = [with(StringComparer.Ordinal)];
+#pragma warning disable IDE0028 // The with(comparer) collection syntax needs preview language; keep the stable-compatible spelling.
+    protected readonly Dictionary<string, string> Values = new(StringComparer.Ordinal);
+#pragma warning restore IDE0028
 
     public virtual string Get(string key, string defaultValue) =>
         Values.TryGetValue(key, out var value) ? value : defaultValue;

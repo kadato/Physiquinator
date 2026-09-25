@@ -57,10 +57,7 @@ public static class JsSafeInvoker
         return result;
     }
 
-    public static async Task ScrollToBottomAsync(IJSRuntime js, ElementReference element, string helper = "physiquinatorHelpers.scrollToBottom")
-    {
-        await InvokeVoidSafeAsync(js, helper, element);
-    }
+    public static async Task ScrollToBottomAsync(IJSRuntime js, ElementReference element, string helper = "physiquinatorHelpers.scrollToBottom") => await InvokeVoidSafeAsync(js, helper, element);
 
     public static async Task RunSafeAsync(Func<Task> action)
     {

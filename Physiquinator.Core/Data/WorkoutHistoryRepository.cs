@@ -880,10 +880,7 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         if (string.IsNullOrWhiteSpace(sessionId) || sets is null || sets.Count == 0) return;
         await _db.EnsureInitializedAsync();
 
-        await _db.Database.RunInTransactionAsync(conn =>
-        {
-            InsertNormalizedSets(conn, sessionId, sets);
-        });
+        await _db.Database.RunInTransactionAsync(conn => InsertNormalizedSets(conn, sessionId, sets));
     }
 
     /// <summary>

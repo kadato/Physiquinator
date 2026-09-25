@@ -43,14 +43,14 @@ public static class WorkoutDayStats
             (gridStartLocal, endLocal) = (endLocal, gridStartLocal);
 
         var scheduleCache = new Dictionary<DateOnly, IReadOnlySet<DayOfWeek>>();
-        Func<DateOnly, IReadOnlySet<DayOfWeek>> memoizedGetSchedule = date =>
+        IReadOnlySet<DayOfWeek> memoizedGetSchedule(DateOnly date)
         {
             if (scheduleCache.TryGetValue(date, out var resolved))
                 return resolved;
             resolved = getSchedule(date);
             scheduleCache[date] = resolved;
             return resolved;
-        };
+        }
 
         var currentStreak = ComputeCurrentStreak(activityByDay, endLocal, memoizedGetSchedule);
         var longest = ComputeLongestStreakInRange(activityByDay, gridStartLocal, endLocal, memoizedGetSchedule);

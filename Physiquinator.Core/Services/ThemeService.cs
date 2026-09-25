@@ -74,10 +74,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
 
     public event Action? ThemeChanged;
 
-    public async Task EnsureInitializedAsync()
-    {
-        await EnsureInitializedCoreAsync().ConfigureAwait(true);
-    }
+    public async Task EnsureInitializedAsync() => await EnsureInitializedCoreAsync().ConfigureAwait(true);
 
     private async Task EnsureInitializedCoreAsync()
     {

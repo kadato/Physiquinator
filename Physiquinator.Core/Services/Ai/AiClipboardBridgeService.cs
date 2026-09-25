@@ -28,11 +28,12 @@ public sealed partial class AiClipboardBridgeService(
 
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
-    private static readonly HashSet<string> DestructiveTools = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> DestructiveTools =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "delete_workout_plan",
         "delete_bodyweight_entry"
-    };
+    ];
 
     public async Task<string> GeneratePromptAsync(string userGoal, AiBridgePromptOptions? options = null)
     {

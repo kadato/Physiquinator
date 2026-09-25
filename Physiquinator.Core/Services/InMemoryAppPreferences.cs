@@ -7,7 +7,7 @@ namespace Physiquinator.Core.Services;
 /// </summary>
 public class InMemoryAppPreferences : IAppPreferences
 {
-    protected readonly Dictionary<string, string> Values = new(StringComparer.Ordinal);
+    protected readonly Dictionary<string, string> Values = [with(StringComparer.Ordinal)];
 
     public virtual string Get(string key, string defaultValue) =>
         Values.TryGetValue(key, out var value) ? value : defaultValue;

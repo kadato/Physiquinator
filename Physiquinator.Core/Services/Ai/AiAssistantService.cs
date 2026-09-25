@@ -29,10 +29,7 @@ public sealed class AiAssistantService(
 
     public IReadOnlyList<AiChatMessage> Messages => _messages.AsReadOnly();
 
-    public void CancelCurrentTurn()
-    {
-        _turnCts?.Cancel();
-    }
+    public void CancelCurrentTurn() => _turnCts?.Cancel();
 
     public AiProviderSettings GetSettings()
     {

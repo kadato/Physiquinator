@@ -24,8 +24,5 @@ public sealed class WeightUnitService(IAppPreferences preferences, UserProfileSe
         }
     }
 
-    public void Set(WeightUnit unit)
-    {
-        _preferences.Set(PreferenceKeys.WeightUnitPreference + Suffix, unit.ToString());
-    }
+    public void Set(WeightUnit unit) => _preferences.Set(PreferenceKeys.WeightUnitPreference + Suffix, unit.ToString());
 }

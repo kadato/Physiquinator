@@ -259,10 +259,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     }
 
     /// <summary>Called when the app window becomes active. Completes rest if wall-clock end passed.</summary>
-    public void NotifyAppActivated()
-    {
-        TryCompleteRestIfExpired();
-    }
+    public void NotifyAppActivated() => TryCompleteRestIfExpired();
 
     /// <summary>Used by tests and <see cref="NotifyAppActivated"/>.</summary>
     public bool TryCompleteRestIfExpired()
@@ -473,8 +470,5 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
         return 40;
     }
 
-    public void Dispose()
-    {
-        StopInternalTimer();
-    }
+    public void Dispose() => StopInternalTimer();
 }

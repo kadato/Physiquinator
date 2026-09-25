@@ -23,10 +23,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         if (_module != null)
             return;
 
-        await InvokeSafeAsync(async () =>
-        {
-            _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
-        });
+        await InvokeSafeAsync(async () => _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath));
     }
 
     /// <param name="remainingMs">Seconds left in the active rest.</param>

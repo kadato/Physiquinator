@@ -6,8 +6,5 @@ public sealed class AppUpdateSettingsService(IAppPreferences preferences)
     /// <summary>True when the app should check for a newer release on startup.</summary>
     public bool AutoCheckEnabled => preferences.Get(PreferenceKeys.AutoUpdateCheckEnabled, true);
 
-    public void SetAutoCheckEnabled(bool enabled)
-    {
-        preferences.Set(PreferenceKeys.AutoUpdateCheckEnabled, enabled);
-    }
+    public void SetAutoCheckEnabled(bool enabled) => preferences.Set(PreferenceKeys.AutoUpdateCheckEnabled, enabled);
 }

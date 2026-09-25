@@ -1,0 +1,42 @@
+@page "/privacy"
+
+<MudStack Spacing="3">
+    <PageTitle>@("Privacy")</PageTitle>
+    <PageHeader Title="@("Privacy")" ShowBackButton="true" />
+
+    <MudPaper Class="pa-4" Elevation="0">
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @("Physiquinator keeps your training data on your device. There is no tracking, no analytics, and no advertising.")
+        </MudText>
+
+        <MudText Typo="Typo.h2" Class="mt-4 mb-2">@("What stays on your device")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("Plans, workout logs, bodyweight entries, settings, and profiles live in a local SQLite database. Each profile gets its own file. The browser demo mirrors that database to IndexedDB with a 20-second autosave. The app saves the theme choice to localStorage. Clearing site data deletes the training data. Export a backup from Settings regularly.")
+        </MudText>
+
+        <MudText Typo="Typo.h2" Class="mt-4 mb-2">@("Accounts on the web host")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("The self-hosted web build keeps a separate database per account and requires cookie sign-in. It sets one essential sign-in cookie named physiquinator-auth with SameSite Lax, Secure, HttpOnly, and a 30-day sliding expiry. It sets nothing else. Sign out to clear the cookie. There are no third-party cookies.")
+        </MudText>
+
+        <MudText Typo="Typo.h2" Class="mt-4 mb-2">@("AI requests")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("The assistant contacts an AI provider only when you ask. It uses the endpoint and key you entered in Settings. Those requests carry your plans and history summaries off the device. The clipboard bridge copies the same context for you to paste into Gemini or ChatGPT yourself. The app sends no prompts anywhere unless you act.")
+        </MudText>
+
+        <MudText Typo="Typo.h2" Class="mt-4 mb-2">@("What never happens")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("The app loads no analytics beacons, no crash reporters, no ad scripts, and no social widgets. Every script, style, font, and image loads from the app itself. The Content Security Policy blocks anything else.")
+        </MudText>
+
+        <MudText Typo="Typo.h2" Class="mt-4 mb-2">@("Your rights")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("Settings exports everything as JSON for import on another device. Remove all data deletes it from the device.")
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @("To report a privacy issue, open an issue in the ")
+            <MudLink Href="https://github.com/kadato/Physiquinator/issues" Target="_blank">@("GitHub issue tracker")</MudLink>
+            @(".")
+        </MudText>
+    </MudPaper>
+</MudStack>

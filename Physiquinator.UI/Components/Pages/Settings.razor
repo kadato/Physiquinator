@@ -29,6 +29,7 @@
     <MudTextField T="string"
                   Value="_settingsSearch"
                   ValueChanged="OnSearchChanged"
+                  Label="@("Search settings")"
                   Placeholder="@("Search settings…")"
                   Adornment="Adornment.Start"
                   AdornmentIcon="@Icons.Material.Filled.Search"
@@ -541,6 +542,33 @@
             </MudExpansionPanel>
         }
 
+        @if (PanelMatches(PrivacyKeywords))
+        {
+            <MudExpansionPanel Class="settings-panel" Expanded="@SearchActive">
+                <TitleContent>
+                    <div class="settings-panel__header">
+                        <span class="settings-panel__icon"><MudIcon Icon="@Icons.Material.Outlined.PrivacyTip" Size="Size.Small" /></span>
+                        <span class="settings-panel__text">
+                            <span class="settings-panel__title" role="heading" aria-level="2">@("Privacy")</span>
+                            <span class="settings-panel__subtitle">@("What stays on your device")</span>
+                        </span>
+                    </div>
+                </TitleContent>
+            <ChildContent>
+                <div class="settings-panel__content">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                        @("Your training data stays on this device. The app tracks nothing and shows no ads.")
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Href="/privacy"
+                               StartIcon="@Icons.Material.Filled.PrivacyTip">
+                        @("Read the privacy page")
+                    </MudButton>
+                </div>
+            </ChildContent>
+        </MudExpansionPanel>
+        }
+
         @if (PanelMatches(RemoveDataKeywords))
         {
             <MudExpansionPanel Class="settings-panel settings-panel--danger" Expanded="@SearchActive">
@@ -642,6 +670,7 @@
     private static readonly string[] AiKeywords = ["ai", "assistant", "chat", "openai", "openrouter", "ollama", "model", "api"];
     private static readonly string[] BackupKeywords = ["backup", "export", "import", "data", "restore"];
     private static readonly string[] UpdatesKeywords = ["updates", "update", "version", "release"];
+    private static readonly string[] PrivacyKeywords = ["privacy", "data", "tracking", "cookies", "policy"];
     private static readonly string[] RemoveDataKeywords = ["remove", "delete", "reset", "wipe"];
 
     private bool GeneralTabVisible => PanelMatches(AppearanceKeywords)
@@ -656,6 +685,7 @@
     private bool DataTabVisible => PanelMatches(BackupKeywords);
 
     private bool AboutTabVisible => (AppUpdateService.IsSupported && PanelMatches(UpdatesKeywords))
+        || PanelMatches(PrivacyKeywords)
         || PanelMatches(RemoveDataKeywords);
 
     /// <summary>True while a search is active but no panel matches anywhere.</summary>

@@ -3,6 +3,7 @@
 @using Physiquinator.Web.Services
 @inject AuthenticationStateProvider AuthStateProvider
 @inject WebUserContext UserContext
+@implements IDisposable
 
 @if (_authenticationChecked)
 {
@@ -23,7 +24,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await RefreshAuthStateAsync();
+    }
+
+    private async Task RefreshAuthStateAsync()
+    {
         var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        ApplyAuthState(state);
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> authStateTask)
+    {
+        ApplyAuthState(await authStateTask);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ApplyAuthState(AuthenticationState state)
+    {
         _isAuthenticated = state.User.Identity?.IsAuthenticated == true;
         if (_isAuthenticated)
         {
@@ -32,5 +50,10 @@
             UserContext.SetFromPrincipal(state.User);
         }
         _authenticationChecked = true;
+    }
+
+    public void Dispose()
+    {
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 }

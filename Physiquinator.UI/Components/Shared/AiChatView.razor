@@ -191,7 +191,7 @@
 		<div class="ai-chat-input">
 			<div class="ai-chat-composer">
 				<div class="ai-chat-input__field">
-					<MudTextField @ref="_inputField" T="string" Variant="Variant.Outlined" Placeholder="@("Ask anything…")"
+					<MudTextField @ref="_inputField" T="string" Variant="Variant.Outlined" Label="@("Message")" Placeholder="@("Ask anything…")"
 								  Immediate="true"
 								  @bind-Value="_inputText"
 								  OnKeyDown="HandleKeyDown"
@@ -256,6 +256,7 @@
 				<div class="ai-bridge-field mt-2">
 					<MudTextField T="string"
 								  @bind-Value="_promptGoal"
+								  Label="@("Goal for the AI")"
 								  Placeholder="@("What should the AI do? For example build a 3-day push pull legs routine, analyze volume, or log weight")"
 								  Variant="Variant.Outlined"
 								  Margin="Margin.Dense"
@@ -362,6 +363,7 @@
 				<div class="ai-bridge-field mt-2">
 					<MudTextField T="string"
 								  @bind-Value="_pastedResponse"
+								  Label="@("AI response")"
 								  Placeholder="@("Paste the full response from Gemini or ChatGPT here (including the JSON action block)...")"
 								  Variant="Variant.Outlined"
 								  Margin="Margin.Dense"

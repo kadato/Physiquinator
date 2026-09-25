@@ -160,6 +160,11 @@
     outline: none;
 }
 
+.set-metric-stepper__input:focus-visible {
+    outline: 2px solid var(--pl-focus);
+    outline-offset: 2px;
+}
+
 /* Compact Mode Styles */
 .set-metric-stepper__row--compact {
     display: flex;
@@ -272,6 +277,11 @@
 
 .set-metric-stepper__input--compact:focus {
     outline: none;
+}
+
+.set-metric-stepper__input--compact:focus-visible {
+    outline: 2px solid var(--pl-focus);
+    outline-offset: -2px;
 }
 
 /* The edit form overlays the value button (absolute, full slot) instead of

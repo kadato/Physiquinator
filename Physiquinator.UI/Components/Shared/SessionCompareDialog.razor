@@ -66,15 +66,16 @@
                 else
                 {
                     <div class="compare-table-wrap">
-                        <table class="compare-table" role="table" aria-label="Exercise comparison">
+                        <table class="compare-table" aria-label="Exercise comparison">
+                            <caption class="sr-only">Exercise comparison between session A and session B</caption>
                             <thead>
                                 <tr>
-                                    <th>Exercise</th>
-                                    <th>Sets <span class="compare-table__subtle">A / B</span></th>
-                                    <th>Best <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
-                                    <th>Volume <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
-                                    <th>Reps</th>
-                                    <th class="compare-table__delta-head">Delta</th>
+                                    <th scope="col">Exercise</th>
+                                    <th scope="col">Sets <span class="compare-table__subtle">A / B</span></th>
+                                    <th scope="col">Best <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
+                                    <th scope="col">Volume <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
+                                    <th scope="col">Reps</th>
+                                    <th scope="col" class="compare-table__delta-head">Delta</th>
                                 </tr>
                             </thead>
                             <tbody>

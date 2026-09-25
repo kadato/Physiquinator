@@ -32,7 +32,8 @@
         <MudTextField T="string"
                       Value="_searchText"
                       ValueChanged="OnSearchTextChanged"
-                       Placeholder="@("Search by plan or exercise name…")"
+                      Label="@("Search history")"
+                      Placeholder="@("Search by plan or exercise name…")"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Clearable="true"
@@ -85,6 +86,7 @@
             <div class="bodyweight-log-row">
                 <SetMetricStepper Value="@BodyweightInputDisplay"
                                   ValueChanged="OnBodyweightInputChanged"
+                                  Label="@("Bodyweight")"
                                   Step="@BodyweightStep"
                                   Min="@BodyweightMin"
                                   Max="@BodyweightMax"

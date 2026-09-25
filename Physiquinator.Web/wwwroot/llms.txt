@@ -1,0 +1,15 @@
+# Physiquinator
+
+Offline workout tracker with rest timer, history, and AI assistant. Data stays on device.
+
+- Home: https://physiquinator.pages.dev/
+- History: https://physiquinator.pages.dev/history
+- Plans: https://physiquinator.pages.dev/plan
+- Settings: https://physiquinator.pages.dev/settings
+- Privacy: https://physiquinator.pages.dev/privacy
+
+Source: https://github.com/kadato/Physiquinator
+Manifest: https://physiquinator.pages.dev/manifest.json
+Sitemap: https://physiquinator.pages.dev/sitemap.xml
+
+The browser demo keeps per-browser SQLite with a 20-second autosave. It installs as an offline PWA. Clearing site data deletes your training data. Export a backup from Settings regularly. The WASM host has no /mcp endpoint. The self-hosted Web build exposes 15 agent tools at /mcp over Streamable HTTP.

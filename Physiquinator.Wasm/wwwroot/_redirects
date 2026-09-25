@@ -1,1 +1,8 @@
+# SPA fallback: every path boots the Blazor router, which renders its own
+# NotFound UI for unknown addresses. The tradeoff is that unknown paths
+# return 200 instead of 404. Search engines call that a soft 404.
+# Cloudflare Pages cannot tell valid client routes (/history, /plan) from
+# invalid ones without a Function router, so a 404 rewrite would return 404
+# for valid deep links too. 404.html mirrors index.html so removing this
+# rule later still renders the app shell with a 404 status.
 /* /index.html 200

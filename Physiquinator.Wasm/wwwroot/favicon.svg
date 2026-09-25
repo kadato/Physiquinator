@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <rect width="512" height="512" fill="#FAFF00"/>
+    <path d="M0 0 H512 V7 H0 Z" fill="white" opacity="0.42"/>
+    <path d="M0 0 V512 H7 V0 Z" fill="white" opacity="0.42"/>
+    <!-- 06 Square Bald Big - bigger centered -->
+    <g fill="#414770" transform="translate(10,10)">
+        <rect x="224" y="94" width="64" height="82"/>
+        <polygon points="136,186 376,186 304,418 208,418"/>
+    </g>
+    <g fill="#10111A">
+        <rect x="224" y="94" width="64" height="82"/>
+        <polygon points="136,186 376,186 304,418 208,418"/>
+    </g>
+</svg>

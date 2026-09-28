@@ -97,11 +97,13 @@ public class GitHubReleaseClientTests
     }
 
     [Fact]
-    public async Task GetLatestReleaseAsync_WhenServerError_Throws()
+    public async Task GetLatestReleaseAsync_WhenServerError_ReturnsNull()
     {
         GitHubReleaseClient client = CreateClient(() => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetLatestReleaseAsync());
+        GitHubRelease? release = await client.GetLatestReleaseAsync();
+
+        Assert.Null(release);
     }
 
     [Fact]

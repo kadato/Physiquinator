@@ -21,7 +21,7 @@
         </div>
     </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3" Class="py-2">
+        <MudStack Spacing="3">
             <MudText Typo="Typo.body1" Class="mud-text-secondary">
                 @("Version") <strong>@Release.Tag</strong> @("is ready to install. Your plans and history stay on this device and are not affected.")
             </MudText>
@@ -29,7 +29,7 @@
             @if (!string.IsNullOrWhiteSpace(Release.Notes))
             {
                 <div class="update-dialog__notes">
-                    <MudText Typo="Typo.overline" Class="mud-text-secondary">@("What's new")</MudText>
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary update-dialog__notes-heading">@("What's new")</MudText>
                     <div class="update-dialog__notes-body markdown-body">@((MarkupString)RenderedNotes)</div>
                 </div>
             }
@@ -38,10 +38,12 @@
             {
                 @if (_downloading)
                 {
-                    <MudProgressLinear Value="(int)(_downloadProgress * 100)" Color="Color.Primary" Class="mt-2" />
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                        @(string.Format("Downloading update… {0}%", Math.Round(_downloadProgress * 100)))
-                    </MudText>
+                    <div class="update-dialog__progress">
+                        <MudProgressLinear Value="(int)(_downloadProgress * 100)" Color="Color.Primary" />
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @(string.Format("Downloading update… {0}%", Math.Round(_downloadProgress * 100)))
+                        </MudText>
+                    </div>
                 }
             }
             else
@@ -112,7 +114,11 @@
         await MudDialog.SetOptionsAsync(new DialogOptions { BackdropClick = false });
         try
         {
-            var progress = new Progress<double>(p => _downloadProgress = p);
+            var progress = new Progress<double>(p =>
+            {
+                _downloadProgress = p;
+                _ = InvokeAsync(StateHasChanged);
+            });
 
             var update = new UpdateCheckResult(Release, true, DownloadUrl);
             await AppUpdateService.DownloadAndInstallAsync(update, progress);

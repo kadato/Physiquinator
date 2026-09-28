@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Models;
 using System.Net;
 using System.Text.Json;
@@ -11,10 +12,14 @@ public sealed class GitHubReleaseClient : IGitHubReleaseClient
         new("https://api.github.com/repos/kadato/Physiquinator/releases/latest");
 
     private readonly HttpClient _http;
+    private readonly ILogger<GitHubReleaseClient>? _logger;
 
-    public GitHubReleaseClient(HttpClient http)
+    public GitHubReleaseClient(HttpClient http, ILogger<GitHubReleaseClient>? logger = null)
     {
         _http = http;
+        _logger = logger;
+        if (_http.Timeout == Timeout.InfiniteTimeSpan)
+            _http.Timeout = TimeSpan.FromSeconds(15);
         if (_http.DefaultRequestHeaders.UserAgent.Count == 0)
         {
             _http.DefaultRequestHeaders.UserAgent.ParseAdd("Physiquinator-Updater");
@@ -24,15 +29,57 @@ public sealed class GitHubReleaseClient : IGitHubReleaseClient
     /// <inheritdoc />
     public async Task<GitHubRelease?> GetLatestReleaseAsync(CancellationToken cancellationToken = default)
     {
-        using HttpResponseMessage response = await _http.GetAsync(LatestReleaseEndpoint, cancellationToken);
-        if (response.StatusCode == HttpStatusCode.NotFound)
+        // Retry transient failures once: 429 and 5xx plus network blips.
+        for (var attempt = 0; attempt < 2; attempt++)
         {
-            return null;
+            try
+            {
+                using HttpResponseMessage response = await _http.GetAsync(LatestReleaseEndpoint, cancellationToken);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                if ((int)response.StatusCode is 429 or >= 500)
+                {
+                    _logger?.LogWarning("GitHub release check got HTTP {StatusCode}, attempt {Attempt}.", (int)response.StatusCode, attempt + 1);
+                    if (attempt == 0)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                        continue;
+                    }
+                    return null;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger?.LogWarning("GitHub release check got HTTP {StatusCode}.", (int)response.StatusCode);
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync(cancellationToken);
+                return Parse(json);
+            }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger?.LogWarning(ex, "GitHub release check timed out, attempt {Attempt}.", attempt + 1);
+                if (attempt == 0)
+                    continue;
+                return null;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger?.LogWarning(ex, "GitHub release check network error, attempt {Attempt}.", attempt + 1);
+                if (attempt == 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    continue;
+                }
+                return null;
+            }
         }
 
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return Parse(json);
+        return null;
     }
 
     /// <summary>Parses a GitHub releases/latest JSON payload into a <see cref="GitHubRelease"/>.</summary>

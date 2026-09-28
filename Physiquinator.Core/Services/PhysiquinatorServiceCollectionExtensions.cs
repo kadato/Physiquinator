@@ -82,7 +82,11 @@ public static class PhysiquinatorServiceCollectionExtensions
         services.AddScoped<IAccountService, NoopAccountService>();
 
         // AI services and tools (registered as scoped to safely consume scoped dependencies like ThemeService)
-        services.AddScoped(sp => new OpenAiCompatibleClient(sp.GetService<HttpClient>() ?? new HttpClient()));
+        services.AddScoped(sp =>
+        {
+            var http = sp.GetService<HttpClient>() ?? new HttpClient { Timeout = TimeSpan.FromSeconds(100) };
+            return new OpenAiCompatibleClient(http);
+        });
 
         services.AddScoped<IAiTool, GetWorkoutPlansTool>();
         services.AddScoped<IAiTool, CreateWorkoutPlanTool>();

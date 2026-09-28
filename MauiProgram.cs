@@ -85,7 +85,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<IVibrationService, MauiVibrationService>();
         builder.Services.AddSingleton<IFileTransferService, FileTransferService>();
 
-        builder.Services.AddSingleton(_ => new HttpClient());
+        builder.Services.AddSingleton(_ =>
+        {
+            var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("Physiquinator-Updater");
+            return http;
+        });
         builder.Services.AddSingleton<IGitHubReleaseClient, GitHubReleaseClient>();
         builder.Services.AddSingleton<IAppUpdateInstaller, MauiAppUpdateInstaller>();
         builder.Services.AddSingleton<IAppUpdateService>(sp => new AppUpdateService(

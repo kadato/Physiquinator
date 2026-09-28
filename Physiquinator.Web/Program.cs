@@ -77,7 +77,12 @@ builder.Services.AddScoped<IDatabasePathProvider, WebUserDatabasePathProvider>()
 // Sign-out is web-only. Registered after Core's no-op default so it wins.
 builder.Services.AddScoped<IAccountService, WebAccountService>();
 
-builder.Services.AddSingleton<HttpClient>();
+builder.Services.AddSingleton<HttpClient>(sp =>
+{
+    var http = new HttpClient { Timeout = TimeSpan.FromSeconds(100) };
+    http.DefaultRequestHeaders.UserAgent.ParseAdd("Physiquinator-App");
+    return http;
+});
 builder.Services.AddSingleton<INotificationService, NoopNotificationService>();
 builder.Services.AddSingleton<IVibrationService, NoopVibrationService>();
 // Scoped: the file picker and downloads need the circuit's JS runtime.

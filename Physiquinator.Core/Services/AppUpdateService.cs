@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Models;
 
 namespace Physiquinator.Core.Services;
 
 /// <summary>Shared update-check logic. Downloading and installing is delegated to the platform installer.</summary>
-public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInstaller installer, Version currentVersion) : IAppUpdateService
+public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInstaller installer, Version currentVersion, ILogger<AppUpdateService>? logger = null) : IAppUpdateService
 {
     private readonly IGitHubReleaseClient _client = client;
     private readonly IAppUpdateInstaller _installer = installer;
@@ -17,7 +18,21 @@ public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInst
     /// <inheritdoc />
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
-        GitHubRelease? release = await _client.GetLatestReleaseAsync(cancellationToken);
+        GitHubRelease? release;
+        try
+        {
+            release = await _client.GetLatestReleaseAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "Update check failed, treating as no update.");
+            return new UpdateCheckResult(null, false, null);
+        }
+
         if (release is null)
         {
             return new UpdateCheckResult(null, false, null);
@@ -48,8 +63,18 @@ public sealed class AppUpdateService(IGitHubReleaseClient client, IAppUpdateInst
             }
         }
 
-        return new UpdateCheckResult(release, true, asset?.DownloadUrl);
+        var downloadUrl = asset?.DownloadUrl;
+        if (!string.IsNullOrWhiteSpace(downloadUrl) && !IsHttpsUrl(downloadUrl))
+        {
+            logger?.LogWarning("Ignoring non-HTTPS update URL for asset {AssetName}.", asset?.Name);
+            downloadUrl = null;
+        }
+
+        return new UpdateCheckResult(release, true, downloadUrl);
     }
+
+    private static bool IsHttpsUrl(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
 
     /// <inheritdoc />
     public async Task DownloadAndInstallAsync(UpdateCheckResult update, IProgress<double>? progress = null, CancellationToken cancellationToken = default)

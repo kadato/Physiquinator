@@ -48,6 +48,7 @@ public static class WebDbRestoreEndpoint
 
             var directory = WebDatabasePathProvider.ResolveDatabaseDirectory();
             var restored = 0;
+            var failed = new List<string>();
 
             foreach (BrowserDbFile file in request.Files)
             {
@@ -74,20 +75,24 @@ public static class WebDbRestoreEndpoint
                 catch (FormatException)
                 {
                     // Invalid base64 in one file. Keep restoring the others.
+                    failed.Add(name);
                 }
-                catch (IOException ex)
+                catch (IOException)
                 {
                     // Another circuit may hold the file open. It will retry on the next page load.
-                    return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
+                    failed.Add(name);
                 }
-                catch (UnauthorizedAccessException ex)
+                catch (UnauthorizedAccessException)
                 {
                     // File is locked by SQLite (WAL) or by AV. Same retry semantics as IOException.
-                    return Results.Problem("Could not write database file.", statusCode: 500, title: ex.Message);
+                    failed.Add(name);
                 }
             }
 
-            return Results.Ok(new { restored });
+            if (failed.Count > 0 && restored == 0)
+                return Results.Problem("Could not write database files: " + string.Join(", ", failed), statusCode: 500);
+
+            return Results.Ok(new { restored, failed });
         })
         .RequireRateLimiting("restore");
     }

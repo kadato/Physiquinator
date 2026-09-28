@@ -113,7 +113,12 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
             yield break;
         }
 
-        if (response == null) yield break;
+        if (response == null)
+        {
+            logger?.LogWarning("AI chat request failed: no HTTP response received from {Endpoint}.", endpointUrl);
+            yield return new StreamingChatChunk { IsError = true, ErrorMessage = "No response from AI provider (connection failed before headers)." };
+            yield break;
+        }
 
         using (response)
         {

@@ -402,7 +402,11 @@ else
     public bool ForceNew { get; set; }
 
     private const int DefaultReps = 10;
-    private const int RestTickIntervalMs = 1000;
+    // 250 ms ticks so every displayed second (which uses ceiling) renders
+    // several times. At 1000 ms the setTimeout chain plus interop round-trip
+    // drifts past 1 s per tick and the countdown can jump from 2 straight to
+    // done without ever painting 1.
+    private const int RestTickIntervalMs = 250;
     private const int UndoToastDurationMs = 8000;
 
     private bool _isRestComplete;
@@ -803,6 +807,11 @@ else
                 if (open != null)
                 {
                     var workoutPlan = WorkoutHistoryRepository.TryParsePlanSnapshot(open.PlanSnapshotJson) ?? plan;
+                    if (!string.IsNullOrWhiteSpace(open.PlanSnapshotJson) && WorkoutHistoryRepository.TryParsePlanSnapshot(open.PlanSnapshotJson) is null)
+                    {
+                        Logger.LogWarning("Plan snapshot for session {SessionId} was corrupt, using current plan.", open.Id);
+                        Snackbar.Add("Saved workout layout was corrupt, using the current plan instead.", Severity.Warning);
+                    }
                     var sets = await HistoryRepository.GetSetsForSessionAsync(open.Id);
                     var completions = sets.Select(s => new SetCompletion(s.ExerciseIndex, s.SetIndex));
                     SessionService.ResumeWorkout(workoutPlan, completions);
@@ -982,6 +991,8 @@ else
             catch (Exception ex)
             {
                 Logger.LogError(ex, "History DeleteSession error");
+                Snackbar.Add(string.Format("Could not discard workout: {0}", ex.Message), Severity.Error);
+                return;
             }
         }
 
@@ -1854,8 +1865,8 @@ else
     {
         if (_dotNetRef == null) return;
 
-        var ms = Math.Max(1, remainingMs ?? SessionService.ActiveRestDurationSeconds * RestTickIntervalMs);
-        var activeDurationMs = SessionService.ActiveRestDurationSeconds * RestTickIntervalMs;
+        var ms = Math.Max(1, remainingMs ?? SessionService.ActiveRestDurationSeconds * 1000);
+        var activeDurationMs = SessionService.ActiveRestDurationSeconds * 1000;
         await TimerInterop.StartTimerAsync(_dotNetRef, RestTickIntervalMs, ms, activeDurationMs, continueMode);
     }
 

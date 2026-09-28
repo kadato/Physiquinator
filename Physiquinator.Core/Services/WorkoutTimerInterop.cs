@@ -83,5 +83,5 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 
     /// <summary>Runs a JS call, swallowing exceptions raised during WebView teardown.</summary>
     private static Task InvokeSafeAsync(Func<Task> action) =>
-        JsSafeInvoker.RunSafeAsync(action);
+        JsInteropGuard.RunSafeAsync(action);
 }

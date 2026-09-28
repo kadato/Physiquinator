@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Serialization;
 using System.Text.Json;
@@ -19,6 +20,7 @@ public sealed class RestTimerCoordinator : IDisposable
     private readonly RestAlertSettingsService _settings;
     private readonly IAppPreferences _preferences;
     private readonly TimeProvider _time;
+    private readonly ILogger<RestTimerCoordinator>? _logger;
     private readonly SemaphoreSlim _syncGate = new(1, 1);
 
     // Last rest state processed by SyncAsync, so per-tick re-syncs skip the
@@ -32,13 +34,15 @@ public sealed class RestTimerCoordinator : IDisposable
         INotificationService notifications,
         RestAlertSettingsService settings,
         IAppPreferences preferences,
-        TimeProvider time)
+        TimeProvider time,
+        ILogger<RestTimerCoordinator>? logger = null)
     {
         _session = session;
         _notifications = notifications;
         _settings = settings;
         _preferences = preferences;
         _time = time;
+        _logger = logger;
 
         _session.RestStateChanged += OnRestStateChanged;
         _session.WorkoutStateChanged += OnWorkoutStateChanged;
@@ -74,7 +78,7 @@ public sealed class RestTimerCoordinator : IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"RestTimerCoordinator hide failed: {ex}");
+            _logger?.LogDebug(ex, "Rest timer hide failed.");
         }
     }
 
@@ -220,7 +224,7 @@ public sealed class RestTimerCoordinator : IDisposable
         catch (Exception ex)
         {
             // Platform surfaces must never break the workout flow
-            System.Diagnostics.Debug.WriteLine($"RestTimerCoordinator sync failed: {ex}");
+            _logger?.LogWarning(ex, "Rest timer platform sync failed.");
         }
         finally
         {

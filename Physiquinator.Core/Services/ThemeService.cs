@@ -150,7 +150,7 @@ public class ThemeService : IAsyncDisposable, IThemeInitialization
 
         try
         {
-            await JsSafeInvoker.InvokeVoidSafeAsync(_js, "physiquinatorTheme.dispose").ConfigureAwait(true);
+            await JsInteropGuard.InvokeVoidSafeAsync(_js, "physiquinatorTheme.dispose").ConfigureAwait(true);
         }
         finally
         {

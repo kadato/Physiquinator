@@ -4,9 +4,9 @@ namespace Physiquinator.Core.Services;
 
 /// <summary>
 /// Wraps IJSRuntime calls that may fail when the circuit or WebView disconnects.
-/// Core counterpart to Physiquinator.UI.Services.JsSafeInvoker so Core services do not need a UI reference.
+/// Shared core implementation so UI and Core services do not drift.
 /// </summary>
-internal static class JsSafeInvoker
+public static class JsInteropGuard
 {
     public static async Task InvokeVoidSafeAsync(IJSRuntime js, string identifier, params object?[] args)
     {

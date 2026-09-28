@@ -453,7 +453,12 @@ else
         Navigation.NavigateTo(AppRoutes.Home);
     }
 
-    public void Dispose() => _saveDebounceCts?.Cancel();
+    public void Dispose()
+    {
+        _saveDebounceCts?.Cancel();
+        _saveDebounceCts?.Dispose();
+        _saveDebounceCts = null;
+    }
 
     private static ExercisePlan CloneExercise(ExercisePlan source) => new()
     {

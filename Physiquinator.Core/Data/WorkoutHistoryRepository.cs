@@ -852,13 +852,27 @@ public sealed class WorkoutHistoryRepository(AppDatabase db, TimeProvider time)
         if (string.IsNullOrWhiteSpace(sessionId)) return;
         await _db.EnsureInitializedAsync();
 
-        await _db.Database.Table<WorkoutSetLogEntity>()
-            .Where(s => s.SessionId == sessionId)
-            .DeleteAsync();
+        await _db.Database.RunInTransactionAsync(conn =>
+        {
+            conn.Table<WorkoutSetLogEntity>().Where(s => s.SessionId == sessionId).Delete();
+            conn.Table<WorkoutSessionLogEntity>().Where(s => s.Id == sessionId).Delete();
+        }).ConfigureAwait(false);
+    }
 
-        await _db.Database.Table<WorkoutSessionLogEntity>()
-            .Where(s => s.Id == sessionId)
-            .DeleteAsync();
+    public async Task DeleteSessionsAsync(IEnumerable<string> sessionIds)
+    {
+        var ids = sessionIds?.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (ids is null || ids.Count == 0) return;
+        await _db.EnsureInitializedAsync();
+
+        await _db.Database.RunInTransactionAsync(conn =>
+        {
+            foreach (var sessionId in ids)
+            {
+                conn.Table<WorkoutSetLogEntity>().Where(s => s.SessionId == sessionId).Delete();
+                conn.Table<WorkoutSessionLogEntity>().Where(s => s.Id == sessionId).Delete();
+            }
+        }).ConfigureAwait(false);
     }
 
     /// <summary>Re-inserts a deleted session together with its logged sets (undo support).</summary>

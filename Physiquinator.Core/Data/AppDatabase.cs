@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using SQLite;
 
 namespace Physiquinator.Core.Data;
@@ -6,12 +7,14 @@ public sealed class AppDatabase
 {
     private readonly SemaphoreSlim _switchLock = new(1, 1);
     private readonly Task? _batteriesInitTask;
+    private readonly ILogger<AppDatabase>? _logger;
     private SQLiteAsyncConnection _database;
     private Task _initializationTask;
 
-    public AppDatabase(string dbPath, Task? batteriesInitTask = null)
+    public AppDatabase(string dbPath, Task? batteriesInitTask = null, ILogger<AppDatabase>? logger = null)
     {
         _batteriesInitTask = batteriesInitTask;
+        _logger = logger;
         _database = new SQLiteAsyncConnection(dbPath);
         _initializationTask = InitializeAsync();
     }
@@ -36,8 +39,8 @@ public sealed class AppDatabase
         }
         catch (Exception ex)
         {
-            // Ignore PRAGMA failures, for example for in-memory unit testing databases.
-            System.Diagnostics.Debug.WriteLine(ex);
+            // In-memory unit test databases reject some PRAGMAs. Log and continue.
+            _logger?.LogDebug(ex, "SQLite PRAGMA setup failed, continuing with defaults.");
         }
 
         // Fast path for steady-state launches: user_version lives in the
@@ -82,7 +85,7 @@ public sealed class AppDatabase
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"WAL checkpoint failed: {ex.Message}");
+                    _logger?.LogWarning(ex, "WAL checkpoint failed during database switch.");
                 }
 
                 try
@@ -91,7 +94,7 @@ public sealed class AppDatabase
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Database close failed: {ex.Message}");
+                    _logger?.LogWarning(ex, "Database close failed during database switch.");
                 }
             }
             _database = new SQLiteAsyncConnection(dbPath);
@@ -189,16 +192,20 @@ public sealed class AppDatabase
 
     /// <summary>
     /// Deletes all persisted workout plans, history, and set logs. Order respects child rows first.
+    /// Runs in one transaction so a kill mid-reset cannot leave a half-wiped database.
     /// </summary>
     public async Task ClearAllUserDataAsync()
     {
         await EnsureInitializedAsync();
-        await _database.ExecuteAsync("DELETE FROM WorkoutScheduleHistory");
-        await _database.ExecuteAsync("DELETE FROM BodyweightLogs");
-        await _database.ExecuteAsync("DELETE FROM WorkoutSetLogs");
-        await _database.ExecuteAsync("DELETE FROM WorkoutSessionLogs");
-        await _database.ExecuteAsync("DELETE FROM ExercisePlans");
-        await _database.ExecuteAsync("DELETE FROM WorkoutPlans");
+        await _database.RunInTransactionAsync(conn =>
+        {
+            conn.Execute("DELETE FROM WorkoutScheduleHistory");
+            conn.Execute("DELETE FROM BodyweightLogs");
+            conn.Execute("DELETE FROM WorkoutSetLogs");
+            conn.Execute("DELETE FROM WorkoutSessionLogs");
+            conn.Execute("DELETE FROM ExercisePlans");
+            conn.Execute("DELETE FROM WorkoutPlans");
+        }).ConfigureAwait(false);
     }
 
     public SQLiteAsyncConnection Database => _database;

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
 using Physiquinator.Core.Serialization;
@@ -12,7 +13,8 @@ public sealed class UserProfileService(
     IAppPreferences preferences,
     IDatabasePathProvider dbPathProvider,
     TimeProvider time,
-    IServiceProvider? serviceProvider = null)
+    IServiceProvider? serviceProvider = null,
+    ILogger<UserProfileService>? logger = null)
 {
     public const string ProfilesKey = PreferenceKeys.UserProfiles;
     public const string ActiveProfileIdKey = PreferenceKeys.ActiveProfileId;
@@ -55,8 +57,19 @@ public sealed class UserProfileService(
             _cachedProfiles = JsonSerializer.Deserialize(json, PhysiquinatorJsonContext.Default.ListUserProfile) ?? [];
             return _cachedProfiles;
         }
-        catch
+        catch (JsonException ex)
         {
+            // Never wipe the stored value on a bad parse. Keep the corrupt
+            // payload under a backup key so it can be inspected later.
+            logger?.LogWarning(ex, "Profile list JSON corrupt, keeping backup and starting empty.");
+            try
+            {
+                _preferences.Set(ProfilesKey + ".corruptBackup", json);
+            }
+            catch (Exception backupEx)
+            {
+                logger?.LogDebug(backupEx, "Profile corrupt backup write failed.");
+            }
             _cachedProfiles = [];
             return _cachedProfiles;
         }
@@ -112,7 +125,7 @@ public sealed class UserProfileService(
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Cache invalidate plans failed: {ex.Message}");
+                logger?.LogWarning(ex, "Cache invalidate plans failed during profile switch.");
             }
 
             try
@@ -122,7 +135,7 @@ public sealed class UserProfileService(
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Cache invalidate stats failed: {ex.Message}");
+                logger?.LogWarning(ex, "Cache invalidate stats failed during profile switch.");
             }
 
             try
@@ -132,7 +145,7 @@ public sealed class UserProfileService(
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Cache reset schedule failed: {ex.Message}");
+                logger?.LogWarning(ex, "Cache reset schedule failed during profile switch.");
             }
         }
     }

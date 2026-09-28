@@ -448,15 +448,24 @@
         if (!confirmed)
             return;
 
-        var deleted = new List<(WorkoutSessionLogEntity? Session, List<WorkoutSetLogEntity> Sets)>(_selectedSessionIds.Count);
-        foreach (var sessionId in _selectedSessionIds)
+        var ids = _selectedSessionIds.ToList();
+        var deleted = new List<(WorkoutSessionLogEntity? Session, List<WorkoutSetLogEntity> Sets)>(ids.Count);
+        try
         {
-            var session = await HistoryRepo.GetSessionAsync(sessionId);
-            deleted.Add((session, session == null ? [] : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList()));
-            if (session?.EndedAtUtc == null)
-                SessionService.EndWorkout();
+            foreach (var sessionId in ids)
+            {
+                var session = await HistoryRepo.GetSessionAsync(sessionId);
+                deleted.Add((session, session == null ? [] : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList()));
+                if (session?.EndedAtUtc == null)
+                    SessionService.EndWorkout();
+            }
 
-            await HistoryRepo.DeleteSessionAsync(sessionId);
+            await HistoryRepo.DeleteSessionsAsync(ids);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not delete sessions: {0}", ex.Message), Severity.Error);
+            return;
         }
 
         _selectedSessionIds.Clear();
@@ -676,7 +685,15 @@
 
         var kg = _bodyweightInputKg!.Value;
         var today = DateOnly.FromDateTime(DateTime.Today);
-        await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
+        try
+        {
+            await HistoryRepo.UpsertBodyweightLogAsync(today, kg);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not log bodyweight: {0}", ex.Message), Severity.Error);
+            return;
+        }
 
         var profile = UserProfileService.GetActiveProfile();
         if (profile != null)
@@ -697,7 +714,14 @@
         var query = _searchText.Trim();
         if (!string.IsNullOrWhiteSpace(query))
         {
-            exerciseSessionIds = await HistoryRepo.GetSessionIdsForExerciseNameAsync(query);
+            try
+            {
+                exerciseSessionIds = await HistoryRepo.GetSessionIdsForExerciseNameAsync(query);
+            }
+            catch (Exception)
+            {
+                exerciseSessionIds = new HashSet<string>();
+            }
         }
 
         IEnumerable<WorkoutSessionLogEntity> source;

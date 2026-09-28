@@ -98,6 +98,7 @@ public class WorkoutScheduleServiceTests
             profiles.CreateProfile("Alice");
             alice = profiles.GetProfiles().First(p => p.Name == "Alice");
             await profiles.SwitchProfileAsync(alice.Id);
+            await schedule.EnsureLoadedAsync();
 
             Assert.Empty(schedule.Days);
             await schedule.SetDaysAsync([DayOfWeek.Wednesday]);
@@ -105,6 +106,7 @@ public class WorkoutScheduleServiceTests
 
             // Back on the demo profile, the Monday schedule is intact.
             await profiles.SwitchProfileAsync(UserProfileService.DemoProfileId);
+            await schedule.EnsureLoadedAsync();
             Assert.Equal(DayOfWeek.Monday, Assert.Single(schedule.Days));
 
             await db.Database.CloseAsync();
@@ -136,7 +138,7 @@ public class WorkoutScheduleServiceTests
         Fixture fix = CreateFixture();
 
         // Initially no schedule
-        Assert.Empty(fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 1)));
+        Assert.Empty(await fix.Schedule.GetScheduleForDateAsync(new DateOnly(2026, 5, 1)));
 
         // Set Mon-Wed-Fri effective on 2026-05-01
         await fix.Schedule.SetDaysAsync([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday], new DateOnly(2026, 5, 1));
@@ -146,22 +148,22 @@ public class WorkoutScheduleServiceTests
 
         // Query historical dates:
         // Before 2026-05-01: empty
-        Assert.Empty(fix.Schedule.GetScheduleForDate(new DateOnly(2026, 4, 30)));
+        Assert.Empty(await fix.Schedule.GetScheduleForDateAsync(new DateOnly(2026, 4, 30)));
 
         // Between 2026-05-01 and 2026-05-09: Mon-Wed-Fri
-        var sched1 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 5));
+        var sched1 = await fix.Schedule.GetScheduleForDateAsync(new DateOnly(2026, 5, 5));
         Assert.Equal(3, sched1.Count);
         Assert.Contains(DayOfWeek.Monday, sched1);
         Assert.Contains(DayOfWeek.Wednesday, sched1);
         Assert.Contains(DayOfWeek.Friday, sched1);
 
         // On and after 2026-05-10: Tue-Thu
-        var sched2 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 10));
+        var sched2 = await fix.Schedule.GetScheduleForDateAsync(new DateOnly(2026, 5, 10));
         Assert.Equal(2, sched2.Count);
         Assert.Contains(DayOfWeek.Tuesday, sched2);
         Assert.Contains(DayOfWeek.Thursday, sched2);
 
-        var sched3 = fix.Schedule.GetScheduleForDate(new DateOnly(2026, 5, 20));
+        var sched3 = await fix.Schedule.GetScheduleForDateAsync(new DateOnly(2026, 5, 20));
         Assert.Equal(2, sched3.Count);
         Assert.Contains(DayOfWeek.Tuesday, sched3);
         Assert.Contains(DayOfWeek.Thursday, sched3);
@@ -185,7 +187,7 @@ public class WorkoutScheduleServiceTests
             await schedule.EnsureLoadedAsync();
 
             // Verify it was migrated
-            var days = schedule.GetScheduleForDate(new DateOnly(2026, 1, 1));
+            var days = await schedule.GetScheduleForDateAsync(new DateOnly(2026, 1, 1));
             Assert.Contains(DayOfWeek.Monday, days);
             Assert.Contains(DayOfWeek.Wednesday, days);
             Assert.Contains(DayOfWeek.Friday, days);

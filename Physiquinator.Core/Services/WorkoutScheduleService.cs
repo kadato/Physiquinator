@@ -1,6 +1,7 @@
 using Physiquinator.Core.Data;
 using Physiquinator.Core.Models;
 using SQLite;
+using System.Collections.Concurrent;
 using System.Globalization;
 
 namespace Physiquinator.Core.Services;
@@ -19,7 +20,7 @@ public sealed class WorkoutScheduleService(
     private const string DateFormat = "yyyy-MM-dd";
 
     private static readonly IReadOnlySet<DayOfWeek> EmptySchedule = new HashSet<DayOfWeek>();
-    private static readonly Dictionary<int, IReadOnlySet<DayOfWeek>> s_unmaskCache = [];
+    private static readonly ConcurrentDictionary<int, IReadOnlySet<DayOfWeek>> s_unmaskCache = new();
 
     private readonly SemaphoreSlim _lock = new(1, 1);
     private SQLiteAsyncConnection? _lastConnection;
@@ -200,12 +201,33 @@ public sealed class WorkoutScheduleService(
 
     /// <summary>
     /// Retrieves the schedule that was active on the specified date.
+    /// Sync fast path returns the cached value and never blocks. Call
+    /// <see cref="EnsureLoadedAsync"/> first on startup, or use
+    /// <see cref="GetScheduleForDateAsync"/> when the fresh value is needed.
     /// </summary>
     public IReadOnlySet<DayOfWeek> GetScheduleForDate(DateOnly date)
     {
         if (!ReferenceEquals(_lastConnection, database.Database))
-            EnsureLoadedAsync().GetAwaiter().GetResult();
+        {
+            // Never block the Blazor sync context here. Kick off a background
+            // load and return empty rather than stale data from another database.
+            // Callers that need the fresh value await EnsureLoadedAsync first
+            // or use GetScheduleForDateAsync.
+            _ = EnsureLoadedAsync();
+            return EmptySchedule;
+        }
 
+        return GetCachedScheduleForDate(date);
+    }
+
+    public async Task<IReadOnlySet<DayOfWeek>> GetScheduleForDateAsync(DateOnly date)
+    {
+        await EnsureLoadedAsync().ConfigureAwait(false);
+        return GetCachedScheduleForDate(date);
+    }
+
+    private IReadOnlySet<DayOfWeek> GetCachedScheduleForDate(DateOnly date)
+    {
         var dateStr = date.ToString(DateFormat);
         WorkoutScheduleHistoryEntity? activeEntity = null;
 
@@ -229,18 +251,16 @@ public sealed class WorkoutScheduleService(
 
     private static IReadOnlySet<DayOfWeek> Unmask(int mask)
     {
-        if (s_unmaskCache.TryGetValue(mask, out var cached))
-            return cached;
-
-        var days = new HashSet<DayOfWeek>();
-        for (DayOfWeek day = DayOfWeek.Sunday; day <= DayOfWeek.Saturday; day++)
+        return s_unmaskCache.GetOrAdd(mask, static m =>
         {
-            if ((mask & (1 << (int)day)) != 0)
-                days.Add(day);
-        }
-        var result = (IReadOnlySet<DayOfWeek>)days;
-        s_unmaskCache[mask] = result;
-        return result;
+            var days = new HashSet<DayOfWeek>();
+            for (DayOfWeek day = DayOfWeek.Sunday; day <= DayOfWeek.Saturday; day++)
+            {
+                if ((m & (1 << (int)day)) != 0)
+                    days.Add(day);
+            }
+            return (IReadOnlySet<DayOfWeek>)days;
+        });
     }
 
     /// <summary>Next scheduled day on or after <paramref name="from"/>. Null when no schedule is configured.</summary>

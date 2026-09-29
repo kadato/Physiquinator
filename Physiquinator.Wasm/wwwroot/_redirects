@@ -1,10 +1,8 @@
-# SPA fallback: every path boots the Blazor router, which renders its own
-# NotFound UI for unknown addresses. The tradeoff is that unknown paths
-# return 200 instead of 404. Search engines call that a soft 404.
-# Workers Static Assets cannot tell valid client routes (/history, /plan)
-# from invalid ones without a Worker script router, so a 404 rewrite would
-# return 404 for valid deep links too. 404.html mirrors index.html so
-# removing this rule later still renders the app shell with a 404 status.
-# (assets.notFoundHandling single-page-application in cloudflare.config.ts
-# provides the same fallback at the routing layer.)
-/* /index.html 200
+# SPA fallback is provided by assets.notFoundHandling
+# single-page-application in cloudflare.config.ts, which serves index.html
+# for unknown paths so the Blazor router renders its own NotFound UI.
+# The old Pages rule (/* /index.html 200) is rejected by Workers Static
+# Assets as an infinite loop, so it must not live here. 404.html mirrors
+# index.html so a future 404 rule still renders the app shell with a 404
+# status. The tradeoff stays the same: unknown paths return 200 instead
+# of 404, which search engines call a soft 404.

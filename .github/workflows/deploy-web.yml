@@ -11,8 +11,7 @@ name: Deploy Web (Cloudflare Workers)
 #   2. Add repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 #
 # The first deploy creates the "physiquinator" Worker at
-# https://physiquinator.kadatodev.workers.dev. After verifying it, delete
-# the legacy Cloudflare Pages project (physiquinator.pages.dev).
+# https://physiquinator.kadatodev.workers.dev.
 
 on:
   workflow_dispatch:

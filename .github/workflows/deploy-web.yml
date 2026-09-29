@@ -1,12 +1,18 @@
-name: Deploy Web (Cloudflare Pages)
+name: Deploy Web (Cloudflare Workers)
 
-# Builds the Blazor WebAssembly host and uploads the static output to
-# Cloudflare Pages via wrangler direct upload. Cloudflare never runs a build,
-# so the free tier's build quota stays untouched.
+# Builds the Blazor WebAssembly host and deploys the static output to
+# Cloudflare Workers Static Assets via the cf CLI. Static asset requests
+# are free, and Cloudflare never runs a build, so the free tier stays
+# untouched.
 #
 # One-time setup:
-#   1. Create an API token with "Cloudflare Pages: Edit" permission
+#   1. Create an API token from the "Edit Cloudflare Workers" template
+#      (Workers Scripts: Edit permission)
 #   2. Add repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#
+# The first deploy creates the "physiquinator" Worker at
+# https://physiquinator.kadatodev.workers.dev. After verifying it, delete
+# the legacy Cloudflare Pages project (physiquinator.pages.dev).
 
 on:
   workflow_dispatch:
@@ -28,13 +34,19 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
 
+    - name: Setup Node
+      uses: actions/setup-node@v5
+      with:
+        node-version: lts/*
+        cache: npm
+
     - name: Install WebAssembly tools workload
       run: dotnet workload install wasm-tools
 
     - name: Publish WASM host
       run: dotnet publish Physiquinator.Wasm/Physiquinator.Wasm.csproj --configuration Release -o ./artifacts/wasm-publish
 
-    # .NET emits precompressed .br and .gz siblings. Pages compresses at the edge
+    # .NET emits precompressed .br and .gz siblings. The edge compresses
     # itself, so shipping them would only double the upload size.
     # Source maps (.map) are only fetched with devtools open; never ship them.
     - name: Remove precompressed duplicates
@@ -43,10 +55,11 @@ jobs:
         find ./artifacts/wasm-publish/wwwroot -type f -name '*.map' -delete
         echo "File count: $(find ./artifacts/wasm-publish/wwwroot -type f | wc -l)"
 
-    - name: Deploy to Cloudflare Pages
-      uses: cloudflare/wrangler-action@v4
-      with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        command: pages deploy ./artifacts/wasm-publish/wwwroot --project-name=physiquinator --branch=main --commit-dirty=true
+    - name: Install JS tooling
+      run: npm ci
 
+    - name: Deploy to Cloudflare Workers
+      run: npx cf deploy
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,0 +1,14 @@
+{
+  "name": "physiquinator",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Workers hosting for the Blazor WebAssembly build. .NET publishes static files, cf deploys them.",
+  "scripts": {
+    "cloudflare:build": "cf build",
+    "cloudflare:deploy": "cf deploy"
+  },
+  "devDependencies": {
+    "cf": "1.0.0-beta.5",
+    "wrangler": "4.143.0"
+  }
+}

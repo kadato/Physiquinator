@@ -28,3 +28,19 @@ updates:
       actions:
         patterns:
           - '*'
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+    groups:
+      cloudflare:
+        patterns:
+          - 'cf'
+          - 'wrangler'
+          - '@cloudflare/*'

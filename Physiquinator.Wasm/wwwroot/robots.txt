@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://physiquinator.pages.dev/sitemap.xml
+Sitemap: https://physiquinator.kadatodev.workers.dev/sitemap.xml

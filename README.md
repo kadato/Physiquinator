@@ -17,7 +17,7 @@ An AI assistant with 15 tools answers questions about your training and edits yo
 
 <div align="center">
 
-[![Live demo in the browser](https://img.shields.io/badge/Live%20Demo-Try%20in%20browser-2dd4bf?style=for-the-badge)](https://physiquinator.pages.dev)
+[![Live demo in the browser](https://img.shields.io/badge/Live%20Demo-Try%20in%20browser-2dd4bf?style=for-the-badge)](https://physiquinator.kadatodev.workers.dev)
 
 No install, no account. Data stays in your browser.
 
@@ -32,7 +32,7 @@ Download the latest build from the [releases page](https://github.com/kadato/Phy
 | Android | [![APK](https://img.shields.io/badge/APK-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Android.apk) | 115 MB | Needs Android 7.0 or later. Enable unknown sources first |
 | Windows | [![Portable ZIP](https://img.shields.io/badge/Portable%20ZIP-1f6feb?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/kadato/Physiquinator/releases/latest/download/Physiquinator-Windows.zip) | 70 MB | Portable. Extract and run |
 | iOS and macOS | *Source only* | - | Build from source using the .NET MAUI workload |
-| Web | [![Web App](https://img.shields.io/badge/Web%20App-6b46c1?style=for-the-badge&logo=web&logoColor=white)](https://physiquinator.pages.dev) | - | Live demo, no install needed |
+| Web | [![Web App](https://img.shields.io/badge/Web%20App-6b46c1?style=for-the-badge&logo=web&logoColor=white)](https://physiquinator.kadatodev.workers.dev) | - | Live demo, no install needed |
 
 **Windows runtime note.** Install the [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/11.0) once.
 

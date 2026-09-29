@@ -140,7 +140,7 @@ else
         }
         try
         {
-            await JS.InvokeVoidAsync("eval", "try{localStorage.clear()}catch(e){}");
+            await JS.InvokeVoidAsync("physiquinatorHelpers.clearLocalStorage");
         }
         catch (Exception ex)
         {
@@ -148,7 +148,7 @@ else
         }
         try
         {
-            await JS.InvokeVoidAsync("eval", "location.reload()");
+            await JS.InvokeVoidAsync("physiquinatorHelpers.reloadPage");
         }
         catch (Exception ex)
         {

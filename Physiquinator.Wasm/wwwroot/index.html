@@ -23,22 +23,7 @@
     <base href="/" />
     <link rel="preload" href="_content/Physiquinator.UI/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="_content/Physiquinator.UI/fonts/jetbrains-mono-5.woff2" as="font" type="font/woff2" crossorigin />
-    <script>
-        (function () {
-            const key = "physiquinator-theme-preference";
-            const preference = localStorage.getItem(key) || "system";
-            const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-            let theme;
-            if (preference === "system") {
-                theme = isDark ? "dark" : "light";
-            } else {
-                theme = preference;
-            }
-            var lightThemes = { "light": 1, "tokyo-night-light": 1, "solarized-light": 1, "github-light": 1 };
-            document.documentElement.dataset.theme = theme;
-            document.documentElement.dataset.themeMode = lightThemes[theme] ? "light" : "dark";
-        })();
-    </script>
+    <script src="js/theme-init.js"></script>
     <style>
         html[data-theme="dark"] body {
             background-color: #1A1B26 !important;
@@ -97,6 +82,7 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#FAFF00" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
 </head>
 
 <body>
@@ -121,24 +107,7 @@
         </output>
     </div>
 
-    <script>
-        (function () {
-            var app = document.getElementById('app');
-            if (!app) return;
-            function hide() {
-                for (var i = 0; i < app.children.length; i++) {
-                    if (!app.children[i].classList.contains('app-splash')) {
-                        var s = app.querySelector('.app-splash');
-                        if (s) s.style.display = 'none';
-                        return true;
-                    }
-                }
-                return false;
-            }
-            if (hide()) return;
-            new MutationObserver(hide).observe(app, { childList: true });
-        })();
-    </script>
+    <script src="js/splash-hide.js"></script>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
@@ -153,7 +122,7 @@
     <script defer src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/wasm-files.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
-    <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+    <script src="js/sw-register.js"></script>
 </body>
 
 </html>

@@ -34,6 +34,56 @@
                     function () { return fallbackCopy(text); });
             }
             return Promise.resolve(fallbackCopy(text));
+        },
+
+        // Named entry points for work Blazor used to do through eval().
+        // Calling eval is blocked by the Content-Security-Policy, so every
+        // dynamic snippet needs a real function here instead.
+        readPrefEntries: function (prefix) {
+            try {
+                var out = {};
+                for (var i = 0; i < window.localStorage.length; i++) {
+                    var key = window.localStorage.key(i);
+                    if (key && key.indexOf(prefix) === 0) out[key] = window.localStorage.getItem(key);
+                }
+                return JSON.stringify(out);
+            } catch (e) {
+                return '';
+            }
+        },
+
+        writePrefEntry: function (key, value) {
+            try {
+                window.localStorage.setItem(key, value);
+            } catch (e) {
+                /* ignore: the in-memory copy keeps this session working */
+            }
+        },
+
+        clearLocalStorage: function () {
+            try {
+                window.localStorage.clear();
+            } catch (e) {
+                /* ignore */
+            }
+        },
+
+        reloadPage: function () {
+            window.location.reload();
+        },
+
+        isSortableLoaded: function () {
+            return typeof Sortable !== 'undefined';
+        },
+
+        loadScript: function (src) {
+            return new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.onload = function () { resolve(true); };
+                s.onerror = function () { reject(new Error('script load failed: ' + src)); };
+                document.head.appendChild(s);
+            });
         }
     };
 

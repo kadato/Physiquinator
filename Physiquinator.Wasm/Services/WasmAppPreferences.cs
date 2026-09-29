@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using Microsoft.JSInterop;
 using Physiquinator.Core.Services;
@@ -30,8 +29,7 @@ public sealed class WasmAppPreferences : InMemoryAppPreferences
         try
         {
             var json = Js()?.Invoke<string>(
-                "eval",
-                "JSON.stringify(Object.fromEntries(Object.entries(localStorage).filter(([k]) => k.startsWith('" + Prefix + "'))))");
+                "physiquinatorHelpers.readPrefEntries", Prefix);
             if (string.IsNullOrEmpty(json))
             {
                 return;
@@ -74,10 +72,7 @@ public sealed class WasmAppPreferences : InMemoryAppPreferences
         try
         {
             Js()?.Invoke<object?>(
-                "eval",
-                string.Create(
-                    CultureInfo.InvariantCulture,
-                    $"localStorage.setItem({JsonSerializer.Serialize(Prefix + key, JsonOptions)}, {JsonSerializer.Serialize(value, JsonOptions)})"));
+                "physiquinatorHelpers.writePrefEntry", Prefix + key, value);
         }
         catch
         {

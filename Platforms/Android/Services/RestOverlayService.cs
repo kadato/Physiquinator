@@ -968,7 +968,7 @@ public sealed class RestOverlayService : Service
             return;
 
         WorkoutPlan plan = session.CurrentPlan;
-        var exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = session.GetUpNextExerciseIndex();
         string? nextExerciseName = null;
         int? nextSetIndex = null;
         int? nextSetTotal = null;
@@ -1218,7 +1218,7 @@ public sealed class RestOverlayService : Service
             return new WorkoutTimerState(null, null, 0, null, null, null, null);
 
         WorkoutPlan plan = session.CurrentPlan;
-        var exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = session.GetUpNextExerciseIndex();
         string? nextExercise = null;
         int? nextSetIndex = null;
         int? nextSetTotal = null;

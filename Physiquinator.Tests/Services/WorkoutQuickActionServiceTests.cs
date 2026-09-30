@@ -193,6 +193,35 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task LogNextSetAsync_logs_up_next_override_exercise()
+    {
+        var plan = new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0, RestIntervalSeconds = 60, DefaultReps = 5, DefaultWeightKg = 100 },
+                new ExercisePlan { Name = "Bench Press", SetCount = 2, Order = 1, RestIntervalSeconds = 60, DefaultReps = 8, DefaultWeightKg = 60 }
+            ]
+        };
+        (WorkoutSessionService session, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(plan);
+        session.SetNextExerciseOverride(1);
+
+        QuickActionResult result = await actions.LogNextSetAsync(null, null);
+
+        Assert.Equal(QuickActionStatus.Logged, result.Status);
+        Assert.Equal("Bench Press", result.ExerciseName);
+
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
+        WorkoutSetLogEntity set = Assert.Single(logged);
+        Assert.Equal(1, set.ExerciseIndex);
+        Assert.Equal("Bench Press", set.ExerciseName);
+        Assert.Equal(60, set.WeightKg);
+        Assert.Equal(8, set.Reps);
+    }
+
+    [Fact]
     public async Task UndoLastSetAsync_removes_set_and_history_row_and_stops_rest()
     {
         (WorkoutSessionService? session, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(SamplePlan());

@@ -25,8 +25,11 @@ public sealed class RestTimerCoordinator : IDisposable
 
     // Last rest state processed by SyncAsync, so per-tick re-syncs skip the
     // platform work (snapshot persist, exact-alarm re-arm, overlay restart).
+    // The up-next pick is part of the key so changing it mid-rest refreshes
+    // the notification and overlay even though the countdown did not change.
     private DateTime? _lastSyncedRestEndUtc;
     private bool _lastSyncedResting;
+    private int _lastSyncedUpNext = -2;
     private bool _hasSynced;
 
     public RestTimerCoordinator(
@@ -179,6 +182,7 @@ public sealed class RestTimerCoordinator : IDisposable
                 _hasSynced = false;
                 _lastSyncedRestEndUtc = null;
                 _lastSyncedResting = false;
+                _lastSyncedUpNext = -2;
                 ClearSnapshot();
                 await _notifications.HideWorkoutTimerUiAsync();
                 await _notifications.CancelRestEndAlarmAsync();
@@ -193,12 +197,14 @@ public sealed class RestTimerCoordinator : IDisposable
             // re-persist the snapshot, re-arm the exact alarm or restart the
             // overlay service for an unchanged countdown.
             DateTime? restEnd = _session.IsResting ? state.RestEndsAtUtc : null;
-            if (_hasSynced && restEnd == _lastSyncedRestEndUtc && _session.IsResting == _lastSyncedResting)
+            var upNext = _session.GetUpNextExerciseIndex();
+            if (_hasSynced && restEnd == _lastSyncedRestEndUtc && _session.IsResting == _lastSyncedResting && upNext == _lastSyncedUpNext)
                 return;
 
             _hasSynced = true;
             _lastSyncedRestEndUtc = restEnd;
             _lastSyncedResting = _session.IsResting;
+            _lastSyncedUpNext = upNext;
 
             // Rest state survives process death. Between-set state is rebuilt
             // from the persisted workout session, so only rest needs a snapshot.
@@ -236,7 +242,7 @@ public sealed class RestTimerCoordinator : IDisposable
     {
         WorkoutPlan? plan = _session.CurrentPlan;
 
-        var exerciseIndex = _session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = _session.GetUpNextExerciseIndex();
         string? nextExerciseName = null;
         int? nextSetIndex = null;
         int? nextSetTotal = null;
@@ -261,7 +267,7 @@ public sealed class RestTimerCoordinator : IDisposable
 
     private string BuildRestCompleteDescription()
     {
-        var exerciseIndex = _session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = _session.GetUpNextExerciseIndex();
         WorkoutPlan? plan = _session.CurrentPlan;
 
         if (plan != null && exerciseIndex >= 0 && exerciseIndex < plan.Exercises.Count)

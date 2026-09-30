@@ -25,7 +25,47 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     private readonly List<SetCompletion> _completedSets = [];
     private readonly HashSet<SetCompletion> _completedSetLookup = [];
 
+    private int? _nextExerciseOverride;
+
     public WorkoutPlan? CurrentPlan { get; private set; }
+
+    /// <summary>
+    /// User-picked "up next" exercise (plan index), chosen mid-rest from the
+    /// workout page. Background surfaces (overlay bubble, notification,
+    /// rest-complete alert) and quick actions honor it while it still has
+    /// uncompleted sets, so every surface names the same next exercise.
+    /// Null when the natural order applies.
+    /// </summary>
+    public int? NextExerciseOverride => _nextExerciseOverride;
+
+    /// <summary>
+    /// Points the "up next" pick at an exercise, or clears it with null.
+    /// Fires <see cref="WorkoutStateChanged"/> so platform surfaces re-sync
+    /// even when the rest countdown itself did not change.
+    /// </summary>
+    public void SetNextExerciseOverride(int? exerciseIndex)
+    {
+        if (_nextExerciseOverride == exerciseIndex)
+            return;
+        _nextExerciseOverride = exerciseIndex;
+        WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// The exercise the user should do next: the up-next pick while it still
+    /// has uncompleted sets, otherwise the first uncompleted exercise.
+    /// Returns -1 when the whole workout is complete.
+    /// </summary>
+    public int GetUpNextExerciseIndex()
+    {
+        if (_nextExerciseOverride.HasValue && CurrentPlan != null)
+        {
+            var ov = _nextExerciseOverride.Value;
+            if (ov >= 0 && ov < CurrentPlan.Exercises.Count && !IsExerciseDone(ov))
+                return ov;
+        }
+        return GetFirstUncompletedExerciseIndex();
+    }
 
     /// <summary>Completed sets in chronological (append) order.</summary>
     public IReadOnlyList<SetCompletion> CompletedSets => _completedSets;
@@ -93,6 +133,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     {
         CurrentPlan = plan;
         ClearCompletedSets();
+        _nextExerciseOverride = null;
         ResetRestSilently();
         WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -102,6 +143,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     {
         CurrentPlan = plan;
         ClearCompletedSets();
+        _nextExerciseOverride = null;
         _completedSets.AddRange(completedSets);
         _completedSetLookup.UnionWith(_completedSets);
         ResetRestSilently();
@@ -112,6 +154,7 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
     {
         CurrentPlan = null;
         ClearCompletedSets();
+        _nextExerciseOverride = null;
         StopRest();
         WorkoutStateChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -208,6 +251,9 @@ public sealed class WorkoutSessionService(TimeProvider time) : IDisposable
             _completedSets[i] = remapped;
             _completedSetLookup.Add(remapped);
         }
+
+        if (_nextExerciseOverride.HasValue && mapping.TryGetValue(_nextExerciseOverride.Value, out var remappedOverride))
+            _nextExerciseOverride = remappedOverride;
     }
 
     /// <summary>Removes the last completed set (chronological append order). Returns false when none.</summary>

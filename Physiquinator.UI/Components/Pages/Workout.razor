@@ -99,7 +99,7 @@ else
             }
             else if (FocusedExercise != null)
             {
-                <div class="workout-focus" data-exercise-index="@_activeExerciseIndex">
+                <div class="workout-focus" data-exercise-index="@ActiveExerciseIndex">
                     @if (_isRestComplete)
                     {
                         <div class="workout-timesup-banner" role="status">
@@ -142,10 +142,10 @@ else
                     }
                     <div class="workout-focus__head">
                         <div class="workout-focus__head-left">
-                            <span class="workout-focus__index">/@((_activeExerciseIndex + 1).ToString("D2"))</span>
+                            <span class="workout-focus__index">/@((ActiveExerciseIndex + 1).ToString("D2"))</span>
                             @if (!string.IsNullOrEmpty(FocusedExercise.SupersetGroupId))
                             {
-                                var _supersetBounds = GetSupersetGroupBounds(_activeExerciseIndex);
+                                var _supersetBounds = GetSupersetGroupBounds(ActiveExerciseIndex);
                                 var _supersetCount = _supersetBounds.Start == -1 ? 0 : _supersetBounds.End - _supersetBounds.Start + 1;
                                 <span class="workout-focus__superset" data-group="@FocusedExercise.SupersetGroupId">SUPERSET @FocusedExercise.SupersetGroupId@(_supersetCount > 1 ? $" · {_supersetCount} exercises" : "")</span>
                             }
@@ -172,13 +172,13 @@ else
                                     <ChildContent>
                                         @if (CanMoveUp)
                                         {
-                                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward" OnClick="() => MoveExerciseAsync(_activeExerciseIndex, _activeExerciseIndex - 1)">Move up</MudMenuItem>
+                                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward" OnClick="() => MoveExerciseAsync(ActiveExerciseIndex, ActiveExerciseIndex - 1)">Move up</MudMenuItem>
                                         }
                                         @if (CanMoveDown)
                                         {
-                                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowDownward" OnClick="() => MoveExerciseAsync(_activeExerciseIndex, _activeExerciseIndex + 1)">Move down</MudMenuItem>
+                                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowDownward" OnClick="() => MoveExerciseAsync(ActiveExerciseIndex, ActiveExerciseIndex + 1)">Move down</MudMenuItem>
                                         }
-                                        <MudMenuItem Icon="@Icons.Material.Filled.SkipNext" OnClick="() => SkipExerciseAsync((_activeExerciseIndex, FocusedExercise.Name))">Skip exercise</MudMenuItem>
+                                        <MudMenuItem Icon="@Icons.Material.Filled.SkipNext" OnClick="() => SkipExerciseAsync((ActiveExerciseIndex, FocusedExercise.Name))">Skip exercise</MudMenuItem>
                                     </ChildContent>
                                 </MudMenu>
                             </div>
@@ -192,7 +192,7 @@ else
                         <div class="workout-focus__steppers">
                             <div class="workout-focus__stepper">
                                     <SetMetricStepper Value="@ToDisplayWeight(FocusedInputs.Weight)"
-                                                      ValueChanged="@(val => HandleWeightStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, ToKgWeight(val))))"
+                                                      ValueChanged="@(val => HandleWeightStepperChanged((ActiveExerciseIndex, FocusedActiveSetIndex, ToKgWeight(val))))"
                                                       Step="@WeightStep"
                                                       Min="@WeightMin"
                                                       IsInteger="false"
@@ -204,7 +204,7 @@ else
                             </div>
                             <div class="workout-focus__stepper">
                                 <SetMetricStepper Value="@((double?)FocusedInputs.Reps)"
-                                                  ValueChanged="@(val => HandleRepsStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
+                                                  ValueChanged="@(val => HandleRepsStepperChanged((ActiveExerciseIndex, FocusedActiveSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                                   Step="1"
                                                   Min="1"
                                                   IsInteger="true"
@@ -216,7 +216,7 @@ else
                         </div>
                         <button type="button"
                                 class="workout-focus__log"
-                                @onclick="@(() => ToggleSetComplete((_activeExerciseIndex, FocusedActiveSetIndex)))"
+                                @onclick="@(() => ToggleSetComplete((ActiveExerciseIndex, FocusedActiveSetIndex)))"
                                 disabled="@_isCompleting"
                                 aria-label="@(string.Format("Log set {0} for {1}", FocusedActiveSetIndex + 1, FocusedExercise.Name))">
                             <MudIcon Icon="@Icons.Material.Filled.Bolt" Class="workout-focus__log-icon" />
@@ -249,7 +249,7 @@ else
                                     </span>
                                     <div class="workout-focus__history-steppers">
                                             <SetMetricStepper Value="@ToDisplayWeight(row.WeightKg)"
-                                                              ValueChanged="@(val => HandleSetWeightChanged((_activeExerciseIndex, row.SetIndex, ToKgWeight(val))))"
+                                                              ValueChanged="@(val => HandleSetWeightChanged((ActiveExerciseIndex, row.SetIndex, ToKgWeight(val))))"
                                                               Step="@WeightStep"
                                                               Min="@WeightMin"
                                                               IsInteger="false"
@@ -259,7 +259,7 @@ else
                                                               CustomDisplayText="@(FocusedExercise.LogType != ExerciseLogType.WeightAndReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
                                                               Placeholder="@ToDisplayWeight(row.WeightKg)" />
                                         <SetMetricStepper Value="@((double?)row.Reps)"
-                                                          ValueChanged="@(val => HandleSetRepsChanged((_activeExerciseIndex, row.SetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
+                                                          ValueChanged="@(val => HandleSetRepsChanged((ActiveExerciseIndex, row.SetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                                           Step="1"
                                                           Min="1"
                                                           IsInteger="true"
@@ -322,7 +322,7 @@ else
                 @foreach (var item in UpcomingExercises)
                 {
                     var exerciseIndex = item.ExerciseIndex;
-                    var isActive = exerciseIndex == _activeExerciseIndex;
+                    var isActive = exerciseIndex == ActiveExerciseIndex;
                     <button type="button"
                             class="workout-sequence-strip__item @(isActive ? "workout-sequence-strip__item--active" : "")"
                             aria-label="@($"Go to {item.Exercise.Name}, exercise {(exerciseIndex + 1):D2}")"
@@ -426,9 +426,26 @@ else
     private readonly SetInputsDictionary _setInputs = new();
     private readonly Dictionary<(int, int), (double? Weight, int? Reps)> _sessionSets = new();
     private readonly HashSet<(int, int)> _skippedSets = [];
-    private int _activeExerciseIndex;
+    private int _activeExerciseIndex = -1;
+
+    /// <summary>
+    /// Focused exercise. Setting it mirrors the value into the session so the
+    /// floating overlay, notification and rest-complete alert all name the
+    /// same next exercise as the page (including a manual "up next" jump).
+    /// </summary>
+    private int ActiveExerciseIndex
+    {
+        get => _activeExerciseIndex;
+        set
+        {
+            if (_activeExerciseIndex == value)
+                return;
+            _activeExerciseIndex = value;
+            SessionService.SetNextExerciseOverride(value >= 0 ? value : null);
+        }
+    }
+
     private readonly Dictionary<int, int> _activeSetIndices = new();
-    private int? _restNextExerciseOverride;
     private string _lastElapsedLabel = "";
 
     private async Task UpdateWakeLockAsync()
@@ -503,10 +520,10 @@ else
     private IReadOnlyList<ExerciseProgress> UpcomingExercises => _upcomingExercises;
 
     // ---- Brutal focus helpers ----
-    private ExercisePlan? FocusedExercise => _activeExerciseIndex >= 0 && SessionService.CurrentPlan != null && _activeExerciseIndex < SessionService.CurrentPlan.Exercises.Count ? SessionService.CurrentPlan.Exercises[_activeExerciseIndex] : null;
+    private ExercisePlan? FocusedExercise => ActiveExerciseIndex >= 0 && SessionService.CurrentPlan != null && ActiveExerciseIndex < SessionService.CurrentPlan.Exercises.Count ? SessionService.CurrentPlan.Exercises[ActiveExerciseIndex] : null;
     private int FocusedTotalSets => FocusedExercise?.TotalSetCount ?? 0;
-    private int FocusedActiveSetIndex => _activeSetIndices.GetValueOrDefault(_activeExerciseIndex, 0);
-    private (double? Weight, int? Reps) FocusedInputs => _setInputs.GetValueOrDefault((_activeExerciseIndex, FocusedActiveSetIndex), (FocusedExercise?.DefaultWeightKg ?? 0.0, FocusedExercise?.DefaultReps ?? DefaultReps));
+    private int FocusedActiveSetIndex => _activeSetIndices.GetValueOrDefault(ActiveExerciseIndex, 0);
+    private (double? Weight, int? Reps) FocusedInputs => _setInputs.GetValueOrDefault((ActiveExerciseIndex, FocusedActiveSetIndex), (FocusedExercise?.DefaultWeightKg ?? 0.0, FocusedExercise?.DefaultReps ?? DefaultReps));
     private double FocusedDefaultWeight => FocusedInputs.Weight ?? FocusedExercise?.DefaultWeightKg ?? 0.0;
     private int FocusedDefaultReps => FocusedInputs.Reps ?? FocusedExercise?.DefaultReps ?? DefaultReps;
     private bool IsFocusedWarmup => FocusedExercise != null && FocusedActiveSetIndex < FocusedExercise.WarmupSetCount;
@@ -517,7 +534,7 @@ else
             if (FocusedExercise == null) return 0;
             int c = 0;
             for (int si = 0; si < FocusedExercise.TotalSetCount; si++)
-                if (SessionService.IsSetCompleted(_activeExerciseIndex, si)) c++;
+                if (SessionService.IsSetCompleted(ActiveExerciseIndex, si)) c++;
             return c;
         }
     }
@@ -541,12 +558,12 @@ else
     {
         get
         {
-            var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == _activeExerciseIndex);
+            var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == ActiveExerciseIndex);
             return idx < 0 ? 0 : idx;
         }
     }
-    private bool CanMoveUp => _activeExerciseIndex > 0;
-    private bool CanMoveDown => SessionService.CurrentPlan != null && _activeExerciseIndex < SessionService.CurrentPlan.Exercises.Count - 1;
+    private bool CanMoveUp => ActiveExerciseIndex > 0;
+    private bool CanMoveDown => SessionService.CurrentPlan != null && ActiveExerciseIndex < SessionService.CurrentPlan.Exercises.Count - 1;
 
     private (ExercisePlan? Exercise, int ExerciseIndex, int SetIndex, string Preview) NextExerciseInfo
     {
@@ -558,8 +575,8 @@ else
             if (FocusedActiveSetIndex + 1 < FocusedTotalSets)
             {
                 var nextSetIdx = FocusedActiveSetIndex + 1;
-                var inputs = _setInputs.GetValueOrDefault((_activeExerciseIndex, nextSetIdx), (FocusedExercise.DefaultWeightKg ?? 0, FocusedExercise.DefaultReps ?? DefaultReps));
-                return (FocusedExercise, _activeExerciseIndex, nextSetIdx, FormatLogPreview(FocusedExercise, inputs));
+                var inputs = _setInputs.GetValueOrDefault((ActiveExerciseIndex, nextSetIdx), (FocusedExercise.DefaultWeightKg ?? 0, FocusedExercise.DefaultReps ?? DefaultReps));
+                return (FocusedExercise, ActiveExerciseIndex, nextSetIdx, FormatLogPreview(FocusedExercise, inputs));
             }
 
             // Otherwise, look for the next upcoming exercise in the plan:
@@ -578,7 +595,7 @@ else
         var rows = new List<(int, double?, int?)>();
         if (FocusedExercise == null) return rows;
         foreach (var (key, value) in _sessionSets)
-            if (key.Item1 == _activeExerciseIndex)
+            if (key.Item1 == ActiveExerciseIndex)
                 rows.Add((key.Item2, value.Weight, value.Reps));
         return rows.OrderBy(r => r.Item1).ToList();
     }
@@ -608,14 +625,14 @@ else
         {
             var plan = SessionService.CurrentPlan;
             if (plan == null) return (null, -1);
-            if ((SessionService.IsResting || _isRestComplete) && _restNextExerciseOverride.HasValue)
+            if (SessionService.IsResting || _isRestComplete)
             {
-                var ov = _restNextExerciseOverride.Value;
-                if (ov >= 0 && ov < plan.Exercises.Count && !SessionService.IsExerciseDone(ov))
+                var upNext = SessionService.GetUpNextExerciseIndex();
+                if (upNext != -1)
                 {
-                    var ovSetIdx = SessionService.GetFirstUncompletedSetIndex(ov);
-                    if (ovSetIdx != -1)
-                        return (plan.Exercises[ov], ovSetIdx);
+                    var upNextSetIdx = SessionService.GetFirstUncompletedSetIndex(upNext);
+                    if (upNextSetIdx != -1)
+                        return (plan.Exercises[upNext], upNextSetIdx);
                 }
             }
             var nextExIdx = SessionService.GetFirstUncompletedExerciseIndex();
@@ -661,24 +678,20 @@ else
     private void FocusPrev()
     {
         if (UpcomingExercises.Count <= 1) return;
-        var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == _activeExerciseIndex);
+        var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == ActiveExerciseIndex);
         if (idx > 0)
         {
-            _activeExerciseIndex = UpcomingExercises[idx - 1].ExerciseIndex;
-            if (SessionService.IsResting || _isRestComplete)
-                _restNextExerciseOverride = _activeExerciseIndex;
+            ActiveExerciseIndex = UpcomingExercises[idx - 1].ExerciseIndex;
         }
     }
 
     private void FocusNext()
     {
         if (UpcomingExercises.Count <= 1) return;
-        var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == _activeExerciseIndex);
+        var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == ActiveExerciseIndex);
         if (idx >= 0 && idx < UpcomingExercises.Count - 1)
         {
-            _activeExerciseIndex = UpcomingExercises[idx + 1].ExerciseIndex;
-            if (SessionService.IsResting || _isRestComplete)
-                _restNextExerciseOverride = _activeExerciseIndex;
+            ActiveExerciseIndex = UpcomingExercises[idx + 1].ExerciseIndex;
         }
     }
 
@@ -686,9 +699,7 @@ else
     {
         if (SessionService.CurrentPlan == null) return;
         if (exIdx < 0 || exIdx >= SessionService.CurrentPlan.Exercises.Count) return;
-        _activeExerciseIndex = exIdx;
-        if (SessionService.IsResting || _isRestComplete)
-            _restNextExerciseOverride = exIdx;
+        ActiveExerciseIndex = exIdx;
         StateHasChanged();
     }
 
@@ -862,7 +873,6 @@ else
         _sessionSets.Clear();
         _skippedSets.Clear();
         _activeSetIndices.Clear();
-        _restNextExerciseOverride = null;
         int firstUncompletedExIdx = -1;
 
         IReadOnlyDictionary<string, IReadOnlyDictionary<int, LastSetMetrics>> lastSessionMetrics =
@@ -906,7 +916,7 @@ else
             }
         }
 
-        _activeExerciseIndex = firstUncompletedExIdx == -1 ? -1 : firstUncompletedExIdx;
+        ActiveExerciseIndex = firstUncompletedExIdx == -1 ? -1 : firstUncompletedExIdx;
     }
 
     private void RefreshExerciseProgress()
@@ -1056,7 +1066,7 @@ else
             if (string.IsNullOrEmpty(groupId))
                 return (null, -1, -1, "");
 
-            var nextIdx = GetNextUncompletedExerciseInSameGroup(_activeExerciseIndex);
+            var nextIdx = GetNextUncompletedExerciseInSameGroup(ActiveExerciseIndex);
             if (nextIdx == -1)
                 return (null, -1, -1, "");
 
@@ -1116,7 +1126,7 @@ else
         SessionService.RemapExerciseIndexes(mapping);
 
         RefreshExerciseProgress();
-        _activeExerciseIndex = UpcomingExercises.FirstOrDefault()?.ExerciseIndex ?? -1;
+        ActiveExerciseIndex = UpcomingExercises.FirstOrDefault()?.ExerciseIndex ?? -1;
 
         try
         {
@@ -1171,15 +1181,7 @@ else
     private void DismissTimesUp()
     {
         _isRestComplete = false;
-        if (_restNextExerciseOverride.HasValue)
-        {
-            _activeExerciseIndex = _restNextExerciseOverride.Value;
-            _restNextExerciseOverride = null;
-        }
-        else if (SessionService.IsExerciseDone(_activeExerciseIndex))
-        {
-            _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-        }
+        ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
         StateHasChanged();
     }
 
@@ -1244,7 +1246,7 @@ else
             }
         }
 
-        _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
+        ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
         await SafeStateHasChangedAsync();
         Snackbar.Add(string.Format("'{0}' skipped.", exerciseName), Severity.Info);
     }
@@ -1288,20 +1290,17 @@ else
 
             if (_historySessionId != null)
             {
-                var loggedWeight = exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight;
-                await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, loggedWeight, isWarmup: isWarmupSet);
+                await HistoryRepository.LogSetAsync(_historySessionId, exerciseIndex, exercise.Name, setIndex, finalReps, finalWeight, isWarmup: isWarmupSet);
             }
 
-            _sessionSets[inputKey] = (
-                exercise.LogType == ExerciseLogType.Duration ? (double?)null : finalWeight,
-                finalReps);
+            _sessionSets[inputKey] = (finalWeight, finalReps);
             _setInputs[inputKey] = (finalWeight, finalReps);
 
             ShowUndoToast();
 
             if (willBeLastSetOfWorkout)
             {
-                _activeExerciseIndex = -1;
+                ActiveExerciseIndex = -1;
                 await SafeStateHasChangedAsync();
                 return;
             }
@@ -1312,27 +1311,22 @@ else
             {
                 await TimerInterop.StopTimerAsync();
                 SessionService.SkipRest();
-                _activeExerciseIndex = nextInGroup;
+                ActiveExerciseIndex = nextInGroup;
                 Snackbar.Add(string.Format("Next: {0}", plan.Exercises[nextInGroup].Name), Severity.Info);
                 await SafeStateHasChangedAsync();
                 return;
             }
 
             _isRestComplete = false;
-            _restNextExerciseOverride = null;
             await TimerInterop.StopTimerAsync();
             _lastRestDurationSeconds = exercise.RestIntervalSeconds;
             SessionService.StartRest(exercise.RestIntervalSeconds);
             await StartJsTimerAsync();
             await ScrollRestTimerIntoViewAsync();
 
-            if (_restNextExerciseOverride != null)
+            if (SessionService.IsExerciseDone(exerciseIndex))
             {
-                _activeExerciseIndex = _restNextExerciseOverride.Value;
-            }
-            else if (SessionService.IsExerciseDone(exerciseIndex))
-            {
-                _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
+                ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
             }
         }
         catch (Exception ex)
@@ -1478,10 +1472,10 @@ else
 
     private async Task ScrollActiveCardIntoViewAsync()
     {
-        if (_disposed || _activeExerciseIndex < 0) return;
+        if (_disposed || ActiveExerciseIndex < 0) return;
         try
         {
-            await JSRuntime.InvokeVoidAsync("physiquinator.scrollExerciseCardIntoView", _activeExerciseIndex);
+            await JSRuntime.InvokeVoidAsync("physiquinator.scrollExerciseCardIntoView", ActiveExerciseIndex);
         }
         catch (Exception ex)
         {
@@ -1533,7 +1527,7 @@ else
         SessionService.SkipRest();
 
         _activeSetIndices[removed.ExerciseIndex] = removed.SetIndex;
-        _activeExerciseIndex = removed.ExerciseIndex;
+        ActiveExerciseIndex = removed.ExerciseIndex;
         _sessionSets.Remove((removed.ExerciseIndex, removed.SetIndex));
 
         var wasSkipped = _skippedSets.Remove((removed.ExerciseIndex, removed.SetIndex));
@@ -1607,15 +1601,7 @@ else
 
         await TimerInterop.StopTimerAsync();
         _isRestComplete = true;
-        if (_restNextExerciseOverride.HasValue)
-        {
-            _activeExerciseIndex = _restNextExerciseOverride.Value;
-            _restNextExerciseOverride = null;
-        }
-        else if (SessionService.IsExerciseDone(_activeExerciseIndex))
-        {
-            _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-        }
+        ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
         SessionService.SkipRest();
         await SafeStateHasChangedAsync();
     }
@@ -1712,15 +1698,7 @@ else
             await TimerInterop.StopTimerAsync();
             await UpdateWakeLockAsync();
             _isRestComplete = true;
-            if (_restNextExerciseOverride.HasValue)
-            {
-                _activeExerciseIndex = _restNextExerciseOverride.Value;
-                _restNextExerciseOverride = null;
-            }
-            else if (SessionService.IsExerciseDone(_activeExerciseIndex))
-            {
-                _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-            }
+            ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
             await SafeStateHasChangedAsync();
             await PlayRestCompleteAlertsAsync();
             await ScrollActiveCardIntoViewAsync();
@@ -1823,15 +1801,7 @@ else
             {
                 await UpdateWakeLockAsync();
                 _isRestComplete = true;
-                if (_restNextExerciseOverride.HasValue)
-                {
-                    _activeExerciseIndex = _restNextExerciseOverride.Value;
-                    _restNextExerciseOverride = null;
-                }
-                else if (SessionService.IsExerciseDone(_activeExerciseIndex))
-                {
-                    _activeExerciseIndex = SessionService.GetFirstUncompletedExerciseIndex();
-                }
+                ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
             }
 
             if (_restPanel != null)
@@ -1914,7 +1884,7 @@ else
     private void CycleRestNextExercise(bool forward = true)
     {
         if (UpcomingExercises.Count <= 1) return;
-        var currentIdx = _restNextExerciseOverride ?? SessionService.GetFirstUncompletedExerciseIndex();
+        var currentIdx = SessionService.GetUpNextExerciseIndex();
         var pos = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == currentIdx);
         if (pos == -1) pos = 0;
 
@@ -1922,8 +1892,8 @@ else
             ? (pos + 1) % UpcomingExercises.Count
             : (pos - 1 + UpcomingExercises.Count) % UpcomingExercises.Count;
 
-        _restNextExerciseOverride = UpcomingExercises[newPos].ExerciseIndex;
-        _activeExerciseIndex = _restNextExerciseOverride.Value;
+        var picked = UpcomingExercises[newPos].ExerciseIndex;
+        ActiveExerciseIndex = picked;
         StateHasChanged();
     }
 

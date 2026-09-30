@@ -599,4 +599,106 @@ public class WorkoutSessionServiceTests
         Assert.Same(completedTcs.Task, completed);
         Assert.False(svc.IsResting);
     }
+
+    private static WorkoutPlan TwoExercisePlan() => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = "Test",
+        Exercises =
+        [
+            new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0, RestIntervalSeconds = 60 },
+            new ExercisePlan { Name = "Bench Press", SetCount = 2, Order = 1, RestIntervalSeconds = 60 }
+        ]
+    };
+
+    [Fact]
+    public void GetUpNextExerciseIndex_prefers_override_while_it_has_uncompleted_sets()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+
+        Assert.Equal(0, svc.GetUpNextExerciseIndex());
+
+        svc.SetNextExerciseOverride(1);
+        Assert.Equal(1, svc.NextExerciseOverride);
+        Assert.Equal(1, svc.GetUpNextExerciseIndex());
+
+        // Completing the picked exercise falls back to the natural order.
+        svc.CompleteSet(1, 0);
+        svc.CompleteSet(1, 1);
+        Assert.Equal(0, svc.GetUpNextExerciseIndex());
+    }
+
+    [Fact]
+    public void GetUpNextExerciseIndex_ignores_out_of_range_override()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+
+        svc.SetNextExerciseOverride(7);
+        Assert.Equal(0, svc.GetUpNextExerciseIndex());
+    }
+
+    [Fact]
+    public void Completing_a_set_of_the_pick_keeps_it_as_up_next()
+    {
+        // Mirrors the active workout: jump to a later exercise, log one of its
+        // sets, and the up-next must stay on that exercise (not snap back to
+        // the first uncompleted one) while it still has open sets.
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+
+        svc.SetNextExerciseOverride(1);
+        svc.CompleteSet(1, 0);
+
+        Assert.Equal(1, svc.GetUpNextExerciseIndex());
+        Assert.Equal(1, svc.NextExerciseOverride);
+    }
+
+    [Fact]
+    public void SetNextExerciseOverride_clears_on_workout_load_and_end()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+        svc.SetNextExerciseOverride(1);
+
+        svc.ResumeWorkout(TwoExercisePlan(), []);
+        Assert.Null(svc.NextExerciseOverride);
+
+        svc.SetNextExerciseOverride(1);
+        svc.EndWorkout();
+        Assert.Null(svc.NextExerciseOverride);
+    }
+
+    [Fact]
+    public void SetNextExerciseOverride_fires_WorkoutStateChanged_only_on_change()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+
+        var fired = 0;
+        svc.WorkoutStateChanged += (_, _) => fired++;
+
+        svc.SetNextExerciseOverride(1);
+        Assert.Equal(1, fired);
+
+        svc.SetNextExerciseOverride(1);
+        Assert.Equal(1, fired);
+
+        svc.SetNextExerciseOverride(null);
+        Assert.Equal(2, fired);
+    }
+
+    [Fact]
+    public void RemapExerciseIndexes_moves_next_exercise_override()
+    {
+        var svc = new WorkoutSessionService(new ManualTimeProvider());
+        svc.StartWorkout(TwoExercisePlan());
+        svc.SetNextExerciseOverride(0);
+
+        svc.RemapExerciseIndexes(new Dictionary<int, int> { [0] = 1, [1] = 0 });
+
+        Assert.Equal(1, svc.NextExerciseOverride);
+        Assert.Equal(1, svc.GetUpNextExerciseIndex());
+    }
 }

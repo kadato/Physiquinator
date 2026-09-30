@@ -48,7 +48,7 @@ public sealed class WorkoutQuickActionService(
         if (plan == null)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 
-        var exerciseIndex = session.GetFirstUncompletedExerciseIndex();
+        var exerciseIndex = session.GetUpNextExerciseIndex();
         if (exerciseIndex < 0 || exerciseIndex >= plan.Exercises.Count)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 

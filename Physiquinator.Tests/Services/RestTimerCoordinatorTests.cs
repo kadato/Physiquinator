@@ -289,6 +289,37 @@ public class RestTimerCoordinatorTests
     }
 
     [Fact]
+    public void UpNextOverride_flows_to_shown_state_and_resyncs_mid_rest()
+    {
+        Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+        fix.Session.StartWorkout(new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Squat", SetCount = 2, Order = 0, RestIntervalSeconds = 60 },
+                new ExercisePlan { Name = "Bench", SetCount = 2, Order = 1, RestIntervalSeconds = 60 }
+            ]
+        });
+        fix.Session.StartRest(60);
+        Assert.Equal("Squat", fix.Notifications.ShownStates[^1].NextExerciseName);
+
+        // Changing the up-next pick mid-rest re-syncs even though the
+        // countdown itself did not change.
+        var shownBefore = fix.Notifications.ShownStates.Count;
+        fix.Session.SetNextExerciseOverride(1);
+
+        Assert.True(fix.Notifications.ShownStates.Count > shownBefore);
+        WorkoutTimerState state = fix.Notifications.ShownStates[^1];
+        Assert.Equal("Bench", state.NextExerciseName);
+        Assert.Equal(1, state.NextExerciseIndex);
+        Assert.Equal(1, state.NextSetIndex);
+        Assert.Equal(2, state.NextSetTotal);
+        Assert.NotNull(state.RestEndsAtUtc);
+    }
+
+    [Fact]
     public void AlertsDisabled_hides_ui_but_keeps_snapshot_for_restore()
     {
         Fixture fix = Build(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc), alertsEnabled: false);

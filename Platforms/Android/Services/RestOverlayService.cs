@@ -689,30 +689,23 @@ public sealed class RestOverlayService : Service
         {
             if (IsBodyweightOnly(_currentWeightKg))
             {
-                if (_weightValue != null)
-                    _weightValue.Text = "BW";
-                if (_weightUnitLabel != null)
-                    _weightUnitLabel.Text = string.Empty;
+                _weightValue?.Text = "BW";
+                _weightUnitLabel?.Text = string.Empty;
             }
             else
             {
                 var abs = Math.Abs(_currentWeightKg);
-                var formatted = _currentWeightKg % 1 == 0 ? $"{abs:0}" : $"{abs:0.#}";
-                if (_weightValue != null)
-                    _weightValue.Text = _currentWeightKg > 0 ? $"+{formatted}" : $"-{formatted}";
-                if (_weightUnitLabel != null)
-                    _weightUnitLabel.Text = "KG";
+                var formatted = abs % 1 == 0 ? $"{abs:0}" : $"{abs:0.#}";
+                _weightValue?.Text = _currentWeightKg > 0 ? $"+{formatted}" : $"-{formatted}";
+                _weightUnitLabel?.Text = "KG";
             }
         }
         else
         {
-            if (_weightValue != null)
-                _weightValue.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
-            if (_weightUnitLabel != null)
-                _weightUnitLabel.Text = "KG";
+            _weightValue?.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
+            _weightUnitLabel?.Text = "KG";
         }
-        if (_repsValue != null)
-            _repsValue.Text = $"{_currentReps}";
+        _repsValue?.Text = $"{_currentReps}";
     }
 
     private static bool IsBodyweightOnly(double weightKg) => Math.Abs(weightKg) < 0.005;

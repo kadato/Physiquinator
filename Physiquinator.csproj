@@ -28,8 +28,8 @@
         <ApplicationId>dev.karoly.physiquinator</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.28.1</ApplicationDisplayVersion>
-        <ApplicationVersion>12801</ApplicationVersion>
+        <ApplicationDisplayVersion>1.29.0</ApplicationDisplayVersion>
+        <ApplicationVersion>12900</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>

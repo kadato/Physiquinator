@@ -145,7 +145,7 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task LogNextSetAsync_duration_exercise_logs_without_weight()
+    public async Task LogNextSetAsync_duration_exercise_logs_default_weight()
     {
         var plan = new WorkoutPlan
         {
@@ -164,8 +164,32 @@ public class WorkoutQuickActionServiceTests : IAsyncLifetime
 
         IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
         WorkoutSetLogEntity set = Assert.Single(logged);
-        Assert.Null(set.WeightKg);
+        Assert.Equal(0, set.WeightKg);
         Assert.Equal(3, set.Reps);
+    }
+
+    [Fact]
+    public async Task LogNextSetAsync_duration_exercise_logs_added_load()
+    {
+        var plan = new WorkoutPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Mobility",
+            Exercises =
+            [
+                new ExercisePlan { Name = "Plank", SetCount = 2, Order = 0, RestIntervalSeconds = 45, LogType = ExerciseLogType.Duration, DefaultReps = 60, DefaultWeightKg = 10 }
+            ]
+        };
+        (WorkoutSessionService _, WorkoutQuickActionService? actions, var sessionId) = await BuildAsync(plan);
+
+        QuickActionResult result = await actions.LogNextSetAsync(10, null);
+
+        Assert.Equal(QuickActionStatus.Logged, result.Status);
+
+        IReadOnlyList<WorkoutSetLogEntity> logged = await _history.GetSetsForSessionAsync(sessionId);
+        WorkoutSetLogEntity set = Assert.Single(logged);
+        Assert.Equal(10, set.WeightKg);
+        Assert.Equal(60, set.Reps);
     }
 
     [Fact]

@@ -87,17 +87,14 @@
                               Format="0"
                               InputMode="numeric" />
             
-            @if (_logType != ExerciseLogType.Duration)
-            {
-                <SetMetricStepper @key="@($"weight-stepper-{_logType}")"
-                                  Label="@DefaultWeightLabel"
-                                  Value="@DefaultWeightDisplay"
-                                  ValueChanged="OnDefaultWeightChanged"
-                                  Step="@DefaultWeightStep"
-                                  Min="@DefaultWeightMin"
-                                  Format="0.#"
-                                  InputMode="decimal" />
-            }
+            <SetMetricStepper @key="@($"weight-stepper-{_logType}")"
+                              Label="@DefaultWeightLabel"
+                              Value="@DefaultWeightDisplay"
+                              ValueChanged="OnDefaultWeightChanged"
+                              Step="@DefaultWeightStep"
+                              Min="@DefaultWeightMin"
+                              Format="0.#"
+                              InputMode="decimal" />
 
             @if (_logType == ExerciseLogType.BodyweightReps)
             {
@@ -162,10 +159,12 @@
     private string BodyweightShareLabel =>
         string.Format("{0}%", _bodyweightPercent ?? 100);
 
-    private string DefaultWeightLabel =>
-        _logType == ExerciseLogType.BodyweightReps
-            ? string.Format("Default weight offset ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current))
-            : string.Format("Default weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current));
+    private string DefaultWeightLabel => _logType switch
+    {
+        ExerciseLogType.Duration => string.Format("Default added load ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)),
+        ExerciseLogType.BodyweightReps => string.Format("Default weight offset ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)),
+        _ => string.Format("Default weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)),
+    };
 
     private double? DefaultWeightDisplay =>
         _defaultWeightKg is { } kg
@@ -272,7 +271,7 @@
         RestIntervalSeconds = Math.Max(0, (int)Math.Round(_restSeconds ?? 0)),
         Order = Exercise.Order,
         DefaultReps = _defaultReps.HasValue ? (int)Math.Round(_defaultReps.Value) : null,
-        DefaultWeightKg = _logType == ExerciseLogType.Duration ? null : _defaultWeightKg,
+        DefaultWeightKg = _defaultWeightKg,
         BodyweightPercent = _logType == ExerciseLogType.BodyweightReps ? _bodyweightPercent : null,
         LogType = _logType
     };

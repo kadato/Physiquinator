@@ -1,4 +1,5 @@
 using Physiquinator.Core.Formatting;
+using Physiquinator.Core.Models;
 using Xunit;
 
 namespace Physiquinator.Tests.Formatting;
@@ -8,10 +9,27 @@ public class ExerciseWeightFormatterTests
     [Theory]
     [InlineData(null)]
     [InlineData(0.0)]
+    [InlineData(0.0000001)]
+    [InlineData(-0.0000001)]
+    [InlineData(0.004)]
+    [InlineData(-0.004)]
     public void FormatBodyweightOffset_bodyweight_only(double? offset)
     {
         Assert.Equal("BW", ExerciseWeightFormatter.FormatBodyweightOffset(offset, null));
         Assert.Equal("BW (85 kg)", ExerciseWeightFormatter.FormatBodyweightOffset(offset, 85));
+    }
+
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData(0.0, true)]
+    [InlineData(0.004, true)]
+    [InlineData(-0.004, true)]
+    [InlineData(0.01, false)]
+    [InlineData(-0.01, false)]
+    [InlineData(2.5, false)]
+    public void IsBodyweightOnly_treats_residue_as_bodyweight(double? offset, bool expected)
+    {
+        Assert.Equal(expected, ExerciseWeightFormatter.IsBodyweightOnly(offset));
     }
 
     [Fact]
@@ -84,6 +102,14 @@ public class ExerciseWeightFormatterTests
         Assert.Equal("BW + 5 kg (90 kg) × 8 reps", ExerciseWeightFormatter.FormatBodyweightOffset(5, 85, 8, WeightUnit.Kilograms));
         Assert.Equal("BW + 11 lb (198.4 lb) × 8 reps", ExerciseWeightFormatter.FormatBodyweightOffset(5, 85, 8, WeightUnit.Pounds));
         Assert.Equal("BW - 11 lb (176.4 lb)", ExerciseWeightFormatter.FormatBodyweightOffset(-5, 85, WeightUnit.Pounds));
+    }
+
+    [Fact]
+    public void FormatEffectiveWeight_duration_shows_added_load_only()
+    {
+        Assert.Equal("-", ExerciseWeightFormatter.FormatEffectiveWeight(null, null, null, WeightUnit.Kilograms, ExerciseLogType.Duration));
+        Assert.Equal("-", ExerciseWeightFormatter.FormatEffectiveWeight(0, null, null, WeightUnit.Kilograms, ExerciseLogType.Duration));
+        Assert.Equal("BW + 10 kg", ExerciseWeightFormatter.FormatEffectiveWeight(10, null, null, WeightUnit.Kilograms, ExerciseLogType.Duration));
     }
 
     [Fact]

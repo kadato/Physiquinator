@@ -57,8 +57,7 @@ public sealed class WorkoutQuickActionService(
         if (setIndex < 0)
             return new QuickActionResult(QuickActionStatus.NothingToLog);
 
-        var duration = exercise.LogType == ExerciseLogType.Duration;
-        double? loggedWeight = duration ? null : weightKg ?? exercise.DefaultWeightKg ?? 0.0;
+        double? loggedWeight = weightKg ?? exercise.DefaultWeightKg ?? 0.0;
         int? loggedReps = reps ?? exercise.DefaultReps ?? DefaultReps;
 
         // Completing the last set ends the workout. Stop any running rest.

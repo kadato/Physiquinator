@@ -238,23 +238,16 @@ else
                                            @onchange="OnEditRepsChanged" />
                                 </span>
                                 <span>
-                                    @if (GetLogType(context.ExerciseName) == ExerciseLogType.Duration)
-                                    {
-                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
-                                    }
-                                    else
-                                    {
-                                        <input type="number"
-                                               class="history-detail-table__input"
-                                               inputmode="decimal"
-                                               min="0"
-                                               step="@WeightStep"
-                                               autocomplete="off"
-                                               enterkeyhint="done"
-                                               value="@_editWeightText"
-                                               aria-label="@(string.Format("Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)))"
-                                               @onchange="OnEditWeightChanged" />
-                                    }
+                                    <input type="number"
+                                           class="history-detail-table__input"
+                                           inputmode="decimal"
+                                           min="0"
+                                           step="@WeightStep"
+                                           autocomplete="off"
+                                           enterkeyhint="done"
+                                           value="@_editWeightText"
+                                           aria-label="@(string.Format("Weight ({0})", ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)))"
+                                           @onchange="OnEditWeightChanged" />
                                 </span>
                             }
                             else
@@ -447,7 +440,7 @@ else
     {
         _editingSetId = set.Id;
         _editRepsText = set.Reps?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
-        _editWeightText = GetLogType(set.ExerciseName) == ExerciseLogType.Duration || set.WeightKg is not { } kg
+        _editWeightText = set.WeightKg is not { } kg
             ? ""
             : ExerciseWeightFormatter.ToDisplay(kg, WeightUnitService.Current)
                 .ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
@@ -471,8 +464,7 @@ else
             reps = parsedReps;
 
         double? weightKg = null;
-        if (GetLogType(set.ExerciseName) != ExerciseLogType.Duration
-            && double.TryParse(_editWeightText, System.Globalization.NumberStyles.Float,
+        if (double.TryParse(_editWeightText, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var parsedWeight) && parsedWeight > 0)
             weightKg = ExerciseWeightFormatter.ToKg(parsedWeight, WeightUnitService.Current);
 
@@ -719,7 +711,10 @@ else
     {
         if (exercise.LogType == ExerciseLogType.Duration)
         {
-            return exercise.DefaultReps.HasValue ? $"{exercise.DefaultReps.Value}s" : "-";
+            var time = exercise.DefaultReps.HasValue ? $"{exercise.DefaultReps.Value}s" : "-";
+            if (exercise.DefaultWeightKg.HasValue && !ExerciseWeightFormatter.IsBodyweightOnly(exercise.DefaultWeightKg))
+                return $"{time} + {ExerciseWeightFormatter.FormatWeightWithUnit(exercise.DefaultWeightKg.Value, WeightUnitService.Current)}";
+            return time;
         }
 
         if (exercise.LogType == ExerciseLogType.BodyweightReps)

@@ -63,6 +63,7 @@ public sealed class RestOverlayService : Service
     private AndroidTextView? _setInfoText;
     private AndroidTextView? _detailText;
     private AndroidTextView? _weightValue;
+    private AndroidTextView? _weightUnitLabel;
     private AndroidTextView? _repsValue;
     private AndroidView? _stepperRow;
     private AndroidButton? _logSetButton;
@@ -561,6 +562,7 @@ public sealed class RestOverlayService : Service
         _weightValue.LetterSpacing = 0.02f;
         AndroidTextButton weightPlus = CreateStepperBtn("+", colors, OnWeightPlus);
         var weightLabel = new AndroidTextView(this) { Text = "KG", Gravity = GravityFlags.CenterVertical };
+        _weightUnitLabel = weightLabel;
         weightLabel.SetTextColor(colors.Stone);
         weightLabel.SetTextSize(ComplexUnitType.Sp, 11);
         weightLabel.SetTypeface(MonoFont(), TypefaceStyle.Bold);
@@ -671,16 +673,49 @@ public sealed class RestOverlayService : Service
         row.AddView(view, lp);
     }
 
-    private void OnWeightMinus() { _currentWeightKg = Math.Max(0, _currentWeightKg - 2.5); UpdateStepperDisplay(); }
+    private void OnWeightMinus()
+    {
+        var min = _currentLogType == ExerciseLogType.BodyweightReps ? -200 : 0;
+        _currentWeightKg = Math.Max(min, _currentWeightKg - 2.5);
+        UpdateStepperDisplay();
+    }
     private void OnWeightPlus() { _currentWeightKg += 2.5; UpdateStepperDisplay(); }
     private void OnRepsMinus() { _currentReps = Math.Max(1, _currentReps - 1); UpdateStepperDisplay(); }
     private void OnRepsPlus() { _currentReps++; UpdateStepperDisplay(); }
 
     private void UpdateStepperDisplay()
     {
-        _weightValue?.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
-        _repsValue?.Text = $"{_currentReps}";
+        if (_currentLogType == ExerciseLogType.BodyweightReps)
+        {
+            if (IsBodyweightOnly(_currentWeightKg))
+            {
+                if (_weightValue != null)
+                    _weightValue.Text = "BW";
+                if (_weightUnitLabel != null)
+                    _weightUnitLabel.Text = string.Empty;
+            }
+            else
+            {
+                var abs = Math.Abs(_currentWeightKg);
+                var formatted = _currentWeightKg % 1 == 0 ? $"{abs:0}" : $"{abs:0.#}";
+                if (_weightValue != null)
+                    _weightValue.Text = _currentWeightKg > 0 ? $"+{formatted}" : $"-{formatted}";
+                if (_weightUnitLabel != null)
+                    _weightUnitLabel.Text = "KG";
+            }
+        }
+        else
+        {
+            if (_weightValue != null)
+                _weightValue.Text = _currentWeightKg % 1 == 0 ? $"{_currentWeightKg:0}" : $"{_currentWeightKg:0.#}";
+            if (_weightUnitLabel != null)
+                _weightUnitLabel.Text = "KG";
+        }
+        if (_repsValue != null)
+            _repsValue.Text = $"{_currentReps}";
     }
+
+    private static bool IsBodyweightOnly(double weightKg) => Math.Abs(weightKg) < 0.005;
 
     private static void AddActionBtn(AndroidLinearLayout row, AndroidView button)
     {
@@ -839,7 +874,7 @@ public sealed class RestOverlayService : Service
         if (quickAction == null)
             return;
 
-        double? weight = _currentLogType != ExerciseLogType.Duration ? _currentWeightKg : null;
+        double? weight = _currentWeightKg;
         int? reps = _currentLogType != ExerciseLogType.Duration ? _currentReps : null;
         _ = LogSetAsync(quickAction, weight, reps);
     }
@@ -981,11 +1016,30 @@ public sealed class RestOverlayService : Service
         string weightPart;
         if (logType == ExerciseLogType.Duration)
         {
-            weightPart = $"{_currentReps}S";
+            var timePart = $"{_currentReps}S";
+            if (IsBodyweightOnly(_currentWeightKg))
+            {
+                weightPart = timePart;
+            }
+            else
+            {
+                var absTime = Math.Abs(_currentWeightKg);
+                var dw = absTime % 1 == 0 ? $"{absTime:0}" : $"{absTime:0.#}";
+                weightPart = _currentWeightKg > 0 ? $"BW + {dw} KG · {timePart}" : $"BW - {dw} KG · {timePart}";
+            }
         }
         else if (logType == ExerciseLogType.BodyweightReps)
         {
-            weightPart = $"BW × {_currentReps}";
+            if (IsBodyweightOnly(_currentWeightKg))
+            {
+                weightPart = $"BW × {_currentReps}";
+            }
+            else
+            {
+                var abs = Math.Abs(_currentWeightKg);
+                var w = abs % 1 == 0 ? $"{abs:0}" : $"{abs:0.#}";
+                weightPart = _currentWeightKg > 0 ? $"BW + {w} KG × {_currentReps}" : $"BW - {w} KG × {_currentReps}";
+            }
         }
         else
         {

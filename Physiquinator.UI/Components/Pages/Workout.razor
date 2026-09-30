@@ -190,9 +190,7 @@ else
                     <div class="workout-focus__controls">
                         <span class="workout-focus__bumper" aria-hidden="true"></span>
                         <div class="workout-focus__steppers">
-                            @if (FocusedExercise.LogType != ExerciseLogType.Duration)
-                            {
-                                <div class="workout-focus__stepper">
+                            <div class="workout-focus__stepper">
                                     <SetMetricStepper Value="@ToDisplayWeight(FocusedInputs.Weight)"
                                                       ValueChanged="@(val => HandleWeightStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, ToKgWeight(val))))"
                                                       Step="@WeightStep"
@@ -200,11 +198,10 @@ else
                                                       IsInteger="false"
                                                       Format="0.##"
                                                       Compact="true"
-                                                      Unit='@(FocusedExercise.LogType == ExerciseLogType.BodyweightReps && (FocusedInputs.Weight == 0 || !FocusedInputs.Weight.HasValue) ? "" : UnitSuffix)'
-                                                      CustomDisplayText="@(FocusedExercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(FocusedInputs.Weight) : null)"
+                                                      Unit='@(FocusedExercise.LogType != ExerciseLogType.WeightAndReps && ExerciseWeightFormatter.IsBodyweightOnly(FocusedInputs.Weight) ? "" : UnitSuffix)'
+                                                      CustomDisplayText="@(FocusedExercise.LogType != ExerciseLogType.WeightAndReps ? GetBodyweightStepperDisplayText(FocusedInputs.Weight) : null)"
                                                       Placeholder="@ToDisplayWeight(FocusedDefaultWeight)" />
-                                </div>
-                            }
+                            </div>
                             <div class="workout-focus__stepper">
                                 <SetMetricStepper Value="@((double?)FocusedInputs.Reps)"
                                                   ValueChanged="@(val => HandleRepsStepperChanged((_activeExerciseIndex, FocusedActiveSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
@@ -251,8 +248,6 @@ else
                                         }
                                     </span>
                                     <div class="workout-focus__history-steppers">
-                                        @if (FocusedExercise.LogType != ExerciseLogType.Duration)
-                                        {
                                             <SetMetricStepper Value="@ToDisplayWeight(row.WeightKg)"
                                                               ValueChanged="@(val => HandleSetWeightChanged((_activeExerciseIndex, row.SetIndex, ToKgWeight(val))))"
                                                               Step="@WeightStep"
@@ -260,10 +255,9 @@ else
                                                               IsInteger="false"
                                                               Format="0.##"
                                                               Compact="true"
-                                                              Unit='@(FocusedExercise.LogType == ExerciseLogType.BodyweightReps && (row.WeightKg == 0 || !row.WeightKg.HasValue) ? "" : UnitSuffix)'
-                                                              CustomDisplayText="@(FocusedExercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
+                                                              Unit='@(FocusedExercise.LogType != ExerciseLogType.WeightAndReps && ExerciseWeightFormatter.IsBodyweightOnly(row.WeightKg) ? "" : UnitSuffix)'
+                                                              CustomDisplayText="@(FocusedExercise.LogType != ExerciseLogType.WeightAndReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
                                                               Placeholder="@ToDisplayWeight(row.WeightKg)" />
-                                        }
                                         <SetMetricStepper Value="@((double?)row.Reps)"
                                                           ValueChanged="@(val => HandleSetRepsChanged((_activeExerciseIndex, row.SetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                                           Step="1"
@@ -633,7 +627,12 @@ else
     private string FormatLogPreview(ExercisePlan ex, (double? Weight, int? Reps) inputs)
     {
         if (ex.LogType == ExerciseLogType.Duration)
-            return $"{inputs.Reps ?? DefaultReps}s";
+        {
+            var time = $"{inputs.Reps ?? DefaultReps}s";
+            if (ExerciseWeightFormatter.IsBodyweightOnly(inputs.Weight))
+                return time;
+            return $"{ExerciseWeightFormatter.FormatBodyweightOffset(inputs.Weight, null, WeightUnitService.Current)} × {time}";
+        }
         var w = ToDisplayWeight(inputs.Weight);
         var r = inputs.Reps ?? DefaultReps;
         var unit = WeightUnitService.Current == WeightUnit.Pounds ? "LB" : "KG";
@@ -653,9 +652,10 @@ else
     private double? ToKgWeight(double? display) => display.HasValue ? ExerciseWeightFormatter.ToKg(display.Value, Unit) : null;
     private string? GetBodyweightStepperDisplayText(double? value)
     {
-        if (value == null || value.Value == 0) return "BW";
-        var sign = value.Value > 0 ? "+" : "-";
-        return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(value.Value), Unit)}";
+        if (ExerciseWeightFormatter.IsBodyweightOnly(value)) return "BW";
+        var offset = value!.Value;
+        var sign = offset > 0 ? "+" : "-";
+        return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(offset), Unit)}";
     }
 
     private void FocusPrev()

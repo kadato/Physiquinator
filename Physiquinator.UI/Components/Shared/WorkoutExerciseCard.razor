@@ -88,8 +88,6 @@
                         </div>
                         <div class="set-active-panel__controls">
                             <div class="set-stepper-rows">
-                                @if (Exercise.LogType != ExerciseLogType.Duration)
-                                {
                                     <SetMetricStepper Value="@ToDisplayWeight(inputs.Weight)"
                                                       ValueChanged="@(val => OnWeightChanged.InvokeAsync((ExerciseIndex, activeSetIndex, ToKgWeight(val))))"
                                                       Step="@WeightStep"
@@ -97,10 +95,9 @@
                                                       IsInteger="false"
                                                       Format="0.##"
                                                       Compact="true"
-                                                      Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (inputs.Weight == 0 || !inputs.Weight.HasValue) ? "" : UnitSuffix)'
-                                                      CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
+                                                      Unit='@(Exercise.LogType != ExerciseLogType.WeightAndReps && ExerciseWeightFormatter.IsBodyweightOnly(inputs.Weight) ? "" : UnitSuffix)'
+                                                      CustomDisplayText="@(Exercise.LogType != ExerciseLogType.WeightAndReps ? GetBodyweightStepperDisplayText(inputs.Weight) : null)"
                                                       Placeholder="@ToDisplayWeight(defaultWeight)" />
-                                }
                                 <SetMetricStepper Value="@((double?)inputs.Reps)"
                                                   ValueChanged="@(val => OnRepsChanged.InvokeAsync((ExerciseIndex, activeSetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                                   Step="1"
@@ -144,8 +141,6 @@
                             }
                         </div>
                         <div class="set-stepper-rows">
-                            @if (Exercise.LogType != ExerciseLogType.Duration)
-                            {
                                 <SetMetricStepper Value="@ToDisplayWeight(row.WeightKg)"
                                                   ValueChanged="@(val => OnSetWeightChanged.InvokeAsync((ExerciseIndex, row.SetIndex, ToKgWeight(val))))"
                                                   Step="@WeightStep"
@@ -153,10 +148,9 @@
                                                   IsInteger="false"
                                                   Format="0.##"
                                                   Compact="true"
-                                                  Unit='@(Exercise.LogType == ExerciseLogType.BodyweightReps && (row.WeightKg == 0 || !row.WeightKg.HasValue) ? "" : UnitSuffix)'
-                                                  CustomDisplayText="@(Exercise.LogType == ExerciseLogType.BodyweightReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
+                                                  Unit='@(Exercise.LogType != ExerciseLogType.WeightAndReps && ExerciseWeightFormatter.IsBodyweightOnly(row.WeightKg) ? "" : UnitSuffix)'
+                                                  CustomDisplayText="@(Exercise.LogType != ExerciseLogType.WeightAndReps ? GetBodyweightStepperDisplayText(row.WeightKg) : null)"
                                                   Placeholder="@ToDisplayWeight(row.WeightKg)" />
-                            }
                             <SetMetricStepper Value="@((double?)row.Reps)"
                                               ValueChanged="@(val => OnSetRepsChanged.InvokeAsync((ExerciseIndex, row.SetIndex, val.HasValue ? (int)Math.Round(val.Value) : (int?)null)))"
                                               Step="1"
@@ -319,9 +313,10 @@
 
     private string? GetBodyweightStepperDisplayText(double? value)
     {
-        if (value == null || value.Value == 0)
+        if (ExerciseWeightFormatter.IsBodyweightOnly(value))
             return "BW";
-        var sign = value.Value > 0 ? "+" : "-";
-        return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(value.Value), Unit)}";
+        var offset = value!.Value;
+        var sign = offset > 0 ? "+" : "-";
+        return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(offset), Unit)}";
     }
 }

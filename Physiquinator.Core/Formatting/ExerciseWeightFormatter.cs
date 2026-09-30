@@ -53,6 +53,17 @@ public static class ExerciseWeightFormatter
     }
 
     /// <summary>
+    /// Offsets smaller than this are treated as bodyweight-only. This keeps
+    /// tiny floating-point residues (for example from a kg/lb round-trip)
+    /// that would format as "0" from showing as "+0 kg" instead of "BW".
+    /// </summary>
+    public const double BodyweightOnlyToleranceKg = 0.005;
+
+    /// <summary>True when the offset means bodyweight-only (null or effectively zero).</summary>
+    public static bool IsBodyweightOnly(double? offsetKg) =>
+        offsetKg is null || Math.Abs(offsetKg.Value) < BodyweightOnlyToleranceKg;
+
+    /// <summary>
     /// Formats a bodyweight-relative offset for a set summary, for example,
     /// "BW", "BW (85 kg)", "BW + 5 kg (90 kg) × 8 reps", "BW - 5 kg (80 kg) × 8 reps".
     /// </summary>
@@ -70,21 +81,22 @@ public static class ExerciseWeightFormatter
         var suffix = reps is { } r ? $" × {r} reps" : "";
         var unitSuffix = UnitSuffix(unit);
 
-        if (offsetKg is null or 0)
+        if (IsBodyweightOnly(offsetKg))
         {
             return bodyweightKg.HasValue
                 ? $"BW ({FormatWeight(bodyweightKg.Value, unit)} {unitSuffix}){suffix}"
                 : $"BW{suffix}";
         }
 
-        if (offsetKg.Value > 0)
+        var offset = offsetKg!.Value;
+        if (offset > 0)
         {
             return bodyweightKg.HasValue
-                ? $"BW + {FormatWeight(offsetKg.Value, unit)} {unitSuffix} ({FormatWeight(offsetKg.Value + bodyweightKg.Value, unit)} {unitSuffix}){suffix}"
-                : $"BW + {FormatWeight(offsetKg.Value, unit)} {unitSuffix}{suffix}";
+                ? $"BW + {FormatWeight(offset, unit)} {unitSuffix} ({FormatWeight(offset + bodyweightKg.Value, unit)} {unitSuffix}){suffix}"
+                : $"BW + {FormatWeight(offset, unit)} {unitSuffix}{suffix}";
         }
 
-        var abs = Math.Abs(offsetKg.Value);
+        var abs = Math.Abs(offset);
         return bodyweightKg.HasValue
             ? $"BW - {FormatWeight(abs, unit)} {unitSuffix} ({FormatWeight(bodyweightKg.Value - abs, unit)} {unitSuffix}){suffix}"
             : $"BW - {FormatWeight(abs, unit)} {unitSuffix}{suffix}";
@@ -108,7 +120,11 @@ public static class ExerciseWeightFormatter
     public static string FormatEffectiveWeight(double? offsetKg, double? bodyweightKg, double? bodyweightPercent, WeightUnit unit, ExerciseLogType logType)
     {
         if (logType == ExerciseLogType.Duration)
-            return "-";
+        {
+            if (IsBodyweightOnly(offsetKg))
+                return "-";
+            return FormatBodyweightOffset(offsetKg, null, unit);
+        }
 
         if (logType == ExerciseLogType.BodyweightReps)
         {

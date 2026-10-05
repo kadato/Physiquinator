@@ -13,9 +13,10 @@
 @inject IJSRuntime JS
 @inject ShareCardInterop ShareCard
 
-<PageTitle>@("Session")</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 
-<PageHeader Title="@("Session")" ShowBackButton="true">
+<HistoryBreadcrumbs Crumbs="Breadcrumbs" />
+<PageHeader Title="@HeaderTitle" ShowBackButton="true" OnBack="GoBackToHistory">
     @if (_ready && _session != null)
     {
         <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="premium-btn" OnClick="CopySessionAsync" aria-label="@("Copy session")" />
@@ -299,6 +300,28 @@ else
             </MudPaper>
         }
 
+        @if (_prevSessionId is not null || _nextSessionId is not null)
+        {
+            <div class="history-pager" role="group" aria-label="Adjacent sessions">
+                <MudButton Variant="Variant.Outlined"
+                           Class="premium-btn premium-btn-outlined"
+                           StartIcon="@Icons.Material.Filled.ChevronLeft"
+                           Disabled="@(_prevSessionId is null)"
+                           OnClick="@(() => GoAdjacentSession(_prevSessionId))"
+                           aria-label="@("Previous session")">
+                    @(_prevSessionLabel ?? "Older")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Class="premium-btn premium-btn-outlined"
+                           EndIcon="@Icons.Material.Filled.ChevronRight"
+                           Disabled="@(_nextSessionId is null)"
+                           OnClick="@(() => GoAdjacentSession(_nextSessionId))"
+                           aria-label="@("Next session")">
+                    @(_nextSessionLabel ?? "Newer")
+                </MudButton>
+            </div>
+        }
+
     </MudStack>
 
     @* Off-screen share card, captured to PNG by the Share button. *@
@@ -320,6 +343,10 @@ else
     [Parameter]
     public string SessionId { get; set; } = "";
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hq")]
+    public string? HistoryQuery { get; set; }
+
     private const int ListPageSize = 50;
     private const string LoadMoreSentinelId = "history-detail-load-more-sentinel";
 
@@ -335,6 +362,10 @@ else
     private Dictionary<string, ExerciseLogType> _logTypesByExercise = new();
     private Dictionary<string, double?> _percentByExercise = new();
     private double? _bodyweightKg;
+    private string? _prevSessionId;
+    private string? _nextSessionId;
+    private string? _prevSessionLabel;
+    private string? _nextSessionLabel;
     private bool _editMode;
     private string? _editingSetId;
     private string _editRepsText = "";
@@ -347,7 +378,20 @@ else
     private void ContinueWorkout(Guid planId) => Navigation.NavigateTo(AppRoutes.Workout(planId));
 
     private void GoExerciseProgress(Guid planId, string exerciseName) =>
-        Navigation.NavigateTo(AppRoutes.ExerciseProgress(planId, exerciseName));
+        Navigation.NavigateTo(AppRoutes.ExerciseProgress(planId, exerciseName, _session?.Id, HistoryQuery));
+
+    private void GoBackToHistory() =>
+        Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
+
+    private string PageTitleText => _session is null
+        ? "Session"
+        : $"{_session.PlanName} {UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_session.StartedAtUtc.ToLocalTime()))}";
+
+    private string HeaderTitle => _session?.PlanName ?? "Session";
+
+    private IReadOnlyList<HistoryCrumb> Breadcrumbs => _session is null
+        ? [HistoryCrumb.History(HistoryQuery), HistoryCrumb.Current("Session")]
+        : [HistoryCrumb.History(HistoryQuery), HistoryCrumb.Current(PageTitleText)];
 
     protected override async Task OnParametersSetAsync()
     {
@@ -406,7 +450,47 @@ else
             .Distinct(StringComparer.Ordinal)
             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
             .ToList();
+        await LoadAdjacentSessionsAsync();
         ResetListPaging();
+    }
+
+    private async Task LoadAdjacentSessionsAsync()
+    {
+        _prevSessionId = null;
+        _nextSessionId = null;
+        _prevSessionLabel = null;
+        _nextSessionLabel = null;
+        if (_session is null) return;
+        try
+        {
+            var recent = await HistoryRepo.GetRecentSessionsAsync(200);
+            var ordered = recent.OrderByDescending(s => s.StartedAtUtc).ThenByDescending(s => s.Id, StringComparer.Ordinal).ToList();
+            var idx = ordered.FindIndex(s => string.Equals(s.Id, _session.Id, StringComparison.Ordinal));
+            if (idx < 0) return;
+            if (idx > 0)
+            {
+                var next = ordered[idx - 1];
+                _nextSessionId = next.Id;
+                _nextSessionLabel = $"{next.PlanName} {UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(next.StartedAtUtc.ToLocalTime()))}";
+            }
+            if (idx + 1 < ordered.Count)
+            {
+                var prev = ordered[idx + 1];
+                _prevSessionId = prev.Id;
+                _prevSessionLabel = $"{prev.PlanName} {UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(prev.StartedAtUtc.ToLocalTime()))}";
+            }
+        }
+        catch
+        {
+            _prevSessionId = null;
+            _nextSessionId = null;
+        }
+    }
+
+    private void GoAdjacentSession(string? sessionId)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery));
     }
 
     /// <summary>Reveals the next chunk of logged sets for the lazy list (no pagination UI).</summary>
@@ -527,7 +611,7 @@ else
             SessionService.EndWorkout();
 
         await HistoryRepo.DeleteSessionAsync(_session.Id);
-        Navigation.NavigateTo(AppRoutes.History);
+        Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
         Snackbar.Add("Session deleted.", Severity.Success);
     }
 

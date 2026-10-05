@@ -1,0 +1,52 @@
+.history-crumbs {
+    margin-bottom: 8px;
+}
+
+.history-crumbs__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.history-crumbs__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.history-crumbs__link {
+    color: var(--pl-stone);
+    text-decoration: none;
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-crumbs__link:hover {
+    color: var(--pl-ink);
+    text-decoration: underline;
+}
+
+.history-crumbs__sep {
+    color: var(--pl-stone);
+    opacity: 0.7;
+}
+
+.history-crumbs__current {
+    color: var(--pl-ink);
+    max-width: 28ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -1,0 +1,27 @@
+@using Physiquinator.Core
+
+<nav class="history-crumbs" aria-label="Breadcrumb">
+    <ol class="history-crumbs__list">
+        @for (var i = 0; i < Crumbs.Count; i++)
+        {
+            var crumb = Crumbs[i];
+            var isLast = i == Crumbs.Count - 1;
+            <li class="history-crumbs__item">
+                @if (!isLast && !string.IsNullOrEmpty(crumb.Href))
+                {
+                    <a class="history-crumbs__link" href="@crumb.Href">@crumb.Title</a>
+                    <span class="history-crumbs__sep" aria-hidden="true">/</span>
+                }
+                else
+                {
+                    <span class="history-crumbs__current" aria-current="page">@crumb.Title</span>
+                }
+            </li>
+        }
+    </ol>
+</nav>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<HistoryCrumb> Crumbs { get; set; } = [];
+}

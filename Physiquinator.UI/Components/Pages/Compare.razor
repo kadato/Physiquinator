@@ -1,0 +1,138 @@
+@page "/history/compare"
+@inject WorkoutHistoryRepository HistoryRepo
+@inject UserProfileService UserProfileService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Compare sessions</PageTitle>
+
+<HistoryBreadcrumbs Crumbs="Breadcrumbs" />
+<PageHeader Title="Compare sessions" ShowBackButton="true" OnBack="GoBack">
+    @if (_ready && _sessionA is not null && _sessionB is not null)
+    {
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   Class="premium-btn"
+                   StartIcon="@Icons.Material.Filled.ContentCopy"
+                   OnClick="CopyAsync">
+            Copy
+        </MudButton>
+    }
+</PageHeader>
+
+@if (!_ready)
+{
+    <DetailSkeleton />
+}
+else if (_sessionA is null || _sessionB is null)
+{
+    <MudAlert Severity="Severity.Error">Those sessions could not be loaded. Pick two sessions from history.</MudAlert>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="GoBack">Back to history</MudButton>
+}
+else
+{
+    <MudStack Spacing="2" Class="compare-page-links">
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ChevronRight" OnClick="@(() => GoSession(_sessionA.Id))">
+            @($"Open A: {_sessionA.PlanName}")
+        </MudButton>
+        <MudButton Variant="Variant.Text" Size="Size.Small" Class="premium-btn" StartIcon="@Icons.Material.Filled.ChevronRight" OnClick="@(() => GoSession(_sessionB.Id))">
+            @($"Open B: {_sessionB.PlanName}")
+        </MudButton>
+    </MudStack>
+    <SessionCompareView @ref="_view"
+                        SessionA="_sessionA"
+                        SessionB="_sessionB"
+                        SetsA="_setsA"
+                        SetsB="_setsB"
+                        BodyweightKgA="_bodyweightA"
+                        BodyweightKgB="_bodyweightB" />
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "a")]
+    public string? SessionAId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "b")]
+    public string? SessionBId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hq")]
+    public string? HistoryQuery { get; set; }
+
+    private bool _ready;
+    private WorkoutSessionLogEntity? _sessionA;
+    private WorkoutSessionLogEntity? _sessionB;
+    private List<WorkoutSetLogEntity> _setsA = [];
+    private List<WorkoutSetLogEntity> _setsB = [];
+    private double? _bodyweightA;
+    private double? _bodyweightB;
+    private SessionCompareView? _view;
+
+    private IReadOnlyList<HistoryCrumb> Breadcrumbs => new[]
+    {
+        HistoryCrumb.History(HistoryQuery),
+        HistoryCrumb.Current("Compare"),
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready = false;
+        _sessionA = null;
+        _sessionB = null;
+        _setsA = [];
+        _setsB = [];
+        if (!string.IsNullOrWhiteSpace(SessionAId) && !string.IsNullOrWhiteSpace(SessionBId))
+        {
+            try
+            {
+                var a = await HistoryRepo.GetSessionAsync(SessionAId);
+                var b = await HistoryRepo.GetSessionAsync(SessionBId);
+                if (a is not null && b is not null)
+                {
+                    if (a.StartedAtUtc > b.StartedAtUtc) (a, b) = (b, a);
+                    _sessionA = a;
+                    _sessionB = b;
+                    _setsA = (await HistoryRepo.GetSetsForSessionAsync(a.Id)).ToList();
+                    _setsB = (await HistoryRepo.GetSetsForSessionAsync(b.Id)).ToList();
+                    (_bodyweightA, _bodyweightB) = await ResolveBodyweightsAsync(a, b);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not load sessions: {ex.Message}", Severity.Error);
+            }
+        }
+        _ready = true;
+    }
+
+    private async Task<(double? A, double? B)> ResolveBodyweightsAsync(WorkoutSessionLogEntity a, WorkoutSessionLogEntity b)
+    {
+        double? bw = UserProfileService.GetActiveProfile()?.BodyweightKg;
+        if (bw is > 0) return (bw, bw);
+        try
+        {
+            var logs = await HistoryRepo.GetBodyweightLogsAsync(500);
+            var dateA = DateOnly.FromDateTime(a.StartedAtUtc.ToLocalTime());
+            var dateB = DateOnly.FromDateTime(b.StartedAtUtc.ToLocalTime());
+            var matchA = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateA) ?? logs.FirstOrDefault();
+            var matchB = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateB) ?? logs.FirstOrDefault();
+            return (matchA?.BodyweightKg is > 0 ? matchA.BodyweightKg : null,
+                    matchB?.BodyweightKg is > 0 ? matchB.BodyweightKg : null);
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
+
+    private void GoSession(string sessionId) =>
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery));
+
+    private void GoBack() =>
+        Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
+
+    private Task CopyAsync() =>
+        _view is null ? Task.CompletedTask : _view.CopyComparisonAsync();
+}

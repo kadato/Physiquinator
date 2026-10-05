@@ -1,0 +1,41 @@
+.compare-dialog { display: flex; flex-direction: column; gap: 14px; }
+.compare-header { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.compare-header__card { border: 1.5px solid var(--pl-hairline-strong); border-radius: 0; background: var(--pl-chip); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.compare-header__label { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pl-stone); }
+.compare-header__plan { font-family: var(--font-display); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; color: var(--pl-ink); line-height: 1.2; }
+.compare-header__date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--pl-stone); }
+.compare-header__stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--pl-hairline); }
+.compare-header__stat { display: flex; flex-direction: column; gap: 1px; }
+.compare-header__stat-label { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pl-stone); }
+.compare-header__stat-value { font-family: var(--font-display); font-size: 0.875rem; font-weight: 800; color: var(--pl-ink); }
+.compare-table-wrap { overflow-x: auto; border: 1.5px solid var(--pl-hairline-strong); border-radius: 0; }
+.compare-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8125rem; min-width: 560px; }
+.compare-table th { background: var(--pl-chip-2); border-bottom: 1.5px solid var(--pl-hairline-strong); padding: 10px 10px; text-align: left; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.6875rem; color: var(--pl-ink); white-space: nowrap; }
+.compare-table td { padding: 10px 10px; border-bottom: 1px solid var(--pl-grid-line); color: var(--pl-ink); vertical-align: middle; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:nth-child(even) td { background: color-mix(in srgb, var(--pl-chip-2) 60%, transparent); }
+.compare-table__exercise { min-width: 120px; }
+.compare-table__exercise-name { font-family: var(--font-display); font-weight: 800; font-size: 0.875rem; display: block; }
+.compare-table__only-badge { display: inline-flex; margin-top: 3px; padding: 1px 6px; font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--pl-chip-2); border: 1px solid var(--pl-hairline); color: var(--pl-stone); }
+.compare-table__type-hint { display: block; margin-top: 2px; font-size: 0.625rem; color: var(--pl-stone); }
+.compare-table__subtle { font-weight: 700; color: var(--pl-stone); text-transform: none; letter-spacing: 0; }
+.compare-table__delta-head { text-align: right; }
+.compare-table__delta { text-align: right; white-space: nowrap; }
+.compare-cell__ab { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.compare-cell__sep { color: var(--pl-stone); }
+.compare-cell__missing { color: var(--pl-stone); }
+.compare-delta { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 5px; border: 1px solid transparent; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.04em; white-space: nowrap; }
+.compare-delta--positive { color: var(--pl-success); background: color-mix(in srgb, var(--pl-success) 14%, transparent); border-color: color-mix(in srgb, var(--pl-success) 30%, transparent); }
+.compare-delta--negative { color: var(--pl-error); background: color-mix(in srgb, var(--pl-error) 12%, transparent); border-color: color-mix(in srgb, var(--pl-error) 28%, transparent); }
+.compare-delta--neutral { color: var(--pl-stone); background: var(--pl-chip-2); border-color: var(--pl-hairline); }
+.compare-table__row--single td { background: color-mix(in srgb, var(--pl-chip-2) 40%, transparent) !important; }
+.compare-legend { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--pl-stone); }
+.compare-legend__item { display: inline-flex; align-items: center; gap: 5px; }
+.compare-legend__swatch { width: 10px; height: 10px; border: 1px solid var(--pl-hairline); display: inline-block; }
+.compare-legend__swatch--positive { background: var(--pl-success); border-color: var(--pl-success); }
+.compare-legend__swatch--negative { background: var(--pl-error); border-color: var(--pl-error); }
+.compare-legend__swatch--neutral { background: var(--pl-chip-2); }
+@media (max-width: 640px) {
+    .compare-header { grid-template-columns: 1fr; }
+    .compare-table { min-width: 520px; }
+}

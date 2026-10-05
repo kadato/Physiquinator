@@ -1,0 +1,440 @@
+@using Physiquinator.Core.Data
+@using Physiquinator.Core.Formatting
+@using Physiquinator.Core.Models
+@inject WeightUnitService WeightUnitService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<div class="compare-dialog">
+    @if (SessionA == null || SessionB == null)
+    {
+        <MudAlert Severity="Severity.Error">Sessions could not be loaded.</MudAlert>
+    }
+    else
+    {
+        <div class="compare-header">
+            <div class="compare-header__card">
+                <span class="compare-header__label">Session A</span>
+                <span class="compare-header__plan">@SessionA.PlanName</span>
+                <span class="compare-header__date">@UiDateFormats.LocalDateTimeCompact(SessionA.StartedAtUtc)</span>
+                <div class="compare-header__stats">
+                    @if (DurationLabelA is { } dA)
+                    {
+                        <span class="compare-header__stat"><span class="compare-header__stat-label">Duration</span><span class="compare-header__stat-value">@dA</span></span>
+                    }
+                    @if (TotalVolumeLabelA is { } vA)
+                    {
+                        <span class="compare-header__stat"><span class="compare-header__stat-label">Volume</span><span class="compare-header__stat-value">@vA</span></span>
+                    }
+                    <span class="compare-header__stat"><span class="compare-header__stat-label">Sets</span><span class="compare-header__stat-value">@TotalSetsA</span></span>
+                </div>
+            </div>
+            <div class="compare-header__card">
+                <span class="compare-header__label">Session B</span>
+                <span class="compare-header__plan">@SessionB.PlanName</span>
+                <span class="compare-header__date">@UiDateFormats.LocalDateTimeCompact(SessionB.StartedAtUtc)</span>
+                <div class="compare-header__stats">
+                    @if (DurationLabelB is { } dB)
+                    {
+                        <span class="compare-header__stat"><span class="compare-header__stat-label">Duration</span><span class="compare-header__stat-value">@dB</span></span>
+                    }
+                    @if (TotalVolumeLabelB is { } vB)
+                    {
+                        <span class="compare-header__stat"><span class="compare-header__stat-label">Volume</span><span class="compare-header__stat-value">@vB</span></span>
+                    }
+                    <span class="compare-header__stat"><span class="compare-header__stat-label">Sets</span><span class="compare-header__stat-value">@TotalSetsB</span></span>
+                </div>
+            </div>
+        </div>
+
+        @if (_rows.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No exercises to compare.</MudText>
+        }
+        else
+        {
+            <div class="compare-table-wrap">
+                <table class="compare-table" aria-label="Exercise comparison">
+                    <caption class="sr-only">Exercise comparison between session A and session B</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Exercise</th>
+                            <th scope="col">Sets <span class="compare-table__subtle">A / B</span></th>
+                            <th scope="col">Best <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
+                            <th scope="col">Volume <span class="compare-table__subtle">@ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)</span></th>
+                            <th scope="col">Reps</th>
+                            <th scope="col" class="compare-table__delta-head">Delta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _rows)
+                        {
+                            <tr class="@(row.IsOnlyInOne ? "compare-table__row--single" : "")">
+                                <td class="compare-table__exercise">
+                                    <span class="compare-table__exercise-name">@row.ExerciseName</span>
+                                    @if (row.IsOnlyInOne)
+                                    {
+                                        <span class="compare-table__only-badge">@(row.HasA ? "only in A" : "only in B")</span>
+                                    }
+                                    @if (row.LogTypeA != row.LogTypeB)
+                                    {
+                                        <span class="compare-table__type-hint" title="Log type differs between sessions">@FormatLogType(row.LogTypeA) vs @FormatLogType(row.LogTypeB)</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="compare-cell__ab">
+                                        <span class="@(row.HasA ? "" : "compare-cell__missing")">@(row.HasA ? row.SetCountA.ToString() : "-")</span>
+                                        <span class="compare-cell__sep">/</span>
+                                        <span class="@(row.HasB ? "" : "compare-cell__missing")">@(row.HasB ? row.SetCountB.ToString() : "-")</span>
+                                    </span>
+                                    @if (!row.IsOnlyInOne)
+                                    {
+                                        <span class="compare-delta @DeltaClass(row.SetsDelta)">@FormatDeltaInt(row.SetsDelta)</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="compare-cell__ab">
+                                        <span class="@(row.HasA ? "" : "compare-cell__missing")">@FormatBestWeight(row.BestWeightA, row.LogTypeA, row.BodyweightPercentA, BodyweightKgA)</span>
+                                        <span class="compare-cell__sep">/</span>
+                                        <span class="@(row.HasB ? "" : "compare-cell__missing")">@FormatBestWeight(row.BestWeightB, row.LogTypeB, row.BodyweightPercentB, BodyweightKgB)</span>
+                                    </span>
+                                    @if (!row.IsOnlyInOne && row.BestDelta.HasValue)
+                                    {
+                                        <span class="compare-delta @DeltaClassForNullable(row.BestDelta)">@FormatDeltaWeight(row.BestDelta.Value, row.LogTypeA, row.LogTypeB)</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="compare-cell__ab">
+                                        <span class="@(row.HasA ? "" : "compare-cell__missing")">@(row.HasA ? FormatVolume(row.TotalVolumeA) : "-")</span>
+                                        <span class="compare-cell__sep">/</span>
+                                        <span class="@(row.HasB ? "" : "compare-cell__missing")">@(row.HasB ? FormatVolume(row.TotalVolumeB) : "-")</span>
+                                    </span>
+                                    @if (!row.IsOnlyInOne)
+                                    {
+                                        <span class="compare-delta @DeltaClass(row.VolumeDelta)">@FormatDeltaVolume(row.VolumeDelta)</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="compare-cell__ab">
+                                        <span class="@(row.HasA ? "" : "compare-cell__missing")">@(row.HasA ? row.TotalRepsA.ToString() : "-")</span>
+                                        <span class="compare-cell__sep">/</span>
+                                        <span class="@(row.HasB ? "" : "compare-cell__missing")">@(row.HasB ? row.TotalRepsB.ToString() : "-")</span>
+                                    </span>
+                                    @if (!row.IsOnlyInOne)
+                                    {
+                                        <span class="compare-delta @DeltaClass(row.RepsDelta)">@FormatDeltaInt(row.RepsDelta)</span>
+                                    }
+                                </td>
+                                <td class="compare-table__delta">
+                                    @if (row.IsOnlyInOne)
+                                    {
+                                        <span class="compare-delta compare-delta--neutral">@(row.HasA ? "only A" : "only B")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="compare-delta @DeltaClass(row.VolumeDelta)" title="Volume delta">@FormatDeltaVolume(row.VolumeDelta)</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="compare-legend">
+                <span class="compare-legend__item"><i class="compare-legend__swatch compare-legend__swatch--positive"></i> increase</span>
+                <span class="compare-legend__item"><i class="compare-legend__swatch compare-legend__swatch--negative"></i> decrease</span>
+                <span class="compare-legend__item"><i class="compare-legend__swatch compare-legend__swatch--neutral"></i> no change</span>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public WorkoutSessionLogEntity? SessionA { get; set; }
+
+    [Parameter]
+    public WorkoutSessionLogEntity? SessionB { get; set; }
+
+    [Parameter]
+    public List<WorkoutSetLogEntity> SetsA { get; set; } = [];
+
+    [Parameter]
+    public List<WorkoutSetLogEntity> SetsB { get; set; } = [];
+
+    [Parameter]
+    public double? BodyweightKgA { get; set; }
+
+    [Parameter]
+    public double? BodyweightKgB { get; set; }
+
+    private Dictionary<string, ExerciseLogType> _logTypesA = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, ExerciseLogType> _logTypesB = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, double?> _percentA = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, double?> _percentB = new(StringComparer.OrdinalIgnoreCase);
+    private List<ExerciseComparisonRow> _rows = [];
+
+    private string? DurationLabelA => FormatDuration(SessionA);
+    private string? DurationLabelB => FormatDuration(SessionB);
+    private string? TotalVolumeLabelA { get; set; }
+    private string? TotalVolumeLabelB { get; set; }
+    private int TotalSetsA => SetsA.Count;
+    private int TotalSetsB => SetsB.Count;
+
+    public sealed record ExerciseComparisonRow(
+        string ExerciseName,
+        bool HasA,
+        bool HasB,
+        bool IsOnlyInOne,
+        ExerciseLogType LogTypeA,
+        ExerciseLogType LogTypeB,
+        double? BodyweightPercentA,
+        double? BodyweightPercentB,
+        int SetCountA,
+        int SetCountB,
+        int SetsDelta,
+        double? BestWeightA,
+        double? BestWeightB,
+        double? BestDelta,
+        double TotalVolumeA,
+        double TotalVolumeB,
+        double VolumeDelta,
+        int TotalRepsA,
+        int TotalRepsB,
+        int RepsDelta);
+
+    protected override void OnParametersSet() => BuildComparison();
+
+    private void BuildComparison()
+    {
+        _logTypesA = BuildLogTypes(SessionA);
+        _logTypesB = BuildLogTypes(SessionB);
+        _percentA = BuildPercents(SessionA);
+        _percentB = BuildPercents(SessionB);
+
+        var groupedA = SetsA
+            .GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        var groupedB = SetsB
+            .GroupBy(s => s.ExerciseName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        var distinct = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var k in groupedA.Keys) distinct.Add(k);
+        foreach (var k in groupedB.Keys) distinct.Add(k);
+
+        var sorted = distinct.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+        _rows = new List<ExerciseComparisonRow>(sorted.Count);
+
+        double totalVolA = 0;
+        double totalVolB = 0;
+
+        foreach (var name in sorted)
+        {
+            var hasA = groupedA.TryGetValue(name, out var listA);
+            var hasB = groupedB.TryGetValue(name, out var listB);
+            listA ??= [];
+            listB ??= [];
+
+            var logTypeA = GetLogTypeFor(name, _logTypesA);
+            var logTypeB = GetLogTypeFor(name, _logTypesB);
+            var percentA = GetPercentFor(name, _percentA);
+            var percentB = GetPercentFor(name, _percentB);
+
+            int setCountA = listA.Count;
+            int setCountB = listB.Count;
+
+            int totalRepsA = listA.Where(s => s.Reps.HasValue).Sum(s => s.Reps!.Value);
+            int totalRepsB = listB.Where(s => s.Reps.HasValue).Sum(s => s.Reps!.Value);
+
+            double? bestA = listA.Select(s => s.WeightKg).Max();
+            double? bestB = listB.Select(s => s.WeightKg).Max();
+
+            double volA = 0;
+            if (logTypeA != ExerciseLogType.Duration)
+            {
+                volA = listA
+                    .Where(s => s.Reps != null)
+                    .Sum(s => PersonalRecordCalculator.ComputeVolume(s.Reps, s.WeightKg, logTypeA, BodyweightKgA, percentA));
+            }
+            double volB = 0;
+            if (logTypeB != ExerciseLogType.Duration)
+            {
+                volB = listB
+                    .Where(s => s.Reps != null)
+                    .Sum(s => PersonalRecordCalculator.ComputeVolume(s.Reps, s.WeightKg, logTypeB, BodyweightKgB, percentB));
+            }
+
+            totalVolA += volA;
+            totalVolB += volB;
+
+            var isOnlyInOne = hasA != hasB;
+            var setsDelta = setCountB - setCountA;
+            var repsDelta = totalRepsB - totalRepsA;
+            var volDelta = volB - volA;
+
+            double? bestDelta = null;
+            if (!isOnlyInOne)
+            {
+                if (logTypeA == ExerciseLogType.Duration || logTypeB == ExerciseLogType.Duration)
+                {
+                    bestDelta = null;
+                }
+                else if (bestA.HasValue && bestB.HasValue)
+                {
+                    double effA = ComputeEffectiveForDelta(bestA, logTypeA, percentA, BodyweightKgA);
+                    double effB = ComputeEffectiveForDelta(bestB, logTypeB, percentB, BodyweightKgB);
+                    bestDelta = effB - effA;
+                }
+                else if (bestA.HasValue || bestB.HasValue)
+                {
+                    bestDelta = null;
+                }
+            }
+
+            _rows.Add(new ExerciseComparisonRow(
+                name, hasA, hasB, isOnlyInOne, logTypeA, logTypeB, percentA, percentB,
+                setCountA, setCountB, setsDelta, bestA, bestB, bestDelta,
+                volA, volB, volDelta, totalRepsA, totalRepsB, repsDelta));
+        }
+
+        TotalVolumeLabelA = totalVolA > 0 ? ExerciseWeightFormatter.FormatVolumeWithUnit(totalVolA, WeightUnitService.Current) : null;
+        TotalVolumeLabelB = totalVolB > 0 ? ExerciseWeightFormatter.FormatVolumeWithUnit(totalVolB, WeightUnitService.Current) : null;
+    }
+
+    private static Dictionary<string, ExerciseLogType> BuildLogTypes(WorkoutSessionLogEntity? session)
+    {
+        var dict = new Dictionary<string, ExerciseLogType>(StringComparer.OrdinalIgnoreCase);
+        if (session == null) return dict;
+        var snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(session.PlanSnapshotJson);
+        if (snapshot == null) return dict;
+        foreach (var ex in snapshot.Exercises) dict.TryAdd(ex.Name, ex.LogType);
+        return dict;
+    }
+
+    private static Dictionary<string, double?> BuildPercents(WorkoutSessionLogEntity? session)
+    {
+        var dict = new Dictionary<string, double?>(StringComparer.OrdinalIgnoreCase);
+        if (session == null) return dict;
+        var snapshot = WorkoutHistoryRepository.TryParsePlanSnapshot(session.PlanSnapshotJson);
+        if (snapshot == null) return dict;
+        foreach (var ex in snapshot.Exercises) dict.TryAdd(ex.Name, ex.BodyweightPercent);
+        return dict;
+    }
+
+    private static ExerciseLogType GetLogTypeFor(string name, Dictionary<string, ExerciseLogType> dict)
+    {
+        if (dict.TryGetValue(name, out var t)) return t;
+        if (ExerciseCatalog.Find(name) is { } entry) return entry.LogType;
+        return ExerciseLogType.WeightAndReps;
+    }
+
+    private static double? GetPercentFor(string name, Dictionary<string, double?> dict)
+    {
+        if (dict.TryGetValue(name, out var p) && p.HasValue) return p;
+        if (ExerciseCatalog.Find(name) is { } entry) return entry.BodyweightPercent ?? 100;
+        return 100;
+    }
+
+    private static double ComputeEffectiveForDelta(double? offsetKg, ExerciseLogType logType, double? percent, double? bodyweightKg)
+    {
+        if (logType == ExerciseLogType.BodyweightReps)
+        {
+            var eff = ExerciseWeightFormatter.ComputeEffectiveWeight(offsetKg, bodyweightKg, percent);
+            return eff ?? offsetKg ?? 0;
+        }
+        return offsetKg ?? 0;
+    }
+
+    private static string? FormatDuration(WorkoutSessionLogEntity? session)
+    {
+        if (session == null || session.EndedAtUtc == null || session.StartedAtUtc == default) return null;
+        var ended = session.EndedAtUtc.Value;
+        var minutes = (int)(ended - session.StartedAtUtc).TotalMinutes;
+        return minutes < 60 ? $"{minutes} min" : $"{minutes / 60}h {minutes % 60}m";
+    }
+
+    private string FormatBestWeight(double? weightKg, ExerciseLogType logType, double? percent, double? bodyweightKg) =>
+        weightKg == null ? "-" : ExerciseWeightFormatter.FormatEffectiveWeight(weightKg, bodyweightKg, percent, WeightUnitService.Current, logType);
+
+    private string FormatVolume(double volKg) =>
+        volKg <= 0 ? "-" : ExerciseWeightFormatter.FormatWeight(volKg, WeightUnitService.Current);
+
+    private static string FormatLogType(ExerciseLogType t) => t switch
+    {
+        ExerciseLogType.BodyweightReps => "BW",
+        ExerciseLogType.Duration => "Time",
+        _ => "Weight"
+    };
+
+    private static string FormatDeltaInt(int delta)
+    {
+        if (delta == 0) return "0";
+        return delta > 0 ? $"+{delta}" : delta.ToString();
+    }
+
+    private string FormatDeltaWeight(double delta, ExerciseLogType typeA, ExerciseLogType typeB)
+    {
+        if (typeA == ExerciseLogType.Duration || typeB == ExerciseLogType.Duration) return "-";
+        var abs = Math.Abs(delta);
+        string sign;
+        if (delta > 0) sign = "+";
+        else if (delta < 0) sign = "-";
+        else sign = "";
+        if (abs < 0.005) return "0";
+        return $"{sign}{ExerciseWeightFormatter.FormatWeight(abs, WeightUnitService.Current)}";
+    }
+
+    private string FormatDeltaVolume(double delta)
+    {
+        if (Math.Abs(delta) < 0.5) return "0";
+        var abs = Math.Abs(Math.Round(ExerciseWeightFormatter.ToDisplay(delta, WeightUnitService.Current)));
+        return $"{(delta > 0 ? "+" : "-")}{abs:0} {ExerciseWeightFormatter.UnitSuffix(WeightUnitService.Current)}";
+    }
+
+    private static string DeltaClass(int delta) => delta switch
+    {
+        > 0 => "compare-delta--positive",
+        < 0 => "compare-delta--negative",
+        _ => "compare-delta--neutral"
+    };
+
+    private static string DeltaClass(double delta) => delta switch
+    {
+        > 0.5 => "compare-delta--positive",
+        < -0.5 => "compare-delta--negative",
+        _ => "compare-delta--neutral"
+    };
+
+    private static string DeltaClassForNullable(double? delta) => delta == null ? "compare-delta--neutral" : DeltaClass(delta.Value);
+
+    public string BuildComparisonText()
+    {
+        if (SessionA == null || SessionB == null) return "";
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Compare: {SessionA.PlanName} ({UiDateFormats.LocalDateTimeCompact(SessionA.StartedAtUtc)}) vs {SessionB.PlanName} ({UiDateFormats.LocalDateTimeCompact(SessionB.StartedAtUtc)})");
+        sb.AppendLine($"Duration: {DurationLabelA ?? "-"} vs {DurationLabelB ?? "-"}");
+        sb.AppendLine($"Volume: {TotalVolumeLabelA ?? "-"} vs {TotalVolumeLabelB ?? "-"}");
+        sb.AppendLine($"Sets: {TotalSetsA} vs {TotalSetsB}");
+        sb.AppendLine();
+        foreach (var row in _rows)
+        {
+            sb.AppendLine($"{row.ExerciseName}:");
+            sb.AppendLine($"  Sets: {(row.HasA ? row.SetCountA.ToString() : "-")} / {(row.HasB ? row.SetCountB.ToString() : "-")} ({FormatDeltaInt(row.SetsDelta)})");
+            sb.AppendLine($"  Best: {FormatBestWeight(row.BestWeightA, row.LogTypeA, row.BodyweightPercentA, BodyweightKgA)} / {FormatBestWeight(row.BestWeightB, row.LogTypeB, row.BodyweightPercentB, BodyweightKgB)}" + (row.BestDelta.HasValue ? $" ({FormatDeltaWeight(row.BestDelta.Value, row.LogTypeA, row.LogTypeB)})" : ""));
+            sb.AppendLine($"  Volume: {(row.HasA ? FormatVolume(row.TotalVolumeA) : "-")} / {(row.HasB ? FormatVolume(row.TotalVolumeB) : "-")} ({FormatDeltaVolume(row.VolumeDelta)})");
+            sb.AppendLine($"  Reps: {(row.HasA ? row.TotalRepsA.ToString() : "-")} / {(row.HasB ? row.TotalRepsB.ToString() : "-")} ({FormatDeltaInt(row.RepsDelta)})");
+            sb.AppendLine();
+        }
+        return sb.ToString().TrimEnd();
+    }
+
+    public async Task CopyComparisonAsync()
+    {
+        bool copied = false;
+        try { copied = await JS.InvokeAsync<bool>("physiquinatorHelpers.copyText", BuildComparisonText()); }
+        catch { copied = false; }
+        if (copied) Snackbar.Add("Comparison copied.", Severity.Success);
+        else Snackbar.Add("Could not copy to clipboard.", Severity.Error);
+    }
+}

@@ -259,6 +259,14 @@
     private const int SessionPageSize = 50;
     private const string LoadMoreSentinelId = "history-load-more-sentinel";
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? QuerySearch { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "days")]
+    public string? QueryDays { get; set; }
+
     private List<WorkoutSessionLogEntity>? _sessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _listSessions;
     private IReadOnlyList<WorkoutSessionLogEntity>? _filterDaySessions;
@@ -289,7 +297,7 @@
     private double BodyweightMax => ExerciseWeightFormatter.ToDisplay(500, WeightUnitService.Current);
 
     private void OpenSession(string sessionId) =>
-        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, CurrentHistoryQuery()));
 
     private Task DeleteSessionById(string sessionId)
     {
@@ -310,6 +318,7 @@
                 _selectedDays.Clear();
                 _filterDaySessions = null;
                 await UpdateSessionsListAsync();
+                SyncQueryToUrl();
             }
         }
         else
@@ -376,6 +385,7 @@
         _filterDaySessions = null;
         _selectionVersion++;
         await UpdateSessionsListAsync();
+        SyncQueryToUrl();
     }
 
     private async Task ClearDayFilters()
@@ -384,6 +394,7 @@
         _filterDaySessions = null;
         _selectionVersion++;
         await UpdateSessionsListAsync();
+        SyncQueryToUrl();
     }
 
     private async Task ToggleDaySessionSelectionAsync(DateOnly day)
@@ -489,64 +500,8 @@
         }
 
         var ids = _selectedSessionIds.ToList();
-        var sessionA = await HistoryRepo.GetSessionAsync(ids[0]);
-        var sessionB = await HistoryRepo.GetSessionAsync(ids[1]);
-        if (sessionA == null || sessionB == null)
-        {
-            Snackbar.Add("Could not load sessions.", Severity.Error);
-            return;
-        }
-
-        if (sessionA.StartedAtUtc > sessionB.StartedAtUtc)
-        {
-            (sessionA, sessionB) = (sessionB, sessionA);
-        }
-
-        var setsA = (await HistoryRepo.GetSetsForSessionAsync(sessionA.Id)).ToList();
-        var setsB = (await HistoryRepo.GetSetsForSessionAsync(sessionB.Id)).ToList();
-
-        double? bodyweightA = UserProfileService.GetActiveProfile()?.BodyweightKg;
-        double? bodyweightB = bodyweightA;
-        if (bodyweightA is not > 0)
-        {
-            try
-            {
-                var logs = await HistoryRepo.GetBodyweightLogsAsync(500);
-                var dateA = DateOnly.FromDateTime(sessionA.StartedAtUtc.ToLocalTime());
-                var dateB = DateOnly.FromDateTime(sessionB.StartedAtUtc.ToLocalTime());
-                var matchA = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateA) ?? logs.FirstOrDefault();
-                var matchB = logs.FirstOrDefault(l => l.GetDateOnlyOrNull() is { } d && d <= dateB) ?? logs.FirstOrDefault();
-                if (matchA != null && matchA.BodyweightKg > 0)
-                {
-                    bodyweightA = matchA.BodyweightKg;
-                }
-                if (matchB != null && matchB.BodyweightKg > 0)
-                {
-                    bodyweightB = matchB.BodyweightKg;
-                }
-            }
-            catch (Exception)
-            {
-                // Bodyweight logs are best-effort for compare deltas; ignore lookup failures.
-            }
-        }
-
-        var parameters = new DialogParameters<SessionCompareDialog>
-        {
-            { x => x.SessionA, sessionA },
-            { x => x.SetsA, setsA },
-            { x => x.SessionB, sessionB },
-            { x => x.SetsB, setsB },
-            { x => x.BodyweightKgA, bodyweightA },
-            { x => x.BodyweightKgB, bodyweightB },
-        };
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.Large,
-            FullWidth = true,
-        };
-        await DialogService.ShowAsync<SessionCompareDialog>("Compare sessions", parameters, options);
+        ids.Sort(StringComparer.Ordinal);
+        Navigation.NavigateTo(AppRoutes.Compare(ids[0], ids[1]));
     }
 
     private async Task RestoreSessionAsync(WorkoutSessionLogEntity? session, IReadOnlyList<WorkoutSetLogEntity> sets)
@@ -610,6 +565,7 @@
     protected override async Task OnInitializedAsync()
     {
         _heatmapEndLocal = DateOnly.FromDateTime(DateTime.Today);
+        ApplyQueryToState();
 
         var statsTask = StatsService.GetSummaryAsync(_heatmapEndLocal, HeatmapWeeks);
         var sessionsTask = HistoryRepo.GetRecentSessionsAsync(SessionPageSize);
@@ -625,6 +581,53 @@
             ?? UserProfileService.GetActiveProfile()?.BodyweightKg;
         _bodyweightDefault = _bodyweightInputKg;
         await UpdateSessionsListAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_sessions is null) return;
+        var newSearch = (QuerySearch ?? "").Trim();
+        var newDays = AppRoutes.ParseDays(QueryDays);
+        var searchChanged = !string.Equals(_searchText, newSearch, StringComparison.Ordinal);
+        var daysChanged = !_selectedDays.SetEquals(newDays);
+        if (!searchChanged && !daysChanged) return;
+        _searchText = newSearch;
+        _selectedDays.Clear();
+        foreach (var day in newDays)
+            _selectedDays.Add(day);
+        _filterDaySessions = null;
+        _selectionVersion++;
+        await UpdateSessionsListAsync();
+        StateHasChanged();
+    }
+
+    private void ApplyQueryToState()
+    {
+        _searchText = (QuerySearch ?? "").Trim();
+        _selectedDays.Clear();
+        foreach (var day in AppRoutes.ParseDays(QueryDays))
+            _selectedDays.Add(day);
+    }
+
+    private string? CurrentHistoryQuery()
+    {
+        var query = AppRoutes.HistoryWithQuery(_searchText, _selectedDays);
+        var idx = query.IndexOf('?');
+        return idx < 0 ? null : query[(idx + 1)..];
+    }
+
+    private void SyncQueryToUrl()
+    {
+        var target = AppRoutes.HistoryWithQuery(_searchText, _selectedDays);
+        var current = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var currentPath = current.Split('?')[0];
+        var currentQuery = current.Contains('?') ? current[(current.IndexOf('?') + 1)..] : "";
+        var targetQuery = target.Contains('?') ? target[(target.IndexOf('?') + 1)..] : "";
+        if (string.Equals(currentQuery, targetQuery, StringComparison.Ordinal)) return;
+        var targetUri = currentPath == "history" || currentPath == "history/"
+            ? target
+            : AppRoutes.HistoryWithQuery(_searchText, _selectedDays);
+        Navigation.NavigateTo(targetUri, replace: true);
     }
 
     public async Task<bool> OnLoadMoreVisible()
@@ -762,5 +765,6 @@
     {
         _searchText = text;
         await UpdateSessionsListAsync();
+        SyncQueryToUrl();
     }
 }

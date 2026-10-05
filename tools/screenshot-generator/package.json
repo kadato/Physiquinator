@@ -4,7 +4,7 @@
   "description": "Automated screenshot generator for Physiquinator using Playwright and WebView2 CDP",
   "main": "screenshot.js",
   "dependencies": {
-    "playwright": "^1.43.0"
+    "playwright": "^1.63.0"
   },
   "private": true
 }

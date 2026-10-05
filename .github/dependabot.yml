@@ -44,3 +44,31 @@ updates:
           - 'cf'
           - 'wrangler'
           - '@cloudflare/*'
+
+  - package-ecosystem: npm
+    directory: /tools/web-e2e
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+    groups:
+      playwright:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /tools/screenshot-generator
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+    groups:
+      playwright:
+        patterns:
+          - "*"

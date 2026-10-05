@@ -1,0 +1,20 @@
+.history-pager {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.history-pager ::deep .mud-button {
+    max-width: 48%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.exercise-progress-links {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+}

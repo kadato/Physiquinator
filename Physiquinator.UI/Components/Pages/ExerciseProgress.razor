@@ -10,7 +10,8 @@
 
 <PageTitle>@_decodedExerciseName</PageTitle>
 
-<PageHeader Title="@_decodedExerciseName" ShowBackButton="true">
+<HistoryBreadcrumbs Crumbs="Breadcrumbs" />
+<PageHeader Title="@_decodedExerciseName" ShowBackButton="true" OnBack="GoBack">
     @if (_ready && _rows.Any())
     {
         <MudButton Variant="Variant.Text"
@@ -70,6 +71,16 @@ else
                 <MudSelectItem Value="ExerciseProgressRange.All">@("All sessions")</MudSelectItem>
             </MudSelect>
         </MudStack>
+
+        <div class="exercise-progress-links">
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Class="premium-btn"
+                       StartIcon="@Icons.Material.Filled.AllInclusive"
+                       OnClick="GoAllPlans">
+                @("View across all plans")
+            </MudButton>
+        </div>
 
         @if (!_rows.Any())
         {
@@ -199,6 +210,28 @@ else
                                         SentinelId="@LoadMoreSentinelId"
                                         OnLoadMore="OnLoadMoreVisible" />
             </MudPaper>
+
+            @if (PrevExerciseName is not null || NextExerciseName is not null)
+            {
+                <div class="history-pager" role="group" aria-label="Adjacent exercises">
+                    <MudButton Variant="Variant.Outlined"
+                               Class="premium-btn premium-btn-outlined"
+                               StartIcon="@Icons.Material.Filled.ChevronLeft"
+                               Disabled="@(PrevExerciseName is null)"
+                               OnClick="@(() => GoAdjacentExercise(-1))"
+                               aria-label="@("Previous exercise")">
+                        @(PrevExerciseName ?? "Previous")
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Class="premium-btn premium-btn-outlined"
+                               EndIcon="@Icons.Material.Filled.ChevronRight"
+                               Disabled="@(NextExerciseName is null)"
+                               OnClick="@(() => GoAdjacentExercise(1))"
+                               aria-label="@("Next exercise")">
+                        @(NextExerciseName ?? "Next")
+                    </MudButton>
+                </div>
+            }
         }
     </MudStack>
 }
@@ -226,6 +259,14 @@ else
     [Parameter]
     public string ExerciseName { get; set; } = "";
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "from")]
+    public string? FromSessionId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hq")]
+    public string? HistoryQuery { get; set; }
+
     private const int AllTimeMaxSessions = 200;
     private const int ListPageSize = 50;
     private const string LoadMoreSentinelId = "exercise-progress-load-more-sentinel";
@@ -250,6 +291,7 @@ else
     private const int MaxChartAxisLabels = 6;
     private double? _bodyweightKg;
     private double? _bodyweightPercent;
+    private WorkoutSessionLogEntity? _fromSession;
 
     private int ActiveMaxSessions => _range switch
     {
@@ -299,12 +341,67 @@ else
     };
 
     private void GoSession(string sessionId) =>
-        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId));
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery));
 
     private void OnExerciseChanged(string newExerciseName)
     {
         if (string.Equals(_decodedExerciseName, newExerciseName, StringComparison.OrdinalIgnoreCase)) return;
-        Navigation.NavigateTo(AppRoutes.ExerciseProgress(PlanId, newExerciseName));
+        Navigation.NavigateTo(AppRoutes.ExerciseProgress(PlanId, newExerciseName, FromSessionId, HistoryQuery), replace: true);
+    }
+
+    private void GoBack()
+    {
+        if (!string.IsNullOrWhiteSpace(FromSessionId))
+            Navigation.NavigateTo(AppRoutes.HistorySession(FromSessionId, HistoryQuery));
+        else
+            Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
+    }
+
+    private void GoAdjacentExercise(int offset)
+    {
+        if (_availableExercises.Count == 0) return;
+        var idx = _availableExercises.FindIndex(n => string.Equals(n, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
+        if (idx < 0) return;
+        var next = idx + offset;
+        if (next < 0 || next >= _availableExercises.Count) return;
+        Navigation.NavigateTo(AppRoutes.ExerciseProgress(PlanId, _availableExercises[next], FromSessionId, HistoryQuery), replace: true);
+    }
+
+    private void GoAllPlans() =>
+        Navigation.NavigateTo(AppRoutes.ExerciseAcrossPlans(_decodedExerciseName, FromSessionId, HistoryQuery));
+
+    private string? PrevExerciseName
+    {
+        get
+        {
+            var idx = _availableExercises.FindIndex(n => string.Equals(n, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
+            return idx > 0 ? _availableExercises[idx - 1] : null;
+        }
+    }
+
+    private string? NextExerciseName
+    {
+        get
+        {
+            var idx = _availableExercises.FindIndex(n => string.Equals(n, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
+            return idx >= 0 && idx + 1 < _availableExercises.Count ? _availableExercises[idx + 1] : null;
+        }
+    }
+
+    private string? FromSessionLabel => _fromSession is null
+        ? null
+        : $"{_fromSession.PlanName} {UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_fromSession.StartedAtUtc.ToLocalTime()))}";
+
+    private IReadOnlyList<HistoryCrumb> Breadcrumbs
+    {
+        get
+        {
+            var crumbs = new List<HistoryCrumb> { HistoryCrumb.History(HistoryQuery) };
+            if (_fromSession is not null && !string.IsNullOrWhiteSpace(FromSessionId))
+                crumbs.Add(new HistoryCrumb(FromSessionLabel ?? "Session", AppRoutes.HistorySession(FromSessionId!, HistoryQuery)));
+            crumbs.Add(HistoryCrumb.Current(_decodedExerciseName));
+            return crumbs;
+        }
     }
 
     private async Task ShowPersonalRecordsAsync()
@@ -349,6 +446,15 @@ else
 
         var plan = await PlanService.GetPlanAsync(PlanId);
         _availableExercises = plan?.Exercises.Select(e => e.Name).Distinct().ToList() ?? [];
+        if (!string.IsNullOrWhiteSpace(FromSessionId))
+        {
+            try { _fromSession = await HistoryRepo.GetSessionAsync(FromSessionId); }
+            catch { _fromSession = null; }
+        }
+        else
+        {
+            _fromSession = null;
+        }
         var ex = plan?.Exercises.FirstOrDefault(e => string.Equals(e.Name, _decodedExerciseName, StringComparison.OrdinalIgnoreCase));
         _planMissing = ex == null;
         _logType = ex?.LogType ?? ExerciseLogType.WeightAndReps;

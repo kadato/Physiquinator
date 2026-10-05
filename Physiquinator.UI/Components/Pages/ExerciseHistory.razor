@@ -1,0 +1,166 @@
+@page "/history/exercise/{ExerciseName}"
+@using System.Globalization
+@inject WorkoutHistoryRepository HistoryRepo
+@inject NavigationManager Navigation
+@inject WeightUnitService WeightUnitService
+
+<PageTitle>@_decodedName</PageTitle>
+
+<HistoryBreadcrumbs Crumbs="Breadcrumbs" />
+<PageHeader Title="@_decodedName" ShowBackButton="true" OnBack="GoBack" />
+
+@if (!_ready)
+{
+    <DetailSkeleton />
+}
+else
+{
+    <MudStack Spacing="3">
+        @if (_allNames.Count > 1)
+        {
+            <MudSelect T="string"
+                       Label="Exercise"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Margin="Margin.Dense"
+                       Value="_decodedName"
+                       ValueChanged="OnExerciseChanged">
+                @foreach (var n in _allNames)
+                {
+                    <MudSelectItem Value="@n">@n</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @($"Showing {_rows.Count} sessions across all plans")
+        </MudText>
+
+        @if (!_rows.Any())
+        {
+            <EmptyState Message="@("No sets logged for this exercise yet.")"
+                        Icon="@Icons.Material.Outlined.FitnessCenter" />
+        }
+        else
+        {
+            <MudPaper Class="premium-table" Elevation="0">
+                <div class="infinite-table-list">
+                    <div class="infinite-table-head infinite-table-head--4">
+                        <span>Date</span>
+                        <span>Best</span>
+                        <span>Sets</span>
+                        <span class="infinite-table-head__action" />
+                    </div>
+                    @foreach (var row in _rows.Take(_loaded))
+                    {
+                        var item = row;
+                        <div @key="item.SessionId" class="infinite-table-row infinite-table-row--4">
+                            <span>@UiDateFormats.LocalDateCompact(item.StartedAtUtc)</span>
+                            <span>@FormatBest(item.BestWeightKg)</span>
+                            <span>@item.SetCount</span>
+                            <span class="infinite-table-row__action">
+                                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                               Size="Size.Small"
+                                               Variant="Variant.Text"
+                                               Class="premium-btn"
+                                               aria-label="Open session"
+                                               OnClick="@(() => GoSession(item.SessionId))" />
+                            </span>
+                        </div>
+                    }
+                </div>
+            </MudPaper>
+
+            @if (_loaded < _rows.Count)
+            {
+                <MudButton Variant="Variant.Outlined" Class="premium-btn premium-btn-outlined" OnClick="LoadMore">
+                    @($"Show more ({_rows.Count - _loaded} left)")
+                </MudButton>
+            }
+        }
+    </MudStack>
+}
+
+@code {
+    [Parameter]
+    public string ExerciseName { get; set; } = "";
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "from")]
+    public string? FromSessionId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hq")]
+    public string? HistoryQuery { get; set; }
+
+    private bool _ready;
+    private string _decodedName = "";
+    private IReadOnlyList<ExerciseSessionProgressEntry> _rows = Array.Empty<ExerciseSessionProgressEntry>();
+    private List<string> _allNames = [];
+    private int _loaded = 50;
+    private WorkoutSessionLogEntity? _fromSession;
+
+    private IReadOnlyList<HistoryCrumb> Breadcrumbs
+    {
+        get
+        {
+            var crumbs = new List<HistoryCrumb> { HistoryCrumb.History(HistoryQuery) };
+            if (_fromSession is not null && !string.IsNullOrWhiteSpace(FromSessionId))
+                crumbs.Add(new HistoryCrumb(
+                    $"{_fromSession.PlanName} {UiDateFormats.DateOnlyCompact(DateOnly.FromDateTime(_fromSession.StartedAtUtc.ToLocalTime()))}",
+                    AppRoutes.HistorySession(FromSessionId!, HistoryQuery)));
+            crumbs.Add(HistoryCrumb.Current(string.IsNullOrWhiteSpace(_decodedName) ? "Exercise" : $"{_decodedName} (all plans)"));
+            return crumbs;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready = false;
+        _decodedName = Uri.UnescapeDataString(ExerciseName ?? "");
+        if (!string.IsNullOrWhiteSpace(FromSessionId))
+        {
+            try { _fromSession = await HistoryRepo.GetSessionAsync(FromSessionId); }
+            catch { _fromSession = null; }
+        }
+        else
+        {
+            _fromSession = null;
+        }
+        try
+        {
+            _allNames = [.. await HistoryRepo.GetExerciseNamesAsync(200)];
+            _rows = string.IsNullOrWhiteSpace(_decodedName)
+                ? Array.Empty<ExerciseSessionProgressEntry>()
+                : await HistoryRepo.GetExerciseSessionProgressAcrossPlansAsync(_decodedName, 200);
+        }
+        catch
+        {
+            _rows = Array.Empty<ExerciseSessionProgressEntry>();
+        }
+        _loaded = Math.Min(50, _rows.Count);
+        _ready = true;
+    }
+
+    private void OnExerciseChanged(string next)
+    {
+        if (string.Equals(_decodedName, next, StringComparison.OrdinalIgnoreCase)) return;
+        Navigation.NavigateTo(AppRoutes.ExerciseAcrossPlans(next, FromSessionId, HistoryQuery), replace: true);
+    }
+
+    private void GoSession(string sessionId) =>
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery));
+
+    private void GoBack()
+    {
+        if (!string.IsNullOrWhiteSpace(FromSessionId))
+            Navigation.NavigateTo(AppRoutes.HistorySession(FromSessionId, HistoryQuery));
+        else
+            Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
+    }
+
+    private void LoadMore() => _loaded = Math.Min(_loaded + 50, _rows.Count);
+
+    private string FormatBest(double? kg) =>
+        kg is null ? "-" : ExerciseWeightFormatter.FormatWeightWithUnit(kg.Value, WeightUnitService.Current);
+}

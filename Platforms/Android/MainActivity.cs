@@ -26,6 +26,20 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
+        // Pre-warm the Android System WebView Chromium provider in the background
+        // so it initializes in parallel with .NET and Blazor startup.
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                global::Android.Webkit.WebSettings.GetDefaultUserAgent(ApplicationContext);
+            }
+            catch
+            {
+                // Ignore if WebView provider is unavailable or updating.
+            }
+        });
+
         // Edge-to-edge for tall screens and camera hole (punch-hole / notch).
         // Must be before the WebView is inflated so the window extends into the cutout.
         try

@@ -36,6 +36,7 @@ public sealed class AppDatabase
             await _database.ExecuteScalarAsync<string>("PRAGMA synchronous = NORMAL;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA temp_store = MEMORY;").ConfigureAwait(false);
             await _database.ExecuteScalarAsync<string>("PRAGMA cache_size = -2000;").ConfigureAwait(false);
+            await _database.ExecuteScalarAsync<string>("PRAGMA mmap_size = 268435456;").ConfigureAwait(false);
         }
         catch (Exception ex)
         {

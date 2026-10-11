@@ -51,8 +51,7 @@ public sealed class AppInitializationService(
                     NotifyProgress();
                 }
 
-                var didSeedHistory = await demoSeeder.SeedDemoHistoryIfNeededAsync().ConfigureAwait(false);
-                var didSeedExtras = await demoSeeder.SeedDemoExtrasIfNeededAsync().ConfigureAwait(false);
+                var (didSeedHistory, didSeedExtras) = await demoSeeder.SeedDemoHistoryAndExtrasIfNeededAsync().ConfigureAwait(false);
 
                 if (didSeedPlans || didSeedHistory || didSeedExtras)
                 {

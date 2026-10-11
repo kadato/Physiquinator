@@ -106,6 +106,66 @@ public sealed class DemoDataSeeder(
     }
 
     /// <summary>
+    /// Seeds demo history and extras in a single SQLite transaction on initial install,
+    /// avoiding redundant transaction commit and WAL fsync overhead.
+    /// </summary>
+    public async Task<(bool SeededHistory, bool SeededExtras)> SeedDemoHistoryAndExtrasIfNeededAsync()
+    {
+        var needsHistory = !_preferences.Get(DemoHistorySeedCompletedKey, false);
+        var needsExtras = !_preferences.Get(DemoExtrasSeedCompletedKey, false);
+
+        if (!needsHistory && !needsExtras)
+            return (false, false);
+
+        if (needsHistory && !needsExtras)
+            return (await SeedDemoHistoryIfNeededAsync().ConfigureAwait(false), false);
+
+        if (!needsHistory && needsExtras)
+            return (false, await SeedDemoExtrasIfNeededAsync().ConfigureAwait(false));
+
+        await _database.EnsureInitializedAsync();
+
+        if (await _historyRepository.GetSessionCountAsync() > 0 || !await HasAllDemoPlansAsync())
+        {
+            _preferences.Set(DemoHistorySeedCompletedKey, true);
+            var didExtras = await SeedDemoExtrasIfNeededAsync().ConfigureAwait(false);
+            return (false, didExtras);
+        }
+
+        DateTime todayUtc = _time.GetUtcNow().UtcDateTime.Date;
+        List<DemoSessionSpec> specs = DemoScheduleGenerator.GenerateDemoSchedule(todayUtc);
+        var sessions = new List<WorkoutSessionLogEntity>(specs.Count);
+        var sets = new List<WorkoutSetLogEntity>(specs.Count * 24);
+        FrozenDictionary<Guid, string> snapshots = s_planSnapshots.Value;
+        for (var i = 0; i < specs.Count; i++)
+        {
+            DemoSessionSpec spec = specs[i];
+            BuildSession(sessions, sets, i, spec, todayUtc, snapshots[spec.PlanId]);
+        }
+
+        List<BodyweightLogEntity> entries = DemoScheduleGenerator.GenerateDemoBodyweights(todayUtc);
+
+        await _database.Database.RunInTransactionAsync(conn =>
+        {
+            conn.InsertAll(sessions, false);
+            conn.InsertAll(sets, false);
+            if (entries.Count > 0)
+            {
+                conn.InsertAll(entries, false);
+            }
+        }).ConfigureAwait(false);
+
+        if (entries.Count > 0)
+        {
+            SetProfileBodyweight(entries[^1].BodyweightKg);
+        }
+
+        _preferences.Set(DemoHistorySeedCompletedKey, true);
+        _preferences.Set(DemoExtrasSeedCompletedKey, true);
+        return (true, true);
+    }
+
+    /// <summary>
     /// Seeds demo extras once: a changing bodyweight series and the profile's
     /// current bodyweight. Gated by its own preference key so existing users
     /// with history get the extras on the next launch.

@@ -7,10 +7,10 @@ public sealed class FileTransferService : IFileTransferService
 {
     private static readonly PlatformFileTypes JsonFileTypes = new()
     {
-        { DevicePlatform.iOS, ["public.json"] },
-        { DevicePlatform.Android, ["application/json"] },
-        { DevicePlatform.WinUI, [".json"] },
-        { DevicePlatform.MacCatalyst, ["public.json"] }
+        { DevicePlatform.iOS, (string[])["public.json"] },
+        { DevicePlatform.Android, (string[])["application/json"] },
+        { DevicePlatform.WinUI, (string[])[".json"] },
+        { DevicePlatform.MacCatalyst, (string[])["public.json"] }
     };
 
     /// <summary>Writes JSON to the app cache directory and opens the platform share sheet.</summary>

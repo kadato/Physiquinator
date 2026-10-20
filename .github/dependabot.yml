@@ -1,63 +1,41 @@
 version: 2
 
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: "Etc/UTC"
+    commit-message:
+      prefix: "build"
+      prefix-development: "build"
+      include: "scope"
+
 updates:
   - package-ecosystem: nuget
     directory: /
-    schedule:
-      interval: weekly
-      day: monday
-    commit-message:
-      prefix: build
-      prefix-development: build
-      include: scope
-    groups:
-      dotnet:
-        patterns:
-          - '*'
+    multi-ecosystem-group: dependencies
+    patterns:
+      - "*"
 
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: weekly
-      day: monday
-    commit-message:
-      prefix: build
-      prefix-development: build
-      include: scope
-    groups:
-      actions:
-        patterns:
-          - '*'
+    multi-ecosystem-group: dependencies
+    patterns:
+      - "*"
 
   - package-ecosystem: dotnet-sdk
     directory: /
-    schedule:
-      interval: weekly
-      day: monday
-    commit-message:
-      prefix: build
-      prefix-development: build
-      include: scope
+    multi-ecosystem-group: dependencies
+    patterns:
+      - "*"
 
   - package-ecosystem: npm
     directories:
       - /
       - /tools/web-e2e
       - /tools/screenshot-generator
-    schedule:
-      interval: weekly
-      day: monday
-    commit-message:
-      prefix: build
-      prefix-development: build
-      include: scope
-    groups:
-      cloudflare:
-        patterns:
-          - cf
-          - wrangler
-          - '@cloudflare/*'
-      playwright:
-        patterns:
-          - playwright
-          - '@playwright/*'
+    multi-ecosystem-group: dependencies
+    patterns:
+      - "*"

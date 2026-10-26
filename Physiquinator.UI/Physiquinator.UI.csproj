@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <!-- S8970: null-forgiving on [Inject]/[CascadingParameter] members is required for Blazor DI;
-         the Razor generator emits the class without constructor assignment. -->
-    <NoWarn>$(NoWarn);S8970</NoWarn>
+         the Razor generator emits the class without constructor assignment.
+         S3881: Razor generator emits standard void Dispose() for @implements IDisposable
+         components without the unmanaged dispose pattern. -->
+    <NoWarn>$(NoWarn);S8970;S3881</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

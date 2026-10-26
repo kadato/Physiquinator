@@ -139,6 +139,7 @@ csharp_space_between_method_declaration_name_and_open_parenthesis = false
 # Build suppression lives in Physiquinator.UI.csproj (NoWarn).
 [*.razor]
 dotnet_diagnostic.S8970.severity = none
+dotnet_diagnostic.S3881.severity = none
 
 # ---------------------------------------------------------------------------
 # Analyzer severities: meaningful rules on, noisy MAUI/legacy rules off

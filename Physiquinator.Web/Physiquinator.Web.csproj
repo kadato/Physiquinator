@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
+    <!-- S3881: Razor generator emits standard void Dispose() for @implements IDisposable
+         components without the unmanaged dispose pattern. -->
+    <NoWarn>$(NoWarn);S3881</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -14,8 +14,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- The linker emits documented-but-noisy WASM0001 varargs warnings for
          sqlite3_config/sqlite3_db_config; they are never called at runtime.
-         S8970: [Inject] members need null-forgiving init, matching the UI library. -->
-    <NoWarn>$(NoWarn);WASM0001;S8970</NoWarn>
+         S8970: [Inject] members need null-forgiving init, matching the UI library.
+         S3881: Razor generator emits standard void Dispose() for @implements IDisposable. -->
+    <NoWarn>$(NoWarn);WASM0001;S8970;S3881</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

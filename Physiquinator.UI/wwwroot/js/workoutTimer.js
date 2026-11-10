@@ -165,6 +165,15 @@ async function onBackGuardPopState() {
         window.history.pushState(backGuardState, '');
         return;
     }
+    // A dialog, menu, or select popover wins over a back press. Close the top layer. Re-arm the back guard.
+    // Stay put. This covers browser back on the web with a sheet open.
+    try {
+        if (window.physiquinatorBack && typeof window.physiquinatorBack.closeTopLayer === 'function'
+            && window.physiquinatorBack.closeTopLayer()) {
+            window.history.pushState(backGuardState, '');
+            return;
+        }
+    } catch {}
     backGuardBusy = true;
     const leave = await confirmLeaveWorkout();
     backGuardBusy = false;
@@ -173,24 +182,24 @@ async function onBackGuardPopState() {
     }
 }
 
-window.physiquinatorBack = {
-    // Invoked from the Android activity on hardware back. Returns true when
-    // the guard took over (or is busy). False lets the system fall back to
-    // its default back behavior.
-    consume: function () {
-        if (!backGuardActive) return false;
-        if (backGuardBusy) return true;
-        backGuardBusy = true;
-        confirmLeaveWorkout()
-            .then((leave) => {
-                backGuardBusy = false;
-                if (!leave) window.history.pushState(backGuardState, '');
-            })
-            .catch(() => {
-                backGuardBusy = false;
-            });
-        return true;
-    }
+window.physiquinatorBack = window.physiquinatorBack || {};
+// Runs on Android hardware back through the shared
+// consume() in appHelpers.js. Returns true when the workout or plan guard
+// took over or is busy. Returns false so the shared handler tries dialogs
+// and then the registered Blazor parent navigation.
+window.physiquinatorBack._workoutConsume = function () {
+    if (!backGuardActive) return false;
+    if (backGuardBusy) return true;
+    backGuardBusy = true;
+    confirmLeaveWorkout()
+        .then((leave) => {
+            backGuardBusy = false;
+            if (!leave) window.history.pushState(backGuardState, '');
+        })
+        .catch(() => {
+            backGuardBusy = false;
+        });
+    return true;
 };
 
 export function stopRestTimer() {

@@ -135,6 +135,61 @@
     }
     updateImeInset();
 
+    // App-wide back handling for the phone gesture and hardware back.
+    // The MAUI activity calls window.physiquinatorBack.consume(). It expects true
+    // when the app handled the press. Dialogs close first. Then the armed
+    // workout or plan guard runs. Then the registered Blazor parent navigation runs.
+    // Root tabs return false so the system can exit or background the app.
+    window.physiquinatorBack = window.physiquinatorBack || {};
+    (function (back) {
+        if (back.__appInit) return;
+        back.__appInit = true;
+        var appRef = null;
+        back.registerAppBackHandler = function (dotNetRef) { appRef = dotNetRef; };
+        back.unregisterAppBackHandler = function () { appRef = null; };
+
+        function sendEscape() {
+            try {
+                var init = { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true, cancelable: true };
+                document.dispatchEvent(new KeyboardEvent('keydown', init));
+                document.dispatchEvent(new KeyboardEvent('keyup', init));
+            } catch {}
+        }
+
+        back.closeTopLayer = function () {
+            try {
+                var pop = document.querySelector('.mud-popover.mud-popover-open, .mud-popover-open, .mud-menu-popover, .mud-select-popover, .mud-autocomplete-popover');
+                if (pop) { sendEscape(); return true; }
+                var dlg = document.querySelector('.mud-dialog-container');
+                if (dlg) { sendEscape(); return true; }
+            } catch {}
+            return false;
+        };
+
+        back.isRootPath = function () {
+            try {
+                var p = (window.location.pathname || '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+                return p === '' || p === 'history' || p === 'settings';
+            } catch (e) { return false; }
+        };
+
+        back.consume = function () {
+            // A dialog, menu, or select popover always wins. Close the top layer. Stay put.
+            if (back.closeTopLayer()) return true;
+            try {
+                if (typeof back._workoutConsume === 'function' && back._workoutConsume()) return true;
+            } catch {}
+            try {
+                if (back.isRootPath()) return false;
+            } catch {}
+            if (appRef) {
+                try { appRef.invokeMethodAsync('OnAppBackRequested'); } catch {}
+                return true;
+            }
+            return false;
+        };
+    })(window.physiquinatorBack);
+
     // Fix MudBlazor's internal icon buttons that lack an accessible name.
     // The autocomplete dropdown toggle (mud-icon-button-edge-end) renders as a
     // plain <button> with an SVG icon and no aria-label, which fails axe

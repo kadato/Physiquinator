@@ -14,7 +14,7 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
 {
     // Cache-busting query: the module's progress-bar logic evolved. Older
     // WebView caches of the module would show a stale bar.
-    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=8";
+    private const string ModulePath = "./_content/Physiquinator.UI/js/workoutTimer.js?v=9";
 
     private IJSObjectReference? _module;
 

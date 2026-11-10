@@ -72,12 +72,13 @@ public class MainActivity : MauiAppCompatActivity
         // and steppers are never hidden behind it (Android).
         Window?.SetSoftInputMode(global::Android.Views.SoftInput.AdjustResize);
 
-        // Asks the workout back-guard (workoutTimer.js) whether it consumed the
-        // press. The guard shows the "Leave workout?" confirm and navigates on
-        // its own. When the guard or the WebView is unavailable, or the press
-        // is not consumed, the callback is disabled and the press is dispatched
-        // to the rest of the chain (MAUI/default behavior).
-        OnBackPressedDispatcher.AddCallback(this, new WorkoutBackGuardCallback(this));
+        // The callback asks the app back guard in appHelpers.js whether physiquinatorBack.consume handled the
+        // press. The workout and plan pages arm a guard. That guard shows a Leave confirm. It navigates on
+        // its own. Dialogs and menus close first. Drill pages navigate to their explicit parent.
+        // When the guard or the WebView is missing, or the press is not handled, the callback
+        // briefly opts out. It passes the press to the MAUI default behavior. It then opts back in
+        // so later guards keep working with predictive back.
+        OnBackPressedDispatcher.AddCallback(this, new AppBackGuardCallback(this));
 
         // Tracks foreground state without overriding activity lifecycle
         // methods, which can interfere with MAUI's fragment setup.
@@ -113,7 +114,7 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 
-    private sealed class WorkoutBackGuardCallback(MainActivity activity) : OnBackPressedCallback(true)
+    private sealed class AppBackGuardCallback(MainActivity activity) : OnBackPressedCallback(true)
     {
         private readonly MainActivity _activity = activity;
 
@@ -150,8 +151,18 @@ public class MainActivity : MauiAppCompatActivity
 
         private void DisableAndContinue()
         {
+            // Temporarily opt out so the dispatcher falls through to MAUI and the system.
+            // After the press passes through, opt back in. The guard then handles the next
+            // back press. Predictive back keeps working and a later workout still shows its Leave confirm.
             Enabled = false;
-            _activity.OnBackPressedDispatcher.OnBackPressed();
+            try
+            {
+                _activity.OnBackPressedDispatcher.OnBackPressed();
+            }
+            finally
+            {
+                Enabled = true;
+            }
         }
     }
 

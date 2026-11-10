@@ -491,3 +491,5 @@ $RECYCLE.BIN/
 *.lscache
 .wrangler/
 .cloudflare/
+
+.dotnet/

@@ -92,9 +92,13 @@
              process start ("Instruction is unrepresentable in DEX V37"). -->
         <AndroidDexTool>d8</AndroidDexTool>
 
-        <!-- .NET 11 preview SDK workaround (dotnet/android#11025): R2R produces
-             mixed-mode assemblies that Mono.Cecil cannot write on Android.
-             Re-enable once the upstream issue is fixed. -->
+        <!-- Keep PublishReadyToRun off for Android. See dotnet/android#11025, closed by #12445.
+             Mono.Cecil cannot write PublishReadyToRun mixed-mode assemblies, so FixAbstractMethodsStep
+             fails with XALNS7015 on CoreCLR Release builds. Upstream now forces PublishReadyToRun off
+             without trimming. It warns XA0119. I verified this on 2026-11-10. Forcing
+             PublishReadyToRun=true on this repo still fails with XALNS7015, so PublishReadyToRun
+             and RunAOTCompilation stay off. Only PublishTrimmed=true brings back PublishReadyToRun.
+             The PublishTrimmed path needs trim validation across Blazor, MudBlazor, SQLite, and the MCP tools. -->
         <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
 
         <!-- iOS release optimizations -->

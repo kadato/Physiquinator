@@ -114,7 +114,7 @@ p, li, .mud-typography-body1, .mud-typography-body2 { text-wrap: pretty; line-he
 }
 .empty-state .mud-icon-root { font-size:32px !important; width:32px !important; height:32px !important; color:var(--pl-stone); }
 .plate-card { position:relative; background:var(--pl-chip); border:var(--hairline); border-radius:var(--radius); overflow:hidden; }
-.app-nav-pill { position:fixed; left:0; right:0; margin-inline:auto; bottom:12px; z-index:1100 !important; width:min(440px, calc(100% - 24px)); pointer-events:auto !important; }
+.app-nav-pill { position:fixed; left:0; right:0; margin-inline:auto; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:1100 !important; width:min(440px, calc(100% - 24px)); pointer-events:auto !important; }
 .app-nav-pill__inner { pointer-events:auto !important; display:flex; align-items:stretch; gap:0; height:56px; background:var(--pl-chip); border:var(--hairline-strong); border-radius:var(--radius); overflow:hidden; }
 .app-nav-tab { display:flex; flex:1 1 0px; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:0; margin:0; padding:6px 8px; border:none; background:transparent; color:var(--pl-stone); text-decoration:none; cursor:pointer; font-family:var(--font-mono); position:relative; transition:background 120ms ease, color 120ms ease, transform 90ms cubic-bezier(0.2, 0, 0, 1), opacity 90ms ease !important; touch-action:manipulation; -webkit-tap-highlight-color:transparent; pointer-events:auto !important; }
 .app-nav-tab .mud-icon-root { font-size:20px !important; width:20px !important; height:20px !important; pointer-events:none; }
@@ -222,7 +222,7 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
 .app-fab--br-1 {
   right: 16px !important;
   left: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 
 /* On pages with bottom navigation (e.g. Home): float above the nav pill */
@@ -230,7 +230,7 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
 .app-shell:not(.app-shell--immersive) .app-nav-pill ~ .app-fab--br-1:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--br-1:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .app-fab--br-1:not(.dialog-fab) {
-  bottom: calc(56px + 12px + 16px) !important; /* 84px */
+  bottom: calc(56px + 12px + 16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important; /* 84px + insets */
   right: 16px !important;
 }
 .app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--bl-1:not(.dialog-fab),
@@ -242,18 +242,18 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
 .app-shell:not(.app-shell--immersive) .app-fab--bl-1:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .app-fab--back:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .workout-undo-fab:not(.dialog-fab) {
-  bottom: 84px !important;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 .app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--br-2:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--br-2:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .app-fab--br-2:not(.dialog-fab) {
-  bottom: 84px !important;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
   right: 72px !important;
 }
 .app-shell:not(.app-shell--immersive) .app-nav-pill ~ * .app-fab--bl-2:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .home-page ~ .app-fab--bl-2:not(.dialog-fab),
 .app-shell:not(.app-shell--immersive) .app-fab--bl-2:not(.dialog-fab) {
-  bottom: 84px !important;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
   left: 72px !important;
 }
 
@@ -309,7 +309,7 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
 .app-shell .dialog-fab.app-fab--br-1 {
   position: fixed !important;
   z-index: 1400 !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 .dialog-fab.app-fab--bl-1,
 .app-shell .dialog-fab.app-fab--bl-1 {
@@ -325,21 +325,21 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
 .app-fab--br-2 {
   right: 72px !important;
   left: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 .app-fab--bl-1,
 .app-fab--back,
 .workout-undo-fab {
   left: 16px !important;
   right: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 /* Keep secondary left stack for future use, but keep same height */
 .app-fab--bl-2,
 .dialog-fab.app-fab--bl-2 {
   left: 72px !important;
   right: auto !important;
-  bottom: 16px !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--app-ime-inset, 0px)) !important;
 }
 
 .mud-dialog-container,
@@ -6683,12 +6683,14 @@ html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn .mud-ic
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 7px 8px 6px;
   background: var(--pl-chip);
   border: 1.5px solid var(--pl-hairline);
   cursor: pointer;
   min-width: 62px;
+  min-height: 44px;
   transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms cubic-bezier(0.2, 0, 0, 1), background 120ms ease, border-color 120ms ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -6905,6 +6907,35 @@ html[data-theme-mode="dark"] .workout-completed-rail__item-meta {
   display: flex;
   gap: 8px;
   padding-top: 2px;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background: var(--pl-paper);
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+}
+.workout-next__nav {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.workout-next__nav-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: var(--pl-chip-2);
+  color: var(--pl-ink);
+  border: 1.5px solid var(--pl-hairline-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .workout-actions__btn {
   flex: 1 1 0;

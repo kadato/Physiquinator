@@ -78,15 +78,20 @@ else
                                         OnSkip="SkipRestFromPanel"
                                         OnAddTime="AddRestTime" />
                     </div>
-                    <div class="workout-rest-takeover__next @(UpcomingExercises.Count > 1 ? "workout-rest-takeover__next--swipeable" : "")"
-                         @ontouchstart="HandleRestNextTouchStart"
-                         @ontouchend="HandleRestNextTouchEnd"
-                         aria-label="Up next exercise. Swipe to change.">
+                    <div class="workout-rest-takeover__next"
+                          aria-label="Up next exercise.">
                         <div class="workout-rest-takeover__next-head">
                             <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
                             @if (NextPendingSet.Exercise != null)
                             {
                                 <span class="workout-rest-takeover__next-set">SET @(NextPendingSet.SetIndex + 1)/@(NextPendingSet.Exercise.TotalSetCount)</span>
+                            }
+                            @if (UpcomingExercises.Count > 1)
+                            {
+                                <span class="workout-next__nav">
+                                    <button type="button" class="workout-next__nav-btn" @onclick="() => CycleRestNextExercise(forward: false)" aria-label="Previous upcoming exercise">PREV</button>
+                                    <button type="button" class="workout-next__nav-btn" @onclick="() => CycleRestNextExercise(forward: true)" aria-label="Next upcoming exercise">NEXT</button>
+                                </span>
                             }
                         </div>
                         <span class="workout-rest-takeover__next-name">@NextExerciseName</span>
@@ -290,13 +295,18 @@ else
 
                 @if (NextExerciseInfo.Exercise != null)
                 {
-                    <div class="workout-rest-takeover__next workout-next @(UpcomingExercises.Count > 1 ? "workout-rest-takeover__next--swipeable" : "")"
-                         @ontouchstart="HandleWorkoutNextTouchStart"
-                         @ontouchend="HandleWorkoutNextTouchEnd"
-                         aria-label="@(string.Format("Next: {0}. Swipe to view.", NextExerciseInfo.Exercise.Name))">
+                    <div class="workout-rest-takeover__next workout-next"
+                         aria-label="@(string.Format("Next: {0}.", NextExerciseInfo.Exercise.Name))">
                         <div class="workout-rest-takeover__next-head">
                             <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
                             <span class="workout-rest-takeover__next-set">SET @(NextExerciseInfo.SetIndex + 1)/@(NextExerciseInfo.Exercise.TotalSetCount)</span>
+                            @if (UpcomingExercises.Count > 1)
+                            {
+                                <span class="workout-next__nav">
+                                    <button type="button" class="workout-next__nav-btn" @onclick="FocusPrev" aria-label="Previous upcoming exercise">PREV</button>
+                                    <button type="button" class="workout-next__nav-btn" @onclick="FocusNext" aria-label="Next upcoming exercise">NEXT</button>
+                                </span>
+                            }
                         </div>
                         <span class="workout-rest-takeover__next-name">@NextExerciseInfo.Exercise.Name</span>
                         @if (!string.IsNullOrEmpty(NextExerciseInfo.Preview))
@@ -1008,7 +1018,7 @@ else
 
         _historySessionId = null;
         SessionService.EndWorkout();
-        Navigation.NavigateTo(AppRoutes.Home);
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
     }
 
     private int GetNextUncompletedExerciseInSameGroup(int exerciseIndex)
@@ -1513,7 +1523,7 @@ else
 
         await TimerInterop.SetKeepScreenOnAsync(false);
         await TimerInterop.UnregisterBackHandlerAsync();
-        Navigation.NavigateTo(AppRoutes.Home);
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
         return true;
     }
 
@@ -1786,7 +1796,7 @@ else
 
         _historySessionId = null;
         SessionService.EndWorkout();
-        Navigation.NavigateTo(AppRoutes.Home);
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
     }
 
     [JSInvokable]
@@ -1850,37 +1860,6 @@ else
         }
     }
 
-    private double _restTouchStartX;
-    private double _restTouchStartY;
-    private double _workoutNextTouchStartX;
-    private double _workoutNextTouchStartY;
-
-    private void HandleRestNextTouchStart(TouchEventArgs e)
-    {
-        if (e.ChangedTouches.Length == 0) return;
-        _restTouchStartX = e.ChangedTouches[0].ClientX;
-        _restTouchStartY = e.ChangedTouches[0].ClientY;
-    }
-
-    private void HandleRestNextTouchEnd(TouchEventArgs e)
-    {
-        if (e.ChangedTouches.Length == 0) return;
-        var deltaX = e.ChangedTouches[0].ClientX - _restTouchStartX;
-        var deltaY = e.ChangedTouches[0].ClientY - _restTouchStartY;
-
-        if (Math.Abs(deltaX) > 30 && Math.Abs(deltaX) > Math.Abs(deltaY) * 1.2)
-        {
-            if (deltaX < 0)
-            {
-                CycleRestNextExercise(forward: true);
-            }
-            else
-            {
-                CycleRestNextExercise(forward: false);
-            }
-        }
-    }
-
     private void CycleRestNextExercise(bool forward = true)
     {
         if (UpcomingExercises.Count <= 1) return;
@@ -1897,32 +1876,6 @@ else
         StateHasChanged();
     }
 
-
-    private void HandleWorkoutNextTouchStart(TouchEventArgs e)
-    {
-        if (e.ChangedTouches.Length == 0) return;
-        _workoutNextTouchStartX = e.ChangedTouches[0].ClientX;
-        _workoutNextTouchStartY = e.ChangedTouches[0].ClientY;
-    }
-
-    private void HandleWorkoutNextTouchEnd(TouchEventArgs e)
-    {
-        if (e.ChangedTouches.Length == 0) return;
-        var deltaX = e.ChangedTouches[0].ClientX - _workoutNextTouchStartX;
-        var deltaY = e.ChangedTouches[0].ClientY - _workoutNextTouchStartY;
-
-        if (Math.Abs(deltaX) > 30 && Math.Abs(deltaX) > Math.Abs(deltaY) * 1.2)
-        {
-            if (deltaX < 0)
-            {
-                FocusNext();
-            }
-            else
-            {
-                FocusPrev();
-            }
-        }
-    }
 
     public async ValueTask DisposeAsync()
     {

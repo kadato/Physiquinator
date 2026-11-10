@@ -7,10 +7,11 @@
 @inject IDialogService DialogService
 @inject UiFeedbackService UiFeedback
 @inject WeightUnitService WeightUnitService
+@inject NavigationManager Navigation
 
 <PageTitle>@("Bodyweight")</PageTitle>
 
-<PageHeader Title="@("Bodyweight")" ShowBackButton="true" />
+<PageHeader Title="@("Bodyweight")" ShowBackButton="true" OnBack="GoBack" />
 
 @if (!_ready)
 {
@@ -437,5 +438,7 @@ else
             },
             "Entry restored.",
             "Could not restore entry");
+
+    private void GoBack() => Navigation.NavigateTo(AppRoutes.History);
 
 }

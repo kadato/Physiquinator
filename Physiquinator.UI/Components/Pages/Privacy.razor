@@ -1,8 +1,9 @@
 @page "/privacy"
+@inject NavigationManager Navigation
 
 <MudStack Spacing="3">
     <PageTitle>@("Privacy")</PageTitle>
-    <PageHeader Title="@("Privacy")" ShowBackButton="true" />
+    <PageHeader Title="@("Privacy")" ShowBackButton="true" OnBack="GoBack" />
 
     <MudPaper Class="pa-4" Elevation="0">
         <MudText Typo="Typo.body1" Class="mb-3">
@@ -40,3 +41,7 @@
         </MudText>
     </MudPaper>
 </MudStack>
+
+@code {
+    private void GoBack() => Navigation.NavigateTo(AppRoutes.Settings);
+}

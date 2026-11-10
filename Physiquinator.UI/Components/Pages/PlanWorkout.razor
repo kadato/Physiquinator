@@ -1,7 +1,10 @@
 @page "/plan"
 @page "/plan/{PlanId:guid}"
 @using Microsoft.Extensions.Logging
+@using Microsoft.JSInterop
+@using Physiquinator.Core.Services
 @implements IDisposable
+@implements IAsyncDisposable
 @inject WorkoutPlanService PlanService
 @inject WorkoutHistoryRepository HistoryRepository
 @inject NavigationManager Navigation
@@ -11,6 +14,7 @@
 @inject TimeProvider TimeProvider
 @inject ILogger<PlanWorkout> Logger
 @inject IJSRuntime JS
+@inject WorkoutTimerInterop TimerInterop
 
 <PageTitle>@PageTitleText</PageTitle>
 
@@ -166,6 +170,9 @@ else
     private bool _isSheetOpen;
     private bool IsNew => PlanId == null;
     private string PageTitleText => IsNew ? "New plan" : "Edit plan";
+    private DotNetObjectReference<PlanWorkout>? _backRef;
+    private bool _backRegistered;
+    private bool _disposed;
 
     private double? DefaultSetCountValue
     {
@@ -213,6 +220,60 @@ else
             _planLoadComplete = true;
         }
         _dirty = false;
+        try
+        {
+            await TimerInterop.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Plan back guard init failed. System back uses the activity default.");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_backRegistered)
+        {
+            _backRegistered = true;
+            try
+            {
+                _backRef = DotNetObjectReference.Create(this);
+                await TimerInterop.RegisterBackHandlerAsync(_backRef);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug(ex, "Plan back guard registration failed. In-app Close still guards unsaved changes.");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task<bool> OnLeaveWorkoutRequested()
+    {
+        if (_disposed)
+            return true;
+        if (_isSheetOpen)
+            return false;
+        if (_dirty)
+        {
+            if (_lastSaveTask is { } pending)
+                await pending;
+
+            if (_dirty)
+            {
+                var confirmed = await DialogService.ConfirmAsync(
+                    "Discard changes?",
+                    "You have unsaved changes to this plan. Leave without saving?",
+                    confirmText: "Discard",
+                    confirmColor: Color.Error);
+                if (!confirmed)
+                    return false;
+            }
+        }
+        await JsSafeInvoker.RunSafeAsync(() => TimerInterop.UnregisterBackHandlerAsync());
+        _backRegistered = false;
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
+        return true;
     }
 
     private void BumpSortable() => _sortableVersion++;
@@ -249,7 +310,9 @@ else
             }
         }
 
-        Navigation.NavigateTo(AppRoutes.Home);
+        await JsSafeInvoker.RunSafeAsync(() => TimerInterop.UnregisterBackHandlerAsync());
+        _backRegistered = false;
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
     }
 
     private async Task OpenAddExerciseSheetAsync()
@@ -450,14 +513,25 @@ else
     {
         await SavePlanInternalAsync(showConfirmation: true);
         _dirty = false;
-        Navigation.NavigateTo(AppRoutes.Home);
+        await JsSafeInvoker.RunSafeAsync(() => TimerInterop.UnregisterBackHandlerAsync());
+        _backRegistered = false;
+        Navigation.NavigateTo(AppRoutes.Home, replace: true);
     }
 
     public void Dispose()
     {
+        _disposed = true;
         _saveDebounceCts?.Cancel();
         _saveDebounceCts?.Dispose();
         _saveDebounceCts = null;
+        _backRef?.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        await JsSafeInvoker.RunSafeAsync(() => TimerInterop.UnregisterBackHandlerAsync());
+        Dispose();
     }
 
     private static ExercisePlan CloneExercise(ExercisePlan source) => new()

@@ -1296,16 +1296,9 @@
 		return "ai-bridge-action-card--valid";
 	}
 
-	private async Task GoBack()
+	private void GoBack()
 	{
-		try
-		{
-			await JS.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
-		}
-		catch
-		{
-			Navigation.NavigateTo(AppRoutes.Home);
-		}
+		Navigation.NavigateTo(AppRoutes.Home);
 	}
 
 	public void Dispose()

@@ -1,5 +1,4 @@
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
 <div class="@($"page-header mb-3 {Class}".Trim())">
     <div class="page-header__title-group d-inline-flex align-center gap-2">
@@ -52,14 +51,7 @@
         }
         else
         {
-            try
-            {
-                await JSRuntime.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
-            }
-            catch
-            {
-                Navigation.NavigateTo(AppRoutes.Home);
-            }
+            Navigation.NavigateTo(AppRoutes.Home);
         }
     }
 }

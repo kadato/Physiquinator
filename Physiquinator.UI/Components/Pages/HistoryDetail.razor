@@ -490,7 +490,7 @@ else
     private void GoAdjacentSession(string? sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId)) return;
-        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery));
+        Navigation.NavigateTo(AppRoutes.HistorySession(sessionId, HistoryQuery), replace: true);
     }
 
     /// <summary>Reveals the next chunk of logged sets for the lazy list (no pagination UI).</summary>

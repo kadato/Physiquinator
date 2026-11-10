@@ -2,6 +2,7 @@
 @implements IDisposable
 @using Microsoft.Extensions.Logging
 @using Physiquinator.Core.Services
+@using Microsoft.JSInterop
 @inject ThemeService ThemeService
 @inject AppInitializationService AppInit
 @inject NavigationManager Navigation
@@ -98,6 +99,8 @@ else
     private bool _useFixedDockPadding;
     private string? _initError;
     private bool _updatePromptShown;
+    private DotNetObjectReference<MainLayout>? _appBackRef;
+    private bool _appBackRegistered;
 
     protected override async Task OnInitializedAsync()
     {
@@ -178,6 +181,20 @@ else
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         UpdateNavigationState();
+        if (firstRender && !_appBackRegistered)
+        {
+            _appBackRegistered = true;
+            try
+            {
+                _appBackRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("physiquinatorBack.registerAppBackHandler", _appBackRef);
+            }
+            catch
+            {
+                // JS is not ready during prerender or WebView teardown. System back uses
+                // the activity default. In-app back buttons use explicit routes.
+            }
+        }
     }
 
     protected override void OnInitialized()
@@ -243,10 +260,6 @@ else
         if (path == "ai" || path == "assistant")
             return false;
 
-        // History detail and progress subpages: provide their own header back button in PageHeader.
-        if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal) || path == "history/bodyweight")
-            return false;
-
         // Exclude plan editor route which has its own Close/Cancel and Save FABs
         if (path == AppRoutes.PlanRoutePath || path.StartsWith(AppRoutes.PlanRoutePrefix, StringComparison.Ordinal))
             return false;
@@ -256,23 +269,73 @@ else
         if (path.StartsWith(AppRoutes.WorkoutRoutePrefix, StringComparison.Ordinal))
             return false;
 
+        // Drill pages show a bottom-left back FAB next to the
+        // top PageHeader back button: history detail, progress, compare,
+        // bodyweight, and privacy. These pages have no other FABs.
+        if (path.StartsWith(AppRoutes.HistoryRoutePrefix, StringComparison.Ordinal))
+            return true;
+        if (path == "privacy")
+            return true;
+
         return false;
     }
 
-    private async Task GoBack()
+    [JSInvokable]
+    public Task OnAppBackRequested()
     {
-        try
+        NavigateToExplicitParent();
+        return Task.CompletedTask;
+    }
+
+    private void NavigateToExplicitParent()
+    {
+        var uri = Navigation.Uri;
+        var relative = Navigation.ToBaseRelativePath(uri);
+        var path = relative.Split('?')[0].TrimEnd('/').ToLowerInvariant();
+        var query = uri.Contains('?') ? uri.Substring(uri.IndexOf('?')) : "";
+
+        string? from = GetQueryValue(query, "from");
+        string? hq = GetQueryValue(query, "hq");
+
+        string target;
+        if (!string.IsNullOrWhiteSpace(from))
+            target = AppRoutes.HistorySession(Uri.UnescapeDataString(from), hq);
+        else if (path.StartsWith("history/"))
+            target = AppRoutes.HistoryWithQuery(hq);
+        else if (path == "privacy")
+            target = AppRoutes.Settings;
+        else if (path == "ai" || path == "assistant")
+            target = AppRoutes.Home;
+        else if (path == "plan" || path.StartsWith("plan/"))
+            target = AppRoutes.Home;
+        else if (path.StartsWith("workout/"))
+            target = AppRoutes.Home;
+        else
+            target = AppRoutes.Home;
+
+        Navigation.NavigateTo(target);
+    }
+
+    private static string? GetQueryValue(string query, string key)
+    {
+        if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(key))
+            return null;
+        var trimmed = query.TrimStart('?');
+        foreach (var part in trimmed.Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
-            await JSRuntime.InvokeVoidAsync("physiquinatorHelpers.goBackOrHome");
+            var eq = part.IndexOf('=');
+            if (eq < 0)
+                continue;
+            var name = Uri.UnescapeDataString(part.Substring(0, eq).Replace('+', ' '));
+            if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
+                return Uri.UnescapeDataString(part.Substring(eq + 1).Replace('+', ' '));
         }
-        catch (Exception ex) when (Physiquinator.UI.Services.JsSafeInvoker.IsJSDisconnected(ex))
-        {
-            Navigation.NavigateTo(AppRoutes.Home);
-        }
-        catch (OperationCanceledException)
-        {
-            Navigation.NavigateTo(AppRoutes.Home);
-        }
+        return null;
+    }
+
+    private void GoBack()
+    {
+        NavigateToExplicitParent();
     }
 
     private async Task OnSkipClicked()
@@ -285,5 +348,8 @@ else
         ThemeService.ThemeChanged -= OnAppStateChanged;
         AppInit.ProgressChanged -= OnAppStateChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+        if (_appBackRegistered)
+            _ = Physiquinator.UI.Services.JsSafeInvoker.InvokeVoidSafeAsync(JSRuntime, "physiquinatorBack.unregisterAppBackHandler");
+        _appBackRef?.Dispose();
     }
 }

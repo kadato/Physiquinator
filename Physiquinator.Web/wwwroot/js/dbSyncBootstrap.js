@@ -35,8 +35,9 @@ window.physiquinatorAuth = {
         });
         return await authResult(response);
     },
-    demoLogin: async function () {
-        const response = await fetch('/api/auth/demo', { method: 'POST' });
+    demoLogin: async function (fresh) {
+        const suffix = fresh ? '?fresh=true' : '';
+        const response = await fetch('/api/auth/demo' + suffix, { method: 'POST' });
         return await authResult(response);
     }
 };

@@ -20,9 +20,19 @@ public static class WebAuthEndpoints
         return endpoints;
     }
 
-    /// <summary>One-click sign-in as the seeded demo account for portfolio visitors.</summary>
-    private static async Task<IResult> DemoLoginAsync(HttpContext context, WebUserStore users)
+    /// <summary>
+    /// One-click sign-in as the seeded demo account for portfolio visitors.
+    /// Wipes the shared demo database first when its seeded dates went stale.
+    /// Stale means the newest session is not from today UTC. The first demo
+    /// visitor of the day then gets a fresh demo. Pass ?fresh=true to force
+    /// the wipe on demand.
+    /// </summary>
+    private static async Task<IResult> DemoLoginAsync(HttpContext context, WebUserStore users, WebDemoRefreshService demoRefresh)
     {
+        var force = string.Equals(context.Request.Query["fresh"], "true", StringComparison.OrdinalIgnoreCase)
+            || context.Request.Query["fresh"] == "1";
+        await demoRefresh.RefreshDemoIfStaleAsync(force, cancellationToken: context.RequestAborted);
+
         WebUser? user = await users.FindByUsernameAsync(users.DemoUsername);
         if (user is null)
             return Results.Problem("The demo account is not configured.", statusCode: 404);

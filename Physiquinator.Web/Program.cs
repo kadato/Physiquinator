@@ -63,6 +63,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton(new WebUserStore(
     Path.Combine(WebDatabasePathProvider.ResolveDatabaseDirectory(), "physiquinator-users.db3")));
+builder.Services.AddSingleton<WebDemoRefreshService>();
 builder.Services.AddScoped<WebUserContext>();
 
 builder.Services.AddPhysiquinatorServices(

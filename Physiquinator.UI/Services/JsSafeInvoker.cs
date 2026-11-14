@@ -23,6 +23,15 @@ public static class JsSafeInvoker
 
     public static async Task ScrollToBottomAsync(IJSRuntime js, ElementReference element, string helper = "physiquinatorHelpers.scrollToBottom") => await InvokeVoidSafeAsync(js, helper, element);
 
+    public static async Task ScrollAiToBottomAsync(IJSRuntime js) =>
+        await InvokeVoidSafeAsync(js, "physiquinatorAiChat.scrollToBottom");
+
+    public static async Task ScrollAiIfNearAsync(IJSRuntime js) =>
+        await InvokeVoidSafeAsync(js, "physiquinatorAiChat.scrollIfNear");
+
+    public static async Task InitAiScrollAreaAsync(IJSRuntime js) =>
+        await InvokeVoidSafeAsync(js, "physiquinatorAiChat.initScrollArea");
+
     public static Task RunSafeAsync(Func<Task> action) =>
         Core.Services.JsInteropGuard.RunSafeAsync(action);
 

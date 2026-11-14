@@ -474,14 +474,14 @@ html[data-theme="dark"] .ai-quick-btn--green {
     gap: 10px;
     padding: 8px 8px 8px 16px;
     border-radius: var(--radius);
-    background: var(--pl-chip-2);
+    background: var(--pl-chip);
     border: var(--hairline-strong);
     box-sizing: border-box;
     min-height: 52px;
 }
 
 .ai-chat-composer:focus-within {
-    border-color: var(--pl-ink);
+    border-color: var(--pl-yellow);
     background: var(--pl-chip);
 }
 
@@ -492,6 +492,30 @@ html[data-theme="dark"] .ai-quick-btn--green {
 
 ::deep .ai-chat-textfield {
     width: 100%;
+}
+
+/* Borderless field: the composer frame is the only border. */
+::deep .ai-chat-textfield.mud-input-control {
+    margin: 0 !important;
+}
+
+::deep .ai-chat-textfield .mud-input.mud-input-outlined,
+::deep .ai-chat-textfield .mud-input-root.mud-input-outlined {
+    background: transparent !important;
+}
+
+::deep .ai-chat-textfield .mud-input-outlined-border {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+::deep .ai-chat-textfield.mud-input-control.mud-input-focused .mud-input-outlined-border {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+::deep .ai-chat-textfield .mud-input-label-outlined {
+    display: none !important;
 }
 
 ::deep .ai-chat-textfield input {

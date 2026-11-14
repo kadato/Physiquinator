@@ -5,7 +5,6 @@
 @using Physiquinator.Core.Data
 @using Physiquinator.UI.Services
 @using System.Text.Json
-@using Markdig
 @inject AiAssistantService AiAssistant
 @inject AiClipboardBridgeService BridgeService
 @inject WorkoutPlanService PlanService
@@ -89,7 +88,7 @@
 			</div>
 		}
 
-		<div class="ai-chat-messages" @ref="_messagesElement" role="log" aria-live="polite" aria-relevant="additions">
+		<div id="ai-messages-scroll-area" class="ai-chat-messages" role="log" aria-live="polite" aria-relevant="additions">
 			@if (AiAssistant.Messages.Count == 0)
 			{
 				<div class="ai-chat-empty">
@@ -102,19 +101,31 @@
 			}
 			else
 			{
+				var lastAssistant = AiAssistant.Messages.LastOrDefault(m => m.Role == AiMessageRole.Assistant);
 				@foreach (var msg in AiAssistant.Messages)
 				{
 					if (msg.Role == AiMessageRole.User)
 					{
-						<div class="ai-msg ai-msg--user">
+						<div class="ai-msg ai-msg--user ai-message">
 							<div class="ai-msg__bubble">
-								@msg.Content
+								<MudText Typo="Typo.body2" Class="white-space-pre-wrap">@msg.Content</MudText>
 							</div>
-							<span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
+							<div class="ai-msg__actions">
+								<div class="ai-msg__actions-row" role="toolbar" aria-label="@("Message actions")">
+									<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+												   Size="Size.Small"
+												   Class="ai-msg__copy"
+												   aria-label="@("Copy message")"
+												   OnClick="@(() => CopyTextAsync(msg.Content, "Message copied."))" />
+									<span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
+								</div>
+							</div>
 						</div>
 					}
 					else if (msg.Role == AiMessageRole.Assistant)
 					{
+						var isLast = ReferenceEquals(msg, lastAssistant);
+						var isStreaming = _isSending && isLast && !msg.IsThinking;
 						<div class="@GetAssistantClass(msg)">
 							<div class="ai-msg__avatar" aria-hidden="true">
 								<MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Small" />
@@ -123,14 +134,19 @@
 								<div class="ai-msg__bubble">
 									@if (msg.IsThinking)
 									{
-										<div class="ai-msg__thinking">
-											<MudProgressCircular Size="Size.Small" Indeterminate="true" />
-											<span>@("Thinking…")</span>
+										<div class="ai-msg__thinking" role="status">
+											<span class="ai-visually-hidden">@("Working on your request…")</span>
+											<span class="ai-typing-dots" aria-hidden="true">
+												<span class="ai-dot"></span>
+												<span class="ai-dot"></span>
+												<span class="ai-dot"></span>
+											</span>
 										</div>
 									}
 									else
 									{
-										<div class="ai-msg__content markdown-body">@((MarkupString)RenderMarkdown(msg.Content))</div>
+										<div class="ai-msg__content ai-rendered-markdown">@((MarkupString)RenderMarkdown(msg.Content))@if (isStreaming)
+{<span class="ai-streaming-cursor" aria-hidden="true">▍</span>}</div>
 									}
 								</div>
 								@if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
@@ -145,6 +161,7 @@
 									</div>
 								}
 								<span class="ai-msg__actions">
+									<div class="ai-msg__actions-row" role="toolbar" aria-label="@("Message actions")">
 									@if (!string.IsNullOrWhiteSpace(msg.Content))
 									{
 										<MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
@@ -152,8 +169,26 @@
 													   Class="ai-msg__copy"
 													   aria-label="@("Copy message")"
 													   OnClick="@(() => CopyTextAsync(msg.Content, "Message copied."))" />
+										@if (isLast && !_isSending)
+										{
+											<MudIconButton Icon="@Icons.Material.Filled.Refresh"
+														   Size="Size.Small"
+														   aria-label="@("Regenerate response")"
+														   title="@("Regenerate response")"
+														   OnClick="RegenerateAsync" />
+										}
+										@if (msg.IsError && !_isSending)
+										{
+											<MudIconButton Icon="@Icons.Material.Filled.Replay"
+														   Size="Size.Small"
+														   Color="Color.Warning"
+														   aria-label="@("Retry request")"
+														   title="@("Retry request")"
+														   OnClick="RegenerateAsync" />
+										}
 									}
 									<span class="ai-msg__time">@FormatTime(msg.Timestamp)</span>
+									</div>
 								</span>
 							</div>
 						</div>
@@ -199,7 +234,13 @@
 								  OnKeyDown="HandleKeyDown"
 								  Disabled="@(_isSending || IsApiKeyMissing)"
 								  Margin="Margin.Dense"
+								  Lines="1"
+								  Sizing="InputSizing.Auto"
+								  MaxLines="4"
 								  enterkeyhint="send"
+								  InputMode="InputMode.text"
+								  autocomplete="off"
+								  autocapitalize="sentences"
 								  Class="ai-chat-textfield" />
 				</div>
 
@@ -632,7 +673,6 @@
 	private MudTextField<string>? _inputField;
 	private string _inputText = string.Empty;
 	private bool _isSending = false;
-	private ElementReference _messagesElement;
 	private string _promptGoal = string.Empty;
 	private bool _includePlans = true;
 	private bool _includeBodyweight = true;
@@ -667,16 +707,11 @@
 		}
 	}
 
-	private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
-		.UseAdvancedExtensions()
-		.DisableHtml()
-		.Build();
-
 	private static string RenderMarkdown(string? rawMarkdown) =>
-		Markdown.ToHtml(rawMarkdown ?? string.Empty, MarkdownPipeline);
+		AiMarkdownFormatter.ToHtml(rawMarkdown ?? string.Empty);
 
 	private static string GetAssistantClass(AiChatMessage msg) =>
-		msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error" : "ai-msg ai-msg--assistant";
+		msg.IsError ? "ai-msg ai-msg--assistant ai-msg--error ai-message" : "ai-msg ai-msg--assistant ai-message";
 
 	private static string FormatTime(DateTime timestamp) =>
 		timestamp.ToLocalTime().ToString("t", System.Globalization.CultureInfo.CurrentCulture);
@@ -1165,19 +1200,25 @@
 		InvokeAsync(async () =>
 		{
 			StateHasChanged();
-			await ScrollToBottomAsync();
+			await ScrollIfNearAsync();
 		});
 	}
 
 	private async Task ScrollToBottomAsync()
 	{
-		await Physiquinator.UI.Services.JsSafeInvoker.ScrollToBottomAsync(JS, _messagesElement);
+		await Physiquinator.UI.Services.JsSafeInvoker.ScrollAiToBottomAsync(JS);
+	}
+
+	private async Task ScrollIfNearAsync()
+	{
+		await Physiquinator.UI.Services.JsSafeInvoker.ScrollAiIfNearAsync(JS);
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
+			await Physiquinator.UI.Services.JsSafeInvoker.InitAiScrollAreaAsync(JS);
 			try
 			{
 				if (_inputField != null)
@@ -1189,10 +1230,25 @@
 				ChatLogger.LogDebug(ex, "AI bridge diff build failed.");
 			}
 		}
-		await ScrollToBottomAsync();
+		if (_activeTab == 0)
+			await ScrollToBottomAsync();
 	}
 
 	private void StopGeneration() => AiAssistant.CancelCurrentTurn();
+
+	private async Task RegenerateAsync()
+	{
+		if (_isSending) return;
+		_isSending = true;
+		try
+		{
+			await AiAssistant.RegenerateLastResponseAsync();
+		}
+		finally
+		{
+			_isSending = false;
+		}
+	}
 
 	private async Task CopyTextAsync(string content, string successMessage)
 	{

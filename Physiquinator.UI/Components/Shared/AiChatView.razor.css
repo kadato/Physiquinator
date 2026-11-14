@@ -37,6 +37,12 @@
 		flex-wrap: wrap;
 		row-gap: 10px;
 	}
+	.ai-chat-view__header > div:first-child {
+		flex-wrap: wrap;
+		row-gap: 10px;
+		min-width: 0;
+		flex: 1 1 auto;
+	}
 	.ai-chat-view__header .ai-mode-tabs {
 		order: 3;
 		flex: 1 1 100%;
@@ -76,4 +82,294 @@
 	width: 18px !important;
 	height: 18px !important;
 	color: inherit;
+}
+
+/* Bubbles hug content. Neither stretches full width. */
+.ai-msg--user {
+	align-self: flex-end;
+	max-width: 82%;
+	width: fit-content;
+}
+.ai-msg--assistant {
+	align-self: flex-start;
+	max-width: 94%;
+	width: fit-content;
+}
+.ai-msg--user .ai-msg__bubble,
+.ai-msg--assistant .ai-msg__bubble {
+	align-self: flex-start;
+	width: fit-content;
+	max-width: 100%;
+}
+.white-space-pre-wrap {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+.ai-visually-hidden {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	overflow: hidden !important;
+	clip: rect(0 0 0 0) !important;
+	white-space: nowrap !important;
+}
+
+/* Message actions sit below the bubble in normal flow. Hidden until hover, focus, or tap. */
+.ai-msg__actions {
+	display: grid;
+	grid-template-rows: 0fr;
+	opacity: 0;
+	visibility: hidden;
+	transition: grid-template-rows 0.16s ease, opacity 0.16s ease, visibility 0.16s ease;
+}
+.ai-msg__actions-row {
+	overflow: hidden;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	min-width: 0;
+}
+.ai-msg--assistant .ai-msg__actions-row {
+	justify-content: flex-start;
+}
+.ai-msg--user .ai-msg__actions-row {
+	justify-content: flex-end;
+}
+.ai-msg:hover .ai-msg__actions,
+.ai-msg:focus-within .ai-msg__actions,
+.ai-msg.show-actions .ai-msg__actions,
+.ai-message:hover .ai-msg__actions,
+.ai-message:focus-within .ai-msg__actions,
+.ai-message.show-actions .ai-msg__actions {
+	grid-template-rows: 1fr;
+	opacity: 1;
+	visibility: visible;
+}
+
+/* Jump-to-latest pill. JS toggles hidden while the reader is scrolled up. */
+.ai-jump-latest {
+	position: sticky;
+	bottom: 10px;
+	z-index: 5;
+	display: block;
+	width: max-content;
+	margin: 0 auto;
+	padding: 6px 14px;
+	border-radius: 999px;
+	border: var(--hairline-strong);
+	background: var(--pl-chip);
+	color: var(--pl-ink);
+	font-size: 0.75rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: none;
+}
+.ai-jump-latest[hidden] {
+	display: none;
+}
+
+/* Typing dots and streaming caret. Honest motion only. */
+.ai-typing-dots {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	height: 12px;
+}
+.ai-dot {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background-color: var(--pl-ink);
+	opacity: 0.6;
+	animation: ai-dot-pulse 1.4s infinite ease-in-out both;
+}
+.ai-dot:nth-child(1) { animation-delay: -0.32s; }
+.ai-dot:nth-child(2) { animation-delay: -0.16s; }
+.ai-dot:nth-child(3) { animation-delay: 0s; }
+@keyframes ai-dot-pulse {
+	0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+	40% { transform: scale(1.25); opacity: 1; }
+}
+.ai-streaming-cursor {
+	display: inline-block;
+	font-weight: 700;
+	margin-left: 2px;
+	animation: ai-cursor-blink 0.8s infinite;
+}
+@keyframes ai-cursor-blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.ai-dot,
+	.ai-streaming-cursor {
+		animation: none !important;
+	}
+}
+
+/* Markdown typography inside assistant messages. */
+.ai-rendered-markdown {
+	font-size: 0.875rem;
+	line-height: 1.55;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+.ai-rendered-markdown .ai-md-h3 {
+	font-size: 1.15rem;
+	font-weight: 700;
+	margin: 0.6rem 0 0.3rem 0;
+}
+.ai-rendered-markdown .ai-md-h4 {
+	font-size: 1.05rem;
+	font-weight: 600;
+	margin: 0.5rem 0 0.25rem 0;
+}
+.ai-rendered-markdown .ai-md-h5 {
+	font-size: 0.95rem;
+	font-weight: 600;
+	margin: 0.4rem 0 0.2rem 0;
+}
+.ai-rendered-markdown .ai-md-p {
+	margin-bottom: 0.45rem;
+}
+.ai-rendered-markdown .ai-md-p:last-child {
+	margin-bottom: 0;
+}
+.ai-rendered-markdown .ai-md-spacer {
+	height: 0.4rem;
+}
+.ai-rendered-markdown ul,
+.ai-rendered-markdown .ai-md-list {
+	padding-left: 1.5rem !important;
+	margin: 0.4rem 0 0.6rem 0 !important;
+	list-style-position: outside !important;
+}
+.ai-rendered-markdown ul,
+.ai-rendered-markdown .ai-md-list {
+	list-style-type: disc !important;
+}
+.ai-rendered-markdown ol {
+	padding-left: 1.5rem !important;
+	margin: 0.4rem 0 0.6rem 0 !important;
+	list-style-type: decimal !important;
+	list-style-position: outside !important;
+}
+.ai-rendered-markdown li {
+	margin-bottom: 0.25rem !important;
+	line-height: 1.5 !important;
+}
+.ai-rendered-markdown .ai-checklist-item {
+	display: flex !important;
+	align-items: flex-start !important;
+	gap: 0.5rem !important;
+	margin: 0.25rem 0 !important;
+	line-height: 1.4 !important;
+}
+.ai-rendered-markdown .ai-md-quote {
+	padding: 0.5rem 0.75rem !important;
+	margin: 0.4rem 0 !important;
+	border-radius: 8px !important;
+	font-style: normal !important;
+}
+.ai-rendered-markdown .ai-inline-code {
+	padding: 2px 6px !important;
+	border-radius: 4px !important;
+	font-size: 0.85em !important;
+}
+.ai-rendered-markdown .ai-code-block {
+	border-radius: 6px !important;
+	padding: 0.6rem 0.8rem !important;
+	margin: 0.5rem 0 !important;
+	overflow-x: auto !important;
+	font-size: 0.82rem !important;
+	line-height: 1.4 !important;
+	max-width: 100%;
+}
+.ai-rendered-markdown .ai-md-link {
+	text-decoration: underline !important;
+	text-underline-offset: 2px !important;
+	word-break: break-all !important;
+}
+.ai-rendered-markdown .ai-md-hr {
+	border: none !important;
+	border-top: var(--hairline) !important;
+	margin: 0.75rem 0 !important;
+}
+.ai-rendered-markdown .ai-md-table-wrap {
+	overflow-x: auto !important;
+	margin: 0.5rem 0 !important;
+	border: var(--hairline) !important;
+	border-radius: 6px !important;
+	max-width: 100%;
+	-webkit-overflow-scrolling: touch;
+}
+.ai-rendered-markdown .ai-md-table {
+	width: 100% !important;
+	border-collapse: collapse !important;
+	font-size: 0.82rem !important;
+}
+.ai-rendered-markdown .ai-md-table th,
+.ai-rendered-markdown .ai-md-table td {
+	padding: 6px 10px !important;
+	border-bottom: var(--hairline) !important;
+	text-align: left !important;
+}
+
+/* Composer: 16px stops iOS zoom, footer stays above keyboard. Single plate lives
+   on .ai-chat-composer (see app-overrides.css); the Mud field stays borderless. */
+.ai-chat-input {
+	padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--app-ime-inset, 0px));
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+.ai-chat-textfield input,
+.ai-chat-textfield textarea {
+	font-size: 16px !important;
+	line-height: 1.4 !important;
+}
+::deep .ai-chat-textfield.mud-input-control {
+	margin: 0 !important;
+}
+::deep .ai-chat-textfield .mud-input.mud-input-outlined {
+	background: transparent !important;
+}
+::deep .ai-chat-textfield .mud-input-outlined-border {
+	border: none !important;
+	box-shadow: none !important;
+}
+::deep .ai-chat-textfield.mud-input-control.mud-input-focused .mud-input-outlined-border {
+	border: none !important;
+	box-shadow: none !important;
+}
+::deep .ai-chat-textfield .mud-input-label-outlined {
+	display: none !important;
+}
+.ai-chat-messages {
+	overscroll-behavior: contain;
+	scroll-padding-bottom: 5rem;
+}
+
+/* Touch pointers get full-size targets. */
+@media (pointer: coarse) {
+	.ai-header-btn {
+		width: 44px !important;
+		height: 44px !important;
+		min-width: 44px !important;
+		min-height: 44px !important;
+	}
+}
+
+/* Phones: assistant bubbles go full width, clip overflow. */
+@media (max-width: 599.98px) {
+	.ai-msg--assistant {
+		max-width: 100% !important;
+	}
+	.ai-chat-messages,
+	.ai-chat-view {
+		min-width: 0 !important;
+		max-width: 100% !important;
+		overflow-x: clip !important;
+	}
 }

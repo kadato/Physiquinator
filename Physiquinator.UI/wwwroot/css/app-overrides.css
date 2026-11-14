@@ -1241,6 +1241,61 @@ textarea { font-size:max(16px, 1em); }
   height: 18px !important;
   margin-right: 8px !important;
 }
+/* Select / autocomplete lists fuse to their input: no hard offset, no gap,
+   so the open list never reads as a second thick border. Menus keep their
+   hard offset per DESIGN.md, so exclude .mud-menu-popover here. Covers
+   MudSelect, MudAutocomplete with results, and the empty/loading popover
+   (no .mud-list) via the explicit popover type classes. */
+.mud-popover.mud-popover-open:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open:has(.mud-select-menu),
+.mud-popover.mud-select-popover.mud-popover-open,
+.mud-popover.mud-autocomplete-popover.mud-popover-open {
+  box-shadow: none !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
+  margin-top: -1px !important;
+}
+.mud-popover.mud-popover-open.mud-popover-top-left:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-top-right:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-top-center:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-top-left:has(.mud-select-menu),
+.mud-popover.mud-popover-open.mud-popover-top-right:has(.mud-select-menu),
+.mud-popover.mud-popover-open.mud-popover-top-center:has(.mud-select-menu),
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-top-left,
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-top-right,
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-top-center,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-top-left,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-top-right,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-top-center {
+  box-shadow: none !important;
+  margin-top: 1px !important;
+}
+.mud-popover.mud-popover-open.mud-popover-bottom-left:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-bottom-right:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-bottom-center:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open.mud-popover-bottom-left:has(.mud-select-menu),
+.mud-popover.mud-popover-open.mud-popover-bottom-right:has(.mud-select-menu),
+.mud-popover.mud-popover-open.mud-popover-bottom-center:has(.mud-select-menu),
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-bottom-left,
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-bottom-right,
+.mud-popover.mud-select-popover.mud-popover-open.mud-popover-bottom-center,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-bottom-left,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-bottom-right,
+.mud-popover.mud-autocomplete-popover.mud-popover-open.mud-popover-bottom-center {
+  box-shadow: none !important;
+  margin-top: -1px !important;
+}
+/* Detached menus keep their hard offset per DESIGN.md. Re-assert after the
+   fused rules so a menu that also contains .mud-list never goes flat. */
+.mud-popover.mud-menu-popover.mud-popover-open {
+  box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
+}
+/* Selects keep the yellow border on focus but drop the halo and plate while
+   open/focused so no yellow or offset edge bleeds from behind the fused list.
+   Text fields keep their halo. */
+.mud-select .mud-input-control.mud-input-focused .mud-input-outlined-border,
+.mud-autocomplete .mud-input-control.mud-input-focused .mud-input-outlined-border {
+  box-shadow: none !important;
+}
 
 /* Universal Dialog & Modal Styling.
    Column direction plus auto vertical margins centers a dialog that fits the
@@ -2505,8 +2560,8 @@ html[data-theme-mode="light"] .mud-text-secondary { color: var(--pl-ink-2) !impo
 /* History Day Filter Bar */
 .history-filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 10px; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip); }
 .history-filter-bar__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--pl-stone); margin-right:2px; }
-.history-filter-chip { display:inline-flex; align-items:center; height:36px; padding-left:10px; border:var(--hairline-strong); border-radius:var(--radius); background:var(--pl-chip-2); }
-.history-filter-chip__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; color:var(--pl-ink); white-space:nowrap; }
+.history-filter-chip { display:inline-flex; align-items:center; height:36px; padding-left:10px; border:var(--hairline-strong); border-radius:var(--radius); background:var(--pl-chip-2); max-width:100%; min-width:0; }
+.history-filter-chip__label { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; color:var(--pl-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; min-width:0; }
 .history-filter-chip__remove { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; margin-left:4px; margin-right:3px; padding:0; border:none; border-radius:var(--radius); background:transparent; color:var(--pl-stone); cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; transition:transform 90ms ease, color 120ms ease, background 120ms ease !important; }
 .history-filter-chip__remove:hover { color:var(--pl-err-text); background:color-mix(in srgb, var(--pl-error) 12%, transparent); }
 .history-filter-chip__remove:active { color:var(--pl-err-text); background:color-mix(in srgb, var(--pl-error) 18%, transparent); transform: translate(1px, 1px); }
@@ -2520,8 +2575,8 @@ html[data-theme-mode="light"] .mud-text-secondary { color: var(--pl-ink-2) !impo
 .history-filter-bar__clear:active { transform: translate(1px, 1px); opacity: 0.8; }
 
 /* History Select Bar */
-.history-select-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip-2) !important; margin-bottom:8px; }
-.history-select-bar__left, .history-select-bar__right { display:flex; align-items:center; gap:8px; }
+.history-select-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; border:var(--hairline-strong) !important; border-radius:var(--radius) !important; background:var(--pl-chip-2) !important; margin-bottom:8px; flex-wrap:wrap; }
+.history-select-bar__left, .history-select-bar__right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
 .history-select-bar__count { font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--pl-ink); }
 .history-select-bar__btn { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 10px; font-family:var(--font-mono); font-size:0.6875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border:var(--hairline); border-radius:var(--radius); background:var(--pl-chip-2); color:var(--pl-ink); cursor:pointer; transition:transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms ease, background 120ms ease, border-color 120ms ease, color 120ms ease !important; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .history-select-bar__btn:hover { background:var(--pl-chip-2); border-color:var(--pl-ink); }
@@ -2779,6 +2834,10 @@ html[data-theme-mode="light"] .app-splash { background: var(--pl-paper) !importa
 /* PageHeader title sizing lives in PageHeader.razor.css (22px display role,
    +0.02em tracking per DESIGN.md). No global override here on purpose. */
 .mud-paper, .mud-card, .mud-dialog, .mud-snackbar, .mud-chip, .mud-button-root, .mud-input-outlined-border { border-radius:var(--radius) !important; }
+/* Volt text links fail on light paper (1.2:1). Use ink-purple for readable links in light mode. */
+html[data-theme-mode="light"] .mud-link.mud-primary-text { color: var(--pl-purple-text) !important; }
+/* MudAlert error text fails in dark (3.6:1). Use lighter pink for readable alerts. */
+html[data-theme-mode="dark"] .mud-alert-text-error { color: #F7768E !important; }
 .mud-button-root:focus-visible, .mud-icon-button:focus-visible { outline:2px solid var(--pl-ink) !important; outline-offset:2px !important; }
 html[data-theme-mode="dark"] .mud-button-root:focus-visible { outline-color:var(--pl-focus) !important; }
 /* content-visibility removed: it deferred paint of plate shadows on scroll, making box shadows appear delayed */
@@ -3005,10 +3064,14 @@ html body span.rest-timer-complete-title {
   position: sticky;
   bottom: 0;
   z-index: 10;
-  background: var(--pl-chip);
-  border: 1.5px solid var(--hairline-strong);
+  background: transparent !important;
+  border: none !important;
   border-radius: var(--radius);
-  padding: 8px 10px;
+  box-shadow: none !important;
+  padding: 8px 0 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 .ai-chat-composer {
   display: flex;
@@ -3053,11 +3116,15 @@ html body span.rest-timer-complete-title {
   background: color-mix(in srgb, var(--pl-amber) 10%, var(--pl-chip));
   border: 1.5px solid var(--pl-yellow);
   border-radius: var(--radius);
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .ai-api-key-banner__content {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .ai-banner-title {
   color: var(--pl-ink) !important;
@@ -3353,7 +3420,7 @@ html body span.rest-timer-complete-title {
   gap: 10px;
   padding: 6px 8px 6px 14px;
   border-radius: var(--radius);
-  background: var(--pl-chip-2);
+  background: var(--pl-chip);
   border: 1.5px solid var(--hairline-strong);
   box-sizing: border-box;
   min-height: 48px;
@@ -3361,6 +3428,30 @@ html body span.rest-timer-complete-title {
 .ai-chat-composer:focus-within {
   border-color: var(--pl-yellow);
   background: var(--pl-chip);
+}
+/* Single-plate composer: the Mud outlined field inside is borderless so only
+   the composer frame paints. Covers input and auto-growing textarea. */
+.ai-chat-composer .mud-input-control,
+.ai-chat-input__field .mud-input-control {
+  margin: 0 !important;
+}
+.ai-chat-composer .mud-input.mud-input-outlined,
+.ai-chat-input__field .mud-input.mud-input-outlined {
+  background: transparent !important;
+}
+.ai-chat-composer .mud-input-outlined-border,
+.ai-chat-input__field .mud-input-outlined-border {
+  border: none !important;
+  box-shadow: none !important;
+}
+.ai-chat-composer .mud-input-control.mud-input-focused .mud-input-outlined-border,
+.ai-chat-input__field .mud-input-control.mud-input-focused .mud-input-outlined-border {
+  border: none !important;
+  box-shadow: none !important;
+}
+.ai-chat-composer .mud-input-label-outlined,
+.ai-chat-input__field .mud-input-label-outlined {
+  display: none !important;
 }
 .ai-chat-input__field {
   flex: 1;
@@ -3506,6 +3597,94 @@ html[data-theme-mode="dark"] .ai-quick-btn:disabled {
   height: 2px;
   background: var(--pl-hairline);
   display: block;
+}
+/* Phones: the 3-step wizard must fit 360px without truncating "Review".
+   Tighten gaps, shrink type and badges, let labels stay on one line. */
+@media (max-width: 480px) {
+  .ai-bridge-wizard {
+    gap: 4px !important;
+    margin-bottom: 12px !important;
+  }
+  .ai-bridge-step {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+    padding: 6px 4px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.04em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .ai-bridge-step-badge {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.625rem !important;
+  }
+  .ai-bridge-step-line {
+    flex: 0 0 8px !important;
+  }
+  .ai-bridge-card {
+    padding: 12px !important;
+    min-width: 0 !important;
+  }
+  .ai-bridge-card__header {
+    flex-wrap: wrap !important;
+  }
+  .ai-bridge-action-card__head {
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+  }
+  .ai-bridge-action-card__head-left {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+  }
+  .ai-bridge-action-card__tool {
+    overflow-wrap: break-word !important;
+    min-width: 0 !important;
+  }
+  .ai-bridge-summary__header {
+    flex-wrap: wrap !important;
+  }
+  .ai-bridge-options {
+    gap: 4px 12px !important;
+  }
+  .ai-bridge-presets .mud-chip {
+    flex: 1 1 calc(50% - 3px) !important;
+    justify-content: center !important;
+  }
+  .ai-bridge-container {
+    min-width: 0 !important;
+  }
+  /* Bridge footers use utility d-flex rows (Back / Next, Copy / Preview,
+     Back / Review). Let them wrap on narrow screens instead of overflowing. */
+  .ai-bridge-card .d-flex.justify-space-between {
+    flex-wrap: wrap !important;
+    row-gap: 8px !important;
+  }
+  /* Chat header inner wrapper (back button + tabs) must wrap before the
+     header itself does, otherwise tabs overflow on the AI page. */
+  .ai-chat-view__header {
+    flex-wrap: wrap !important;
+    row-gap: 10px !important;
+  }
+  .ai-chat-view__header > .d-inline-flex {
+    flex-wrap: wrap !important;
+    row-gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  /* API-key banner buttons stack full-width on phones (global; the modal-only
+     scoped rule never reaches the page view). */
+  .ai-api-key-banner > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .ai-api-key-banner > div:last-child .mud-button {
+    flex: 1 1 0 !important;
+  }
 }
 .ai-bridge-diff {
   margin-top: 8px;
@@ -3979,7 +4158,7 @@ html[data-theme-mode="light"] .app-main-scroll {
 .plan-details-card,
 .history-filter-bar,
 .ai-chat-messages,
-.ai-chat-input,
+.ai-chat-composer,
 .ai-bridge-card {
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
@@ -4146,13 +4325,20 @@ html[data-theme-mode="light"] .app-main-scroll {
 .mud-snackbar {
   box-shadow: var(--pl-plate-shadow-md) !important;
 }
-.mud-popover.mud-popover-open {
+.mud-popover.mud-popover-open:not(:has(.mud-list)):not(:has(.mud-select-menu)):not(.mud-select-popover):not(.mud-autocomplete-popover) {
   box-shadow: 4px 4px 0 var(--pl-plate-shadow-color) !important;
 }
-.mud-popover.mud-popover-open.mud-popover-top-left,
-.mud-popover.mud-popover-open.mud-popover-top-right,
-.mud-popover.mud-popover-open.mud-popover-top-center {
+.mud-popover.mud-popover-open.mud-popover-top-left:not(:has(.mud-list)):not(:has(.mud-select-menu)):not(.mud-select-popover):not(.mud-autocomplete-popover),
+.mud-popover.mud-popover-open.mud-popover-top-right:not(:has(.mud-list)):not(:has(.mud-select-menu)):not(.mud-select-popover):not(.mud-autocomplete-popover),
+.mud-popover.mud-popover-open.mud-popover-top-center:not(:has(.mud-list)):not(:has(.mud-select-menu)):not(.mud-select-popover):not(.mud-autocomplete-popover) {
   box-shadow: 4px -4px 0 var(--pl-plate-shadow-color) !important;
+}
+.mud-popover.mud-popover-open:has(.mud-list):not(.mud-menu-popover),
+.mud-popover.mud-popover-open:has(.mud-select-menu),
+.mud-popover.mud-select-popover.mud-popover-open,
+.mud-popover.mud-autocomplete-popover.mud-popover-open {
+  box-shadow: none !important;
+  margin-top: -1px !important;
 }
 /* Snackbars clear the fixed bottom nav pill so toasts never cover navigation */
 .mud-snackbar-location-bottom-left,
@@ -4612,7 +4798,7 @@ button.heatmap-cell.heatmap-on {
   .history-heatmap-panel.mud-paper, .home-heatmap-panel.mud-paper,
   .activity-heatmap-card, .settings-card.mud-paper, .settings-panel.mud-expand-panel,
   .plan-details-card, .history-filter-bar, .ai-chat-messages,
-  .ai-chat-input, .ai-bridge-card, .app-nav-pill__inner, .app-fab, .workout-undo-fab,
+  .ai-chat-composer, .ai-bridge-card, .app-nav-pill__inner, .app-fab, .workout-undo-fab,
   .mud-dialog, .mud-snackbar, .mud-popover.mud-popover-open,
   .mud-button-filled, .mud-button-outlined, .mud-icon-button,
   .workout-actions-row .premium-btn-filled, .workout-actions-row .premium-btn-error-outlined {
@@ -5742,6 +5928,10 @@ html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); ba
   background: color-mix(in srgb, var(--pl-amber) 20%, var(--pl-chip));
   border-color: var(--pl-warn-text);
   color: var(--pl-warn-text);
+}
+html[data-theme-mode="light"] .workout-focus__badge--warmup {
+  border-color: #92400E;
+  color: #92400E;
 }
 html[data-theme-mode="dark"] .workout-focus__badge--set {
   background: #1C2033;
@@ -6907,12 +7097,7 @@ html[data-theme-mode="dark"] .workout-completed-rail__item-meta {
   display: flex;
   gap: 8px;
   padding-top: 2px;
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
-  background: var(--pl-paper);
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  margin-bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  padding-bottom: 8px;
 }
 .workout-next__nav {
   display: inline-flex;
@@ -8130,3 +8315,19 @@ html[data-theme-mode="light"] .workout-focus__history-steppers .set-metric-stepp
   color: var(--pl-yellow-text) !important;
 }
 
+
+/* MCP client snippets (Settings AI panel). Global so the Settings page can use them. */
+.mcp-snippet-pre {
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--pl-paper-2);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 8px 0;
+}

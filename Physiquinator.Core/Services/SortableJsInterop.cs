@@ -30,8 +30,15 @@ public static class SortableJsInterop
             }
             return await js.InvokeAsync<bool>(initFunction, listId, dotNetRef);
         }
-        catch (JSException)
+        catch (Exception ex) when (ex is JSException
+            or InvalidOperationException
+            or OperationCanceledException
+            or ObjectDisposedException)
         {
+            // Teardown and disconnect failures (JSDisconnectedException derives
+            // from InvalidOperationException) surface here when the circuit or
+            // WebView goes away mid-init. Report "not ready" like a missing
+            // script instead of faulting the render.
             return false;
         }
     }
@@ -42,9 +49,12 @@ public static class SortableJsInterop
         {
             await js.InvokeVoidAsync(destroyFunction);
         }
-        catch (JSException)
+        catch (Exception ex) when (ex is JSException
+            or InvalidOperationException
+            or OperationCanceledException
+            or ObjectDisposedException)
         {
-            // Scripts not ready yet
+            // Scripts not ready yet, or the runtime is already gone.
         }
     }
 }

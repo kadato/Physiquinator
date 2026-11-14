@@ -276,7 +276,14 @@
                 return;
             }
 
-            await HistoryRepository.EndSessionAsync(open.Id);
+            try
+            {
+                await HistoryRepository.EndSessionAsync(open.Id);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(string.Format("Could not close the previous session: {0}", ex.Message), Severity.Warning);
+            }
             await RefreshInProgressAsync();
             Navigation.NavigateTo(AppRoutes.Workout(planId, forceNew: true));
             return;
@@ -298,7 +305,14 @@
                 return;
             }
 
-            await HistoryRepository.EndSessionAsync(anyOpen.Id);
+            try
+            {
+                await HistoryRepository.EndSessionAsync(anyOpen.Id);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(string.Format("Could not close the previous session: {0}", ex.Message), Severity.Warning);
+            }
             await RefreshInProgressAsync();
         }
 
@@ -325,7 +339,16 @@
 
         if (!confirmed) return;
 
-        await HistoryRepository.DeleteSessionAsync(_inProgressSession.Id);
+        try
+        {
+            await HistoryRepository.DeleteSessionAsync(_inProgressSession.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not discard workout: {0}", ex.Message), Severity.Error);
+            return;
+        }
+
         SessionService.EndWorkout();
         await RefreshInProgressAsync();
         Snackbar.Add("Workout discarded.", Severity.Success);

@@ -111,9 +111,47 @@ let backGuardHandler = null;
 // be registered (the workout page re-arms its guard on a second mount), and
 // it must not pop up the "Leave workout?" dialog on page load.
 let suppressOwnPop = false;
+// One-shot listener and fallback timer for the pop queued by the async
+// unregisterBackHandler below. Module-level so register can cancel a stale
+// wait instead of letting it shield or confuse a fresh guard.
+let ownPopHandler = null;
+let ownPopTimer = null;
+
+function hasGuardEntry() {
+    try {
+        return !!(window.history.state && window.history.state.physiquinatorBackGuard);
+    } catch {
+        return false;
+    }
+}
+
+function disarmGuard() {
+    backGuardActive = false;
+    backGuardBusy = false;
+    backGuardRef = null;
+    if (backGuardHandler) {
+        window.removeEventListener('popstate', backGuardHandler);
+        backGuardHandler = null;
+    }
+    if (ownPopHandler) {
+        window.removeEventListener('popstate', ownPopHandler);
+        ownPopHandler = null;
+    }
+    if (ownPopTimer !== null) {
+        clearTimeout(ownPopTimer);
+        ownPopTimer = null;
+    }
+}
 
 export function registerBackHandler(dotNetRef) {
-    unregisterBackHandler();
+    disarmGuard();
+    // A stale guard entry (a previous page never popped it) is neutralized in
+    // place. Popping it here would remove the entry this call is about to
+    // push, so clear the flag synchronously instead.
+    if (hasGuardEntry()) {
+        try { window.history.replaceState(null, ''); } catch {}
+    }
+    suppressOwnPop = false;
     backGuardRef = dotNetRef;
     backGuardActive = true;
     backGuardBusy = false;
@@ -123,18 +161,51 @@ export function registerBackHandler(dotNetRef) {
 }
 
 export function unregisterBackHandler() {
-    backGuardActive = false;
-    backGuardBusy = false;
-    backGuardRef = null;
-    if (backGuardHandler) {
-        window.removeEventListener('popstate', backGuardHandler);
-        backGuardHandler = null;
-    }
+    disarmGuard();
     // Pop the guard entry so a later back press does not land on it.
-    if (window.history.state && window.history.state.physiquinatorBackGuard) {
-        suppressOwnPop = true;
-        window.history.back();
+    // history.back() is asynchronous: the pop lands after this call returns,
+    // so callers MUST await the returned promise before navigating. An early
+    // NavigateTo lets the queued pop fire after the navigation and drags
+    // Blazor back onto the guarded page, which made discard/close look like
+    // it silently did nothing.
+    if (hasGuardEntry()) {
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                suppressOwnPop = false;
+                if (ownPopHandler) {
+                    window.removeEventListener('popstate', ownPopHandler);
+                    ownPopHandler = null;
+                }
+                if (ownPopTimer !== null) {
+                    clearTimeout(ownPopTimer);
+                    ownPopTimer = null;
+                }
+                resolve();
+            };
+            suppressOwnPop = true;
+            ownPopHandler = (e) => {
+                // Shield a guard registered after us (rapid remount): the
+                // queued pop is ours, not a user back press.
+                try { e.stopImmediatePropagation(); } catch {}
+                finish();
+            };
+            window.addEventListener('popstate', ownPopHandler);
+            try {
+                window.history.back();
+            } catch {
+                finish();
+                return;
+            }
+            // If the pop never arrives (teardown, non-standard WebView),
+            // do not trap the caller forever.
+            ownPopTimer = setTimeout(finish, 400);
+        });
     }
+    suppressOwnPop = false;
+    return Promise.resolve();
 }
 
 async function confirmLeaveWorkout() {

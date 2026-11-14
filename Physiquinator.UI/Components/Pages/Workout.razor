@@ -848,7 +848,16 @@ else
             {
                 var open = await HistoryRepository.GetInProgressSessionForPlanAsync(PlanId);
                 if (open != null)
-                    await HistoryRepository.EndSessionAsync(open.Id);
+                {
+                    try
+                    {
+                        await HistoryRepository.EndSessionAsync(open.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogWarning(ex, "History EndSession error on force-new start; starting fresh anyway.");
+                    }
+                }
             }
 
             SessionService.StartWorkout(plan);
@@ -1012,7 +1021,8 @@ else
             {
                 Logger.LogError(ex, "History DeleteSession error");
                 Snackbar.Add(string.Format("Could not discard workout: {0}", ex.Message), Severity.Error);
-                return;
+                // Fall through: the in-memory session is still ended and the
+                // page still leaves, so a storage failure cannot trap the user.
             }
         }
 

@@ -54,6 +54,11 @@ public sealed class WorkoutTimerInterop(IJSRuntime js) : IAsyncDisposable
         where T : class =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("registerBackHandler", dotNetRef));
 
+    /// <summary>
+    /// Removes the back guard and pops its history entry. Await before
+    /// navigating: the pop lands asynchronously, and navigating early lets
+    /// the queued pop drag Blazor back onto the guarded page.
+    /// </summary>
     public Task UnregisterBackHandlerAsync() =>
         InvokeModuleAsync(module => module.InvokeVoidAsync("unregisterBackHandler"));
 

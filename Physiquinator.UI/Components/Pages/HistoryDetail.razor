@@ -607,10 +607,19 @@ else
 
         if (!ok) return;
 
+        try
+        {
+            await HistoryRepo.DeleteSessionAsync(_session.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not delete session: {0}", ex.Message), Severity.Error);
+            return;
+        }
+
         if (inProgress)
             SessionService.EndWorkout();
 
-        await HistoryRepo.DeleteSessionAsync(_session.Id);
         Navigation.NavigateTo(AppRoutes.HistoryWithQuery(HistoryQuery));
         Snackbar.Add("Session deleted.", Severity.Success);
     }

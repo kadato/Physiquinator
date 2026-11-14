@@ -424,15 +424,26 @@
         if (!confirmed)
             return;
 
-        var deletedSession = await HistoryRepo.GetSessionAsync(sessionId);
-        var deletedSets = deletedSession == null
-            ? []
-            : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList();
+        WorkoutSessionLogEntity? deletedSession;
+        List<WorkoutSetLogEntity> deletedSets;
+        try
+        {
+            deletedSession = await HistoryRepo.GetSessionAsync(sessionId);
+            deletedSets = deletedSession == null
+                ? []
+                : (await HistoryRepo.GetSetsForSessionAsync(sessionId)).ToList();
+
+            await HistoryRepo.DeleteSessionAsync(sessionId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format("Could not delete session: {0}", ex.Message), Severity.Error);
+            return;
+        }
 
         if (inProgress)
             SessionService.EndWorkout();
 
-        await HistoryRepo.DeleteSessionAsync(sessionId);
         _selectedSessionIds.Remove(sessionId);
         await ReloadAsync();
         Snackbar.Add("Session deleted.", Severity.Success, options =>

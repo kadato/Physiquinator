@@ -28,8 +28,8 @@
         <ApplicationId>dev.karoly.physiquinator</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.32.1</ApplicationDisplayVersion>
-        <ApplicationVersion>13201</ApplicationVersion>
+        <ApplicationDisplayVersion>1.32.3</ApplicationDisplayVersion>
+        <ApplicationVersion>13203</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -72,14 +72,13 @@
 
     <!-- Release Configuration: Optimize for performance -->
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <!-- Android release optimizations -->
-        <AndroidLinkMode>None</AndroidLinkMode>
-        <!-- .NET 11 runs mobile on CoreCLR: the Mono codegen props
-             (RunAOTCompilation, AndroidEnableProfiledAot) are dead, and setting
-             RunAOTCompilation at all now fails the build with XA1044. The AOT
-             path is PublishTrimmed=true (re-enables the default partial
-             ReadyToRun), but that needs trim validation for sqlite-net,
-             MudBlazor, and the MCP tools first. Until then R2R stays off. -->
+        <!-- Android release optimizations: deliberately the .NET 11 defaults.
+             Release trims (PublishTrimmed=true, TrimMode=partial) and precompiles
+             with partial ReadyToRun + default MIBC profiles: the CoreCLR AOT story.
+             (Mono props RunAOTCompilation/AndroidEnableProfiledAot are dead and
+             XA1044 on CoreCLR, so they were removed. History: XALNS7015 blocked
+             PublishReadyToRun without trimming; upstream now auto-disables R2R
+             with XA0119 instead.) -->
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
         <AndroidPackageFormat>aab</AndroidPackageFormat>
@@ -93,14 +92,11 @@
              process start ("Instruction is unrepresentable in DEX V37"). -->
         <AndroidDexTool>d8</AndroidDexTool>
 
-        <!-- Keep PublishReadyToRun off for Android. See dotnet/android#11025, closed by #12445.
-             Mono.Cecil cannot write PublishReadyToRun mixed-mode assemblies, so FixAbstractMethodsStep
-             fails with XALNS7015 on CoreCLR Release builds. Upstream now forces PublishReadyToRun off
-             without trimming. It warns XA0119. I verified this on 2026-11-10. Forcing
-             PublishReadyToRun=true on this repo still fails with XALNS7015, so PublishReadyToRun
-             and RunAOTCompilation stay off. Only PublishTrimmed=true brings back PublishReadyToRun.
-             The PublishTrimmed path needs trim validation across Blazor, MudBlazor, SQLite, and the MCP tools. -->
-        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</PublishReadyToRun>
+        <!-- ReadyToRun stays on for Android (the default): with trimming active,
+             partial R2R + MIBC precompiles the hot paths while the JIT covers
+             the rest. History: XALNS7015 (dotnet/android#11025, closed by #12445)
+             blocked R2R on untrimmed builds; trimming is back on so this applies. -->
+        <PublishReadyToRun Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">true</PublishReadyToRun>
 
         <!-- iOS release optimizations -->
         <MtouchLink>SdkOnly</MtouchLink>

@@ -31,6 +31,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+    min-inline-size: 24px;
+    padding-block: 4px;
+    padding-inline: 2px;
 }
 
 .history-crumbs__link:hover {

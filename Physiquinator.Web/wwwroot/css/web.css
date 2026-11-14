@@ -29,6 +29,11 @@
     color: var(--mud-palette-text-primary);
 }
 
+h1.auth-brand {
+    margin: 0;
+    font-size: 1.375rem;
+}
+
 .auth-tagline {
     font-family: 'Departure Mono', 'JetBrains Mono', monospace;
     color: var(--mud-palette-text-secondary);

@@ -16,6 +16,9 @@ public sealed class AppInitializationService(
 
     public bool ShowSetupOverlay { get; private set; }
 
+    /// <summary>Status line shown on the splash screen while seeding runs. Null otherwise.</summary>
+    public string? StatusMessage { get; private set; }
+
     public event Action? ProgressChanged;
 
     public Task EnsureInitializedAsync() =>
@@ -48,6 +51,7 @@ public sealed class AppInitializationService(
                 if (didSeedPlans)
                 {
                     ShowSetupOverlay = true;
+                    StatusMessage = "Preparing demo data...";
                     NotifyProgress();
                 }
 
@@ -59,6 +63,7 @@ public sealed class AppInitializationService(
                     preferences.Set(PreferenceKeys.ShowFirstTimeSeedModal, true);
 
                     ShowSetupOverlay = false;
+                    StatusMessage = null;
                     NotifyProgress();
                 }
             }
@@ -78,6 +83,7 @@ public sealed class AppInitializationService(
         try
         {
             IsReady = false;
+            StatusMessage = null;
             _initializationTask = null;
         }
         finally

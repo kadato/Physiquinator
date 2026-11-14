@@ -22,11 +22,18 @@
         <p class="app-splash__status app-splash__status--error">@ErrorMessage</p>
         <button type="button" class="app-splash__retry" @onclick="OnRetryAsync">@("Try again")</button>
     }
+    else if (StatusMessage is not null)
+    {
+        <p class="app-splash__status">@StatusMessage</p>
+    }
 </div>
 
 @code {
     [Parameter]
     public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public string? StatusMessage { get; set; }
 
     [Parameter]
     public EventCallback RetryRequested { get; set; }

@@ -119,6 +119,7 @@ else
                 }
 
                 <form @onsubmit="AddExerciseAsync" @onsubmit:preventDefault class="plan-add-exercise">
+                    <label class="sr-only" for="new-exercise-input">@("Add exercise")</label>
                     <ExerciseNameAutocomplete @bind-Value="NewExerciseName"
                                               InputId="new-exercise-input"
                                               Placeholder="@("Add exercise…")"

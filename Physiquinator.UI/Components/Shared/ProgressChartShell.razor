@@ -4,7 +4,12 @@
     </div>
     @if (HasData)
     {
-        @ChildContent
+        <div class="progress-chart-plot" role="img" aria-label="@($"{Title} trend chart. Detailed values are listed in the table below.")">
+            <div aria-hidden="true">
+                @ChildContent
+            </div>
+        </div>
+        <p class="sr-only">@($"{Title} chart. Refer to the data table below for exact values.")</p>
     }
     else
     {

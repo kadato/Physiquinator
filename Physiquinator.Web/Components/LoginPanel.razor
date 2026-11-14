@@ -9,9 +9,10 @@
 @inject ThemeService ThemeService
 
 <MudThemeProvider Theme="_mudTheme" IsDarkMode="_isDark" />
-<main class="auth-shell">
+<a class="skip-link" href="#main-content">@("Skip to content")</a>
+<main class="auth-shell" id="main-content" tabindex="-1">
     <MudPaper Elevation="6" Class="auth-card">
-        <div class="auth-brand">Physiquinator</div>
+        <h1 class="auth-brand">Physiquinator</h1>
         <p class="auth-tagline">Workout tracking, on-device AI assistance, and Model Context Protocol agent integration.</p>
 
         @if (!string.IsNullOrEmpty(_error))

@@ -37,6 +37,7 @@
     text-transform: uppercase;
     line-height: 1.1;
     color: var(--pl-ink);
+    margin: 0;
 }
 
 .wsd__title-plan {

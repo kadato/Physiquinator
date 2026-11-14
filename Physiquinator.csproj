@@ -28,8 +28,8 @@
         <ApplicationId>dev.karoly.physiquinator</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.32.0</ApplicationDisplayVersion>
-        <ApplicationVersion>13200</ApplicationVersion>
+        <ApplicationDisplayVersion>1.32.1</ApplicationDisplayVersion>
+        <ApplicationVersion>13201</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -58,7 +58,6 @@
         <!-- Android optimizations for faster wireless debugging -->
         <AndroidUseSharedRuntime>true</AndroidUseSharedRuntime>
         <AndroidLinkMode>None</AndroidLinkMode>
-        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 
         <!-- iOS optimizations -->
@@ -75,10 +74,12 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <!-- Android release optimizations -->
         <AndroidLinkMode>None</AndroidLinkMode>
-        <!-- Profiled AOT is harmless with RunAOTCompilation=false below;
-             re-enabled so it takes effect if full AOT is switched on later. -->
-        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
-        <RunAOTCompilation Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">false</RunAOTCompilation>
+        <!-- .NET 11 runs mobile on CoreCLR: the Mono codegen props
+             (RunAOTCompilation, AndroidEnableProfiledAot) are dead, and setting
+             RunAOTCompilation at all now fails the build with XA1044. The AOT
+             path is PublishTrimmed=true (re-enables the default partial
+             ReadyToRun), but that needs trim validation for sqlite-net,
+             MudBlazor, and the MCP tools first. Until then R2R stays off. -->
         <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
         <AndroidPackageFormat>aab</AndroidPackageFormat>

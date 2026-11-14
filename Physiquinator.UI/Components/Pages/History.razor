@@ -354,7 +354,6 @@
                 _selectedSessionIds.Add(s.Id);
         }
         _selectionVersion++;
-        StateHasChanged();
     }
 
     /// <summary>
@@ -598,7 +597,6 @@
         _filterDaySessions = null;
         _selectionVersion++;
         await UpdateSessionsListAsync();
-        StateHasChanged();
     }
 
     private void ApplyQueryToState()

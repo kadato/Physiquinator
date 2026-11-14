@@ -218,7 +218,6 @@
             return;
 
         _focusIndex = next;
-        StateHasChanged();
         try
         {
             await JSRuntime.InvokeVoidAsync("physiquinator.focusHeatmapCell", _heatmapScroll, _focusIndex);

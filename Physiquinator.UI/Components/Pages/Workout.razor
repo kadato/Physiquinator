@@ -1192,7 +1192,6 @@ else
     {
         _isRestComplete = false;
         ActiveExerciseIndex = SessionService.GetUpNextExerciseIndex();
-        StateHasChanged();
     }
 
     private async Task HandleSetWeightChanged((int ExerciseIndex, int SetIndex, double? WeightKg) input)

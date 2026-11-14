@@ -5,6 +5,12 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Blazor WASM AOT: compile managed code to WebAssembly for runtime speed
+         (Emscripten 6 toolchain in .NET 11). Costs ~2x download size and a much
+         longer publish; WasmStripILAfterAOT claws some of it back by dropping
+         IL for AOT-compiled methods. Only runs on publish, not dev runs. -->
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
     <!-- Links the e_sqlite3 static library into the wasm runtime so sqlite-net-pcl
          works in-browser (see tools/wasm-spike for the proof). -->
     <WasmBuildNative>true</WasmBuildNative>

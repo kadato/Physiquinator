@@ -126,9 +126,17 @@ async function startWebHost() {
         detached: false,
         stdio: ['ignore', 'pipe', 'pipe']
     });
+    // Fail fast when the host dies on startup (usually a stale process still
+    // holding PORT). Without this, waitForHealth can pass against the stale
+    // host and every capture silently shows another run's dirty database.
+    let exitedEarly = null;
+    webProcess.on('exit', (code) => { exitedEarly = code; });
     webProcess.stdout.on('data', d => process.stdout.write(`[WEB] ${d}`));
     webProcess.stderr.on('data', d => process.stderr.write(`[WEB] ${d}`));
     await waitForHealth(`${BASE_URL}/healthz`, 90000);
+    if (exitedEarly !== null) {
+        throw new Error(`Web host exited with code ${exitedEarly}; is port ${PORT} already in use?`);
+    }
     console.log('Web host is healthy.');
 }
 
@@ -220,7 +228,30 @@ async function configureAiSettings(page) {
 
     await page.getByLabel('API Base URL').fill(`http://127.0.0.1:${AI_PORT}/v1`);
     await page.getByLabel('API Key', { exact: false }).fill('dummy-key-for-screenshots');
-    await page.getByLabel('Model Name').fill('gpt-4o-mini');
+
+    // Provider preset gates custom URLs: pick the OpenAI-compatible preset
+    // so the mock server base URL is accepted.
+    try {
+        await page.getByLabel('Provider preset').click({ timeout: 5000 });
+        await page.getByRole('option', { name: /Custom \(OpenAI compatible\)/ }).click();
+        await delay(500);
+    } catch {
+        console.log('Provider preset select not found, keeping default.');
+    }
+
+    // Model is now a catalog dropdown plus an optional custom-ID field.
+    // Route through the custom choice so the mock model ID sticks.
+    try {
+        await page.getByLabel('AI model').click({ timeout: 5000 });
+        await page.getByRole('option', { name: /Custom model ID/ }).click();
+        await delay(400);
+    } catch {
+        console.log('Custom model option not found, trying direct fill.');
+    }
+    const customModel = page.getByLabel('Custom model identifier');
+    if (await customModel.isVisible().catch(() => false)) {
+        await customModel.fill('gpt-4o-mini');
+    }
     await page.getByRole('button', { name: 'Save settings' }).click();
     await dismissSnackbars(page);
     await delay(300);
@@ -254,13 +285,27 @@ async function capture(page, name) {
     console.log(`Capturing screenshot: ${name}`);
 
     await dismissSnackbars(page);
+    // Settle layout, park at the top of the scroll container, and move the
+    // pointer off any hoverable card so hover states don't leak into shots.
+    // Scroll twice: late-rendering lists can shift content under us, and
+    // Blazor's scroll restoration can re-apply an offset after navigation.
+    for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => {
+            const scroller = document.querySelector('.app-main-scroll');
+            if (scroller) scroller.scrollTo(0, 0);
+            window.scrollTo(0, 0);
+        });
+        await delay(300);
+    }
+    await page.mouse.move(0, 0);
+    await delay(400);
     // Hide scrollbar briefly for a cleaner screenshot
     await page.evaluate(() => {
         document.documentElement.style.overflow = 'hidden';
         if (document.body) document.body.style.overflow = 'hidden';
     });
 
-    await page.screenshot({ path: filepath });
+    await page.screenshot({ path: filepath, animations: 'disabled' });
 
     await page.evaluate(() => {
         document.documentElement.style.overflow = '';
@@ -463,6 +508,15 @@ async function run() {
                 await page.waitForSelector('.ai-msg__content', { timeout: 10000 });
             }
             await delay(1000);
+            // Park the message list at the latest response so the capture
+            // shows the answer and the composer, not stale top-of-chat.
+            await page.evaluate(() => {
+                const list = document.querySelector('.ai-chat-messages');
+                if (list) list.scrollTo(0, list.scrollHeight);
+                const scroller = document.querySelector('.app-main-scroll');
+                if (scroller) scroller.scrollTo(0, scroller.scrollHeight);
+            });
+            await delay(400);
             await capture(page, `ai-chat-${theme}.png`);
         }
 

@@ -257,7 +257,7 @@ public sealed class OpenAiCompatibleClient(HttpClient httpClient, ILogger<OpenAi
 
     private static void AddProviderHeaders(HttpRequestMessage request, AiProviderSettings settings)
     {
-        if (settings.Provider is AiProviderType.OpenRouter or AiProviderType.OpenCode)
+        if (settings.Provider is AiProviderType.OpenRouter or AiProviderType.OpenCode or AiProviderType.OpenCodeGo)
         {
             request.Headers.TryAddWithoutValidation("HTTP-Referer", "https://github.com/kadato/Physiquinator");
             request.Headers.TryAddWithoutValidation("X-Title", "Physiquinator Fitness App");

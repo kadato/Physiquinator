@@ -5,18 +5,27 @@ public enum AiProviderType
     OpenAI,
     OpenRouter,
     OpenCode,
+    OpenCodeGo,
+    Groq,
     OllamaLocal,
     Custom
 }
 
 public class AiProviderSettings
 {
+    public const string DefaultOpenAiEndpoint = "https://api.openai.com/v1";
+    public const string DefaultOpenRouterEndpoint = "https://openrouter.ai/api/v1";
+    public const string DefaultOpenCodeEndpoint = "https://opencode.ai/inference/openai/v1";
+    public const string DefaultOpenCodeGoEndpoint = "https://opencode.ai/inference/go/openai/v1";
+    public const string DefaultGroqEndpoint = "https://api.groq.com/openai/v1";
+    public const string DefaultOllamaEndpoint = "http://localhost:11434/v1";
+
     public bool Enabled { get; set; } = true;
 
-    public AiProviderType Provider { get; set; } = AiProviderType.OpenAI;
-    public string BaseUrl { get; set; } = "https://api.openai.com/v1";
+    public AiProviderType Provider { get; set; } = AiProviderType.OpenCodeGo;
+    public string BaseUrl { get; set; } = DefaultOpenCodeGoEndpoint;
     public string ApiKey { get; set; } = string.Empty;
-    public string ModelName { get; set; } = "gpt-4o-mini";
+    public string ModelName { get; set; } = "muse-spark-1.3-contributor";
     public string CustomSystemPrompt { get; set; } = string.Empty;
 
     public string GetEffectiveBaseUrl()
@@ -33,11 +42,13 @@ public class AiProviderSettings
     {
         return provider switch
         {
-            AiProviderType.OpenAI => "https://api.openai.com/v1",
-            AiProviderType.OpenRouter => "https://openrouter.ai/api/v1",
-            AiProviderType.OpenCode => "https://opencode.ai/zen/go/v1/chat/completions",
-            AiProviderType.OllamaLocal => "http://localhost:11434/v1",
-            _ => "https://api.openai.com/v1"
+            AiProviderType.OpenAI => DefaultOpenAiEndpoint,
+            AiProviderType.OpenRouter => DefaultOpenRouterEndpoint,
+            AiProviderType.OpenCode => DefaultOpenCodeEndpoint,
+            AiProviderType.OpenCodeGo => DefaultOpenCodeGoEndpoint,
+            AiProviderType.Groq => DefaultGroqEndpoint,
+            AiProviderType.OllamaLocal => DefaultOllamaEndpoint,
+            _ => DefaultOpenAiEndpoint
         };
     }
 
@@ -57,10 +68,24 @@ public class AiProviderSettings
         return provider switch
         {
             AiProviderType.OpenAI => "gpt-4o-mini",
-            AiProviderType.OpenRouter => "anthropic/claude-3.5-sonnet",
-            AiProviderType.OpenCode => "deepseek-v4-flash",
+            AiProviderType.OpenRouter => "anthropic/claude-3.7-sonnet",
+            AiProviderType.OpenCode => "muse-spark-1.3-contributor",
+            AiProviderType.OpenCodeGo => "muse-spark-1.3-contributor",
+            AiProviderType.Groq => "llama-3.3-70b-versatile",
             AiProviderType.OllamaLocal => "llama3.2",
             _ => "gpt-4o-mini"
         };
+    }
+
+    public AiProviderSettings Normalize()
+    {
+        BaseUrl = string.IsNullOrWhiteSpace(BaseUrl) ? GetDefaultBaseUrl(Provider) : BaseUrl.Trim().TrimEnd('/');
+        ModelName = string.IsNullOrWhiteSpace(ModelName) ? GetDefaultModel(Provider) : ModelName.Trim();
+        ApiKey = ApiKey?.Trim() ?? string.Empty;
+        if (CustomSystemPrompt is not null && CustomSystemPrompt.Length > 2000)
+        {
+            CustomSystemPrompt = CustomSystemPrompt[..2000];
+        }
+        return this;
     }
 }

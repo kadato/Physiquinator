@@ -19,6 +19,7 @@
 @inject AiToolRegistry ToolRegistry
 @inject WeightUnitService WeightUnitService
 @inject IAccountService Account
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>@("Settings")</PageTitle>
@@ -352,18 +353,21 @@
                                        Variant="Variant.Outlined"
                                        Value="_aiSettings.Provider"
                                        ValueChanged="OnAiProviderChanged">
-                                <MudSelectItem Value="AiProviderType.OpenAI">OpenAI Official</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.OpenRouter">OpenRouter for Claude, Llama, DeepSeek</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.OpenCode">OpenCode</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.OllamaLocal">Ollama Local at http://localhost:11434/v1</MudSelectItem>
-                                <MudSelectItem Value="AiProviderType.Custom">Custom OpenAI-Compatible API</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenCodeGo">@("OpenCode Go (recommended)")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenCode">@("OpenCode Console")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenRouter">@("OpenRouter")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OpenAI">@("OpenAI")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.Groq">@("Groq")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.OllamaLocal">@("Ollama (local)")</MudSelectItem>
+                                <MudSelectItem Value="AiProviderType.Custom">@("Custom (OpenAI compatible)")</MudSelectItem>
                             </MudSelect>
 
                             <MudTextField T="string"
                                           Label="@("API Base URL")"
                                           Variant="Variant.Outlined"
                                           @bind-Value="_aiSettings.BaseUrl"
-                                          HelperText="@("Standard base URL, for example https://api.openai.com/v1")" />
+                                          Placeholder="@GetEndpointPlaceholder(_aiSettings.Provider)"
+                                          HelperText="@("Root URL only. The app appends /chat/completions and /models.")" />
 
                             <MudTextField T="string"
                                           Label="@("API Key")"
@@ -373,7 +377,38 @@
                                           AdornmentIcon="@(_showApiKey ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
                                           OnAdornmentClick="@(() => _showApiKey = !_showApiKey)"
                                           @bind-Value="_aiSettings.ApiKey"
-                                          HelperText="@("Stored on-device in plaintext preferences")" />
+                                          HelperText="@("Stored on-device in plaintext preferences. Ollama local needs no key.")" />
+
+                            <MudText Typo="Typo.subtitle2" Class="mt-1">@(string.Format("Model ({0})", _aiSettings.Provider))</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block">@("Pick a model. Type a custom ID when your model is missing.")</MudText>
+
+                            <MudSelect T="string"
+                                       Label="@("AI model")"
+                                       Variant="Variant.Outlined"
+                                       Value="@GetSelectedModelValue()"
+                                       ValueChanged="OnModelDropdownChanged"
+                                       HelperText="@("Pick a model.")">
+                                @foreach (var opt in AiModelCatalog.GetModelsForProvider(_aiSettings.Provider))
+                                {
+                                    <MudSelectItem Value="@opt.Id">@(string.IsNullOrWhiteSpace(opt.Badge) ? opt.DisplayName : string.Format("{0} ({1})", opt.DisplayName, opt.Badge))</MudSelectItem>
+                                }
+                                <MudSelectItem Value="@("custom_model_choice")">@("Custom model ID…")</MudSelectItem>
+                                @foreach (var fetched in _availableModels.Where(m => !AiModelCatalog.GetModelsForProvider(_aiSettings.Provider).Any(o => string.Equals(o.Id, m, StringComparison.OrdinalIgnoreCase))).Take(20))
+                                {
+                                    <MudSelectItem Value="@fetched">@(fetched + " (fetched)")</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                            @if (_isCustomModel || !AiModelCatalog.GetModelsForProvider(_aiSettings.Provider).Any(m => string.Equals(m.Id, _aiSettings.ModelName, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                <MudTextField T="string"
+                                              Label="@("Custom model identifier")"
+                                              Variant="Variant.Outlined"
+                                              Value="@_aiSettings.ModelName"
+                                              ValueChanged="OnModelNameChanged"
+                                              Placeholder="@("e.g. muse-spark-1.3-contributor")"
+                                              HelperText="@("Model ID from your provider.")" />
+                            }
 
                              @if (_fetchingModels)
                              {
@@ -383,26 +418,17 @@
                                  </div>
                              }
 
-                             <MudAutocomplete T="string"
-                                              Label="@("Model Name")"
-                                              Variant="Variant.Outlined"
-                                              Value="@_aiSettings.ModelName"
-                                              ValueChanged="OnModelNameChanged"
-                                              SearchFunc="SearchModels"
-                                              Placeholder="@("Pick or type model, e.g. gpt-4o-mini")"
-                                              HelperText="@("Any model name works.")"
-                                              MaxItems="50"
-                                              Immediate="true"
-                                              CoerceText="true"
-                                              CoerceValue="true"
-                                              Clearable="true" />
+                            @if (!string.IsNullOrWhiteSpace(_aiTestResult))
+                            {
+                                <MudAlert Severity="@(_aiTestOk ? Severity.Success : Severity.Error)" Dense="true" Class="mt-2">@_aiTestResult</MudAlert>
+                            }
 
                             <MudTextField T="string"
                                           Label="@("Custom instructions")"
                                           Variant="Variant.Outlined"
-                                          Lines="2"
+                                          Lines="3"
                                           @bind-Value="_aiSettings.CustomSystemPrompt"
-                                          HelperText="@("Extra instructions passed to the AI assistant. Optional.")" />
+                                          HelperText="@("Extra instructions passed to the AI assistant. Optional, max 2000 chars.")" />
 
                             <div class="settings-btn-group mt-2">
                                 <MudButton Variant="Variant.Filled"
@@ -456,6 +482,31 @@
                                 </div>
                             }
                         </div>
+                        <MudText Typo="Typo.subtitle2" Class="mt-4">@("External AI access (MCP)")</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@("The web host exposes the same tools at /mcp over Streamable HTTP. Set Mcp:ApiKey on the server, then point your agent here.")</MudText>
+                        <MudTextField T="string" Label="@("MCP endpoint path")" Variant="Variant.Outlined" Value="@("/mcp")" ReadOnly="true" HelperText="@("Append to your Physiquinator.Web origin, e.g. https://your-host/mcp")" Class="mt-2" />
+                        <MudTabs Elevation="0" Rounded="true" Outlined="true" Class="mt-2">
+                            <MudTabPanel Text="Claude">
+                                <div class="pa-2">
+                                    <pre class="mcp-snippet-pre">@McpClientSnippets.Claude(null, null)</pre>
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick='() => CopyMcpSnippet(McpClientSnippets.Claude(null, null))'>@("Copy config")</MudButton>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">@("CLI: ")<code>@McpClientSnippets.ClaudeCodeCli(null, null)</code></MudText>
+                                </div>
+                            </MudTabPanel>
+                            <MudTabPanel Text="OpenCode">
+                                <div class="pa-2">
+                                    <pre class="mcp-snippet-pre">@McpClientSnippets.OpenCode(null, null, true)</pre>
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick='() => CopyMcpSnippet(McpClientSnippets.OpenCode(null, null, true))'>@("Copy config")</MudButton>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">@("CLI: ")<code>@McpClientSnippets.OpenCodeCli(null, null, true)</code></MudText>
+                                </div>
+                            </MudTabPanel>
+                            <MudTabPanel Text="Terminal">
+                                <div class="pa-2">
+                                    <pre class="mcp-snippet-pre">@McpClientSnippets.Curl(null, null)</pre>
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick='() => CopyMcpSnippet(McpClientSnippets.Curl(null, null))'>@("Copy curl")</MudButton>
+                                </div>
+                            </MudTabPanel>
+                        </MudTabs>
                     }
                 </div>
 
@@ -787,29 +838,57 @@
     private bool _testingAiConnection;
     private bool _fetchingModels;
     private List<string> _availableModels = [];
+    private bool _isCustomModel;
+    private string? _aiTestResult;
+    private bool _aiTestOk;
+
+    private static string GetEndpointPlaceholder(AiProviderType provider) => AiProviderSettings.GetDefaultBaseUrl(provider);
+
+    private string GetSelectedModelValue()
+    {
+        if (_isCustomModel)
+            return "custom_model_choice";
+        if (string.IsNullOrWhiteSpace(_aiSettings.ModelName))
+            return string.Empty;
+        var catalog = AiModelCatalog.GetModelsForProvider(_aiSettings.Provider);
+        var inCatalog = catalog.Any(m => string.Equals(m.Id, _aiSettings.ModelName, StringComparison.OrdinalIgnoreCase));
+        if (inCatalog)
+            return _aiSettings.ModelName;
+        if (_availableModels.Any(m => string.Equals(m, _aiSettings.ModelName, StringComparison.OrdinalIgnoreCase)))
+            return _aiSettings.ModelName;
+        return "custom_model_choice";
+    }
+
+    private void OnModelDropdownChanged(string modelId)
+    {
+        if (modelId == "custom_model_choice")
+        {
+            _isCustomModel = true;
+            return;
+        }
+        _isCustomModel = false;
+        _aiSettings.ModelName = modelId;
+        _aiTestResult = null;
+        SaveAiSettings();
+    }
 
     private void OnModelNameChanged(string? value)
     {
         _aiSettings.ModelName = value ?? string.Empty;
+        _aiTestResult = null;
     }
 
-    private Task<IEnumerable<string>> SearchModels(string? value, CancellationToken token)
+    private async Task CopyMcpSnippet(string snippet)
     {
-        if (_availableModels.Count == 0)
+        try
         {
-            return Task.FromResult<IEnumerable<string>>([]);
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", snippet);
+            UiFeedback.Success("MCP config copied.");
         }
-
-        if (string.IsNullOrWhiteSpace(value))
+        catch
         {
-            return Task.FromResult<IEnumerable<string>>(_availableModels.Take(50));
+            UiFeedback.Warning("Copy failed. Select the text manually.");
         }
-
-        var query = value.Trim();
-        var filtered = _availableModels
-            .Where(m => m.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .Take(50);
-        return Task.FromResult<IEnumerable<string>>(filtered);
     }
 
     private async Task FetchModelsAsync()
@@ -867,12 +946,16 @@
         _aiSettings.Provider = provider;
         _aiSettings.BaseUrl = _aiSettings.GetDefaultBaseUrl();
         _aiSettings.ModelName = _aiSettings.GetDefaultModel();
+        _isCustomModel = false;
+        _aiTestResult = null;
+        _aiSettings.Normalize();
         SaveAiSettings();
         await FetchModelsAsync();
     }
 
     private void SaveAiSettings(bool showToast = true)
     {
+        _aiSettings.Normalize();
         AiAssistant.SaveSettings(_aiSettings);
         if (showToast)
             UiFeedback.Success("AI Assistant settings saved.");
@@ -881,10 +964,13 @@
     private async Task TestAiConnectionAsync()
     {
         _testingAiConnection = true;
+        _aiTestResult = null;
         try
         {
             SaveAiSettings(showToast: false);
             var (ok, msg) = await AiAssistant.TestConnectionAsync();
+            _aiTestOk = ok;
+            _aiTestResult = msg;
             if (ok)
             {
                 UiFeedback.Success("AI connection test successful!");

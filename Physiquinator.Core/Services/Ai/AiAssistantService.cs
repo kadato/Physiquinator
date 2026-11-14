@@ -33,23 +33,37 @@ public sealed class AiAssistantService(
 
     public AiProviderSettings GetSettings()
     {
-        var providerStr = preferences.Get(PreferenceKeys.AiProvider, AiProviderType.OpenAI.ToString());
-        Enum.TryParse<AiProviderType>(providerStr, true, out AiProviderType provider);
+        var providerStr = preferences.Get(PreferenceKeys.AiProvider, AiProviderType.OpenCodeGo.ToString());
+        if (!Enum.TryParse<AiProviderType>(providerStr, true, out AiProviderType provider))
+        {
+            // Legacy "OpenCode" value already maps. Unknown strings fall back to recommended preset.
+            provider = AiProviderType.OpenCodeGo;
+        }
 
-        return new AiProviderSettings
+        var settings = new AiProviderSettings
         {
             Enabled = preferences.Get(PreferenceKeys.AiEnabled, true),
             Provider = provider,
 
-            BaseUrl = preferences.Get(PreferenceKeys.AiBaseUrl, "https://api.openai.com/v1"),
+            BaseUrl = preferences.Get(PreferenceKeys.AiBaseUrl, AiProviderSettings.DefaultOpenCodeGoEndpoint),
             ApiKey = preferences.Get(PreferenceKeys.AiApiKey, string.Empty),
-            ModelName = preferences.Get(PreferenceKeys.AiModelName, "gpt-4o-mini"),
+            ModelName = preferences.Get(PreferenceKeys.AiModelName, AiProviderSettings.GetDefaultModel(provider)),
             CustomSystemPrompt = preferences.Get(PreferenceKeys.AiSystemPrompt, string.Empty)
         };
+
+        // Migrate legacy stored values: strip /chat/completions suffix, fix retired endpoints or models.
+        if (settings.BaseUrl.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+            settings.BaseUrl = settings.BaseUrl[..^"/chat/completions".Length].TrimEnd('/');
+        if (settings.BaseUrl.StartsWith("https://opencode.ai/zen/", StringComparison.OrdinalIgnoreCase))
+            settings.BaseUrl = AiProviderSettings.GetDefaultBaseUrl(settings.Provider);
+        if (string.IsNullOrWhiteSpace(settings.ModelName) || string.Equals(settings.ModelName, "deepseek-v4-flash", StringComparison.OrdinalIgnoreCase))
+            settings.ModelName = settings.GetDefaultModel();
+        return settings.Normalize();
     }
 
     public void SaveSettings(AiProviderSettings settings)
     {
+        settings.Normalize();
         preferences.Set(PreferenceKeys.AiEnabled, settings.Enabled);
         preferences.Set(PreferenceKeys.AiProvider, settings.Provider.ToString());
         preferences.Set(PreferenceKeys.AiBaseUrl, settings.BaseUrl);
@@ -211,7 +225,7 @@ public sealed class AiAssistantService(
 
     private async Task ExecuteUserTurnAsync(string userPrompt, CancellationToken cancellationToken)
     {
-        AiChatMessage userMessage = AddUserMessage(userPrompt);
+        AddUserMessage(userPrompt);
         AiChatMessage assistantMessage = AddInitialAssistantMessage();
 
         try
@@ -231,27 +245,41 @@ public sealed class AiAssistantService(
         }
         catch (OperationCanceledException)
         {
-            _messages.Remove(userMessage);
-            _messages.Remove(assistantMessage);
-            _apiHistory = [];
+            assistantMessage.IsThinking = false;
+            if (string.IsNullOrWhiteSpace(assistantMessage.Content))
+                assistantMessage.Content = "Stopped. No changes were made.";
             OnMessagesChanged?.Invoke();
         }
+    }
+
+    public async Task RegenerateLastResponseAsync()
+    {
+        var lastAssistantIndex = _messages.FindLastIndex(m => m.Role == AiMessageRole.Assistant);
+        if (lastAssistantIndex < 0 || _inFlightTurn is { IsCompleted: false })
+            return;
+        var lastUserIndex = _messages.FindLastIndex(lastAssistantIndex, m => m.Role == AiMessageRole.User);
+        var prompt = lastUserIndex >= 0 ? _messages[lastUserIndex].Content : _messages[lastAssistantIndex].Content;
+        if (lastAssistantIndex >= 0)
+            _messages.RemoveAt(lastAssistantIndex);
+        if (lastUserIndex >= 0)
+            _messages.RemoveAt(lastUserIndex);
+        OnMessagesChanged?.Invoke();
+        if (!string.IsNullOrWhiteSpace(prompt))
+            await SendUserMessageAsync(prompt);
     }
 
 
     private static bool IsConfigured(AiProviderSettings settings) =>
         settings.Enabled && (!string.IsNullOrWhiteSpace(settings.ApiKey) || settings.Provider == AiProviderType.OllamaLocal);
 
-    private AiChatMessage AddUserMessage(string userPrompt)
+    private void AddUserMessage(string userPrompt)
     {
-        var msg = new AiChatMessage
+        _messages.Add(new AiChatMessage
         {
             Role = AiMessageRole.User,
             Content = userPrompt.Trim(),
             Timestamp = _time.GetLocalNow().LocalDateTime
-        };
-        _messages.Add(msg);
-        return msg;
+        });
     }
 
     private AiChatMessage AddInitialAssistantMessage()

@@ -5,14 +5,10 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Blazor WASM AOT: compile managed code to WebAssembly for runtime speed
-         (Emscripten 6 toolchain in .NET 11). Costs ~2x download size and a much
-         longer publish; WasmStripILAfterAOT claws some of it back by dropping
-         IL for AOT-compiled methods. Only runs on publish, not dev runs. -->
-    <RunAOTCompilation>true</RunAOTCompilation>
-    <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
-    <!-- Links the e_sqlite3 static library into the wasm runtime so sqlite-net-pcl
-         works in-browser (see tools/wasm-spike for the proof). -->
+    <!-- No Blazor WASM AOT here: RunAOTCompilation=true builds fine (verified
+         2026-11-14, .NET 11 GA, Emscripten 6) but the AOT dotnet.native.wasm is
+         31.9 MiB, over Cloudflare Workers' 25 MiB per-asset cap, so deploy
+         fails. Interpreter + WasmBuildNative stays until hosting changes. -->
     <WasmBuildNative>true</WasmBuildNative>
     <!-- All app formatting and parsing uses InvariantCulture explicitly, and
          time zones come from the browser rather than ICU, so ship without ICU

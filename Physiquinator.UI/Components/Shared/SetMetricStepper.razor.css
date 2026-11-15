@@ -43,18 +43,52 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.set-metric-stepper__btn:hover {
-    background: var(--pl-chip);
-    border-color: var(--pl-yellow);
-    color: var(--pl-yellow);
+.set-metric-stepper__btn--dec {
+    color: var(--pl-amber);
+}
+
+.set-metric-stepper__btn--dec:hover {
+    background: rgba(224, 175, 104, 0.12);
+    border-color: var(--pl-amber);
+    color: var(--pl-warn-text);
+}
+
+.set-metric-stepper__btn--inc {
+    color: var(--pl-cyan);
+}
+
+.set-metric-stepper__btn--inc:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: var(--pl-cyan);
+    color: var(--pl-cyan-text);
 }
 
 .set-metric-stepper__btn:active {
     transform: translate(2px, 2px);
     box-shadow: none;
     border-color: var(--pl-volt-edge);
-    background: var(--pl-chip);
-    color: var(--pl-yellow);
+}
+
+html[data-theme-mode="light"] .set-metric-stepper__btn {
+    border-color: var(--pl-ink-border);
+}
+
+html[data-theme-mode="light"] .set-metric-stepper__btn--dec {
+    color: var(--pl-warn-text);
+}
+
+html[data-theme-mode="light"] .set-metric-stepper__btn--dec:hover {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: var(--pl-amber);
+}
+
+html[data-theme-mode="light"] .set-metric-stepper__btn--inc {
+    color: var(--pl-cyan-text);
+}
+
+html[data-theme-mode="light"] .set-metric-stepper__btn--inc:hover {
+    background: rgba(0, 122, 153, 0.12);
+    border-color: var(--pl-cyan);
 }
 
 .set-metric-stepper__value {

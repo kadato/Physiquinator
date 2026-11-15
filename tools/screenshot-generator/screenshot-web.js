@@ -15,7 +15,7 @@ const PORT = Number(process.env.SHOT_WEB_PORT || 9255);
 const BASE_URL = `http://localhost:${PORT}`;
 // Overridable because 9099 can be taken outside WSL by an earlier Windows run.
 const AI_PORT = Number(process.env.MOCK_AI_PORT || 9099);
-const APP_PATH = path.resolve(__dirname, '../../Physiquinator.Web/bin/Debug/net11.0/Physiquinator.Web.dll');
+const CSPROJ_PATH = path.resolve(__dirname, '../../Physiquinator.Web/Physiquinator.Web.csproj');
 const DOCS_DIR = process.env.SHOTS_DIR ? path.resolve(process.env.SHOTS_DIR) : path.resolve(__dirname, '../../docs');
 const TEMP_DATA_DIR = path.resolve(__dirname, './temp-web-data');
 
@@ -117,7 +117,7 @@ function waitForHealth(url, timeoutMs) {
 
 async function startWebHost() {
     console.log('Starting Physiquinator.Web...');
-    webProcess = spawn('dotnet', [APP_PATH, `--urls=http://localhost:${PORT}`], {
+    webProcess = spawn('dotnet', ['run', '--project', CSPROJ_PATH, '--no-build', `--urls=http://localhost:${PORT}`], {
         env: {
             ...process.env,
             ASPNETCORE_ENVIRONMENT: 'Development',

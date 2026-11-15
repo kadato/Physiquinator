@@ -6,7 +6,7 @@
 .compare-header__date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--pl-stone); }
 .compare-header__stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--pl-hairline); }
 .compare-header__stat { display: flex; flex-direction: column; gap: 1px; }
-.compare-header__stat-label { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pl-stone); }
+.compare-header__stat-label { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pl-stone); }
 .compare-header__stat-value { font-family: var(--font-display); font-size: 0.875rem; font-weight: 800; color: var(--pl-ink); }
 .compare-table-wrap { overflow-x: auto; border: 1.5px solid var(--pl-hairline-strong); border-radius: 0; }
 .compare-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8125rem; min-width: 560px; }
@@ -16,8 +16,8 @@
 .compare-table tr:nth-child(even) td { background: color-mix(in srgb, var(--pl-chip-2) 60%, transparent); }
 .compare-table__exercise { min-width: 120px; }
 .compare-table__exercise-name { font-family: var(--font-display); font-weight: 800; font-size: 0.875rem; display: block; }
-.compare-table__only-badge { display: inline-flex; margin-top: 3px; padding: 1px 6px; font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--pl-chip-2); border: 1px solid var(--pl-hairline); color: var(--pl-stone); }
-.compare-table__type-hint { display: block; margin-top: 2px; font-size: 0.625rem; color: var(--pl-stone); }
+.compare-table__only-badge { display: inline-flex; margin-top: 3px; padding: 1px 6px; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--pl-chip-2); border: 1px solid var(--pl-hairline); color: var(--pl-stone); }
+.compare-table__type-hint { display: block; margin-top: 2px; font-size: 0.6875rem; color: var(--pl-stone); }
 .compare-table__subtle { font-weight: 700; color: var(--pl-stone); text-transform: none; letter-spacing: 0; }
 .compare-table__delta-head { text-align: right; }
 .compare-table__delta { text-align: right; white-space: nowrap; }

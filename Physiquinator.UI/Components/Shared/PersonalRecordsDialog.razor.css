@@ -44,9 +44,17 @@
     width: 36px;
     height: 36px;
     flex-shrink: 0;
-    background: color-mix(in srgb, var(--pl-amber) 16%, transparent);
-    border: 1px solid var(--pl-warn-text);
-    color: var(--pl-warn-text);
+    border-radius: var(--radius);
+    background: rgba(192, 132, 252, 0.16);
+    border: 1.5px solid var(--pl-purple);
+    color: var(--pl-purple);
+    box-shadow: 1px 1px 0 var(--pl-plate-shadow-color);
+}
+
+html[data-theme-mode="light"] .pr-dialog-row__icon {
+    background: rgba(124, 58, 237, 0.12);
+    border: 1.5px solid var(--pl-purple);
+    color: var(--pl-purple-text);
 }
 
 .pr-dialog-row__icon ::deep .mud-icon-root {
@@ -85,10 +93,14 @@
 .pr-dialog-row__value {
     flex-shrink: 0;
     white-space: nowrap;
-    font-weight: 700;
-    font-size: 0.875rem;
+    font-weight: 800;
+    font-size: 0.9375rem;
     font-variant-numeric: tabular-nums;
-    color: var(--pl-ink);
+    color: var(--pl-yellow);
+}
+
+html[data-theme-mode="light"] .pr-dialog-row__value {
+    color: var(--pl-yellow-text);
 }
 
 .pr-dialog-row__chevron {
@@ -99,15 +111,32 @@
 .pr-dialog-close.mud-button-root {
     min-height: 44px !important;
     padding: 0 16px !important;
-    border: var(--hairline-strong) !important;
+    border: 1.5px solid var(--hairline-strong) !important;
     border-radius: var(--radius) !important;
-    background: var(--pl-chip) !important;
+    background: var(--pl-chip-2) !important;
     color: var(--pl-ink) !important;
     font-family: var(--font-mono) !important;
     font-size: 0.6875rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
+    box-shadow: var(--pl-plate-shadow-sm) !important;
+    transition: transform 90ms ease, box-shadow 90ms ease, border-color 120ms ease, background 120ms ease !important;
+}
+
+.pr-dialog-close.mud-button-root:hover {
+    border-color: var(--pl-yellow) !important;
+    background: var(--pl-chip) !important;
+}
+
+.pr-dialog-close.mud-button-root:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: none !important;
+}
+
+html[data-theme-mode="light"] .pr-dialog-close.mud-button-root {
+    border: 1.5px solid var(--pl-ink-border) !important;
+    background: var(--pl-chip-2) !important;
 }
 
 html[data-theme-mode="light"] .pr-dialog-row__date,

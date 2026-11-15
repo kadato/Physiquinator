@@ -86,13 +86,6 @@ else
                             {
                                 <span class="workout-rest-takeover__next-set">SET @(NextPendingSet.SetIndex + 1)/@(NextPendingSet.Exercise.TotalSetCount)</span>
                             }
-                            @if (UpcomingExercises.Count > 1)
-                            {
-                                <span class="workout-next__nav">
-                                    <button type="button" class="workout-next__nav-btn" @onclick="() => CycleRestNextExercise(forward: false)" aria-label="Previous upcoming exercise">PREV</button>
-                                    <button type="button" class="workout-next__nav-btn" @onclick="() => CycleRestNextExercise(forward: true)" aria-label="Next upcoming exercise">NEXT</button>
-                                </span>
-                            }
                         </div>
                         <span class="workout-rest-takeover__next-name">@NextExerciseName</span>
                         @if (!string.IsNullOrEmpty(NextSetPreview))
@@ -293,20 +286,17 @@ else
                     </div>
                 }
 
-                @if (NextExerciseInfo.Exercise != null)
+                @if (NextExerciseInfo.Exercise != null && SupersetPartnerInfo.Exercise == null)
                 {
-                    <div class="workout-rest-takeover__next workout-next"
-                         aria-label="@(string.Format("Next: {0}.", NextExerciseInfo.Exercise.Name))">
+                    <div class="workout-rest-takeover__next workout-next workout-next--interactive"
+                         role="button"
+                         tabindex="0"
+                         @onclick="FocusNext"
+                         @onkeydown="@(e => { if (e.Key == "Enter" || e.Key == " ") FocusNext(); })"
+                         aria-label="@(string.Format("Next exercise: {0}. Tap to jump.", NextExerciseInfo.Exercise.Name))">
                         <div class="workout-rest-takeover__next-head">
                             <span class="workout-rest-takeover__next-kicker">UP NEXT</span>
                             <span class="workout-rest-takeover__next-set">SET @(NextExerciseInfo.SetIndex + 1)/@(NextExerciseInfo.Exercise.TotalSetCount)</span>
-                            @if (UpcomingExercises.Count > 1)
-                            {
-                                <span class="workout-next__nav">
-                                    <button type="button" class="workout-next__nav-btn" @onclick="FocusPrev" aria-label="Previous upcoming exercise">PREV</button>
-                                    <button type="button" class="workout-next__nav-btn" @onclick="FocusNext" aria-label="Next upcoming exercise">NEXT</button>
-                                </span>
-                            }
                         </div>
                         <span class="workout-rest-takeover__next-name">@NextExerciseInfo.Exercise.Name</span>
                         @if (!string.IsNullOrEmpty(NextExerciseInfo.Preview))
@@ -683,16 +673,6 @@ else
         var offset = value!.Value;
         var sign = offset > 0 ? "+" : "-";
         return $"{sign}{ExerciseWeightFormatter.FormatWeight(Math.Abs(offset), Unit)}";
-    }
-
-    private void FocusPrev()
-    {
-        if (UpcomingExercises.Count <= 1) return;
-        var idx = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == ActiveExerciseIndex);
-        if (idx > 0)
-        {
-            ActiveExerciseIndex = UpcomingExercises[idx - 1].ExerciseIndex;
-        }
     }
 
     private void FocusNext()
@@ -1867,22 +1847,6 @@ else
             var ms = (int)(end - TimeProvider.GetUtcNow().UtcDateTime).TotalMilliseconds;
             return Math.Max(0, ms);
         }
-    }
-
-    private void CycleRestNextExercise(bool forward = true)
-    {
-        if (UpcomingExercises.Count <= 1) return;
-        var currentIdx = SessionService.GetUpNextExerciseIndex();
-        var pos = UpcomingExercises.ToList().FindIndex(u => u.ExerciseIndex == currentIdx);
-        if (pos == -1) pos = 0;
-
-        var newPos = forward
-            ? (pos + 1) % UpcomingExercises.Count
-            : (pos - 1 + UpcomingExercises.Count) % UpcomingExercises.Count;
-
-        var picked = UpcomingExercises[newPos].ExerciseIndex;
-        ActiveExerciseIndex = picked;
-        StateHasChanged();
     }
 
 

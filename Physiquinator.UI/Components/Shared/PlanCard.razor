@@ -1,7 +1,6 @@
 <MudCard Class="plan-card" Elevation="0" data-plan-index="@(PlanIndex.ToString("D2"))">
     <div class="plan-card__header-bar">
         <div class="plan-card__header-left">
-            <span class="plan-card__index-tag" aria-hidden="true">/@PlanIndex.ToString("D2")</span>
             <span class="plan-card__meta-chip">@ExerciseCountLabel</span>
             @if (!string.IsNullOrEmpty(LastDoneLabel))
             {
@@ -35,6 +34,8 @@
                          Size="Size.Small"
                          Class="plan-card-icon-btn"
                          Dense="true"
+                         AnchorOrigin="Origin.BottomRight"
+                         TransformOrigin="Origin.TopRight"
                          AriaLabel="@("Plan options")">
                     <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
                                  Disabled="@(!CanMoveUp)"

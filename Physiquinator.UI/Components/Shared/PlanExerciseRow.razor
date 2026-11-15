@@ -34,6 +34,8 @@
         <MudMenu Icon="@Icons.Material.Filled.MoreVert"
                  Class="plan-exercise-row__menu"
                  Dense="true"
+                 AnchorOrigin="Origin.BottomRight"
+                 TransformOrigin="Origin.TopRight"
                  AriaLabel="@(string.Format("Actions for {0}", Exercise.Name))">
             <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
                          Disabled="@(!CanMoveUp)"

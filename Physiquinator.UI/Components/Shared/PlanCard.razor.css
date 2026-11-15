@@ -71,9 +71,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border: none;
     background: transparent;
     color: var(--pl-stone);
@@ -153,6 +154,27 @@
     box-shadow: none !important;
 }
 
+.plan-card-icon-btn:hover {
+    background: var(--pl-chip) !important;
+    border-color: var(--pl-cyan) !important;
+    color: var(--pl-cyan) !important;
+}
+
+.plan-card-icon-btn:hover .mud-icon-root {
+    color: var(--pl-cyan) !important;
+    fill: var(--pl-cyan) !important;
+}
+
+html[data-theme-mode="light"] .plan-card-icon-btn:hover {
+    border-color: var(--pl-cyan-text) !important;
+    color: var(--pl-cyan-text) !important;
+}
+
+html[data-theme-mode="light"] .plan-card-icon-btn:hover .mud-icon-root {
+    color: var(--pl-cyan-text) !important;
+    fill: var(--pl-cyan-text) !important;
+}
+
 .plan-card-icon-btn .mud-icon-root {
     color: var(--pl-ink) !important;
     fill: var(--pl-ink) !important;
@@ -174,6 +196,18 @@
 .plan-card-icon-btn.plan-card__start:hover {
     filter: brightness(1.12);
     background: var(--pl-volt-fill) !important;
+}
+
+html[data-theme-mode="light"] .plan-card__meta-chip {
+    background: rgba(20, 83, 45, 0.08);
+    border-color: rgba(20, 83, 45, 0.45);
+    color: #14532D;
+}
+
+html[data-theme-mode="light"] .plan-card__last-done-chip {
+    background: rgba(20, 83, 45, 0.08);
+    border-color: rgba(20, 83, 45, 0.45);
+    color: #14532D;
 }
 
 

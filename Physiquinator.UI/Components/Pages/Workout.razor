@@ -382,10 +382,14 @@ else
 
 @if (_undoVisible)
 {
-    <MudIconButton Class="app-fab app-fab--secondary app-fab--bl-1 workout-undo-fab"
-                   Icon="@Icons.Material.Filled.Restore"
-                   OnClick="UndoLastSetCoreAsync"
-                   aria-label="@("Undo last set")" />
+    <button type="button"
+            class="app-fab app-fab--secondary app-fab--bl-1 workout-undo-fab workout-undo-toast"
+            @onclick="UndoLastSetCoreAsync"
+            aria-label="@($"Undo {_undoMessage}")">
+        <MudIcon Icon="@Icons.Material.Filled.Restore" Size="Size.Small" />
+        <span class="workout-undo-toast__text">@_undoMessage</span>
+        <span class="workout-undo-toast__action">UNDO</span>
+    </button>
 }
 
 @code {
@@ -417,6 +421,7 @@ else
     private string? _historySessionId;
     private double? _bodyweightKg;
     private bool _undoVisible;
+    private string _undoMessage = "";
     private System.Threading.Timer? _undoTimer;
     private DateTime _sessionStartedAtUtc;
     private System.Threading.Timer? _elapsedTimer;
@@ -659,6 +664,25 @@ else
             return $"{bw} × {r}";
         }
         return $"{(w?.ToString("0.##", CultureInfo.InvariantCulture) ?? "0")} {unit} × {r}";
+    }
+
+    private string FormatLoggedAmount(ExercisePlan exercise, double weightKg, int reps)
+    {
+        if (exercise.LogType == ExerciseLogType.Duration)
+        {
+            if (ExerciseWeightFormatter.IsBodyweightOnly(weightKg))
+                return $"{reps}s";
+            var sign = weightKg > 0 ? "+" : "-";
+            return string.Format("{0}{1} {2} × {3}s", sign, ExerciseWeightFormatter.FormatWeight(Math.Abs(weightKg), Unit), UnitSuffix, reps);
+        }
+        if (exercise.LogType == ExerciseLogType.BodyweightReps)
+        {
+            if (ExerciseWeightFormatter.IsBodyweightOnly(weightKg))
+                return string.Format("BW × {0}", reps);
+            var sign = weightKg > 0 ? "+" : "-";
+            return string.Format("{0}{1} {2} × {3}", sign, ExerciseWeightFormatter.FormatWeight(Math.Abs(weightKg), Unit), UnitSuffix, reps);
+        }
+        return string.Format("{0} {1} × {2}", ExerciseWeightFormatter.FormatWeight(weightKg, Unit), UnitSuffix, reps);
     }
 
     private WeightUnit Unit => WeightUnitService.Current;
@@ -1295,7 +1319,7 @@ else
             _sessionSets[inputKey] = (finalWeight, finalReps);
             _setInputs[inputKey] = (finalWeight, finalReps);
 
-            ShowUndoToast();
+            ShowUndoToast(string.Format("Logged {0}", FormatLoggedAmount(exercise, finalWeight, finalReps)));
 
             if (willBeLastSetOfWorkout)
             {
@@ -1311,7 +1335,6 @@ else
                 await TimerInterop.StopTimerAsync();
                 SessionService.SkipRest();
                 ActiveExerciseIndex = nextInGroup;
-                Snackbar.Add(string.Format("Next: {0}", plan.Exercises[nextInGroup].Name), Severity.Info);
                 await SafeStateHasChangedAsync();
                 return;
             }
@@ -1339,9 +1362,10 @@ else
         }
     }
 
-    private void ShowUndoToast()
+    private void ShowUndoToast(string message)
     {
         HideUndoToast();
+        _undoMessage = message;
         _undoVisible = true;
         _undoTimer = new System.Threading.Timer(
             _ => OnUndoTimerElapsed(),
@@ -1465,6 +1489,7 @@ else
     private void HideUndoToast()
     {
         _undoVisible = false;
+        _undoMessage = "";
         _undoTimer?.Dispose();
         _undoTimer = null;
     }

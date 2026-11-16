@@ -385,6 +385,37 @@ html[data-theme-mode="light"] .app-fab--secondary .mud-icon-root {
   color: var(--pl-yellow) !important;
   fill: var(--pl-yellow) !important;
 }
+.workout-undo-toast {
+  width: auto !important;
+  min-width: 48px !important;
+  max-width: calc(100vw - 32px) !important;
+  height: 48px !important;
+  padding: 0 14px !important;
+  gap: 8px !important;
+  justify-content: flex-start !important;
+  font-family: var(--font-display) !important;
+}
+.workout-undo-toast__text {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-ink) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 52vw !important;
+}
+.workout-undo-toast__action {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--pl-yellow) !important;
+  border-left: 1.5px solid var(--pl-hairline-strong) !important;
+  padding-left: 8px !important;
+  margin-left: 2px !important;
+}
 .page-header, .home-header {
   display: flex !important;
   align-items: center !important;

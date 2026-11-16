@@ -59,7 +59,7 @@ public static class DesignTokens
         public const string Chip = "#24283B";
         public const string Chip2 = "#414868";
         public const string VoltFill = "#FAFF00";
-        public const string VoltFg = "#10111A";
+        public const string VoltFg = "#1A1B26";
         public const string Yellow = "#E0AF68";
         public const string Purple = "#BB9AF7";
         public const string Cyan = "#7DCFFF";
@@ -79,7 +79,7 @@ public static class DesignTokens
         public const string Chip = "#1F2335";
         public const string Chip2 = "#292E42";
         public const string VoltFill = "#FAFF00";
-        public const string VoltFg = "#10111A";
+        public const string VoltFg = "#1A1B26";
         public const string Yellow = "#E0AF68";
         public const string Purple = "#BB9AF7";
         public const string Cyan = "#7DCFFF";
@@ -99,7 +99,7 @@ public static class DesignTokens
         public const string Chip = "#2F334D";
         public const string Chip2 = "#444A73";
         public const string VoltFill = "#FAFF00";
-        public const string VoltFg = "#10111A";
+        public const string VoltFg = "#1E2030";
         public const string Yellow = "#FFC777";
         public const string Purple = "#C099FF";
         public const string Cyan = "#86E1FC";
@@ -120,11 +120,11 @@ public static class DesignTokens
         public const string Chip2 = "#B4B5B9";
         public const string VoltFill = "#005A8A";
         public const string VoltFg = "#FFFFFF";
-        public const string Yellow = "#6B4E00";
+        public const string Yellow = "#5A4000";
         public const string Purple = "#6B21C5";
         public const string Cyan = "#00506B";
         public const string Magenta = "#8A1A2E";
-        public const string Success = "#3D6B1E";
+        public const string Success = "#2F5A16";
         public const string Error = "#8A1A2E";
     }
 
@@ -245,7 +245,7 @@ public static class DesignTokens
         public const string Purple = "#5A4DB8";
         public const string Cyan = "#006B7A";
         public const string Magenta = "#A3274A";
-        public const string Success = "#5A7A00";
+        public const string Success = "#4A6600";
         public const string Error = "#A3274A";
     }
 

@@ -31,7 +31,7 @@
 	--pl-cyan: #007A99;
 	--pl-amber: #D97706;
 	--pl-amber-ink: #5A3E1A;
-	--pl-plate-red: #FF0055;
+	--pl-plate-red: #E11D48;
 	--pl-plate-blue: #1E5EFF;
 	--pl-plate-gold: #D97706;
 	--pl-plate-green: #16A34A;
@@ -236,13 +236,13 @@ html[data-theme="tokyo-night-storm"] {
 	--pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);
 }
 
-/* Tokyo Night Moon */
+/* Tokyo Night Moon - ink-2 lightened to AA on chip for secondary text. */
 html[data-theme="tokyo-night-moon"] {
 	--pl-paper: #222436;
 	--pl-paper-2: #1E2030;
 	--pl-paper-3: #2F334D;
 	--pl-ink: #C8D3F5;
-	--pl-ink-2: #828BB8;
+	--pl-ink-2: #A9B1D6;
 	--pl-stone: #8C9CC4;
 	--pl-stone-2: #9AA3C2;
 	--pl-hairline: #2F334D;
@@ -292,13 +292,15 @@ html[data-theme="tokyo-night-moon"] {
 	--pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);
 }
 
-/* Tokyo Night Light */
+/* Tokyo Night Light - text-safe dark prints for AA on light chip.
+   Err/warn/ok use deep prints that hold 4.5:1 on chip and 3:1 under
+   deuteranopia/protanopia. Amber/volt collapse per DESIGN.md. */
 html[data-theme="tokyo-night-light"] {
 	--pl-paper: #D5D6DB;
 	--pl-paper-2: #CBCCD1;
 	--pl-paper-3: #B4B5B9;
 	--pl-ink: #343B58;
-	--pl-ink-2: #5A638C;
+	--pl-ink-2: #3F4566;
 	--pl-stone: #444A6B;
 	--pl-stone-2: #444A6B;
 	--pl-hairline: #B4B5B9;
@@ -310,23 +312,23 @@ html[data-theme="tokyo-night-light"] {
 	--pl-rubber-3: #444A73;
 	--pl-ink-border: #343B58;
 	--pl-ink-border-2: #5A638C;
-	--pl-yellow-text: #6B4E00;
+	--pl-yellow-text: #5A4000;
 	--pl-purple-text: #5A1E9E;
 	--pl-cyan-text: #00506B;
-	--pl-success-text: #3D6B1E;
-	--pl-yellow: #6B4E00;
+	--pl-success-text: #2F5A16;
+	--pl-yellow: #5A4000;
 	--pl-yellow-bg: rgba(140, 108, 26, 0.14);
 	--pl-purple: #6B21C5;
-	--pl-magenta: #C64343;
+	--pl-magenta: #8A1A2E;
 	--pl-cyan: #00506B;
-	--pl-amber: #8C6C1A;
+	--pl-amber: #5A4000;
 	--pl-amber-ink: #5A3E1A;
 	--pl-plate-red: #C64343;
 	--pl-plate-blue: #007197;
 	--pl-plate-gold: #8C6C1A;
 	--pl-plate-green: #587539;
-	--pl-success: #3D6B1E;
-	--pl-error: #C64343;
+	--pl-success: #2F5A16;
+	--pl-error: #8A1A2E;
 	--pl-seal: #9854F1;
 	--pl-dot: rgba(52, 59, 88, 0.08);
 	--pl-grid-line: rgba(52, 59, 88, 0.12);
@@ -334,15 +336,15 @@ html[data-theme="tokyo-night-light"] {
 	--pl-accent-fg: #FFFFFF;
 	--pl-volt-fg: #FFFFFF;
 	--pl-volt-edge: #005A8A;
-	--pl-warn-text: #8C6C1A;
-	--pl-ok-text: #587539;
-	--pl-err-text: #C64343;
+	--pl-warn-text: #5A4000;
+	--pl-ok-text: #2F5A16;
+	--pl-err-text: #8A1A2E;
 	--pl-focus: #005A8A;
 	--pl-plate-shadow-color: #1B1E33;
 	--pl-volt-fill: #005A8A;
 	--pl-bevel-highlight: rgba(255, 255, 255, 0.65);
-	--pl-danger: #C64343;
-	--pl-warning: #8C6C1A;
+	--pl-danger: #8A1A2E;
+	--pl-warning: #5A4000;
 	--pl-plate-shadow-sm: 3px 3px 0 var(--pl-plate-shadow-color);
 	--pl-plate-shadow-md: 5px 5px 0 var(--pl-plate-shadow-color);
 	--pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);
@@ -593,7 +595,7 @@ html[data-theme="solarized-dark"] {
 	--pl-yellow-text: #D4A500;
 	--pl-purple-text: #9AA3FF;
 	--pl-cyan-text: #2AA198;
-	--pl-success-text: #859900;
+	--pl-success-text: #A3C63E;
 	--pl-yellow: #D4A500;
 	--pl-yellow-bg: rgba(181, 137, 0, 0.16);
 	--pl-purple: #9AA3FF;
@@ -605,7 +607,7 @@ html[data-theme="solarized-dark"] {
 	--pl-plate-blue: #268BD2;
 	--pl-plate-gold: #B58900;
 	--pl-plate-green: #859900;
-	--pl-success: #859900;
+	--pl-success: #A3C63E;
 	--pl-error: #FF6B6B;
 	--pl-seal: #6C71C4;
 	--pl-dot: rgba(131, 148, 150, 0.06);
@@ -614,8 +616,8 @@ html[data-theme="solarized-dark"] {
 	--pl-accent-fg: #002B36;
 	--pl-volt-fg: #002B36;
 	--pl-volt-edge: #002B36;
-	--pl-warn-text: #B58900;
-	--pl-ok-text: #859900;
+	--pl-warn-text: #D4A500;
+	--pl-ok-text: #A3C63E;
 	--pl-err-text: #FF6B6B;
 	--pl-focus: #2AA198;
 	--pl-plate-shadow-color: #000000;
@@ -649,11 +651,11 @@ html[data-theme="solarized-light"] {
 	--pl-yellow-text: #5A4000;
 	--pl-purple-text: #5A4DB8;
 	--pl-cyan-text: #006B7A;
-	--pl-success-text: #5A7A00;
+	--pl-success-text: #4A6600;
 	--pl-yellow: #7A5A00;
 	--pl-yellow-bg: rgba(181, 137, 0, 0.12);
 	--pl-purple: #5A4DB8;
-	--pl-magenta: #D33682;
+	--pl-magenta: #A3274A;
 	--pl-cyan: #006B7A;
 	--pl-amber: #CB4B16;
 	--pl-amber-ink: #5A3E1A;
@@ -661,8 +663,8 @@ html[data-theme="solarized-light"] {
 	--pl-plate-blue: #268BD2;
 	--pl-plate-gold: #B58900;
 	--pl-plate-green: #859900;
-	--pl-success: #5A7A00;
-	--pl-error: #DC322F;
+	--pl-success: #4A6600;
+	--pl-error: #A3274A;
 	--pl-seal: #6C71C4;
 	--pl-dot: rgba(101, 123, 131, 0.07);
 	--pl-grid-line: rgba(147, 161, 161, 0.18);
@@ -670,15 +672,15 @@ html[data-theme="solarized-light"] {
 	--pl-accent-fg: #FDF6E3;
 	--pl-volt-fg: #FDF6E3;
 	--pl-volt-edge: #005DBB;
-	--pl-warn-text: #B58900;
-	--pl-ok-text: #859900;
-	--pl-err-text: #DC322F;
+	--pl-warn-text: #5A4000;
+	--pl-ok-text: #4A6600;
+	--pl-err-text: #A3274A;
 	--pl-focus: #475A64;
 	--pl-plate-shadow-color: #1B1E33;
 	--pl-volt-fill: #005DBB;
 	--pl-bevel-highlight: rgba(255, 255, 255, 0.65);
-	--pl-danger: #DC322F;
-	--pl-warning: #B58900;
+	--pl-danger: #A3274A;
+	--pl-warning: #5A4000;
 	--pl-plate-shadow-sm: 3px 3px 0 var(--pl-plate-shadow-color);
 	--pl-plate-shadow-md: 5px 5px 0 var(--pl-plate-shadow-color);
 	--pl-plate-shadow-lg: 8px 8px 0 var(--pl-plate-shadow-color);

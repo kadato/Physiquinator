@@ -10,6 +10,10 @@ jobs:
   analyze:
     name: Analyze with SonarCloud
     runs-on: ubuntu-latest
+    # Dependabot PRs cannot read repository secrets, so the scan fails without a
+    # Dependabot-scoped SONAR_TOKEN. The push scan on main still covers the
+    # merged result.
+    if: github.actor != 'dependabot[bot]'
 
     steps:
     - name: Checkout code

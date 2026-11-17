@@ -23,7 +23,7 @@
     <script type="application/ld+json">
     {"@@context":"https://schema.org","@@type":"WebApplication","name":"Physiquinator","url":"https://physiquinator.kadatodev.workers.dev/","description":"Cross-platform workout tracking with a smart rest timer, progress analytics, an on-device AI assistant, and an MCP agent API.","applicationCategory":"HealthApplication","operatingSystem":"Any"}
     </script>
-    <meta name="theme-color" content="#0E0F17" />
+    <meta name="theme-color" id="theme-color-meta" content="#0E0F17" />
     <meta name="color-scheme" content="light dark" />
     <base href="/" />
     <link rel="preload" href="_content/Physiquinator.UI/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
@@ -38,7 +38,7 @@
         }
         html[data-theme-mode="light"] body,
         html[data-theme="light"] body {
-            background-color: #E7E3D1 !important;
+            background-color: #E6E2D0 !important;
             color: #1A1B26;
         }
         /* Startup splash - void #0E0F17 with volt plate centered: matches native MauiSplashScreen
@@ -73,8 +73,6 @@
         }
         html[data-theme-mode="light"] .app-splash,
         html[data-theme="light"] .app-splash {
-            background-color: #E7E3D1;
-            color: #1A1B26;
         }
         #app:has(> :not(.app-splash)) .app-splash {
             display: none;

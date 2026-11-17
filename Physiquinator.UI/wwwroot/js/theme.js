@@ -95,6 +95,44 @@
     const lightThemes = new Set(["light", "tokyo-night-light", "solarized-light", "github-light"]);
     const isLightTheme = (theme) => lightThemes.has(theme);
 
+    // Mirrors --pl-paper in tokens.css / DesignTokens.cs. Used for the OS
+    // status bar (theme-color meta) so every theme gets a matching strip
+    // with contrasting system icons.
+    const paperColors = {
+        "dark": "#0E0F17",
+        "light": "#E6E2D0",
+        "tokyo-night": "#1A1B26",
+        "tokyo-night-storm": "#24283B",
+        "tokyo-night-moon": "#222436",
+        "tokyo-night-light": "#D5D6DB",
+        "dracula": "#282A36",
+        "monokai": "#272822",
+        "one-dark-pro": "#282C34",
+        "nord": "#2E3440",
+        "solarized-dark": "#002B36",
+        "solarized-light": "#FDF6E3",
+        "github-dark": "#0D1117",
+        "github-light": "#FFFFFF",
+        "night-owl": "#011627"
+    };
+
+    const syncThemeColor = (theme) => {
+        try {
+            const paper = paperColors[theme];
+            if (!paper) return;
+            let meta = document.querySelector('meta[name="theme-color"]');
+            if (!meta) {
+                meta = document.createElement("meta");
+                meta.setAttribute("name", "theme-color");
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute("content", paper);
+            try {
+                document.documentElement.style.colorScheme = isLightTheme(theme) ? "light" : "dark";
+            } catch { /* ignore */ }
+        } catch { /* ignore */ }
+    };
+
     const getPreference = () => localStorage.getItem(storageKey) || "system";
     const getSystemTheme = () =>
         window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -104,6 +142,7 @@
     const applyTheme = (theme) => {
         document.documentElement.setAttribute("data-theme", theme);
         document.documentElement.setAttribute("data-theme-mode", isLightTheme(theme) ? "light" : "dark");
+        syncThemeColor(theme);
     };
 
     const notify = (theme) => {

@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" id="theme-color-meta" content="#0E0F17" />
     <title>Physiquinator</title>
     <base href="/" />
     <link rel="preload" href="_content/Physiquinator.UI/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
@@ -21,15 +23,22 @@
             var lightThemes = { "light": 1, "tokyo-night-light": 1, "solarized-light": 1, "github-light": 1 };
             document.documentElement.dataset.theme = theme;
             document.documentElement.dataset.themeMode = lightThemes[theme] ? "light" : "dark";
+            // Keep the OS status bar / PWA theme-color in sync pre-paint.
+            // Values mirror --pl-paper in tokens.css / DesignTokens.cs.
+            var papers = { "dark": "#0E0F17", "light": "#E6E2D0", "tokyo-night": "#1A1B26", "tokyo-night-storm": "#24283B", "tokyo-night-moon": "#222436", "tokyo-night-light": "#D5D6DB", "dracula": "#282A36", "monokai": "#272822", "one-dark-pro": "#282C34", "nord": "#2E3440", "solarized-dark": "#002B36", "solarized-light": "#FDF6E3", "github-dark": "#0D1117", "github-light": "#FFFFFF", "night-owl": "#011627" };
+            var meta = document.getElementById("theme-color-meta");
+            if (meta && papers[theme]) { meta.setAttribute("content", papers[theme]); }
         })();
     </script>
     <style>
+        html[data-theme-mode="dark"] body,
         html[data-theme="dark"] body {
-            background-color: #1A1B26 !important;
+            background-color: #0E0F17 !important;
             color: #C0CAF5;
         }
+        html[data-theme-mode="light"] body,
         html[data-theme="light"] body {
-            background-color: #D5D6DB !important;
+            background-color: #E6E2D0 !important;
             color: #1A1B26;
         }
     </style>
@@ -75,22 +84,37 @@
             display: block;
         }
         html[data-theme="light"] .app-splash {
-            background-color: #E7E3D1;
-            color: #1A1B26;
         }
         /* Camera hole / display cutout and tall screens: let the WebView extend edge-to-edge
            and use the safe-area inset for the top. The status-bar-safe-area div provides
-           the visible background behind the cutout. */
+           the visible background behind the cutout. It must track --pl-paper for every
+           theme: the native status icons use dark glyphs on light papers and light glyphs
+           on dark papers, so a mismatched strip destroys contrast (e.g. dark icons on a
+           dark fallback when tokyo-night-light is active). */
         .status-bar-safe-area {
             display: block;
             height: env(safe-area-inset-top, 0px);
             min-height: env(safe-area-inset-top, 0px);
-            background: #0E0F17;
+            background: var(--pl-paper, #0E0F17);
             flex-shrink: 0;
         }
-        html[data-theme="light"] .status-bar-safe-area {
-            background: #E7E3D1;
-        }
+        /* Per-theme explicit paper fallback for pre-CSS paint and for WebViews where
+           custom properties resolve late. Values mirror tokens.css --pl-paper. */
+        html[data-theme="dark"] .status-bar-safe-area { background: #0E0F17; }
+        html[data-theme="light"] .status-bar-safe-area { background: #E6E2D0; }
+        html[data-theme="tokyo-night"] .status-bar-safe-area { background: #1A1B26; }
+        html[data-theme="tokyo-night-storm"] .status-bar-safe-area { background: #24283B; }
+        html[data-theme="tokyo-night-moon"] .status-bar-safe-area { background: #222436; }
+        html[data-theme="tokyo-night-light"] .status-bar-safe-area { background: #D5D6DB; }
+        html[data-theme="dracula"] .status-bar-safe-area { background: #282A36; }
+        html[data-theme="monokai"] .status-bar-safe-area { background: #272822; }
+        html[data-theme="one-dark-pro"] .status-bar-safe-area { background: #282C34; }
+        html[data-theme="nord"] .status-bar-safe-area { background: #2E3440; }
+        html[data-theme="solarized-dark"] .status-bar-safe-area { background: #002B36; }
+        html[data-theme="solarized-light"] .status-bar-safe-area { background: #FDF6E3; }
+        html[data-theme="github-dark"] .status-bar-safe-area { background: #0D1117; }
+        html[data-theme="github-light"] .status-bar-safe-area { background: #FFFFFF; }
+        html[data-theme="night-owl"] .status-bar-safe-area { background: #011627; }
         /* Tall screens (20:9, 21:9) - ensure the app fills the viewport even when the
            status bar is transparent and the content extends into the cutout. */
         html, body {

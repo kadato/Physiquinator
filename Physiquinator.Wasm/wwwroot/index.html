@@ -65,15 +65,33 @@
             height: min(68vmin, 320px);
             display: block;
         }
-        html[data-theme="light"] .app-splash {
-        }
+        html[data-theme-mode="light"] .app-splash { color: #1A1B26; }
+        /* Per-theme splash paper: the pre-paint boot script already resolved
+           data-theme, so the HTML splash matches the Blazor splash
+           (var(--pl-paper)) and the app content exactly - one continuous
+           splash instead of a flash per stage. Values mirror tokens.css. */
+        html[data-theme="dark"] .app-splash { background-color: #0E0F17; }
+        html[data-theme="light"] .app-splash { background-color: #E6E2D0; }
+        html[data-theme="tokyo-night"] .app-splash { background-color: #1A1B26; }
+        html[data-theme="tokyo-night-storm"] .app-splash { background-color: #24283B; }
+        html[data-theme="tokyo-night-moon"] .app-splash { background-color: #222436; }
+        html[data-theme="tokyo-night-light"] .app-splash { background-color: #D5D6DB; }
+        html[data-theme="dracula"] .app-splash { background-color: #282A36; }
+        html[data-theme="monokai"] .app-splash { background-color: #272822; }
+        html[data-theme="one-dark-pro"] .app-splash { background-color: #282C34; }
+        html[data-theme="nord"] .app-splash { background-color: #2E3440; }
+        html[data-theme="solarized-dark"] .app-splash { background-color: #002B36; }
+        html[data-theme="solarized-light"] .app-splash { background-color: #FDF6E3; }
+        html[data-theme="github-dark"] .app-splash { background-color: #0D1117; }
+        html[data-theme="github-light"] .app-splash { background-color: #FFFFFF; }
+        html[data-theme="night-owl"] .app-splash { background-color: #011627; }
         #app:has(> :not(.app-splash)) .app-splash {
             display: none;
         }
     </style>
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="_content/Physiquinator.UI/css/tokens.css?v=94" />
-    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=96" />
+    <link rel="stylesheet" href="_content/Physiquinator.UI/css/app-overrides.css?v=97" />
     <link rel="stylesheet" href="Physiquinator.Wasm.styles.css" />
     <link rel="icon" href="favicon.ico?v=2" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="_content/Physiquinator.UI/favicon.svg?v=2" />

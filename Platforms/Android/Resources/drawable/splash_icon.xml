@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Splash icon without the baked background color, so the theme-aware
-     maui_splash_color (teal light / volt green dark) shows through. -->
+     maui_splash_color (light paper / dark void) shows through. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/maui_splash_color" />
     <item android:width="108dp" android:height="108dp" android:gravity="center"

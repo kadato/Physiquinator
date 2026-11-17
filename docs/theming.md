@@ -57,12 +57,13 @@ Preview the new theme by setting `document.documentElement.dataset.theme = "fore
 ## Verifying a theme
 
 - Run `dotnet build Physiquinator.UI/Physiquinator.UI.csproj` to ensure `DesignTokens` and `PhysiquinatorThemes` stay in sync.
-- Check the startup splash in `Physiquinator.Web/Components/App.razor` and `wwwroot/index.html`: its inline `<style>` block duplicates the paper and ink tokens for the first paint before CSS loads. Update it when you change `tokens.css`.
+- Check the startup splash in `Physiquinator.Web/Components/App.razor`, `wwwroot/index.html`, `Physiquinator.Wasm/wwwroot/index.html`, and `Physiquinator.Wasm/wwwroot/404.html`: their inline `<style>` blocks carry a per-theme `.app-splash` paper map plus the `theme-color` paper map in the pre-paint boot script for the first paint before CSS loads. The Blazor `SplashScreen.razor` stage is styled by `.app-splash` in `app-overrides.css` via `var(--pl-paper)` so it matches exactly. Update all of them when you change `tokens.css`. The native Android splash (`Platforms/Android/Resources/values/colors.xml`, `values-night/colors.xml`) only knows system light/dark, so keep it aligned with the default `light`/`dark` papers; per-theme exactness starts at the HTML stage.
+- `tokens.css` and `app-overrides.css` are referenced with `?v=` cache-busters in the files above. Bump the number when you change either file so WebView2 and browsers fetch the new sheet.
 - Run `dotnet test Physiquinator.Tests/Physiquinator.Tests.csproj` — no test should depend on a color value.
 
 ## Cache busting
 
-`tokens.css` and `app-overrides.css` are referenced with `?v=87` in `wwwroot/index.html`, `Physiquinator.Web/Components/App.razor`, and `Physiquinator.Wasm/wwwroot/index.html`. Bump the number when you change either file so WebView2 and browsers fetch the new sheet.
+`tokens.css` and `app-overrides.css` are referenced with `?v=` cache-busters in the files above. Bump the number when you change either file so WebView2 and browsers fetch the new sheet.
 
 ## Past drift that is now fixed
 

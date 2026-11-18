@@ -113,20 +113,35 @@ First launch seeds sample plans and workouts.
 
 ## Features
 
-- **Plans.** Build plans with custom exercises, per-exercise rest, sets, and reps. Duplicate any plan. Undo removes the copy.
-- **Logging.** Log weight and reps, bodyweight reps with added load, or duration. Each set pre-fills from your last session of the same plan. Names autocomplete from the catalog and your history. Custom names still save.
-- **Supersets.** Group exercises into supersets. The workout shows the partner up next and skips the rest between the two.
-- **Rest timer.** Count down with add-time, reset, skip, and pause. Progress counts completed time, not just sets. On Android the timer floats over other apps from a foreground service, with sound, vibration, and exact alarms.
-- **History.** Read the 53-week heatmap, per-exercise charts with PR markers, and automatic records for weight, reps, volume, and session length. Streaks respect your training days. Open any session to edit its sets, continue it, or delete it.
-- **Session compare.** Pick two sessions and compare them side by side.
-- **Bodyweight.** Log bodyweight daily and read the trend by range. Calisthenics volume counts a share of your bodyweight. Push-ups count 65%, pull-ups 100%. Charts use 70 kg where you logged no weight.
-- **Share cards.** Copy a session as text or save it as a PNG card. You pick the parts and the theme.
-- **AI assistant.** Chat in the app with streaming answers. The assistant works through 15 tools that read plans, history, bodyweight, and settings. `generate_deload_plan` cuts volume for a light week. `calculate_progressive_overload` sets next targets from recent sessions.
-- **AI providers.** Use OpenAI, OpenRouter, OpenCode, local Ollama, or any OpenAI-compatible endpoint. Fetch the model list from the endpoint and test the connection before you save. Custom instructions steer every chat. No API key? The clipboard bridge carries your context and the action schemas to Gemini or ChatGPT and back. You review each action as a diff before the app applies it.
-- **Agent API.** The web host exposes the same 15 tools at `/mcp` over Streamable HTTP for MCP clients. Destructive tools ask for confirmation. Set `Mcp__ApiKey` before you expose the host. Browser clients also need `CorsOrigins` in `appsettings.json`.
-- **Profiles and backup.** Switch one-tap profiles, each with its own database. Export and import plans, history, or everything as JSON. You preview the contents before you apply them.
-- **Themes and settings.** Pick from 15 themes or follow the OS. The native chrome follows your pick. Set kg or lb, rest alerts, the floating bubble, and your training days. Settings has search.
-- **Web and browser.** `Physiquinator.Web` serves the same UI with cookie auth and per-account SQLite mirrored to IndexedDB. It answers `/healthz` and needs `Mcp__ApiKey` in public, so serve it behind HTTPS. `Physiquinator.Wasm` runs with no server and no accounts, keeps per-browser SQLite with a 20-second autosave, and installs as an offline PWA. Clearing site data deletes history, so export from **Settings** regularly. Browser AI calls need CORS headers, so set `OLLAMA_ORIGINS` for Ollama. The WASM host has no `/mcp`.
+### Workouts
+
+- **Plans.** You build plans from custom exercises with sets, reps, and rest per exercise. Duplication takes one tap. Undo removes the copy.
+- **Sets.** You log weight and reps, bodyweight plus added load, or duration. The app prefills each set from your last session. Names autocomplete from your history and the catalog. The app still saves custom names.
+- **Supersets.** You pair exercises into supersets. The partner shows up next. The app skips rest between the pair.
+- **Rest timer.** The timer counts down with add time, reset, skip, and pause. On Android the timer floats over other apps with sound, vibration, and exact alarms.
+
+### Progress
+
+- **History.** You read a 53-week heatmap and per-exercise charts with PR markers. The app records weight, reps, volume, and session length automatically. Streaks respect your training days.
+- **Sessions.** You open any session to edit, continue, or delete it. A compare view shows two sessions side by side.
+- **Bodyweight.** You log bodyweight daily. Trends group by range. The app scales calisthenics volume with bodyweight. Push-ups count 65% and pull-ups count 100%.
+- **Share cards.** Parts and theme are your choice. You copy a session as text or save it as a PNG card.
+
+### AI assistant
+
+- **Chat.** You chat in the app. Answers arrive as they stream. The 15 tools behind the chat read plans, history, bodyweight, and settings. You ask for a deload week or next targets from recent sessions.
+- **Providers.** OpenAI, OpenRouter, OpenCode, local Ollama, or any OpenAI-compatible endpoint all work. The app lists models from the endpoint. You test the connection before you save. Custom instructions steer every chat. Without a key, you carry context through the clipboard bridge to Gemini or ChatGPT and back. You review each change before the app applies it.
+- **Agent API.** The app exposes the same 15 tools over MCP at `/mcp` for external agents. You confirm destructive actions.
+
+### Your data
+
+- **Offline-first.** The app stores plans, history, and settings in local SQLite. You need no account. The app works with no connection.
+- **Profiles and backup.** You switch profiles with one tap. Each profile keeps its own database. Export files hold plans, history, or everything as JSON. You preview the contents before you apply them.
+- **Settings.** Appearance offers 15 themes or follows the OS. Settings hold kg or lb, rest alerts, the floating bubble, and training days. Search finds any setting.
+
+### Every runtime
+
+- **One UI.** The same UI runs on Android, Windows, iOS, macOS, and the web. Web accounts keep separate storage. The WASM build runs with no server as an offline PWA.
 
 ## Tech stack
 

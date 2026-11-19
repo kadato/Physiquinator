@@ -1019,6 +1019,8 @@ html[data-theme-mode="dark"] .rest-timer-digits {
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
+  background: color-mix(in srgb, var(--pl-success) 12%, var(--pl-chip-2)) !important;
+  border-color: color-mix(in srgb, var(--pl-ok-text) 55%, var(--pl-ink-border)) !important;
 }
 .rest-timer-add-btn .mud-icon-root {
   font-size: 18px !important;
@@ -1027,9 +1029,17 @@ html[data-theme-mode="dark"] .rest-timer-digits {
   color: var(--pl-ok-text) !important;
   fill: var(--pl-ok-text) !important;
 }
+.rest-timer-icon-btn--reset {
+  background: color-mix(in srgb, var(--pl-warning) 12%, var(--pl-chip-2)) !important;
+  border-color: color-mix(in srgb, var(--pl-warn-text) 55%, var(--pl-ink-border)) !important;
+}
 .rest-timer-icon-btn--reset .mud-icon-root {
   color: var(--pl-warn-text) !important;
   fill: var(--pl-warn-text) !important;
+}
+.rest-timer-icon-btn--skip {
+  background: color-mix(in srgb, var(--pl-cyan) 12%, var(--pl-chip-2)) !important;
+  border-color: color-mix(in srgb, var(--pl-cyan-text) 55%, var(--pl-ink-border)) !important;
 }
 .rest-timer-icon-btn--skip .mud-icon-root {
   color: var(--pl-cyan-text) !important;
@@ -1037,24 +1047,15 @@ html[data-theme-mode="dark"] .rest-timer-digits {
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn,
 html[data-theme-mode="dark"] .rest-timer-add-btn {
-  background: var(--pl-chip) !important;
-  border-color: var(--pl-hairline-strong) !important;
-  box-shadow: 3px 3px 0 #10111A !important;
-}
-html[data-theme-mode="dark"] .rest-timer-add-btn {
-  color: var(--pl-success-text) !important;
-}
-html[data-theme-mode="dark"] .rest-timer-add-btn .mud-icon-root {
-  color: var(--pl-success-text) !important;
-  fill: var(--pl-success-text) !important;
+  box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn:hover,
 html[data-theme-mode="dark"] .rest-timer-add-btn:hover {
-  background: var(--pl-chip-2) !important;
+  filter: brightness(1.12) !important;
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn--reset .mud-icon-root {
-  color: var(--pl-yellow-text) !important;
-  fill: var(--pl-yellow-text) !important;
+  color: var(--pl-warn-text) !important;
+  fill: var(--pl-warn-text) !important;
 }
 html[data-theme-mode="dark"] .rest-timer-icon-btn--skip .mud-icon-root {
   color: var(--pl-cyan-text) !important;
@@ -1370,13 +1371,20 @@ html[data-theme-mode="light"] .mud-chip.mud-chip-color-error {
 }
 .mud-input-label-outlined {
   font-family: var(--font-mono) !important;
-  font-size: 0.6875rem !important;
+  font-size: 1rem !important;
   font-weight: 800 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   color: var(--pl-ink) !important;
   background: var(--pl-chip) !important;
   padding: 0 4px !important;
+}
+/* The fieldset legend sizes the notch gap. Mirror the label's type here so
+   the gap always fits the shrunk (0.75 scale) label instead of clipping it. */
+.mud-input.mud-input-outlined > .mud-input-outlined-border legend {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
 }
 .mud-input-label-outlined.mud-input-label-inputcontrol {
   color: var(--pl-ink) !important;
@@ -1836,10 +1844,24 @@ textarea { font-size:max(16px, 1em); }
 }
 .dialog-header-bar__left {
   display: flex !important;
-  align-items: center !important;
+  align-items: stretch !important;
   gap: 10px !important;
   min-width: 0 !important;
   flex: 1 !important;
+}
+/* The icon plate always matches its title plate exactly: stretch to the row
+   height (fixed comfortable width), so the two boxes share top/bottom edges
+   on one line or wrapped. */
+.dialog-header-bar__left > .dialog-title-icon-box,
+.mud-dialog-title > .d-flex:has(.dialog-title-icon-box) > .dialog-title-icon-box {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+}
+.mud-dialog-title > .d-flex:has(.dialog-title-icon-box) {
+  align-items: stretch !important;
 }
 .dialog-header-bar__title {
   font-family: var(--font-display) !important;
@@ -1957,10 +1979,10 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius);
   background: var(--pl-volt-fill);
   color: var(--pl-volt-fg) !important;
@@ -1969,9 +1991,9 @@ html:has(.mud-dialog) .app-fab:not(.dialog-fab),
 .dialog-title-icon-box .mud-icon-root {
   color: var(--pl-volt-fg) !important;
   fill: var(--pl-volt-fg) !important;
-  font-size: 18px !important;
-  width: 18px !important;
-  height: 18px !important;
+  font-size: 24px !important;
+  width: 24px !important;
+  height: 24px !important;
 }
 .dialog-title-icon-box--error {
   background: var(--pl-error) !important;
@@ -2299,8 +2321,8 @@ button.plan-card__start,
 
 /* Exercise Card Top Edge Track */
 .exercise-card-edge-track { width:100%; height:4px; background:var(--pl-chip-2); position:relative; overflow:hidden; flex-shrink:0; }
-.exercise-card-edge-fill { height:100%; background:var(--pl-ink); transition:width 240ms cubic-bezier(0.4, 0, 0.2, 1); }
-.exercise-card-edge-fill--complete { background:var(--pl-ok-text) !important; }
+.exercise-card-edge-fill { height:100%; background:linear-gradient(90deg, var(--pl-cyan), var(--pl-volt-fill)); transition:width 240ms cubic-bezier(0.4, 0, 0, 1); }
+.exercise-card-edge-fill--complete { background:var(--pl-success) !important; }
 
 .mud-snackbar {
   border: var(--hairline-strong) !important;
@@ -5036,17 +5058,13 @@ html[data-theme-mode="light"] .mud-button-outlined:not(.mud-button-outlined-disa
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
 }
-html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard),
-html[data-theme-mode="light"] .rest-timer-icon-btn,
-html[data-theme-mode="light"] .rest-timer-add-btn {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.plan-card__start):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard) {
   background: var(--pl-chip-2) !important;
   border: 1.5px solid var(--pl-ink-border) !important;
   color: var(--pl-ink) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
 }
-html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard):hover,
-html[data-theme-mode="light"] .rest-timer-icon-btn:hover,
-html[data-theme-mode="light"] .rest-timer-add-btn:hover {
+html[data-theme-mode="light"] .mud-icon-button:not(.mud-button-disabled):not(.app-fab):not(.workout-undo-fab):not(.mud-error-text):not(.mud-warning-text):not(.mud-success-text):not(.home-hero__discard):hover {
   background: color-mix(in srgb, var(--pl-volt-fill) 8%, var(--pl-chip-2)) !important;
   border-color: var(--pl-yellow) !important;
   color: var(--pl-yellow-text) !important;
@@ -6126,8 +6144,6 @@ html[data-theme-mode="dark"] .workout-brutal__alert-btn { background: var(--pl-v
   color: var(--pl-stone);
   line-height: 1;
 }
-.workout-hud__stat--volume .workout-hud__label { color: var(--pl-cyan-text); }
-.workout-hud__stat--sets .workout-hud__label { color: var(--pl-ok-text); }
 .workout-hud__value {
   font-family: var(--font-display);
   font-size: clamp(16px, 4.5vw, 20px) !important;
@@ -6187,7 +6203,7 @@ html[data-theme-mode="dark"] .workout-brutal__alert-btn { background: var(--pl-v
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(90deg, transparent 0 10px, color-mix(in srgb, var(--pl-volt-fg) 10%, transparent) 10px 11px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 45%);
 }
 .workout-hud__bar-grid {
   position: absolute;
@@ -6284,7 +6300,7 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
 }
 .workout-focus__edge-fill {
   height: 100%;
-  background: var(--pl-ink);
+  background: linear-gradient(90deg, var(--pl-cyan), var(--pl-volt-fill));
   transition: width 300ms cubic-bezier(.19,1,.22,1);
   position: relative;
 }
@@ -6294,16 +6310,19 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
 }
-/* Time's up banner on the logging interface: high-visibility acid volt plate */
+/* Time's up banner: one hue only. Green-tinted plate with a green edge,
+   green stamp title, neutral set badge, neutral buttons except READY,
+   which shares the plate's green. No volt, amber, or cyan in here. */
 .workout-timesup-banner {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  background: var(--pl-volt-fill);
-  border-bottom: 2px solid var(--pl-volt-edge);
-  color: var(--pl-volt-fg);
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.5), 0 3px 0 rgba(16, 17, 26, 0.25);
+  background: color-mix(in srgb, var(--pl-success) 13%, var(--pl-chip));
+  border-top: 4px solid var(--pl-success);
+  border-bottom: 2px solid var(--pl-success);
+  color: var(--pl-ink);
+  box-shadow: inset 0 1px 0 var(--pl-bevel-highlight);
   animation: timesup-banner-slide 220ms cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
@@ -6331,18 +6350,22 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   place-items: center;
   width: 36px;
   height: 36px;
-  background: var(--pl-volt-fg);
-  border: 1.5px solid var(--pl-volt-fg);
+  background: var(--pl-success);
+  border: 1.5px solid var(--pl-ink-border);
   border-radius: var(--radius);
   flex-shrink: 0;
-  box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.35);
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
 }
 .workout-timesup-banner__badge .mud-icon-root {
   font-size: 22px !important;
   width: 22px !important;
   height: 22px !important;
-  color: var(--pl-volt-fill) !important;
-  fill: var(--pl-volt-fill) !important;
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+html[data-theme-mode="dark"] .workout-timesup-banner__badge .mud-icon-root {
+  color: #10111A !important;
+  fill: #10111A !important;
 }
 .workout-timesup-banner__text {
   display: flex;
@@ -6363,7 +6386,7 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--pl-volt-fg) !important;
+  color: var(--pl-ok-text) !important;
   line-height: 1;
 }
 .workout-timesup-banner__set-badge {
@@ -6372,13 +6395,13 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-weight: 900 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
-  background: var(--pl-volt-fg) !important;
-  color: var(--pl-volt-fill) !important;
+  background: var(--pl-chip-2) !important;
+  color: var(--pl-ink) !important;
   padding: 4px 10px !important;
-  border: 1.5px solid var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   border-radius: var(--radius);
   line-height: 1.1;
-  box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.4) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -6388,7 +6411,7 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--pl-volt-fg) !important;
+  color: var(--pl-ink) !important;
   line-height: 1.1;
   word-break: break-word;
 }
@@ -6405,9 +6428,9 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   gap: 6px;
   min-height: 40px;
   padding: 0 12px;
-  background: var(--pl-volt-fg) !important;
-  color: var(--pl-volt-fill) !important;
-  border: 1.5px solid var(--pl-volt-fg) !important;
+  background: var(--pl-chip) !important;
+  color: var(--pl-ink) !important;
+  border: 1.5px solid var(--pl-ink-border) !important;
   border-radius: var(--radius);
   cursor: pointer;
   font-family: var(--font-mono) !important;
@@ -6415,55 +6438,37 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-weight: 900 !important;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow: 2px 2px 0 rgba(16, 17, 26, 0.4) !important;
+  box-shadow: 2px 2px 0 var(--pl-plate-shadow-color) !important;
   transition: transform 90ms cubic-bezier(0.2, 0, 0, 1), box-shadow 90ms ease, background 120ms ease, border-color 120ms ease !important;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 .workout-timesup-banner__btn span {
-  color: var(--pl-volt-fill) !important;
+  color: inherit !important;
   font-weight: 900 !important;
 }
 .workout-timesup-banner__btn .mud-icon-root {
-  color: var(--pl-volt-fill) !important;
-  fill: var(--pl-volt-fill) !important;
+  color: inherit !important;
+  fill: currentColor !important;
   font-size: 18px !important;
   width: 18px !important;
   height: 18px !important;
 }
 .workout-timesup-banner__btn:hover {
-  filter: brightness(1.12) !important;
-}
-.workout-timesup-banner__btn:hover span {
-  color: var(--pl-volt-fill) !important;
+  filter: brightness(1.06) !important;
 }
 .workout-timesup-banner__btn:active {
   transform: translate(1px, 1px);
   box-shadow: none !important;
 }
 .workout-timesup-banner__btn--ready {
-  background: var(--pl-volt-fg) !important;
-  color: var(--pl-volt-fill) !important;
-  border-color: var(--pl-volt-fg) !important;
+  background: var(--pl-success) !important;
+  color: #FFFFFF !important;
+  border-color: var(--pl-success) !important;
   font-weight: 900 !important;
 }
-.workout-timesup-banner__btn--ready .mud-icon-root {
-  color: var(--pl-volt-fill) !important;
-  fill: var(--pl-volt-fill) !important;
-}
-.workout-timesup-banner__btn--add {
-  border-color: var(--pl-volt-fg) !important;
-}
-.workout-timesup-banner__btn--add .mud-icon-root {
-  color: var(--pl-volt-fill) !important;
-  fill: var(--pl-volt-fill) !important;
-}
-.workout-timesup-banner__btn--reset {
-  border-color: var(--pl-volt-fg) !important;
-}
-.workout-timesup-banner__btn--reset .mud-icon-root {
-  color: var(--pl-volt-fill) !important;
-  fill: var(--pl-volt-fill) !important;
+html[data-theme-mode="dark"] .workout-timesup-banner__btn--ready {
+  color: #10111A !important;
 }
 @media (max-width: 380px) {
   .workout-timesup-banner {
@@ -6522,9 +6527,8 @@ html[data-theme-mode="dark"] .workout-hud__dot--done {
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.06em;
-  color: var(--pl-purple-text);
+  color: var(--pl-stone);
 }
-html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); background: var(--pl-chip-2); }
 .workout-focus__superset {
   display: inline-flex;
   align-items: center;
@@ -6533,12 +6537,16 @@ html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); ba
   padding: 0 8px;
   background: var(--pl-cyan);
   color: #10111A;
-  border: 1.5px solid #10111A;
+  border: 1.5px solid var(--pl-volt-edge);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.06em;
   border-radius: var(--radius);
+}
+html[data-theme-mode="light"] .workout-focus__superset {
+  color: #FFFFFF;
+  border-color: var(--pl-ink-border);
 }
 .workout-focus__superset-partner {
   display: flex;
@@ -6609,22 +6617,14 @@ html[data-theme-mode="dark"] .workout-focus__index { color: var(--pl-purple); ba
   line-height: 1;
 }
 .workout-focus__badge--set {
-  background: var(--pl-chip);
-  color: var(--pl-ink);
+  background: var(--pl-volt-fill);
+  color: var(--pl-volt-fg);
+  border-color: var(--pl-volt-edge);
 }
 .workout-focus__badge--warmup {
   background: color-mix(in srgb, var(--pl-amber) 20%, var(--pl-chip));
   border-color: var(--pl-warn-text);
   color: var(--pl-warn-text);
-}
-html[data-theme-mode="light"] .workout-focus__badge--warmup {
-  border-color: #92400E;
-  color: #92400E;
-}
-html[data-theme-mode="dark"] .workout-focus__badge--set {
-  background: #1C2033;
-  color: #FAFF00;
-  border-color: #2D3352;
 }
 .workout-focus__pill {
   display: inline-flex;
@@ -6747,8 +6747,8 @@ html[data-theme-mode="dark"] .workout-focus__dot--done {
 }
 .workout-focus__dot--active {
   background: var(--pl-volt-fill);
-  border: 2px solid #10111A;
-  color: #10111A;
+  border: 2px solid var(--pl-volt-edge);
+  color: var(--pl-volt-fg);
   box-shadow: 2.5px 2.5px 0 var(--pl-plate-shadow-color);
   width: 28px;
   height: 28px;
@@ -7304,10 +7304,6 @@ html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-digits {
   cursor: default;
   transition: transform 90ms ease;
 }
-html[data-theme-mode="dark"] .workout-rest-takeover__next {
-  background: #1C2033;
-  border-color: #2D3352;
-}
 .workout-rest-takeover__next--swipeable:active {
   transform: translate(1px, 1px);
 }
@@ -7339,16 +7335,11 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next {
   text-transform: uppercase;
   color: var(--pl-volt-fg) !important;
   background: var(--pl-volt-fill) !important;
-  border: 1.5px solid var(--pl-ink-border) !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
   padding: 3px 10px;
   border-radius: var(--radius);
   line-height: 1;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover__next-kicker {
-  color: #10111A !important;
-  background: #FAFF00 !important;
-  border-color: #10111A !important;
 }
 .workout-rest-takeover__next-set {
   display: inline-flex;
@@ -7358,18 +7349,13 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next-kicker {
   font-weight: 900 !important;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--pl-ink) !important;
-  background: var(--pl-chip-2) !important;
-  border: 1.5px solid var(--pl-ink-border) !important;
+  color: var(--pl-cyan-text) !important;
+  background: color-mix(in srgb, var(--pl-cyan) 12%, var(--pl-chip-2)) !important;
+  border: 1.5px solid var(--pl-cyan) !important;
   box-shadow: 2px 2px 0 var(--pl-plate-shadow-color);
   padding: 3px 10px;
   border-radius: var(--radius);
   line-height: 1;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover__next-set {
-  color: #C0CAF5 !important;
-  background: #10111A !important;
-  border-color: #2D3352 !important;
 }
 .workout-rest-takeover__next-name {
   font-family: var(--font-display);
@@ -7383,9 +7369,6 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next-set {
   word-break: break-word;
   margin: 4px 0 2px;
 }
-html[data-theme-mode="dark"] .workout-rest-takeover__next-name {
-  color: #FFFFFF !important;
-}
 .workout-rest-takeover__next-preview {
   display: inline-flex;
   align-items: center;
@@ -7395,20 +7378,14 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next-name {
   font-weight: 900 !important;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--pl-ink) !important;
-  background: var(--pl-chip-2) !important;
-  border: 2px solid var(--pl-ink-border) !important;
+  color: var(--pl-purple-text) !important;
+  background: color-mix(in srgb, var(--pl-purple) 12%, var(--pl-chip)) !important;
+  border: 2px solid var(--pl-purple) !important;
   box-shadow: 3px 3px 0 var(--pl-plate-shadow-color) !important;
   border-radius: var(--radius);
   padding: 8px 18px;
   line-height: 1;
   margin-top: 4px;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover__next-preview {
-  color: var(--pl-yellow) !important;
-  background: #10111A !important;
-  border-color: #2D3352 !important;
-  box-shadow: 3px 3px 0 #000000 !important;
 }
 .workout-rest-takeover__next-preview:empty { display: none; }
 
@@ -7461,72 +7438,41 @@ html[data-theme-mode="dark"] .workout-rest-takeover__next-preview {
   color: var(--pl-ink) !important;
   fill: var(--pl-ink) !important;
 }
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn,
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn {
-  background: #1C2033 !important;
-  color: var(--pl-ink) !important;
-  border-color: var(--pl-hairline-strong) !important;
-  box-shadow: 3px 3px 0 #10111A !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn {
-  color: var(--pl-cyan) !important;
-  border-color: color-mix(in srgb, var(--pl-cyan) 60%, var(--pl-hairline-strong)) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn .mud-icon-root {
-  color: var(--pl-cyan) !important;
-  fill: var(--pl-cyan) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--reset {
-  color: var(--pl-amber) !important;
-  border-color: color-mix(in srgb, var(--pl-amber) 60%, var(--pl-hairline-strong)) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--reset .mud-icon-root {
-  color: var(--pl-amber) !important;
-  fill: var(--pl-amber) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--skip {
-  color: var(--pl-yellow) !important;
-  border-color: color-mix(in srgb, var(--pl-yellow) 60%, var(--pl-hairline-strong)) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--skip .mud-icon-root {
-  color: var(--pl-yellow) !important;
-  fill: var(--pl-yellow) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-add-btn:hover {
-  background: color-mix(in srgb, var(--pl-cyan) 12%, #1C2033) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--reset:hover {
-  background: color-mix(in srgb, var(--pl-amber) 12%, #1C2033) !important;
-}
-html[data-theme-mode="dark"] .workout-rest-takeover .rest-timer-icon-btn--skip:hover {
-  background: color-mix(in srgb, var(--pl-yellow) 12%, #1C2033) !important;
-}
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-add-btn {
+.workout-rest-takeover .rest-timer-add-btn {
   color: var(--pl-cyan-text) !important;
-  border-color: color-mix(in srgb, var(--pl-cyan-text) 50%, var(--pl-ink-border)) !important;
-  background: color-mix(in srgb, var(--pl-cyan-text) 8%, var(--pl-chip-2)) !important;
+  border-color: color-mix(in srgb, var(--pl-cyan) 60%, var(--pl-hairline-strong)) !important;
+  background: color-mix(in srgb, var(--pl-cyan) 12%, var(--pl-chip-2)) !important;
 }
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-add-btn .mud-icon-root {
+.workout-rest-takeover .rest-timer-add-btn .mud-icon-root {
   color: var(--pl-cyan-text) !important;
   fill: var(--pl-cyan-text) !important;
 }
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-icon-btn--reset {
+.workout-rest-takeover .rest-timer-icon-btn--reset {
   color: var(--pl-warn-text) !important;
-  border-color: color-mix(in srgb, var(--pl-warn-text) 50%, var(--pl-ink-border)) !important;
-  background: color-mix(in srgb, var(--pl-warn-text) 8%, var(--pl-chip-2)) !important;
+  border-color: color-mix(in srgb, var(--pl-amber) 60%, var(--pl-hairline-strong)) !important;
+  background: color-mix(in srgb, var(--pl-amber) 12%, var(--pl-chip-2)) !important;
 }
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-icon-btn--reset .mud-icon-root {
+.workout-rest-takeover .rest-timer-icon-btn--reset .mud-icon-root {
   color: var(--pl-warn-text) !important;
   fill: var(--pl-warn-text) !important;
 }
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-icon-btn--skip {
-  color: var(--pl-green-text) !important;
-  border-color: color-mix(in srgb, var(--pl-green-text) 50%, var(--pl-ink-border)) !important;
-  background: color-mix(in srgb, var(--pl-green-text) 8%, var(--pl-chip-2)) !important;
+.workout-rest-takeover .rest-timer-icon-btn--skip {
+  color: var(--pl-ok-text) !important;
+  border-color: color-mix(in srgb, var(--pl-success) 60%, var(--pl-hairline-strong)) !important;
+  background: color-mix(in srgb, var(--pl-success) 12%, var(--pl-chip-2)) !important;
 }
-html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-icon-btn--skip .mud-icon-root {
-  color: var(--pl-green-text) !important;
-  fill: var(--pl-green-text) !important;
+.workout-rest-takeover .rest-timer-icon-btn--skip .mud-icon-root {
+  color: var(--pl-ok-text) !important;
+  fill: var(--pl-ok-text) !important;
+}
+.workout-rest-takeover .rest-timer-add-btn:hover {
+  background: color-mix(in srgb, var(--pl-cyan) 20%, var(--pl-chip-2)) !important;
+}
+.workout-rest-takeover .rest-timer-icon-btn--reset:hover {
+  background: color-mix(in srgb, var(--pl-amber) 20%, var(--pl-chip-2)) !important;
+}
+.workout-rest-takeover .rest-timer-icon-btn--skip:hover {
+  background: color-mix(in srgb, var(--pl-success) 20%, var(--pl-chip-2)) !important;
 }
 
 /* TRANSPORT, brutal thumb bar */
@@ -7678,27 +7624,27 @@ html[data-theme-mode="light"] .workout-rest-takeover .rest-timer-icon-btn--skip 
   width: 8px;
   height: 8px;
   background: var(--pl-volt-fill) !important;
-  border: 1.5px solid #10111A !important;
-  box-shadow: 0 0 0 1.5px var(--pl-volt-fill), 0 0 0 3px #10111A !important;
+  border: 1.5px solid var(--pl-volt-edge) !important;
+  box-shadow: 0 0 0 1.5px var(--pl-volt-fill), 0 0 0 3px var(--pl-volt-edge) !important;
   z-index: 1;
 }
 .workout-sequence-strip__item--active .workout-sequence-strip__pip {
   background: transparent;
-  border: 1.5px solid rgba(16, 17, 26, 0.4);
+  border: 1.5px solid color-mix(in srgb, var(--pl-volt-fg) 40%, transparent);
 }
 .workout-sequence-strip__item--active .workout-sequence-strip__pip--done {
-  background: #10111A !important;
-  border-color: #10111A !important;
+  background: var(--pl-volt-fg) !important;
+  border-color: var(--pl-volt-fg) !important;
   opacity: 0.95;
 }
 .workout-sequence-strip__item--active .workout-sequence-strip__pip--active {
-  background: #10111A !important;
+  background: var(--pl-volt-fg) !important;
   border: 2px solid var(--pl-volt-fill) !important;
-  box-shadow: 0 0 0 1.5px #10111A !important;
+  box-shadow: 0 0 0 1.5px var(--pl-volt-fg) !important;
 }
 .workout-sequence-strip__item--active .workout-sequence-strip__pip--done.workout-sequence-strip__pip--active {
-  background: #10111A !important;
-  border: 1.5px solid #10111A !important;
+  background: var(--pl-volt-fg) !important;
+  border: 1.5px solid var(--pl-volt-fg) !important;
   box-shadow: none !important;
   transform: none !important;
 }
@@ -8424,6 +8370,20 @@ html[data-theme-mode="dark"] #app .mud-checkbox .mud-icon-button.mud-checkbox-tr
 
 /* Bridge textareas: let the placeholder wrap and breathe */
 .ai-bridge-field .mud-input-control { margin-bottom: 8px !important; }
+/* Static in-flow field labels: the MudBlazor floating notch label renders at
+   11px x 0.75 scale and its chip background splits against the white field in
+   light mode, so bridge fields use a plain micro-label that cannot clip. */
+.ai-bridge-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pl-ink);
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
 .ai-bridge-field .mud-input.mud-input-outlined {
   background: var(--pl-chip) !important;
   padding: 6px 12px !important;

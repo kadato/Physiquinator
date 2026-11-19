@@ -1,0 +1,9 @@
+/* Privacy page: section headings use the brutalist display voice but must fit a
+   360px phone. Fluid size with wrapping, so long headings never clip. */
+.privacy-paper .mud-typography-h2 {
+    font-size: clamp(1.5rem, 8vw, 2.25rem) !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+}

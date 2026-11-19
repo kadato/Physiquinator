@@ -297,12 +297,13 @@
 				</div>
 
 				<div class="ai-bridge-field mt-2">
+					<span class="ai-bridge-label" id="ai-bridge-goal-label">@("Goal for the AI")</span>
 					<MudTextField T="string"
 								  @bind-Value="_promptGoal"
-								  Label="@("Goal for the AI")"
 								  Placeholder="@("What should the AI do? For example build a 3-day push pull legs routine, analyze volume, or log weight")"
 								  Variant="Variant.Outlined"
 								  Margin="Margin.Dense"
+								  aria-label="@("Goal for the AI")"
 								  Lines="2" />
 				</div>
 
@@ -330,7 +331,8 @@
 				@if (_includeStats)
 				{
 					<div class="ai-bridge-range mt-2">
-						<MudSelect T="AiBridgeHistoryRange" Value="_historyRange" ValueChanged="OnHistoryRangeChanged" Label="@("History range")" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Class="ai-bridge-range-select">
+						<span class="ai-bridge-label" id="ai-bridge-range-label">@("History range")</span>
+						<MudSelect T="AiBridgeHistoryRange" Value="_historyRange" ValueChanged="OnHistoryRangeChanged" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Class="ai-bridge-range-select" aria-label="@("History range")">
 							<MudSelectItem Value="AiBridgeHistoryRange.AllTime">@("All time")</MudSelectItem>
 							<MudSelectItem Value="AiBridgeHistoryRange.Last30Days">@("Last 30 days")</MudSelectItem>
 							<MudSelectItem Value="AiBridgeHistoryRange.Last90Days">@("Last 90 days")</MudSelectItem>
@@ -404,12 +406,13 @@
 				</div>
 
 				<div class="ai-bridge-field mt-2">
+					<span class="ai-bridge-label" id="ai-bridge-response-label">@("AI response")</span>
 					<MudTextField T="string"
 								  @bind-Value="_pastedResponse"
-								  Label="@("AI response")"
 								  Placeholder="@("Paste the full response from Gemini or ChatGPT here (including the JSON action block)...")"
 								  Variant="Variant.Outlined"
 								  Margin="Margin.Dense"
+								  aria-label="@("AI response")"
 								  Lines="5" />
 				</div>
 

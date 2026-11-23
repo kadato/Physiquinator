@@ -15,9 +15,9 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="11.0.0" />
 
     <!-- UI -->
-    <PackageVersion Include="MudBlazor" Version="9.13.0" />
+    <PackageVersion Include="MudBlazor" Version="9.14.0" />
     <PackageVersion Include="Markdig" Version="1.6.0" />
-    <PackageVersion Include="Plugin.LocalNotification" Version="14.1.2" />
+    <PackageVersion Include="Plugin.LocalNotification" Version="14.2.0" />
 
     <!-- SQLite -->
     <PackageVersion Include="sqlite-net-pcl" Version="1.11.285" />
@@ -43,7 +43,7 @@
     <PackageVersion Include="ModelContextProtocol" Version="2.4.0" />
 
     <!-- Code quality analysis -->
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.37.0.15768" />
   </ItemGroup>
 
 </Project>
